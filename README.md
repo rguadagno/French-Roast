@@ -1,2 +1,7 @@
 # French-Roast
-pure C++ bytecode instrumentation for Java that can be used with JVMTI
+A pure C++ bytecode instrumentation API ( for Java class).
+The purpose of French-Roast is to allow light weight JNI hooks into any method ( including Java itself e.g. HashMap )
+
+Example
+
+
