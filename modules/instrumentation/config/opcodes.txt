@@ -1,0 +1,96 @@
+aconst_null   <1>   1
+iconst_ml     <2>   1
+iconst_0      <3>   1
+iconst_1      <4>   1
+iconst_2      <5>   1
+iconst_3      <6>   1
+iconst_4      <7>   1
+iconst_5      <8>   1
+lconst_0      <9>   1
+lconst_1      <10>  1
+fconst_0      <11>  1
+fconst_1      <12>  1
+fconst_2      <13>  1
+dconst_0      <14>  1
+dconst_1      <15>  1
+bipush        <16>  2
+sipush        <17>  3
+ldc           <18>  2
+ldc_2         <19>  3
+ldc2_w        <20>  3
+iload         <21>  2
+lload         <22>  2
+fload         <23>  2
+dload         <24>  2
+aload         <25>  2
+iload_0       <26>  1
+iload_1       <27>  1
+iload_2       <28>  1
+iload_3       <29>  1
+lload_0       <30>  1
+lload_1       <31>  1
+lload_2       <32>  1
+lload_3       <33>  1
+fload_0       <34>  1
+fload_1       <35>  1
+fload_2       <36>  1
+fload_3       <37>  1
+dload_0       <38>  1
+dload_1       <39>  1
+dload_2       <40>  1
+dload_3       <41>  1
+aload_0       <42>  1
+aload_1       <43>  1
+aload_2       <44>  1
+aload_3       <45>  1
+iaload        <46>  1
+laload        <47>  1
+faload        <48>  1
+daload        <49>  1
+aaload        <50>  1
+baload        <51>  1
+caload        <52>  1
+saload        <53>  1
+istore        <54>  2
+lstore        <55>  2
+fstore        <56>  2
+dstore        <57>  2
+astore        <58>  2
+istore_0      <59>  1
+istore_1      <60>  1
+istore_2      <61>  1
+istore_3      <62>  1
+lstore_0      <63>  1
+lstore_1      <64>  1
+lstore_2      <65>  1
+lstore_3      <66>  1
+fstore_0      <67>  1
+fstore_1      <68>  1
+fstore_2      <69>  1
+fstore_3      <70>  1
+dstore_0      <71>  1
+dstore_1      <72>  1
+dstore_2      <73>  1
+dup           <89>  1
+iand          <126> 1
+iinc          <132> 3
+dcmpl         <151> 1
+ifeq          <153> 3 <branch>
+ifne          <154> 3 <branch>
+iflt          <155> 3 <branch>
+ifge          <156> 3 <branch>
+ifgt          <157> 3 <branch>
+ifle          <158> 3 <branch>
+if_icmp       <164> 3 <branch>
+if_acmpeq     <165> 3 <branch>
+if_acmpne     <166> 3 <branch>
+goto          <167> 3 <branch>
+areturn       <176> 1
+return        <177> 1
+getstatic     <178> 3
+getfield      <180> 3
+invokevirtual <182> 3
+invokespecial <183> 3
+invokestatic  <184> 3
+new           <187> 3
+ifnonnull     <199> 3
