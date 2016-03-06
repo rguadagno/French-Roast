@@ -8,7 +8,7 @@ The purpose of French-Roast is to allow us to insert these light weight JNI hook
 
 
 ### Example
-This is done from in the callback JVMTI method ClassFileLoadHook ( see modules/monitor/src/Monitor.cpp )
+This is done from in the callback JVMTI method ClassFileLoadHook (see modules/monitor/src/Monitor.cpp)
 
 Instrument Package:
 ```C++
