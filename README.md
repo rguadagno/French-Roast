@@ -8,18 +8,30 @@ The purpose of French-Roast is to allow us to insert these light weight JNI hook
 
 
 ### Example
+This is done from in the callback JVMTI method ClassFileLoadHook ( see modules/monitor/src/Monitor.cpp )
+
 Instrument Package:
 ```C++
 fr.load_from_buffer(class_data);
 fr.add_name_to_pool("thook");
 fr.add_name_to_pool("()V");
-fr.add_native_method("thook", "()V");
+fr.add_native_method("thook", "()V"); 
 jint size = fr.size_in_bytes();
-jvmtiError  err =    env->Allocate(size,new_class_data);
+jvmtiError err = env->Allocate(size,new_class_data);
 *new_class_data_len = size;
 fr.load_to_buffer(*new_class_data); 
 ```
-
+Instrument any method with hook, such as scanAndLockForPut:
+```C++
+fr.load_from_buffer(class_data);
+fr.add_name_to_pool("thook");
+fr.add_name_to_pool("()V");
+fr.add_method_call("scanAndLockForPut:(Ljava/lang/Object;ILjava/lang/Object;)Ljava/util/concurrent/ConcurrentHashMap$HashEntry;", "java/lang/Package.thook:()V", fr.METHOD_ENTER|fr.METHOD_EXIT);
+jint size = fr.size_in_bytes();
+jvmtiError err = env->Allocate(size,new_class_data);
+*new_class_data_len = size;
+fr.load_to_buffer(*new_class_data); 
+```
 
 
 
