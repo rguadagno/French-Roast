@@ -106,9 +106,9 @@ namespace frenchroast {
     InfoHolder* build_holder(unsigned char tag, const unsigned char* buf);
   public:
     ConstantPoolComponent() {_nextIndex = 0; }
-    int add_info_from_raw(int idx, const unsigned char* buf);
-    int add_info_from_raw(unsigned char* buf);
-    int add_info(BYTE tag, InfoHolder* item);
+    int add_info_from_raw(int idx, const unsigned char* buf,bool& skip);
+    int add_info_from_raw(unsigned char* buf,bool& skip);
+    int add_info(BYTE tag, InfoHolder* item,bool& skip);
     int get_name_index(const std::string& tname);
     int add_name(const std::string& tname);
     int add_class(const std::string& tname);

@@ -457,28 +457,30 @@ namespace frenchroast {
   {
     _count++;
     short localbcount = to_int(_bcount,sizeof(_bcount))+1;
-    write_big_e_bytes<short>(_bcount, &localbcount); 
-    add_info(ptr->get_tag(),ptr);
+    write_big_e_bytes<short>(_bcount, &localbcount);
+    bool skip;
+    add_info(ptr->get_tag(),ptr,skip);
     return next_index();
   }
 
-  int ConstantPoolComponent::add_info_from_raw( BYTE* buf)
+  int ConstantPoolComponent::add_info_from_raw( BYTE* buf,bool& skip)
   {
-    return add_info_from_raw(0,buf);
+    return add_info_from_raw(0,buf,skip);
   }
 
-  int ConstantPoolComponent::add_info_from_raw(int offset, const BYTE* buf)
+  int ConstantPoolComponent::add_info_from_raw(int offset, const BYTE* buf,bool& skip)
   {
     unsigned char tag = buf[offset];
     InfoHolder* item = build_holder(tag, &buf[offset+1]);
-    int rv = offset + add_info(tag,item);
+    int rv = offset + add_info(tag,item,skip);
     return rv;
   }
     
-  int ConstantPoolComponent::add_info(BYTE tag, InfoHolder* item)
+  int ConstantPoolComponent::add_info(BYTE tag, InfoHolder* item, bool& skip)
   {
     if (tag == TAG_Double || tag == TAG_Long) {
       --_count;
+      skip = true;
     }
     if(_info.size() == _count) {
 	return 0;
@@ -579,8 +581,13 @@ namespace frenchroast {
     _count = bits_to_int<short>(_count, buf) - 1;
     int nextByte;
     nextByte = 2;
+    bool skip = false;
     for(int idx = 1; idx < to_int(_bcount,sizeof(_bcount));idx++) {
-      nextByte = add_info_from_raw(nextByte, buf) + 1;  
+      nextByte = add_info_from_raw(nextByte, buf,skip) + 1;
+      if(skip) {
+	++idx;
+	skip = false;
+      }
     }
   }
     
@@ -620,8 +627,8 @@ namespace frenchroast {
     ++_count;
     short localbcount = to_int(_bcount,sizeof(_bcount))+1;
     write_big_e_bytes<short>(_bcount, &localbcount); 
-      
-    add_info_from_raw(nbuf);
+    bool skip;
+    add_info_from_raw(nbuf,skip);
     return _nextIndex;
 }
         
