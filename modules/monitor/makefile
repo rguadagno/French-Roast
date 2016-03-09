@@ -18,21 +18,44 @@
 #
 
 CC := cl /c /Zi /EHsc /Iinclude /I..\instrumentation\include  /Fobuild\\
+CCI := cl /c /Zi /EHsc /Iinclude /I..\instrumentation\include  /Fo..\\instrumentation\\build\\
 RMCMD := del
 
-VPATH = src;include;build;..\instrumentation\build;
+VPATH = src;include;build;..\instrumentation\build;..\instrumentation\src;build;..\instrumentation\include;
 
 BUILDDIR := build/
 
-FILEOBJECTS = Monitor.obj FrenchRoast.obj Util.obj AccessFlags.obj ConstantPoolComponents.obj StackMapFrame.obj
+
+IFILEOBJECTS = FrenchRoast.obj Util.obj AccessFlags.obj ConstantPoolComponents.obj StackMapFrame.obj OpCode.obj
+FILEOBJECTS = Monitor.obj $(IFILEOBJECTS)
 OBJECTS = $(addprefix $(BUILDDIR), $(FILEOBJECTS))
-LOCALOBJECTS = $(addprefix build\, $(FILEOBJECTS))
+IOBJECTS = $(addprefix ..\instrumentation\build\, $(IFILEOBJECTS))
 
 # 
 # ---------------------------------------------------------------------------------------------   
 #
 bin\Monitor.dll: $(FILEOBJECTS)
-	link /out:bin\Monitor.dll /DLL $^
+	link /out:bin\Monitor.dll /DLL build\Monitor.obj $(IOBJECTS)
+
+
+FrenchRoast.obj : FrenchRoast.cpp FrenchRoast.h
+	$(CCI) $<
+
+ConstantPoolComponents.obj : ConstantPoolComponents.cpp ConstantPool.h
+	$(CCI) $<
+
+StackMapFrame.obj : StackMapFrame.cpp StackMapFrame.h
+	$(CCI) $<
+
+AccessFlags.obj : AccessFlags.cpp AccessFlags.h
+	$(CCI) $<
+
+Util.obj : Util.cpp Util.h
+	$(CCI) $<
+
+OpCode.obj : OpCode.cpp OpCode.h
+	$(CCI) $<
+
 
 $(BUILDDIR)Monitor.obj: Monitor.cpp Monitor.h
 	$(CC) src\Monitor.cpp

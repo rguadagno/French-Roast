@@ -21,6 +21,7 @@
 #include "ConstantPool.h"
 #include "Util.h"
 #include "StackMapFrame.h"
+#include "OpCode.h"
 
 namespace frenchroast {
 
@@ -56,118 +57,36 @@ namespace frenchroast {
     out.flags(flags);
   }
     
-  int  MinorVersionComponent::size_in_bytes() const
+  int  IDComponent::size_in_bytes() const
   {
     return sizeof(_version);
   }
 
-  void MinorVersionComponent::reset()
+  void IDComponent::reset()
   {
     memset(_version, 0, sizeof(_version));
   }
 
-  void MinorVersionComponent::load_from_buffer(const BYTE* buf)
+  void IDComponent::load_from_buffer(const BYTE* buf)
   {
     memcpy(_version, buf,sizeof(_version));
   }
 
-  void MinorVersionComponent::load_to_buffer(BYTE* buf)
+  void IDComponent::load_to_buffer(BYTE* buf)
   {
     memcpy(buf, _version, sizeof(_version));
   }
 
-  int  MinorVersionComponent::get_version()
+  int  IDComponent::get()
   {
     return to_int(_version,sizeof(_version));
   }
 
-  void MinorVersionComponent::display(std::ostream& out)
+  void IDComponent::display(std::ostream& out)
   {
-    out << "minor version: " << to_int(_version,sizeof(_version)) << std::endl;
+    out << to_int(_version,sizeof(_version)) << std::endl;
   }
 
-  int  MajorVersionComponent::size_in_bytes() const
-  {
-    return sizeof(_version);
-  }
-
-  void MajorVersionComponent::reset()
-  {
-    memset(_version, 0, sizeof(_version));
-  }
-
-  void MajorVersionComponent::load_from_buffer(const BYTE* buf)
-  {
-    memcpy(_version, buf,sizeof(_version));
-  }
-
-  void MajorVersionComponent::load_to_buffer(BYTE* buf)
-  {
-    memcpy(buf, _version, sizeof(_version));
-  }
-
-  void MajorVersionComponent::display(std::ostream& out)
-  {
-    out << "major version: " << to_int(_version,sizeof(_version)) << std::endl;
-  }
-
-  int MajorVersionComponent::get_version()
-  {
-    return to_int(_version,sizeof(_version));
-  }
-
-    
-  int  ThisClassComponent::size_in_bytes() const
-  {
-    return sizeof(_index);
-  }
-
-  void ThisClassComponent::reset()
-  {
-    memset(_index, 0, sizeof(_index));
-  }
-
-  void ThisClassComponent::load_from_buffer(const BYTE* buf)
-  {
-    memcpy(_index, buf,sizeof(_index));
-  }
-
-  void ThisClassComponent::load_to_buffer(BYTE* buf)
-  {
-    memcpy(buf, _index, sizeof(_index));
-  }
-
-  void ThisClassComponent::display(std::ostream& out)
-  {
-    int idx  = to_int(_index,sizeof(_index));
-    out << "this class index: " << idx << " [TO DO]" << std::endl;
-  }
-    
-  int  SuperClassComponent::size_in_bytes() const
-  {
-    return sizeof(_index);
-  }
-
-  void SuperClassComponent::reset()
-  {
-    memset(_index, 0, sizeof(_index));
-  }
-
-  void SuperClassComponent::load_from_buffer(const BYTE* buf)
-  {
-    memcpy(_index, buf,sizeof(_index));
-  }
-
-  void SuperClassComponent::load_to_buffer(BYTE* buf)
-  {
-    memcpy(buf, _index, sizeof(_index));
-  }
-
-  void SuperClassComponent::display(std::ostream& out)
-  {
-    int idx  = to_int(_index,sizeof(_index));
-    out << "super class index: " << idx << " [TO DO]" << std::endl;
-  }
 
   int InterfacesComponent::size_in_bytes() const
   {
@@ -314,10 +233,8 @@ namespace frenchroast {
     }
   }
     
- 
   FrenchRoast::FrenchRoast() : _opcodesLoaded(false)
   {
-      
   }
 
   std::string FrenchRoast::resolve_const(int idx)
@@ -413,58 +330,6 @@ namespace frenchroast {
     _methodsComponent.add_item(method);
   }
 
-  class OpCode {
-    BYTE         _code;
-    int          _size;
-    std::string _name;
-    bool        _isBranch;
-  public:
-    OpCode(BYTE code, int size,const std::string& name) : _code(code),_size(size),_name(name),_isBranch(false)
-    {
-      
-    }
-    
-    OpCode(BYTE code, int size,const std::string& name,bool isbranch) : _code(code),_size(size),_name(name),_isBranch(isbranch)
-    {
-      
-    }
-    OpCode()
-    {
-      
-    }
-    bool is_branch() const
-    {
-      return _isBranch;
-    }
-
-    int get_size() const
-    {
-      return _size;
-    }
-
-    std::string get_name() const
-    {
-      return _name;
-    }
-    
-    BYTE get_code() const
-    {
-      return _code;
-    }
-    static const BYTE aload_0       = 42;
-    static const BYTE invokevirtual = 182;
-    static const BYTE invokestatic  = 184;
-  };
-
-  std::unordered_map<BYTE, OpCode> op_codes;
-
-  const OpCode& lookup_op_code(BYTE op)
-  {
-    if(op_codes.count(op) == 0) {
-      std::cout << "MISSING OPCODE: " << (int)op << std::endl;op = 0;
-    }
-    return op_codes[op];
-  }
 
   class Instruction {
     OpCode _opCode;
@@ -496,7 +361,7 @@ namespace frenchroast {
     {
       _address = address;
       loaded = 1;
-      _opCode = lookup_op_code(*buf);
+      _opCode = _opCode[*buf];
       memset(_operand,0,2);
       if (_opCode.get_size() == 0) {
 	loaded=0;
@@ -663,23 +528,7 @@ namespace frenchroast {
       {
 	return;
       }
-
-    std::ifstream in {fileName};
-    std::string line;
-    while (getline(in,line)) {
-      size_t pos;
-      while ((pos=line.find(" ")) != std::string::npos) {
-	line.erase(pos,1);
-      }
-      int osize = atoi(split(split(line,'<')[1],'>')[1].c_str());
-      BYTE op = static_cast<BYTE>(atoi(split(split(line,'<')[1],'>')[0].c_str()));
-      const std::string name = split(line,'<')[0];
-      if (split(line,'<').size() > 2) 
-	op_codes[op] = OpCode(op,osize,name,true);
-      else
-	op_codes[op] = OpCode(op,osize,name);
-    }
-    in.close();
+    _opCodes.load(fileName);
     _opcodesLoaded = true;
   }
     
@@ -702,9 +551,9 @@ namespace frenchroast {
     int origNonCodeLength   = origAttributeLength - origCodeLength;
   
     std::vector<Instruction> instructions;
-    instructions.push_back(Instruction(op_codes[OpCode::aload_0]));  
+    instructions.push_back(Instruction(_opCodes[OpCode::aload_0]));  
     int idxid =   _constPool.add_method_ref_index(callTo);
-    instructions.push_back(Instruction(op_codes[OpCode::invokestatic],  idxid));  
+    instructions.push_back(Instruction(_opCodes[OpCode::invokestatic],  idxid));  
     int startAddress = 0;
     method.add_instructions(startAddress,instructions); 
     _methodsComponent.get_item(callFrom).get_attribute("Code").set_length(method.size_in_bytes() + origNonCodeLength);

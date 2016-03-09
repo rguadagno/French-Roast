@@ -29,6 +29,8 @@
 #include "ConstantPool.h"
 #include "Info.h"
 #include "AccessFlags.h"
+#include "OpCode.h"
+
 
 namespace frenchroast {
 
@@ -43,7 +45,7 @@ namespace frenchroast {
     int get_number();
   };
 
-  class MinorVersionComponent : public ClassFileComponent {
+  class IDComponent : public ClassFileComponent {
     BYTE _version[2];
   public:
     int  size_in_bytes() const;
@@ -51,38 +53,7 @@ namespace frenchroast {
     void load_from_buffer(const BYTE* buf);
     void load_to_buffer(BYTE* buf);   
     void display(std::ostream& out);
-    int get_version();
-  };
-
-  class MajorVersionComponent : public ClassFileComponent {
-    BYTE _version[2];
-  public:
-    int  size_in_bytes() const;
-    void reset();
-    void load_from_buffer(const BYTE* buf);
-    void load_to_buffer(BYTE* buf);   
-    void display(std::ostream& out);
-    int get_version();
-  };
-
-  class ThisClassComponent : public ClassFileComponent {
-    BYTE _index[2];
-  public:
-    int  size_in_bytes() const;
-    void reset();
-    void load_from_buffer(const BYTE* buf);
-    void load_to_buffer(BYTE* buf);
-    void display(std::ostream& out);
-  };
-
-  class SuperClassComponent : public ClassFileComponent {
-    BYTE _index[2];
-  public:
-    int  size_in_bytes() const;
-    void reset();
-    void load_from_buffer(const BYTE* buf);
-    void load_to_buffer(BYTE* buf);
-    void display(std::ostream& out);
+    int get();
   };
 
   
@@ -98,7 +69,7 @@ namespace frenchroast {
     void display(std::ostream& out);
   };
 
-  template
+  template  
   <typename T,typename H>
   class InfoComponent : public ClassFileComponent   {
     BYTE           _count[2];
@@ -120,14 +91,15 @@ namespace frenchroast {
   };
    
   class FrenchRoast {
-    MagicComponent        _magic;
-    MinorVersionComponent _minorVersion;
-    MajorVersionComponent _majorVersion;
-    ConstantPoolComponent _constPool;
-    AccessFlagsComponent  _accessFlags;
-    ThisClassComponent    _thisClass;
-    SuperClassComponent   _superClass;
-    InterfacesComponent   _interfaces;
+    OpCode                 _opCodes;
+    MagicComponent         _magic;
+    IDComponent            _minorVersion;
+    IDComponent            _majorVersion;
+    ConstantPoolComponent  _constPool;
+    AccessFlagsComponent   _accessFlags;
+    IDComponent            _thisClass;
+    IDComponent            _superClass;
+    InterfacesComponent    _interfaces;
     InfoComponent<FrenchRoast, Info<FrenchRoast>>  _fieldsComponent{*this, "Fields"};
     InfoComponent<FrenchRoast, Info<FrenchRoast>> _methodsComponent{*this,"Methods"};
     InfoComponent<FrenchRoast, Attribute<FrenchRoast>> _attributeComponent{*this,"Attributes"};

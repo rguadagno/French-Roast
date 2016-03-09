@@ -24,7 +24,7 @@ VPATH = src;include;build
 
 BUILDDIR := build/
 
-FILEOBJECTS = FrenchRoast.obj Util.obj AccessFlags.obj ConstantPoolComponents.obj StackMapFrame.obj
+FILEOBJECTS = FrenchRoast.obj Util.obj AccessFlags.obj ConstantPoolComponents.obj StackMapFrame.obj OpCode.obj
 OBJECTS = $(addprefix $(BUILDDIR), $(FILEOBJECTS))
 LOCALOBJECTS = $(addprefix build\, $(FILEOBJECTS))
 
@@ -35,7 +35,7 @@ LOCALOBJECTS = $(addprefix build\, $(FILEOBJECTS))
 .PHONY : compall
 compall : $(FILEOBJECTS)
 
-$(BUILDDIR)FrenchRoast.obj: FrenchRoast.cpp Info.h Attribute.h StackMapFrame.h
+$(BUILDDIR)FrenchRoast.obj: FrenchRoast.cpp FrenchRoast.h Info.h Attribute.h StackMapFrame.h OpCode.h
 	$(CC) $<
 
 $(BUILDDIR)AccessFlags.obj: AccessFlags.cpp  AccessFlags.h
@@ -45,6 +45,9 @@ $(BUILDDIR)ConstantPoolComponents.obj: ConstantPoolComponents.cpp  ConstantPool.
 	$(CC) $<
 
 $(BUILDDIR)StackMapFrame.obj: StackMapFrame.cpp  StackMapFrame.h
+	$(CC) $<
+
+$(BUILDDIR)OpCode.obj: OpCode.cpp  OpCode.h
 	$(CC) $<
 
 $(BUILDDIR)Util.obj: Util.cpp  Util.h
