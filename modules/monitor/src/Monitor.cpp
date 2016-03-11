@@ -22,7 +22,9 @@
 #include <fstream>
 #include "jvmti.h"
 #include "Monitor.h"
+#include "Hooks.h"
 #include "FrenchRoast.h"
+#include "Util.h"
 
 struct GlobalAgentData {
 
@@ -35,6 +37,9 @@ static int counter = 0;
 static GlobalAgentData g_data;
 static GlobalAgentData* gdata = &g_data;
 frenchroast::FrenchRoast fr;
+frenchroast::monitoring::Hooks _hooks;
+
+
 jvmtiEnv* genv;
 
 void enter_section(jvmtiEnv *env) {
@@ -43,10 +48,8 @@ void enter_section(jvmtiEnv *env) {
 }
 
 void exit_section(jvmtiEnv *env) {
-
   env->RawMonitorExit(gdata->_lock);
 }
-
 
 void JNICALL
 ThreadStart(jvmtiEnv *env, JNIEnv* jni_env, jthread thread) {
@@ -58,12 +61,7 @@ ThreadStart(jvmtiEnv *env, JNIEnv* jni_env, jthread thread) {
 void JNICALL
  MonitorWait(jvmtiEnv* env, JNIEnv* jni_env, jthread thread, jobject object, jlong timeout) {
   std::cout << "*** About to get lock " << std::endl;
-  //  std::cout.flush();
 }
-
-
-
-
 
 JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object)
 {
@@ -87,9 +85,6 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object
     }
   }
 }
-
-
-
 
 void JNICALL
      ClassFileLoadHook(
@@ -116,16 +111,31 @@ void JNICALL
     fr.load_to_buffer(*new_class_data); 
   }
 
-  if (sname == "java/util/concurrent/ConcurrentHashMap$Segment") {
+  //  if (sname == "java/util/concurrent/ConcurrentHashMap$Segment") {
+  if (_hooks.is_hook_class(sname)) {
     fr.load_from_buffer(class_data);
     fr.add_name_to_pool("thook");
     fr.add_name_to_pool("()V");
-    fr.add_method_call("scanAndLockForPut:(Ljava/lang/Object;ILjava/lang/Object;)Ljava/util/concurrent/ConcurrentHashMap$HashEntry;", "java/lang/Package.thook:()V", fr.METHOD_ENTER|fr.METHOD_EXIT);
+    for (auto x : _hooks.get(sname)) {
+      if (x.line_number() > 0) {
+	fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
+      }
+      else {
+	fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.flags());
+      }
+    }
+      //    fr.add_method_call("scanAndLockForPut:(Ljava/lang/Object;ILjava/lang/Object;)Ljava/util/concurrent/ConcurrentHashMap$HashEntry;", "java/lang/Package.thook:()V", fr.METHOD_ENTER|fr.METHOD_EXIT);
 
     jint size = fr.size_in_bytes();
     jvmtiError  err =    env->Allocate(size,new_class_data);
     *new_class_data_len = size;
-    fr.load_to_buffer(*new_class_data); 
+    fr.load_to_buffer(*new_class_data);
+    
+    //    	    std::ofstream outclass{"c:\\temp\\RG.class",std::ios_base::out | std::ios_base::binary};
+    //	  outclass.write((char *)*new_class_data,size);
+    //	  outclass.close();  
+    
+    
   }
 }
 
@@ -174,17 +184,56 @@ void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
 
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 {
-  std::string opcodeFile;
-  if(options != NULL)
-    opcodeFile = std::string{options};
+  std::string opcodeFile = "";
+  std::string hooksFile  = "";
+  std::string configFile;
+  if (options != NULL)
+    configFile = std::string{options};
   else {
-    std::cout << "Opcode file path missing from options";
+    std::cout << "config file path missing from options";
     exit(0);
   }
  
+  std::ifstream inconfig{configFile};
+  std::string line;
+  while (getline(inconfig,line)) {
+    frenchroast::remove_blanks(line);
+    if(frenchroast::split(line,'<')[0] == "opcodefile") {
+      opcodeFile = frenchroast::split(line,'<')[1];
+      opcodeFile = opcodeFile.substr(0,opcodeFile.length()-1);
+    }
+    if(frenchroast::split(line,'<')[0] == "hooksfile") {
+      hooksFile = frenchroast::split(line,'<')[1];
+      hooksFile = hooksFile.substr(0,hooksFile.length()-1);
+     }
+  }
+  inconfig.close();
+  
+  if (opcodeFile == "") {
+    std::cout << "opcodefile not set in config file" << std::endl;
+    exit(0);
+  }
+
+  if (hooksFile == "") {
+    std::cout << "hooksfile not set in config file" << std::endl;
+    exit(0);
+  }
+
+
   
   std::cout << "*** OnLoad() ********" << std::endl;
+  try {
   fr.load_op_codes(opcodeFile);
+  _hooks.load(hooksFile);
+  }
+  catch(std::exception& e) {
+    std::cout << "ERROR: " << e.what() << std::endl;
+    exit(0);
+  }
+  std::cout << "No Exception: "  << std::endl; 
+
+
+  
   jvmtiError err;
   jvmtiEnv* env;
   vm->GetEnv((void**)&env, JVMTI_VERSION_1_0);

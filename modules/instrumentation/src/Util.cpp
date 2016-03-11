@@ -22,20 +22,74 @@
 #include "Util.h"
 
 namespace frenchroast {
-  std::vector<std::string> split(const std::string& str,const char delim)
+    
+  std::vector<std::string> xsplit(const std::string& str, const std::string& delim)
   {
     std::vector<std::string> rv;
-    int pos=0;
-    int idx=str.length();
-    while ((idx = str.find_first_of(delim,pos)) != std::string::npos) {
+    int pos = 0;
+    int idx = str.length();
+    int len = delim.length();
+    while ((idx = str.find(delim,pos)) != std::string::npos) {
       rv.push_back(str.substr(pos,idx-pos));
-      ++idx;
-      pos=idx;
+      if (len == 1) {
+	++idx;
+	pos = idx ;
+      }
+      else {
+	idx += len-1;
+	pos = idx + delim.length();
+      }
+       
+
     }
-    rv.push_back(str.substr(pos,idx-pos));
+    rv.push_back(str.substr(pos-len+1,idx-(pos+len)));
     return rv;
   }
 
+
+  std::vector<std::string> split(const std::string& str, const std::string& delim)
+  {
+    std::vector<std::string> rv;
+    int pos = 0;
+    int next = str.find(delim, pos);
+    while ((next = str.find(delim,pos)) != std::string::npos) {
+      rv.push_back(str.substr(pos,next-pos));
+      pos = next + delim.length();
+    }
+    rv.push_back(str.substr(pos));
+    return rv;
+  }
+
+  
+  std::vector<std::string> split(const std::string& str, const char delim)
+  {
+    return split(str,std::string{delim});
+  }
+
+  std::vector<std::string> split(const std::string& str)
+  {
+    return split(str, ',');
+  }
+
+  
+
+  void remove_blanks(std::string& line)
+  {
+    size_t pos;
+    while ((pos=line.find(" ")) != std::string::npos) {
+      line.erase(pos,1);
+    }
+  }
+
+  void replace(std::string& line, const char from, const char to)
+  {
+    size_t pos;
+    while ((pos=line.find(from)) != std::string::npos) {
+      line[pos] = to;
+    }
+  }
+
+  
   std::string ntoa(int x)
   {
     std::stringstream ss;

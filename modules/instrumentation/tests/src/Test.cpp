@@ -29,6 +29,34 @@
 
 using   namespace frenchroast;   
 
+
+TEST_CASE ("split") {
+
+  REQUIRE( split("hello::there", "::").size() == 2 );
+  REQUIRE( split("hello::there", "::")[0] == "hello" );
+  REQUIRE( split("hello::there", "::")[1] == "there" );
+  REQUIRE( split("hello::there::ok", "::")[2] == "ok" );
+
+  
+  REQUIRE( split("hello:::there", ":::")[0] == "hello" );
+  REQUIRE( split("hello:::there", ":::")[1] == "there" );
+  REQUIRE( split("hello:::there:::ok", ":::")[2] == "ok" );
+
+
+  REQUIRE( split("hello::there~func", "::")[1] == "there~func" );
+  REQUIRE( split("hello::there:func", "::")[1] == "there:func" );
+
+  REQUIRE( split("hello,there,func")[0] == "hello" );
+  REQUIRE( split("hello,there,func")[1] == "there" );
+  REQUIRE( split("hello,there,func")[2] == "func" );
+
+
+  
+  
+
+}
+
+
 TEST_CASE("simple load")
 {
 
@@ -42,17 +70,17 @@ TEST_CASE("simple load")
   REQUIRE( mc.get_number() == 0xCAFEBABE);
 
   int idx = mc.size_in_bytes();
-  MinorVersionComponent mv;
+  IDComponent mv;
   mv.load_from_buffer(ptr.get() + idx);
   REQUIRE( mv.size_in_bytes() == 2    );
   idx += mv.size_in_bytes();
-  REQUIRE( mv.get_version() == 0    );
+  REQUIRE( mv.get() == 0    );
 
-  MajorVersionComponent major;
+  IDComponent major;
   major.load_from_buffer(ptr.get() + idx);
   REQUIRE( major.size_in_bytes() == 2    );
   idx += major.size_in_bytes();
-  REQUIRE( major.get_version() >= 50    );
+  REQUIRE( major.get() >= 50    );
 }
 
 TEST_CASE("ConstantPool : simple : add_class")
@@ -121,4 +149,6 @@ TEST_CASE ("to_int") {
   data[1]=244;
   REQUIRE ( to_int(data,2) == 500);
 }
+
+
 

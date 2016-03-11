@@ -225,6 +225,7 @@ namespace frenchroast {
     
   const std::bitset<4> FrenchRoast::METHOD_ENTER{"0001"};
   const std::bitset<4> FrenchRoast::METHOD_EXIT{"0010"};
+
     
   void FrenchRoast::reset()
   {
@@ -535,7 +536,7 @@ namespace frenchroast {
   void FrenchRoast::add_method_call(const std::string& callFrom, const std::string& callTo, std::bitset<4> flags)
   {
     if (!_methodsComponent.has_item(callFrom)) {
-      std::cout << "ERROR, does not Exist: " << callFrom << std::endl; return;
+      std::cout << "ERROR, does not Exist: " << callFrom << std::endl; 
     }
     ConstantPoolComponent::validate_method_name(callTo); 
     MethodInfo method;
@@ -551,7 +552,6 @@ namespace frenchroast {
     int origNonCodeLength   = origAttributeLength - origCodeLength;
   
     std::vector<Instruction> instructions;
-    instructions.push_back(Instruction(_opCodes[OpCode::aload_0]));  
     int idxid =   _constPool.add_method_ref_index(callTo);
     instructions.push_back(Instruction(_opCodes[OpCode::invokestatic],  idxid));  
     int startAddress = 0;
@@ -572,8 +572,13 @@ namespace frenchroast {
 	totalNewBytes += x.get_size();
       }
       std::vector<StackMapFrame*> frames = load_frames_from_buffer(to_int(ptr,2), ptr + 2);
+      //@@ this is only temp, must be fixed will not work when we insert in middle
+      bool adjustedFirst = false;
       for (auto& x : frames) {
-	x->adjust_offset(totalNewBytes);
+	if (!adjustedFirst) {
+	  x->adjust_offset(totalNewBytes);
+	}
+	adjustedFirst = true;
       }
       load_frames_to_buffer(frames,ptr + 2);
     }

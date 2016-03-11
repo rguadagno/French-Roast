@@ -50,22 +50,28 @@ namespace frenchroast {
   
     void OpCode::load(const std::string& fileName)
     {
-      std::ifstream in {fileName};
-      std::string line;
-      while (getline(in,line)) {
-	size_t pos;
-	while ((pos=line.find(" ")) != std::string::npos) {
-	  line.erase(pos,1);
+      try {
+	std::ifstream in;
+	in.open(fileName);
+	std::string line;
+	while (getline(in,line)) {
+	  size_t pos;
+	  while ((pos=line.find(" ")) != std::string::npos) {
+	    line.erase(pos,1);
+	  }
+	  int osize = atoi(split(split(line,'<')[1],'>')[1].c_str());
+	  BYTE op = static_cast<BYTE>(atoi(split(split(line,'<')[1],'>')[0].c_str()));
+	  const std::string name = split(line,'<')[0];
+	  if (split(line,'<').size() > 2) 
+	    _op_codes[op] = OpCode(op,osize,name,true);
+	  else
+	    _op_codes[op] = OpCode(op,osize,name);
 	}
-	int osize = atoi(split(split(line,'<')[1],'>')[1].c_str());
-	BYTE op = static_cast<BYTE>(atoi(split(split(line,'<')[1],'>')[0].c_str()));
-	const std::string name = split(line,'<')[0];
-	if (split(line,'<').size() > 2) 
-	  _op_codes[op] = OpCode(op,osize,name,true);
-	else
-	  _op_codes[op] = OpCode(op,osize,name);
+	in.close();
       }
-      in.close();
+      catch(std::ifstream::failure& e) {
+	throw std::ifstream::failure("cannot open file: " + fileName);
+      }
     }
    const BYTE OpCode::aload_0       = 42;
    const BYTE OpCode::invokevirtual = 182;

@@ -134,6 +134,7 @@ namespace frenchroast {
 
     void adjust_offset(int amount)
     {
+      _frameType += amount;
     }
 
     void load_from_buffer(BYTE* buf)
@@ -269,7 +270,38 @@ namespace frenchroast {
       save_verification_items(buf +  size, _verificationStack);
     }
   };
-    
+
+
+  class ChopFrame : public StackMapFrame {
+    BYTE _offsetDelta[2];
+    int _size;
+  public:
+    int size_in_bytes() const
+    {
+      return _size;
+    }
+
+    void adjust_offset(int amount)
+    {
+      short offset = to_int(_offsetDelta,2) + amount;
+      write_big_e_bytes(_offsetDelta,&offset);
+    }
+
+    void load_from_buffer(BYTE* buf)
+    {
+      _frameType = *buf;
+      memcpy(_offsetDelta,buf +1, 2);
+      _size = 1 + sizeof(_offsetDelta);
+    }
+
+    void load_to_buffer(BYTE* buf)
+    {
+      memcpy(buf,    &_frameType, 1);
+      memcpy(buf +1, _offsetDelta,2);
+    }
+
+  };
+  
   std::vector<StackMapFrame*> load_frames_from_buffer(int count,BYTE* buf)
   {
     std::vector<StackMapFrame*> rv;
@@ -290,6 +322,10 @@ namespace frenchroast {
 	ptr = new AppendFrame();
       }
 
+      if (ftype >= 248 && ftype <= 250) {
+	ptr = new ChopFrame();
+      }
+
       if (ftype == 255) {
 	ptr = new FullFrame();
       }
@@ -308,7 +344,6 @@ namespace frenchroast {
     
   void load_frames_to_buffer(std::vector<StackMapFrame*> items, BYTE* buf)
   {
-    return;
     int startPos=0;
     for(auto& x : items) {
       x->load_to_buffer(buf+startPos);

@@ -29,7 +29,12 @@ namespace frenchroast {
 
   int to_int(const BYTE* buf, int length);
   void incr(BYTE* buf, int length);
-  std::vector<std::string> split(const std::string& str,const char delim=',');
+  //  std::vector<std::string> split(const std::string& str,const char delim=',');
+    std::vector<std::string> split(const std::string& str,const char delim);
+  std::vector<std::string> split(const std::string& str, const std::string&);
+    std::vector<std::string> split(const std::string& str);
+  void remove_blanks(std::string&);
+  void replace(std::string&, char form, char to);
   std::string ntoa(int);
   std::string ntoa(double);
 

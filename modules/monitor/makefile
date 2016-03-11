@@ -27,7 +27,7 @@ BUILDDIR := build/
 
 
 IFILEOBJECTS = FrenchRoast.obj Util.obj AccessFlags.obj ConstantPoolComponents.obj StackMapFrame.obj OpCode.obj
-FILEOBJECTS = Monitor.obj $(IFILEOBJECTS)
+FILEOBJECTS = Monitor.obj Hooks.obj $(IFILEOBJECTS)
 OBJECTS = $(addprefix $(BUILDDIR), $(FILEOBJECTS))
 IOBJECTS = $(addprefix ..\instrumentation\build\, $(IFILEOBJECTS))
 
@@ -35,7 +35,7 @@ IOBJECTS = $(addprefix ..\instrumentation\build\, $(IFILEOBJECTS))
 # ---------------------------------------------------------------------------------------------   
 #
 bin\Monitor.dll: $(FILEOBJECTS)
-	link /out:bin\Monitor.dll /DLL build\Monitor.obj $(IOBJECTS)
+	link /out:bin\Monitor.dll /DLL build\Monitor.obj build\Hooks.obj $(IOBJECTS)
 
 
 FrenchRoast.obj : FrenchRoast.cpp FrenchRoast.h
@@ -57,5 +57,9 @@ OpCode.obj : OpCode.cpp OpCode.h
 	$(CCI) $<
 
 
-$(BUILDDIR)Monitor.obj: Monitor.cpp Monitor.h
-	$(CC) src\Monitor.cpp
+$(BUILDDIR)Hooks.obj: Hooks.cpp Hooks.h
+	$(CC) $<
+
+$(BUILDDIR)Monitor.obj: Monitor.cpp Monitor.h Hooks.h
+	$(CC) $<
+

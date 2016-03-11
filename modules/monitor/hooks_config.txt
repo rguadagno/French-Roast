@@ -1,0 +1,3 @@
+java.util.concurrent.ConcurrentHashMap$Segment::scanAndLockForPut:(java.lang.Object,int,java.lang.Object):java.util.concurrent.ConcurrentHashMap$HashEntry <ENTER>
+juniper.MyStuff::isAna:(java.lang.String, java.lang.String):bool      <ENTER>
+juniper.MyStuff::fib:(int,int,int,int):void                           <ENTER>
