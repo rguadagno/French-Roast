@@ -47,7 +47,7 @@ What this does is effectivly change the code to:
     }
 ```
 
-Our JVMTI to handle the callback looks like:
+Our JVMTI code to handle the callback looks like:
 ```C++
 
 JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object)
