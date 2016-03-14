@@ -7,7 +7,7 @@ The JVMTI API provides call-backs to profile for monitor contention (eg `Monitor
 The purpose of French-Roast is to allow us to insert these light weight JNI hooks into any method. The agent.dll must implement the JNI native method with full JNI name (eg Java_java_util_concurrent_ConcurrentHashMap etc...). We add a static native hook method to java.lang.Package and instrument the method being investigated to call that hook. Hence we only need to code the Java_java_lang_Package_thook() once in our monitor dll.
 
 
-### Example 1
+### Example
 
 Given a Java class that implements a recursive Fibonacci generator:
 ```Java
@@ -33,11 +33,11 @@ First we edit the hooks_config.txt file to look like:
 mypackage.Example::fib:(int,int,int,int):void                           <ENTER>
 ```
 
-The location tag can be <ENTER>, <ENTER|EXIT>, <EXIT>, or <20,132>
-Currently only <ENTER> is supported. The <20,132> means add the hook at these line numbers (for this to work the Java source must have been compiled with debug information).
+The location tag can be `<ENTER>`, `<ENTER|EXIT>`, `<EXIT>`, or `<20,132>`
+Currently only `<ENTER>` is supported. The `<20,132>` means add the hook at these line numbers (for this to work the Java source must have been compiled with debug information).
 
 What this does is effectivly change the code to:
-```
+```Java
    static public void fib(int v1, int v2, int count, final int max) {
       Package.thook();  // <------------------------------------------------ hook ----------
       System.out.print(v1 + " ");
@@ -47,35 +47,39 @@ What this does is effectivly change the code to:
     }
 ```
 
-
-
-
-
-This is done from in the callback JVMTI method ClassFileLoadHook (see modules/monitor/src/Monitor.cpp)
-
-Instrument Package:
+Our JVMTI to handle the callback looks like:
 ```C++
-fr.load_from_buffer(class_data);
-fr.add_name_to_pool("thook");
-fr.add_name_to_pool("()V");
-fr.add_native_method("thook", "()V"); 
-jint size = fr.size_in_bytes();
-jvmtiError err = env->Allocate(size,new_class_data);
-*new_class_data_len = size;
-fr.load_to_buffer(*new_class_data); 
-```
-Instrument any method with hook, such as scanAndLockForPut:
-```C++
-fr.load_from_buffer(class_data);
-fr.add_name_to_pool("thook");
-fr.add_name_to_pool("()V");
-fr.add_method_call("scanAndLockForPut:(Ljava/lang/Object;ILjava/lang/Object;)Ljava/util/concurrent/ConcurrentHashMap$HashEntry;", "java/lang/Package.thook:()V", fr.METHOD_ENTER|fr.METHOD_EXIT);
-jint size = fr.size_in_bytes();
-jvmtiError err = env->Allocate(size,new_class_data);
-*new_class_data_len = size;
-fr.load_to_buffer(*new_class_data); 
+
+JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object)
+{
+  jvmtiFrameInfo frames[5];
+  jint count;
+  jvmtiError err;
+  jthread aThread;
+
+  genv->GetCurrentThread(&aThread);
+  err = genv->GetStackTrace(aThread, 0, 5, frames, &count);
+  if (err == JVMTI_ERROR_NONE && count >= 1) {
+    char *methodName;
+    char *sig;
+    char *generic;
+    err = genv->GetMethodName(frames[1].method, &methodName,&sig,&generic);
+    if (err == JVMTI_ERROR_NONE) {
+      std::string methodNameStr{methodName};
+      std::string sigStr{sig};
+      _rptr.hook(methodNameStr + ":" +sigStr);   // <----- send this over a Socket to server listening
+    }
+  }
+}
+
 ```
 
+We can also put hooks into Java classes such as ConcurrentHashMap to facilitate concurrency contention ( which can be monitored for the built in
+JVM synchronized, or wait() ).
+```
+java.util.concurrent.ConcurrentHashMap$Segment::scanAndLockForPut:(java.lang.Object,int,java.lang.Object):java.util.concurrent.ConcurrentHashMap$HashEntry <ENTER>
+
+```
 
 
 
