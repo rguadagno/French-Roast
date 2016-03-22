@@ -48,10 +48,6 @@ namespace frenchroast { namespace monitoring {
       const std::vector<Hook>& get(const std::string& name);
       void load(const std::string& filename);
     };
-
-
-    
-
   }
 }
 

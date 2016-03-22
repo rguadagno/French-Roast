@@ -16,34 +16,28 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
+#include "catch.hpp"
 
-#ifndef OP_H
-#define OP_H
-#include <unordered_map>
-#include "ClassFileComponent.h"
+#include "OpCode.h"
 
-namespace frenchroast {
-  class OpCode {
-    BYTE        _code;
-    int         _size;
-    std::string _name;
-    bool        _isBranch;
-    bool        _isDynamic;
-    static std::unordered_map<BYTE, OpCode> _op_codes;    
-  public:
-    OpCode(BYTE code, int size,const std::string& name);
-    OpCode(BYTE code, int size,const std::string& name,bool isbranch);
-    OpCode(BYTE code, int size,const std::string& name,bool isbranch,bool isdynamic);
-    OpCode();
-    OpCode& operator[](BYTE op);
-    bool is_branch() const;
-    int get_size() const;
-    bool is_dynamic() const;
-    std::string get_name() const;
-    BYTE get_code() const;
-    static void load(const std::string& fileName);
-  };
+TEST_CASE ("load")
+{
+    using namespace frenchroast;
+  OpCode ops; 
+  OpCode::load( std::getenv("OPCODE_FILE"));
+  REQUIRE(ops[1].get_size() == 1 );
+
+  REQUIRE(ops[171].get_name() == "lookupswitch" );
+  REQUIRE(ops[171].get_size() == 0 );
+  REQUIRE(ops[171].is_dynamic() == true );
+  REQUIRE(ops[171].is_branch() == true );
+
+  REQUIRE(ops[25].get_name() == "aload" );
+  REQUIRE(ops[25].is_dynamic() == false );
+  REQUIRE(ops[25].get_size() == 2 );
+  REQUIRE(ops[25].is_branch() == false );
+  
+
+
+
 }
-
-
-#endif

@@ -16,34 +16,37 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
-
-#ifndef OP_H
-#define OP_H
-#include <unordered_map>
-#include "ClassFileComponent.h"
+#ifndef INSTRUCTION_H
+#define INSTRUCTION_H
+#include "OpCode.h"
 
 namespace frenchroast {
-  class OpCode {
-    BYTE        _code;
-    int         _size;
-    std::string _name;
-    bool        _isBranch;
-    bool        _isDynamic;
-    static std::unordered_map<BYTE, OpCode> _op_codes;    
+  class Instruction {
+    OpCode _opCode;
+    int    _address;
+    BYTE   _operand[2];
+    BYTE*  _opbuf;
+    int    _opbuf_size;
+    static const  int PAD_MAX = 3;
+
   public:
-    OpCode(BYTE code, int size,const std::string& name);
-    OpCode(BYTE code, int size,const std::string& name,bool isbranch);
-    OpCode(BYTE code, int size,const std::string& name,bool isbranch,bool isdynamic);
-    OpCode();
-    OpCode& operator[](BYTE op);
-    bool is_branch() const;
+    Instruction();
+    Instruction(const OpCode& opcode, short operand);
+    ~Instruction();
+    Instruction(Instruction&& ref);
+    const std::string get_name() const;
     int get_size() const;
-    bool is_dynamic() const;
-    std::string get_name() const;
-    BYTE get_code() const;
-    static void load(const std::string& fileName);
+    int load_from_buffer(const BYTE* buf, int address, int& loaded);
+    int load_to_buffer(BYTE* buf);
+    short get_operand() const;
+    void set_operand(short operand);
+    int address();
+    void set_address(int addr);
+    bool is_branch() const;
+    void adjust(int insertedAt, int byteCount);
+    static int calc_pad(int startAddress);
   };
+    
+  std::ostream& operator<<(std::ostream& out, const Instruction& ref);
 }
-
-
 #endif

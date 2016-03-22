@@ -25,6 +25,9 @@
 #include "Hooks.h"
 #include "FrenchRoast.h"
 #include "Util.h"
+#include "Reporter.h"
+#include "Config.h"
+
 
 struct GlobalAgentData {
 
@@ -38,7 +41,8 @@ static GlobalAgentData g_data;
 static GlobalAgentData* gdata = &g_data;
 frenchroast::FrenchRoast fr;
 frenchroast::monitoring::Hooks _hooks;
-
+frenchroast::monitoring::Config _config;
+frenchroast::monitoring::Reporter _rptr;
 
 jvmtiEnv* genv;
 
@@ -65,7 +69,7 @@ void JNICALL
 
 JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object)
 {
-  std::cout << "XXXXXXXXXX hooked XXXXXXXXXXXX" << std::endl;
+  //  std::cout << "XXXXXXXXXX hooked XXXXXXXXXXXX" << std::endl;
   jvmtiFrameInfo frames[5];
   jint count;
   jvmtiError err;
@@ -81,7 +85,29 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object
     if (err == JVMTI_ERROR_NONE) {
       std::string methodNameStr{methodName};
       std::string sigStr{sig};
-      std::cout << "CALLED FROM: " << methodNameStr << ":" << sig << std::endl;
+      //      std::cout << "CALLED FROM: " << methodNameStr << std::endl;
+      //@@@@      _rptr.hook(_hooks.get_tag(methodNameStr));
+      //@@ try getMehodDeclaringClass  <-- look at says this must be managed, maybe some clean up ... not sure...
+      //@@     GetClassSignature <-- call this to get the name
+      //@@     makes sense to pass back a tag ( or id or something) it shows that it is unique,
+      //@@     but then again... maybe a tag is really what is mentioned in config and passed back to
+      //@@     the java.lang.Package.thook(  tag )  <---
+      //       design, in config user can mention tag , if they do then use that text in call to thook, else
+      //       use "none", if in this call we get "none" then pass class::method"
+      //       for now just pass class::method in that tags are important when we can put hooks at any spot
+      //       so later if user says ok hook on borh ENTER and EXIT, then call of this method should be
+      //       for examples:
+      //       ENTER:sometag  <-- where "sometag" is a user tag
+      //       EXIT
+      //       ENTER
+      //       125
+      //       125:sometag
+      //
+      //       so if we are called with something that has a :  then we just send that tag back
+      //       else we must something like  ENTER::classsignature::methodsignature
+      //  for now just send back method signaure....
+            _rptr.hook(methodNameStr + ":" +sigStr);
+      
     }
   }
 }
@@ -111,7 +137,6 @@ void JNICALL
     fr.load_to_buffer(*new_class_data); 
   }
 
-  //  if (sname == "java/util/concurrent/ConcurrentHashMap$Segment") {
   if (_hooks.is_hook_class(sname)) {
     fr.load_from_buffer(class_data);
     fr.add_name_to_pool("thook");
@@ -124,18 +149,10 @@ void JNICALL
 	fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.flags());
       }
     }
-      //    fr.add_method_call("scanAndLockForPut:(Ljava/lang/Object;ILjava/lang/Object;)Ljava/util/concurrent/ConcurrentHashMap$HashEntry;", "java/lang/Package.thook:()V", fr.METHOD_ENTER|fr.METHOD_EXIT);
-
     jint size = fr.size_in_bytes();
     jvmtiError  err =    env->Allocate(size,new_class_data);
     *new_class_data_len = size;
     fr.load_to_buffer(*new_class_data);
-    
-    //    	    std::ofstream outclass{"c:\\temp\\RG.class",std::ios_base::out | std::ios_base::binary};
-    //	  outclass.write((char *)*new_class_data,size);
-    //	  outclass.close();  
-    
-    
   }
 }
 
@@ -193,7 +210,8 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     std::cout << "config file path missing from options";
     exit(0);
   }
- 
+
+  //-----------------------------------------------------------
   std::ifstream inconfig{configFile};
   std::string line;
   while (getline(inconfig,line)) {
@@ -219,19 +237,19 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     exit(0);
   }
 
-
+  //-----------------------------------------------------------
   
   std::cout << "*** OnLoad() ********" << std::endl;
   try {
-  fr.load_op_codes(opcodeFile);
-  _hooks.load(hooksFile);
+    fr.load_op_codes(opcodeFile);
+    _hooks.load(hooksFile);
   }
   catch(std::exception& e) {
     std::cout << "ERROR: " << e.what() << std::endl;
     exit(0);
   }
-  std::cout << "No Exception: "  << std::endl; 
-
+  //@@ read from remote.config, rename .txt to config
+  _rptr.init(_config.reporterDescriptor());
 
   
   jvmtiError err;

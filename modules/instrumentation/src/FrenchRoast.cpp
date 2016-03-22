@@ -22,6 +22,8 @@
 #include "Util.h"
 #include "StackMapFrame.h"
 #include "OpCode.h"
+#include "OpCodeConst.h"
+#include "Instruction.h"
 
 namespace frenchroast {
 
@@ -332,104 +334,15 @@ namespace frenchroast {
   }
 
 
-  class Instruction {
-    OpCode _opCode;
-    int    _address;
-    BYTE   _operand[2];
-  public:
-    Instruction() {}
-    Instruction(const OpCode& opcode) : _opCode(opcode)
-    {
-      
-    }
-    
-    Instruction(const OpCode& opcode, short operand) : _opCode(opcode)
-    {
-      write_big_e_bytes(_operand,&operand);
-    }
-
-    const std::string get_name() const
-    {
-      return _opCode.get_name();
-    }
-    
-    int get_size() const
-    {
-      return _opCode.get_size();
-    }
-    
-    int load_from_buffer(const BYTE* buf, int address, int& loaded)
-    {
-      _address = address;
-      loaded = 1;
-      _opCode = _opCode[*buf];
-      memset(_operand,0,2);
-      if (_opCode.get_size() == 0) {
-	loaded=0;
-      }
-    
-     if (_opCode.get_size() == 3) {
-       memcpy(&_operand[0],buf+1,2);
-     }
-     if(_opCode.get_size() == 2) {
-       memcpy(&_operand[1],buf+1,1);
-     }
-     return _opCode.get_size();
-    }
-
-    int load_to_buffer(BYTE* buf)
-    {
-      *buf = _opCode.get_code();
-      if (_opCode.get_size()==3) {
-	memcpy(buf + 1,&_operand[0], 2);
-      }
-      if (_opCode.get_size()==2) {
-	memcpy(buf + 1,&_operand[1], 1);
-      }
-      return _opCode.get_size();
-    }
-   
-    short get_operand() const
-    {
-      if(_opCode.get_size() == 1) {
-	return 0;
-      }
-      return  (_operand[0] << 8) | _operand[1];
-    }
-    
-    void set_operand(short operand)
-    {
-      write_big_e_bytes(_operand,&operand);
-    }
-
-    int address()
-    {
-      return _address;
-    }
-
-    void set_address(int addr)
-    { _address = addr;
-    }
-
-    bool is_branch() const
-    {
-      return _opCode.is_branch();
-    }
-  };
-    
-  std::ostream& operator<<(std::ostream& out, const Instruction& ref)
-  {
-    out << ref.get_name() << "  " << ref.get_operand();
-    return out;
-  }
     
   class MethodInfo {  // inflated from raw bytes
     short _maxStack;
     short _maxLocals;
     int   _codeLength;
-    std::vector<Instruction> _instructions; //@@ put back to prive 
+    std::vector<Instruction> _instructions; 
   public:
-    void load_from_buffer(const BYTE* buf) {
+    void load_from_buffer(const BYTE* buf)
+    {
       _instructions.clear();
       _maxStack   = to_int(buf, 2);
       _maxLocals  = to_int(buf + 2, 2);
@@ -439,12 +352,12 @@ namespace frenchroast {
       int loaded;
       int address = 0;
       while (totalLen < _codeLength) {
-	address += instr.load_from_buffer(buf+8+address,address,loaded);
-	if(!loaded ) {
-	  break;
-	}
-	totalLen+=instr.get_size();
-	_instructions.push_back(instr);
+	 address += instr.load_from_buffer(buf+8+address,address,loaded);
+	 if (!loaded ) {
+	   break;
+	 }
+	 totalLen += instr.get_size();
+	 _instructions.push_back(std::move(instr));
       }
     }
 
@@ -457,7 +370,7 @@ namespace frenchroast {
       offset += sizeof(_maxLocals);
       write_big_e_bytes(buf + offset, &_codeLength);
       offset += sizeof(_codeLength);
-      for(auto x : _instructions) {
+      for(auto& x : _instructions) {
 	offset += x.load_to_buffer(buf + offset);
       }
     }
@@ -484,35 +397,65 @@ namespace frenchroast {
 
     void add_instructions(int insertAt, std::vector<Instruction>& ilist)
     {
+	    std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"<< std::endl;	    
+      int huh = 0;
+            for(auto& x : _instructions) {
+	      //	      huh += x.get_size();
+	      std::cout << x << std::endl;
+	    }
+	    std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"<< std::endl;	    
+	    std::cout << "CODE LEN BEFORE = " << huh << "   " << _codeLength<< std::endl;	    
+
+      
       int totalbytes=0;
       for (auto& x : ilist) {
 	totalbytes += x.get_size();
       }
+      std::cout << "CODE LEN A.0 = " << _codeLength << std::endl;
       _codeLength += totalbytes;
+      std::cout << "CODE LEN A.1 = " << _codeLength << std::endl;
       int totalInstructions = ilist.size() + _instructions.size();
       int insertedBytes = 0;
       std::vector<Instruction> newvec;
       newvec.reserve(totalInstructions);
       bool inserted = false;
       for (auto& x : _instructions) {
-	if (x.address() == insertAt) { 
-	  inserted = true;
-	  int prev = 0;
-	  for (auto& instruc : ilist) {
-	    instruc.set_address(x.address()+prev);  
-	    prev += instruc.get_size();
-	    insertedBytes += instruc.get_size();
-	    newvec.push_back(instruc);
-	  }
+        if (x.address() == insertAt) { 
+	   inserted = true;
+	   int prev = 0;
+	   for (auto& instruc : ilist) {
+	     instruc.set_address(x.address()+prev);  
+	     prev += instruc.get_size();
+	     insertedBytes += instruc.get_size();
+	     //@@@@@
+	     newvec.push_back(std::move(instruc));
+	   }
 	}
-      if (inserted && x.is_branch() && insertAt > x.address()) {
+	if (inserted && x.is_branch() && insertAt > x.address()) {
+
 	//@@ tobe done: only in affect when hook is in middle of func
 	//	x.setOperand(x.getOperand() + insertedBytes);
+	// handle lookuptable and lookupswitch, like: x.adjust(insertAt, byte count) <-- 
+	}
+
+      //@@@@
+	newvec.push_back(std::move(x));
       }
-      newvec.push_back(x);
+      
+      _instructions = std::move(newvec);
+      for(auto& x : _instructions) {
+	x.adjust(insertAt, insertedBytes);
+      }
+
+      
+      //@@@@@
+      std::cout << "CODE LEN A = " << _codeLength << std::endl;
+      _codeLength = 0;
+      for(auto& x : _instructions) {
+        _codeLength += x.get_size();
+      }
+      std::cout << "CODE LEN B = " << _codeLength << std::endl;
     }
-    _instructions = newvec;
-   }
     
   };
 
@@ -553,10 +496,12 @@ namespace frenchroast {
   
     std::vector<Instruction> instructions;
     int idxid =   _constPool.add_method_ref_index(callTo);
-    instructions.push_back(Instruction(_opCodes[OpCode::invokestatic],  idxid));  
+    instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  idxid));  
     int startAddress = 0;
-    method.add_instructions(startAddress,instructions); 
+    method.add_instructions(startAddress,instructions);
+    std::cout << "add_method_call:  = " << _methodsComponent.get_item(callFrom).get_attribute("Code").get_length() << std::endl;	    
     _methodsComponent.get_item(callFrom).get_attribute("Code").set_length(method.size_in_bytes() + origNonCodeLength);
+        std::cout << "add_method_call:  = " << _methodsComponent.get_item(callFrom).get_attribute("Code").get_length() << std::endl;	    
     BYTE* newbuf = new BYTE[method.size_in_bytes() + origNonCodeLength ];
     method.load_to_buffer(newbuf);
     memcpy(newbuf + method.size_in_bytes(), _methodsComponent.get_item(callFrom).get_attribute("Code")._info + origCodeLength, origNonCodeLength);
@@ -576,7 +521,8 @@ namespace frenchroast {
       bool adjustedFirst = false;
       for (auto& x : frames) {
 	if (!adjustedFirst) {
-	  x->adjust_offset(totalNewBytes);
+	      std::cout << "add_method_call:  total new = " <<  totalNewBytes << std::endl;	    
+	  x->adjust_offset(totalNewBytes+1);
 	}
 	adjustedFirst = true;
       }

@@ -47,8 +47,6 @@ TEST_CASE("Hooks : load")
   REQUIRE( hooks.get("juniper/MyStuff")[1].method_name() == "fib:(IIII)V" );
 
   
-
-  
   
   
 }

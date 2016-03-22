@@ -26,40 +26,31 @@ VPATH = src;include;build;..\instrumentation\build;..\instrumentation\src;build;
 BUILDDIR := build/
 
 
-IFILEOBJECTS = FrenchRoast.obj Util.obj AccessFlags.obj ConstantPoolComponents.obj StackMapFrame.obj OpCode.obj
-FILEOBJECTS = Monitor.obj Hooks.obj $(IFILEOBJECTS)
+IFILEOBJECTS = FrenchRoast.obj Util.obj AccessFlags.obj ConstantPoolComponents.obj StackMapFrame.obj OpCode.obj Instruction.obj
+FILEOBJECTS = Config.obj WindowsReporter.obj Hooks.obj Monitor.obj  $(IFILEOBJECTS)
 OBJECTS = $(addprefix $(BUILDDIR), $(FILEOBJECTS))
 IOBJECTS = $(addprefix ..\instrumentation\build\, $(IFILEOBJECTS))
 
 # 
 # ---------------------------------------------------------------------------------------------   
 #
-bin\Monitor.dll: $(FILEOBJECTS)
-	link /out:bin\Monitor.dll /DLL build\Monitor.obj build\Hooks.obj $(IOBJECTS)
+bin\Monitor.dll: core $(FILEOBJECTS)
+	link /out:bin\Monitor.dll /DLL build\Monitor.obj build\Hooks.obj  build\Config.obj build\WindowsReporter.obj  ws2_32.lib $(IOBJECTS)
 
+core: makefile
+	c:\devtools\gnumake.exe -C ..\instrumentation
 
-FrenchRoast.obj : FrenchRoast.cpp FrenchRoast.h
-	$(CCI) $<
+$(BUILDDIR)Config.obj: Config.cpp Config.h
+	$(CC) $<
 
-ConstantPoolComponents.obj : ConstantPoolComponents.cpp ConstantPool.h
-	$(CCI) $<
-
-StackMapFrame.obj : StackMapFrame.cpp StackMapFrame.h
-	$(CCI) $<
-
-AccessFlags.obj : AccessFlags.cpp AccessFlags.h
-	$(CCI) $<
-
-Util.obj : Util.cpp Util.h
-	$(CCI) $<
-
-OpCode.obj : OpCode.cpp OpCode.h
-	$(CCI) $<
-
+$(BUILDDIR)WindowsReporter.obj: WindowsReporter.cpp Reporter.h
+	$(CC) $<
 
 $(BUILDDIR)Hooks.obj: Hooks.cpp Hooks.h
 	$(CC) $<
 
 $(BUILDDIR)Monitor.obj: Monitor.cpp Monitor.h Hooks.h
 	$(CC) $<
+
+
 

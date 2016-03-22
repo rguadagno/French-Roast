@@ -20,7 +20,7 @@
 #define UTIL_H
 #include <iostream>
 #include <fstream>
-
+#include <vector>
 #include <memory>
 namespace frenchroast {
 

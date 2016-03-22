@@ -17,33 +17,12 @@
 //    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef OP_H
-#define OP_H
-#include <unordered_map>
-#include "ClassFileComponent.h"
-
-namespace frenchroast {
-  class OpCode {
-    BYTE        _code;
-    int         _size;
-    std::string _name;
-    bool        _isBranch;
-    bool        _isDynamic;
-    static std::unordered_map<BYTE, OpCode> _op_codes;    
-  public:
-    OpCode(BYTE code, int size,const std::string& name);
-    OpCode(BYTE code, int size,const std::string& name,bool isbranch);
-    OpCode(BYTE code, int size,const std::string& name,bool isbranch,bool isdynamic);
-    OpCode();
-    OpCode& operator[](BYTE op);
-    bool is_branch() const;
-    int get_size() const;
-    bool is_dynamic() const;
-    std::string get_name() const;
-    BYTE get_code() const;
-    static void load(const std::string& fileName);
-  };
+namespace frenchroast { namespace opcode {
+    const BYTE iload_0       = 26;
+    const BYTE aload_0       = 42;
+    const BYTE tableswitch   = 170;
+    const BYTE lookupswitch  = 171;
+    const BYTE invokevirtual = 182;
+    const BYTE invokestatic  = 184;
+  }
 }
-
-
-#endif
