@@ -28,7 +28,11 @@ namespace frenchroast {
   {
   }
 
-  Instruction::Instruction(const OpCode& opcode, short operand) : _opCode(opcode)
+  Instruction::Instruction(const OpCode& opcode) : _opCode(opcode), _opbuf(nullptr)
+  {
+  }
+  
+  Instruction::Instruction(const OpCode& opcode, short operand) : _opCode(opcode), _opbuf(nullptr)
   {
     write_big_e_bytes(_operand,&operand);
   }
@@ -50,6 +54,9 @@ namespace frenchroast {
       _opbuf = ref._opbuf;
       ref._opbuf = nullptr;
     }
+    else {
+      _opbuf = nullptr;
+    }
   }
   
   const std::string Instruction::get_name() const
@@ -57,7 +64,7 @@ namespace frenchroast {
     return _opCode.get_name();
   }
     
-  int Instruction::get_size() const
+  int Instruction::size() const
   {
     return _opCode.is_dynamic() ? 1 + _opbuf_size : _opCode.get_size();
   }
@@ -122,52 +129,53 @@ namespace frenchroast {
 	 memcpy(buf + 1,&_operand[1], 1);
       }
     }
-    return get_size();
+    return size();
   }
 
 
-  void Instruction::adjust(int insertedAt, int byteCount)
+  void Instruction::adjust(int newAddr)
   {
-    if (_opCode.get_code() == opcode::lookupswitch || _opCode.get_code() == opcode::tableswitch)  {
-
-      if (insertedAt <= _address) {
-	int newAddr = _address+ byteCount;
-	int currentPad = calc_pad(_address);
-	int newPad = calc_pad(newAddr);
-	int adjustPad = currentPad - newPad;
-	 if (adjustPad != 0) {
-	   BYTE* newbuf = new BYTE[_opbuf_size - adjustPad];
-	   memset(newbuf,0, _opbuf_size - adjustPad);
-	   memcpy(newbuf + newPad, _opbuf + currentPad,_opbuf_size-currentPad);
-	   _address = newAddr;
-	   _opbuf_size = _opbuf_size - adjustPad;
-
-	   delete[] _opbuf;
-	   _opbuf = newbuf;
-	   int pad = calc_pad(_address);
-      	   int defaultoffset = to_int(_opbuf + pad,4 ) + adjustPad * -1;
-	   write_big_e_bytes(_opbuf + pad, &defaultoffset);
-	   if (_opCode.get_code() == opcode::lookupswitch) {
-	     int totalPairs = to_int(_opbuf + pad + 4,4 );
-	     for(int idx = 0; idx < totalPairs; idx++) {
-	       defaultoffset = to_int(_opbuf + pad + 8 + (8 * idx) + 4,4 ) + adjustPad * -1;
-	       write_big_e_bytes(_opbuf + pad + 8 + (8 * idx) + 4, &defaultoffset);
-	     }
-	   }
-	   if ( _opCode.get_code() == opcode::tableswitch) {
-	     int low = to_int(_opbuf  + pad + 4,4);
-	     int high = to_int(_opbuf  + pad + 4 + 4,4);
-	     int offsets = (high - low) + 1;
-	     for(int idx = 0; idx < offsets; idx++) {
-	       defaultoffset = to_int(_opbuf + pad + 8 + (4 * idx) + 4,4 ) + adjustPad * -1;
-	       write_big_e_bytes(_opbuf + pad + 8 + (4 * idx) + 4, &defaultoffset);
-	     }
-	   }
-	 }
-      }
-      
+    if (_opCode.get_code() != opcode::lookupswitch && _opCode.get_code() != opcode::tableswitch)  {
+      return;
     }
+    int currentPad = calc_pad(_address);
+    int newPad = calc_pad(newAddr);
+    int adjustPad = currentPad - newPad;
+    if (adjustPad != 0) {
+      BYTE* newbuf = new BYTE[_opbuf_size - adjustPad];
+      memset(newbuf,0, _opbuf_size - adjustPad);
+      memcpy(newbuf + newPad, _opbuf + currentPad,_opbuf_size-currentPad);
+      _address = newAddr;
+      _opbuf_size = _opbuf_size - adjustPad;
+      
+      delete[] _opbuf;
+      _opbuf = newbuf;
+      int pad = calc_pad(_address);
+      int defaultoffset = to_int(_opbuf + pad,4 ) + adjustPad * -1;
+      write_big_e_bytes(_opbuf + pad, &defaultoffset);
+      if (_opCode.get_code() == opcode::lookupswitch) {
+	int totalPairs = to_int(_opbuf + pad + 4,4 );
+	for(int idx = 0; idx < totalPairs; idx++) {
+	  defaultoffset = to_int(_opbuf + pad + 8 + (8 * idx) + 4,4 ) + adjustPad * -1;
+	  write_big_e_bytes(_opbuf + pad + 8 + (8 * idx) + 4, &defaultoffset);
+	}
+      }
+      if ( _opCode.get_code() == opcode::tableswitch) {
+	int low = to_int(_opbuf  + pad + 4,4);
+	int high = to_int(_opbuf  + pad + 4 + 4,4);
+	int offsets = (high - low) + 1;
+	for(int idx = 0; idx < offsets; idx++) {
+	  defaultoffset = to_int(_opbuf + pad + 8 + (4 * idx) + 4,4 ) + adjustPad * -1;
+	  write_big_e_bytes(_opbuf + pad + 8 + (4 * idx) + 4, &defaultoffset);
+	}
+      }
+    }
+  }
 
+
+  BYTE* Instruction::get_buffer()
+  {
+    return _opbuf;
   }
   
   short Instruction::get_operand() const
@@ -176,6 +184,11 @@ namespace frenchroast {
       return 0;
     }
     return  (_operand[0] << 8) | _operand[1];
+  }
+
+  short Instruction::offset() const
+  {
+    return is_branch() ? get_operand() : 0;
   }
   
   void Instruction::set_operand(short operand)
@@ -188,6 +201,11 @@ namespace frenchroast {
     return _address;
   }
 
+  OpCode& Instruction::opcode()
+  {
+    return _opCode;
+  }
+  
   void Instruction::set_address(int addr)
   {
     _address = addr;
@@ -200,7 +218,7 @@ namespace frenchroast {
 
   std::ostream& operator<<(std::ostream& out, const Instruction& ref)
   {
-    out << ref.get_name() << "  " << ref.get_size();
+    out << ref.get_name() << "  " << ref.size();
     return out;
   }
 }

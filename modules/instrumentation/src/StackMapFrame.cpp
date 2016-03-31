@@ -18,6 +18,7 @@
 //
 
 #include "StackMapFrame.h"
+#include "FrameConst.h"
 
 namespace frenchroast {
 
@@ -127,16 +128,31 @@ namespace frenchroast {
     
   class SameFrame : public StackMapFrame {
   public:
+
+    operator int()
+    {
+      return stackmapframe::same;
+    }
+    
     int size_in_bytes() const
     {
       return 1 ;
     }
 
-    void adjust_offset(int amount)
+    bool adjust_offset(short offset)
     {
-      _frameType += amount;
+      if (offset > 63) {
+	 return false;
+      }
+      _frameType = offset;
+      return true;
     }
 
+    int offset() const
+    {
+      return _frameType;
+    }
+    
     void load_from_buffer(BYTE* buf)
     {
       _frameType = *buf;
@@ -148,19 +164,74 @@ namespace frenchroast {
     }
   };
 
+  SameFrameExtended::SameFrameExtended() 
+    {
+       _frameType = 251;
+    }
+
+    SameFrameExtended::operator int()
+    {
+      return stackmapframe::same_extended;
+    }
+
+    int SameFrameExtended::size_in_bytes() const
+    {
+      return _size;
+    }
+
+    bool SameFrameExtended::adjust_offset(short offset)
+    {
+      write_big_e_bytes(_offsetDelta,&offset);
+      return true;
+    }
+
+    int SameFrameExtended::offset() const
+    {
+
+      return to_int(_offsetDelta,2);
+    }
+    
+    void SameFrameExtended::load_from_buffer(BYTE* buf)
+    {
+      _frameType = *buf;
+      memcpy(_offsetDelta,buf +1, 2);
+      _size = 1 + sizeof(_offsetDelta);
+    }
+
+    void SameFrameExtended::load_to_buffer(BYTE* buf)
+    {
+      memcpy(buf,    &_frameType, 1);
+      memcpy(buf +1, _offsetDelta,2);
+    }
+  
   class SameLocalsOneStackFrame : public StackMapFrame {
     std::vector<VerificationType*> _verificationInfoList;
     int _size;
   public:
+    operator int()
+    {
+      return stackmapframe::same_local_one_stack;
+    }
+
     int size_in_bytes() const
     {
       return _size;
     }
 
-    void adjust_offset(int amount)
+    bool adjust_offset(short offset)
     {
+      if (offset > 63) {
+	return false;
+      }
+      _frameType = 64 + offset;
+      return true;
     }
 
+    int offset() const
+    {
+      return _frameType - 64;
+    }
+    
     void load_from_buffer(BYTE* buf)
     {
       _frameType = *buf;
@@ -183,17 +254,27 @@ namespace frenchroast {
     std::vector<VerificationType*> _verificationInfoList;
     int _size;
   public:
+    operator int()
+    {
+      return stackmapframe::append;
+    }
+
     int size_in_bytes() const
     {
       return _size;
     }
 
-    void adjust_offset(int amount)
+    bool adjust_offset(short offset)
     {
-      short offset = to_int(_offsetDelta,2) + amount;
       write_big_e_bytes(_offsetDelta,&offset);
+      return true;
     }
 
+    int offset() const
+    {
+      return to_int(_offsetDelta,2);
+    }
+    
     void load_from_buffer(BYTE* buf)
     {
       _frameType = *buf;
@@ -223,17 +304,27 @@ namespace frenchroast {
     std::vector<VerificationType*> _verificationStack;
     int _size;
   public:
+    operator int()
+    {
+      return stackmapframe::full;
+    }
+
     int size_in_bytes() const
     {
       return _size;
     }
 
-    void adjust_offset(int amount)
+    bool adjust_offset(short offset)
     {
-      short offset = to_int(_offsetDelta,2) + amount;
       write_big_e_bytes(_offsetDelta,&offset);
+      return true;
     }
 
+    int offset() const
+    {
+      return to_int(_offsetDelta,2);
+    }
+    
     void load_from_buffer(BYTE* buf)
     {
       _frameType = *buf;
@@ -276,17 +367,27 @@ namespace frenchroast {
     BYTE _offsetDelta[2];
     int _size;
   public:
+    operator int()
+    {
+      return stackmapframe::chop;
+    }
+
     int size_in_bytes() const
     {
       return _size;
     }
 
-    void adjust_offset(int amount)
+    bool adjust_offset(short offset)
     {
-      short offset = to_int(_offsetDelta,2) + amount;
       write_big_e_bytes(_offsetDelta,&offset);
+      return true;
     }
 
+    int offset() const
+    {
+      return to_int(_offsetDelta,2);
+    }
+    
     void load_from_buffer(BYTE* buf)
     {
       _frameType = *buf;
@@ -326,6 +427,10 @@ namespace frenchroast {
 	ptr = new ChopFrame();
       }
 
+      if (ftype == 251) {
+	ptr = new SameFrameExtended();
+      }
+      
       if (ftype == 255) {
 	ptr = new FullFrame();
       }

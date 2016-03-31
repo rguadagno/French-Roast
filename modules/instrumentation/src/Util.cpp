@@ -22,7 +22,21 @@
 #include "Util.h"
 
 namespace frenchroast {
+
+
+  void write_bytes(BYTE* out, int value, int size)
+  {
+    if (size == 2) {
+      short vv = static_cast<short>(value);
+      write_big_e_bytes(out, &vv);
+    }
     
+    if (size == 4) {
+      write_big_e_bytes(out, &value);
+    }
+
+  }
+  
   std::vector<std::string> xsplit(const std::string& str, const std::string& delim)
   {
     std::vector<std::string> rv;

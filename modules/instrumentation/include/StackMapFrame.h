@@ -30,11 +30,28 @@ namespace frenchroast {
     BYTE  _frameType;
   public:
     virtual int size_in_bytes() const = 0;
-    virtual  void adjust_offset(int amount) = 0;
+    virtual bool adjust_offset(short offset) = 0;
     virtual void load_from_buffer(BYTE* buf) = 0;
     virtual void load_to_buffer(BYTE* buf) = 0;
+    virtual int  offset() const = 0;
+    virtual operator int() = 0;
   };
 
+  class SameFrameExtended : public StackMapFrame {
+    BYTE _offsetDelta[2];
+    int _size;
+  public:
+    SameFrameExtended();
+    operator int();
+    int size_in_bytes() const;
+    bool adjust_offset(short offset);
+    int offset() const;
+    void load_from_buffer(BYTE* buf);
+    void load_to_buffer(BYTE* buf);
+  };
+
+
+  
   std::vector<StackMapFrame*> load_frames_from_buffer(int count,BYTE* buf); 
   void load_frames_to_buffer(std::vector<StackMapFrame*> items, BYTE* buf);
  

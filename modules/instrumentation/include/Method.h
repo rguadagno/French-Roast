@@ -16,35 +16,31 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
-
-#ifndef OP_H
-#define OP_H
-#include <unordered_map>
-#include "ClassFileComponent.h"
+#ifndef FRMETHOD_H
+#define FRMETHOD_H
+#include <iostream>
+#include <vector>
+#include "Instruction.h"
+#include "StackMapFrame.h"
 
 namespace frenchroast {
-  class OpCode {
-    BYTE        _code;
-    int         _size;
-    std::string _name;
-    bool        _isBranch;
-    bool        _isDynamic;
-    static std::unordered_map<BYTE, OpCode> _op_codes;    
+  class Method {  // inflated from raw bytes
+    short _maxStack;
+    short _maxLocals;
+    int   _codeLength;
+    std::vector<Instruction> _instructions; 
   public:
-    OpCode(BYTE code, int size,const std::string& name);
-    OpCode(BYTE code, int size,const std::string& name,bool isbranch);
-    OpCode(BYTE code, int size,const std::string& name,bool isbranch,bool isdynamic);
-    OpCode();
-    OpCode& operator[](BYTE op);
-    operator BYTE() const;
-    bool is_branch() const;
-    int get_size() const;
-    bool is_dynamic() const;
-    std::string get_name() const;
-    BYTE get_code() const;
-    static void load(const std::string& fileName);
+    void load_from_buffer(const BYTE* buf);
+    void load_to_buffer(BYTE* buf);
+    int get_max_stack() const;
+    void set_max_stack(int v);
+    int get_max_locals() const;
+    int size_in_bytes() const;
+    void add_instructions(int insertAt, std::vector<Instruction>& ilist, bool branchafter);
+    void adjust_frames(std::vector<StackMapFrame*>& frames);
+    Instruction& operator[](int idx);
   };
+
+  std::ostream& operator<<(std::ostream& out, const Method& ref);
 }
-
-
 #endif

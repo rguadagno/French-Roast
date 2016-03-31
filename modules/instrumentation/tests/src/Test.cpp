@@ -149,6 +149,3 @@ TEST_CASE ("to_int") {
   data[1]=244;
   REQUIRE ( to_int(data,2) == 500);
 }
-
-
-

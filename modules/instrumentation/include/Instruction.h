@@ -31,19 +31,23 @@ namespace frenchroast {
 
   public:
     Instruction();
+    Instruction(const OpCode& opcode);
     Instruction(const OpCode& opcode, short operand);
     ~Instruction();
     Instruction(Instruction&& ref);
     const std::string get_name() const;
-    int get_size() const;
+    int size() const;
     int load_from_buffer(const BYTE* buf, int address, int& loaded);
     int load_to_buffer(BYTE* buf);
     short get_operand() const;
+    short offset() const;
     void set_operand(short operand);
     int address();
+    OpCode& opcode();
     void set_address(int addr);
     bool is_branch() const;
-    void adjust(int insertedAt, int byteCount);
+    void adjust(int insertedAt);
+    BYTE* get_buffer();
     static int calc_pad(int startAddress);
   };
     

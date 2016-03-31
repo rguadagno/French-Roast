@@ -16,23 +16,16 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
-#ifndef OPCODE_CONST_H
-#define OPCODE_CONST_H
+#ifndef FRAMECONST_H
+#define FRAMECONST_H
+namespace frenchroast { namespace stackmapframe {
+    const BYTE same                 = 1;
+    const BYTE same_extended        = 2;
+    const BYTE same_local_one_stack = 3;
+    const BYTE append               = 4;
+    const BYTE chop                 = 5;
+    const BYTE full                 = 6;
 
-namespace frenchroast { namespace opcode {
-    const BYTE bipush        = 16;
-    const BYTE ldc           = 18;
-    const BYTE iload_0       = 26;
-    const BYTE iload_1       = 27;
-    const BYTE aload_0       = 42;
-    const BYTE if_icmpge     = 162;
-    const BYTE xgoto         = 167;
-    const BYTE tableswitch   = 170;
-    const BYTE lookupswitch  = 171;
-    const BYTE xreturn       = 177;
-    const BYTE getstatic     = 178;
-    const BYTE invokevirtual = 182;
-    const BYTE invokestatic  = 184;
   }
 }
 #endif

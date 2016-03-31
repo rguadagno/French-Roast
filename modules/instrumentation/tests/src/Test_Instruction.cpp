@@ -28,7 +28,7 @@ TEST_CASE ( "default cons")
 {
   using namespace frenchroast;
   Instruction instr;
-  REQUIRE(instr.get_size() == 0);
+  REQUIRE(instr.size() == 0);
 }
 
 
@@ -58,7 +58,7 @@ TEST_CASE ("load_iload0")
   int loaded;
   instr.load_from_buffer(buf,0,loaded);
 
-  REQUIRE(instr.get_size() == 1);
+  REQUIRE(instr.size() == 1);
   REQUIRE(instr.is_branch() == false);
   
 }
@@ -93,7 +93,7 @@ TEST_CASE ("lookupswitch start at 1")
   int loaded;
   REQUIRE(instr.load_from_buffer(buf,1,loaded) == 27);
 
-  REQUIRE(instr.get_size() == 27);
+  REQUIRE(instr.size() == 27);
   REQUIRE(instr.is_branch() == true);
 
   BYTE tobuf[100];
@@ -101,10 +101,9 @@ TEST_CASE ("lookupswitch start at 1")
   instr.load_to_buffer(tobuf);
   REQUIRE(memcmp(tobuf,buf,sizeof(tobuf)) == 0);
 
-  int insertedAt = 0;
   int byteCount = 3;
-  instr.adjust(0,3);
-  REQUIRE(instr.get_size() == 28);
+  instr.adjust(3);
+  REQUIRE(instr.size() == 25);
   
   
 }
@@ -139,7 +138,7 @@ TEST_CASE ("lookupswitch start at 0")
   int loaded;
   REQUIRE(instr.load_from_buffer(buf,0,loaded) == 28);
 
-  REQUIRE(instr.get_size() == 28);
+  REQUIRE(instr.size() == 28);
   REQUIRE(instr.is_branch() == true);
 
   BYTE tobuf[100];
@@ -147,10 +146,8 @@ TEST_CASE ("lookupswitch start at 0")
   instr.load_to_buffer(tobuf);
   REQUIRE(memcmp(tobuf,buf,sizeof(tobuf)) == 0);
 
-  int insertedAt = 0;
-  int byteCount = 3;
-  instr.adjust(0,3);
-  REQUIRE(instr.get_size() == 25);
+  instr.adjust(3);
+  REQUIRE(instr.size() == 25);
   
   
 }

@@ -24,6 +24,7 @@
 #include "OpCode.h"
 #include "OpCodeConst.h"
 #include "Instruction.h"
+#include "Method.h"
 
 namespace frenchroast {
 
@@ -334,138 +335,6 @@ namespace frenchroast {
   }
 
 
-    
-  class MethodInfo {  // inflated from raw bytes
-    short _maxStack;
-    short _maxLocals;
-    int   _codeLength;
-    std::vector<Instruction> _instructions; 
-  public:
-    void load_from_buffer(const BYTE* buf)
-    {
-      _instructions.clear();
-      _maxStack   = to_int(buf, 2);
-      _maxLocals  = to_int(buf + 2, 2);
-      _codeLength = to_int(buf + 4, 4);
-      Instruction instr;
-      int totalLen = 0;
-      int loaded;
-      int address = 0;
-      while (totalLen < _codeLength) {
-	 address += instr.load_from_buffer(buf+8+address,address,loaded);
-	 if (!loaded ) {
-	   break;
-	 }
-	 totalLen += instr.get_size();
-	 _instructions.push_back(std::move(instr));
-      }
-    }
-
-    void load_to_buffer(BYTE* buf)
-    {
-      int offset = 0;
-      write_big_e_bytes(buf + offset, &_maxStack);
-      offset += sizeof(_maxStack);
-      write_big_e_bytes(buf + offset, &_maxLocals);
-      offset += sizeof(_maxLocals);
-      write_big_e_bytes(buf + offset, &_codeLength);
-      offset += sizeof(_codeLength);
-      for(auto& x : _instructions) {
-	offset += x.load_to_buffer(buf + offset);
-      }
-    }
-
-    int get_max_stack() const
-    {
-      return _maxStack;
-    }
-
-    void set_max_stack(int v)
-    {
-      _maxStack = v;
-    }
-
-    int get_max_locals() const
-    {
-      return _maxLocals;
-    }
-
-    int size_in_bytes() const
-    {
-      return sizeof(_maxStack) + sizeof(_maxLocals) + sizeof(_codeLength) + _codeLength;
-    }
-
-    void add_instructions(int insertAt, std::vector<Instruction>& ilist)
-    {
-	    std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"<< std::endl;	    
-      int huh = 0;
-            for(auto& x : _instructions) {
-	      //	      huh += x.get_size();
-	      std::cout << x << std::endl;
-	    }
-	    std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"<< std::endl;	    
-	    std::cout << "CODE LEN BEFORE = " << huh << "   " << _codeLength<< std::endl;	    
-
-      
-      int totalbytes=0;
-      for (auto& x : ilist) {
-	totalbytes += x.get_size();
-      }
-      std::cout << "CODE LEN A.0 = " << _codeLength << std::endl;
-      _codeLength += totalbytes;
-      std::cout << "CODE LEN A.1 = " << _codeLength << std::endl;
-      int totalInstructions = ilist.size() + _instructions.size();
-      int insertedBytes = 0;
-      std::vector<Instruction> newvec;
-      newvec.reserve(totalInstructions);
-      bool inserted = false;
-      for (auto& x : _instructions) {
-        if (x.address() == insertAt) { 
-	   inserted = true;
-	   int prev = 0;
-	   for (auto& instruc : ilist) {
-	     instruc.set_address(x.address()+prev);  
-	     prev += instruc.get_size();
-	     insertedBytes += instruc.get_size();
-	     //@@@@@
-	     newvec.push_back(std::move(instruc));
-	   }
-	}
-	if (inserted && x.is_branch() && insertAt > x.address()) {
-
-	//@@ tobe done: only in affect when hook is in middle of func
-	//	x.setOperand(x.getOperand() + insertedBytes);
-	// handle lookuptable and lookupswitch, like: x.adjust(insertAt, byte count) <-- 
-	}
-
-      //@@@@
-	newvec.push_back(std::move(x));
-      }
-      
-      _instructions = std::move(newvec);
-      for(auto& x : _instructions) {
-	x.adjust(insertAt, insertedBytes);
-      }
-
-      
-      //@@@@@
-      std::cout << "CODE LEN A = " << _codeLength << std::endl;
-      _codeLength = 0;
-      for(auto& x : _instructions) {
-        _codeLength += x.get_size();
-      }
-      std::cout << "CODE LEN B = " << _codeLength << std::endl;
-    }
-    
-  };
-
-  std::ostream& operator<<(std::ostream& out, const MethodInfo& ref)
-  {
-    out << "SIZE(BYTES):" << ref.size_in_bytes() << "   max stack=" << ref.get_max_stack() << "   locals=" << ref.get_max_locals();
-    return out;
-  }
-
-
   void FrenchRoast::load_op_codes(const std::string& fileName)
   {
     if (_opcodesLoaded)
@@ -482,52 +351,70 @@ namespace frenchroast {
       std::cout << "ERROR, does not Exist: " << callFrom << std::endl; 
     }
     ConstantPoolComponent::validate_method_name(callTo); 
-    MethodInfo method;
-
+    Method method;
     // * LOAD
-    BYTE* hptr = _methodsComponent.get_item(callFrom).get_attribute("Code")._info;
-    method.load_from_buffer(_methodsComponent.get_item(callFrom).get_attribute("Code")._info);
+    BYTE* methodBuffer = _methodsComponent.get_item(callFrom).get_attribute("Code")._info;
+    method.load_from_buffer(methodBuffer);
+                        
     if (method.get_max_stack() == 0) {
       method.set_max_stack(1);
     }
+
+    int exception_table_length = to_int(methodBuffer + 8 + to_int(methodBuffer +4,4),2);
+    int attribStart = 8 + to_int(methodBuffer +4,4)  + exception_table_length + 2;
+
+    InfoComponent<FrenchRoast, Attribute<FrenchRoast>> methodAttributes{*this,"Attributes"};
+    methodAttributes.load_from_buffer(methodBuffer + attribStart);
+
+
+    
     int origAttributeLength = _methodsComponent.get_item(callFrom).get_attribute("Code").get_length();
     int origCodeLength      = method.size_in_bytes();
     int origNonCodeLength   = origAttributeLength - origCodeLength;
-  
     std::vector<Instruction> instructions;
     int idxid =   _constPool.add_method_ref_index(callTo);
-    instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  idxid));  
+    instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  idxid));
     int startAddress = 0;
-    method.add_instructions(startAddress,instructions);
-    std::cout << "add_method_call:  = " << _methodsComponent.get_item(callFrom).get_attribute("Code").get_length() << std::endl;	    
+
+    // ---------------> handle flags correctly
+    // method.add_instructions(startAddress,instructions,true);
+    //method.add_instructions(17,instructions,true);
+    method.add_instructions(30,instructions,true);
+    //method.add_instructions(50,instructions,false);
+    
+    if (methodAttributes.has_item("StackMapTable")) {
+      BYTE* ptr = methodAttributes.get_item("StackMapTable")._info;
+      short frameCount = to_int(ptr,2);
+      std::vector<StackMapFrame*> frames = load_frames_from_buffer(frameCount, ptr + 2);
+      int origframebytes = 0;
+      for(auto& x : frames) {
+	 origframebytes += x->size_in_bytes();
+      }
+
+      origNonCodeLength -= origframebytes;
+      method.adjust_frames(frames);
+      delete[] methodAttributes.get_item("StackMapTable")._info;
+      int framebytes = 0;
+      for(auto& x : frames) {
+	framebytes += x->size_in_bytes();
+      }
+      origNonCodeLength += framebytes;
+      methodAttributes.get_item("StackMapTable")._info = new BYTE[framebytes +2];
+      ptr = methodAttributes.get_item("StackMapTable")._info;
+      write_bytes(ptr,frameCount,2);
+      load_frames_to_buffer(frames,ptr + 2);
+    }
+    
     _methodsComponent.get_item(callFrom).get_attribute("Code").set_length(method.size_in_bytes() + origNonCodeLength);
-        std::cout << "add_method_call:  = " << _methodsComponent.get_item(callFrom).get_attribute("Code").get_length() << std::endl;	    
+
     BYTE* newbuf = new BYTE[method.size_in_bytes() + origNonCodeLength ];
     method.load_to_buffer(newbuf);
     memcpy(newbuf + method.size_in_bytes(), _methodsComponent.get_item(callFrom).get_attribute("Code")._info + origCodeLength, origNonCodeLength);
-    InfoComponent<FrenchRoast, Attribute<FrenchRoast>> methodAttributes{*this,"Attributes"};
-    int exception_table_length = to_int(newbuf + 8 + to_int(newbuf +4,4),2);
-    int attribStart = 8 + to_int(newbuf +4,4)  + exception_table_length + 2;
-    methodAttributes.load_from_buffer(newbuf + attribStart);
-    short xx = 1;
-    if (methodAttributes.has_item("StackMapTable")) {
-      BYTE* ptr = methodAttributes.get_item("StackMapTable")._info;
-      int totalNewBytes=0;
-      for (auto& x : instructions) {
-	totalNewBytes += x.get_size();
-      }
-      std::vector<StackMapFrame*> frames = load_frames_from_buffer(to_int(ptr,2), ptr + 2);
-      //@@ this is only temp, must be fixed will not work when we insert in middle
-      bool adjustedFirst = false;
-      for (auto& x : frames) {
-	if (!adjustedFirst) {
-	      std::cout << "add_method_call:  total new = " <<  totalNewBytes << std::endl;	    
-	  x->adjust_offset(totalNewBytes+1);
-	}
-	adjustedFirst = true;
-      }
-      load_frames_to_buffer(frames,ptr + 2);
-    }
+    
+    exception_table_length = to_int(newbuf + 8 + to_int(newbuf +4,4),2);
+    attribStart = 8 + to_int(newbuf +4,4)  + exception_table_length + 2;
+
+    
     methodAttributes.load_to_buffer(newbuf + attribStart);
     delete[] _methodsComponent.get_item(callFrom).get_attribute("Code")._info;
    _methodsComponent.get_item(callFrom).get_attribute("Code")._info = newbuf;

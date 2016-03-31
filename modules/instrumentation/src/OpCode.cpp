@@ -57,6 +57,11 @@ namespace frenchroast {
       return _code;
     }
 
+    OpCode::operator BYTE() const
+    {
+      return _code;
+    }
+  
     OpCode& OpCode::operator[](BYTE op)
     {
       if(_op_codes.count(op) == 0) {
