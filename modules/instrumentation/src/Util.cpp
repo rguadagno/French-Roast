@@ -26,6 +26,9 @@ namespace frenchroast {
 
   void write_bytes(BYTE* out, int value, int size)
   {
+    if (size == 1) {
+      *out = static_cast<BYTE>(value);
+    }
     if (size == 2) {
       short vv = static_cast<short>(value);
       write_big_e_bytes(out, &vv);

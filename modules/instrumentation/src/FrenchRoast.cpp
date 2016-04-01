@@ -352,8 +352,18 @@ namespace frenchroast {
     std::vector<Instruction> instructions;
     instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  constPoolId));
 
-    //    if (flags
-    
+    if ((flags & METHOD_ENTER) == METHOD_ENTER) {
+      meth.add_instructions(0,instructions, true);
+    }
+    std::cout << "=========== FLAGS " << flags << std::endl;
+    if ((flags & METHOD_EXIT) == METHOD_EXIT) {
+      bool adjust = false;
+      for(auto& x : meth.get_return_addresses()) {
+	 meth.add_instructions(x,instructions, adjust);
+	 std::cout << "=========== FLAGS B" << flags << std::endl;
+	 adjust = true;
+      }
+    }
     
     
   }
@@ -394,12 +404,7 @@ namespace frenchroast {
 
 
     update_method(method, flags, idxid);
-    
-    // ---------------> handle flags correctly
-    // method.add_instructions(startAddress,instructions,true);
-    //method.add_instructions(17,instructions,true);
-    //    method.add_instructions(30,instructions,true);
-    //method.add_instructions(50,instructions,false);
+
     
     if (methodAttributes.has_item("StackMapTable")) {
       BYTE* ptr = methodAttributes.get_item("StackMapTable")._info;

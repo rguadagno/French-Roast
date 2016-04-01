@@ -19,6 +19,7 @@
 #ifndef INSTRUCTION_H
 #define INSTRUCTION_H
 #include "OpCode.h"
+#include "Util.h"
 
 namespace frenchroast {
   class Instruction {
@@ -48,6 +49,7 @@ namespace frenchroast {
     bool is_branch() const;
     void adjust(int insertedAt);
     BYTE* get_buffer();
+    operator BYTE() const;
     static int calc_pad(int startAddress);
   };
     

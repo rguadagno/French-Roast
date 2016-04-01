@@ -1,5 +1,5 @@
 aconst_null     <1>   1
-iconst_ml       <2>   1
+iconst_m1       <2>   1
 iconst_0        <3>   1
 iconst_1        <4>   1
 iconst_2        <5>   1

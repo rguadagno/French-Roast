@@ -36,8 +36,9 @@ namespace frenchroast {
     void set_max_stack(int v);
     int get_max_locals() const;
     int size_in_bytes() const;
-    void add_instructions(int insertAt, std::vector<Instruction>& ilist, bool branchafter);
+    void add_instructions(int insertAt, std::vector<Instruction>& ilist, bool adjust);
     void adjust_frames(std::vector<StackMapFrame*>& frames);
+    std::vector<int> get_return_addresses();
     Instruction& operator[](int idx);
   };
 

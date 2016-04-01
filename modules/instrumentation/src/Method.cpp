@@ -255,4 +255,29 @@ namespace frenchroast {
     return out;
   }
 
+
+  std::vector<int> Method::get_return_addresses()
+  {
+    std::vector<int> rv;
+
+    int total = _instructions.size() -1;
+    for (int idx = total;idx >=0;idx--) {
+      if (_instructions[idx] == opcode::xreturn) {
+        rv.push_back(_instructions[idx].address());
+      }
+      if (_instructions[idx] == opcode::ireturn ||
+	   _instructions[idx] == opcode::lreturn ||
+	  _instructions[idx] == opcode::freturn ||
+	  _instructions[idx] == opcode::dreturn ||
+	  _instructions[idx] == opcode::areturn 
+	  ) {
+	rv.push_back(_instructions[idx-1].address());
+      }
+
+    }
+    
+    return rv;
+  }
+
+  
 }

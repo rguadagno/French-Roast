@@ -216,6 +216,11 @@ namespace frenchroast {
     return _opCode.is_branch();
   }
 
+  Instruction::operator BYTE() const
+  {
+    return _opCode;
+  }
+  
   std::ostream& operator<<(std::ostream& out, const Instruction& ref)
   {
     out << ref.get_name() << "  " << ref.size();

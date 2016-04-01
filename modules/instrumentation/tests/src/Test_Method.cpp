@@ -194,8 +194,64 @@ public void something(int x) {
 }
 
 
+BYTE* build_multi_return_method(int& size)
+{
 
-TEST_CASE ( "method: [simple] load from buffer")
+/*
+    public int yeah(int i) {
+	if( i < 10) {
+	    System.out.println("less 10");
+	    return  0;
+	}
+	else if (i < 100 ) {
+	    System.out.println("less 100");
+	    return 1;
+	}
+	else {
+	    System.out.println("neg");
+	    return -1;
+	}
+    }
+*/
+  const int DOES_NOT_MATTER = 1; // since code is not to be run just make it clear
+  size = 42;
+  BYTE* buf = new BYTE[size + 8];
+  memset(buf,0,size);
+  short maxStack = 2;
+  short maxLocals = 2;
+  int codeLength = size;
+  write_big_e_bytes(buf, &maxStack);
+  write_big_e_bytes(buf +2 , &maxLocals);
+  write_big_e_bytes(buf +4 , &codeLength);
+  
+  BYTE* code = buf + 8;
+  *(code + 0) = opcode::iload_1;
+  *(code + 1) = opcode::bipush;         write_bytes(code + 2, DOES_NOT_MATTER, 1);
+  *(code + 3) = opcode::if_icmpge;      write_bytes(code + 4, 16, 2);
+  *(code + 6) = opcode::getstatic;      write_bytes(code + 7, DOES_NOT_MATTER,2);
+  *(code + 9) = opcode::ldc;            write_bytes(code + 10, DOES_NOT_MATTER,1);
+  *(code + 11) = opcode::invokevirtual; write_bytes(code + 12, DOES_NOT_MATTER, 2);
+  *(code + 14) = opcode::iconst_0;
+  *(code + 15) = opcode::ireturn;
+  *(code + 16) = opcode::iload_1;
+  *(code + 17) = opcode::bipush;        write_bytes(code + 18, DOES_NOT_MATTER, 1);
+  *(code + 19) = opcode::if_icmpge;     write_bytes(code + 20, 32, 2);
+  *(code + 22) = opcode::getstatic;     write_bytes(code + 23, DOES_NOT_MATTER, 2);
+  *(code + 25) = opcode::ldc;           write_bytes(code + 26, DOES_NOT_MATTER, 1);
+  *(code + 27) = opcode::invokevirtual; write_bytes(code + 28, DOES_NOT_MATTER, 2);
+  *(code + 30) = opcode::iconst_1;
+  *(code + 31) = opcode::ireturn;
+  *(code + 32) = opcode::getstatic;     write_bytes(code + 33, DOES_NOT_MATTER, 2);
+  *(code + 35) = opcode::ldc;           write_bytes(code + 36, DOES_NOT_MATTER, 1);
+  *(code + 37) = opcode::invokevirtual; write_bytes(code + 38, DOES_NOT_MATTER, 2);
+  *(code + 40) = opcode::iconst_m1;
+  *(code + 41) = opcode::ireturn;
+   
+  return buf;
+}
+
+
+TEST_CASE ( "method) = opcode:: [simple] load from buffer")
 {
   using namespace frenchroast;
   
@@ -505,7 +561,24 @@ TEST_CASE ( "method: [simple]   multiple SameFrame  adjusted, with return in mid
   REQUIRE(get_targets(meth[3])[1] == 32 );
   REQUIRE(get_targets(meth[3])[2] == 44);
 
+
+  
   delete[] buf;
+}
+
+
+TEST_CASE ( "method : get_return_addresses")
+{
+
+  int size;
+  BYTE* buf = build_multi_return_method(size);
+  Method meth;
+  meth.load_from_buffer(buf);
+
+  std::vector<int> rlist = meth.get_return_addresses();
+  REQUIRE(rlist.size() == 3);
+  REQUIRE(meth[7].address() == rlist[2]);
+
 }
 
 

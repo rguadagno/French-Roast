@@ -20,6 +20,9 @@
 #define OPCODE_CONST_H
 
 namespace frenchroast { namespace opcode {
+    const BYTE iconst_m1     = 2;
+    const BYTE iconst_0      = 3;
+    const BYTE iconst_1      = 4;
     const BYTE bipush        = 16;
     const BYTE ldc           = 18;
     const BYTE iload_0       = 26;
@@ -29,6 +32,11 @@ namespace frenchroast { namespace opcode {
     const BYTE xgoto         = 167;
     const BYTE tableswitch   = 170;
     const BYTE lookupswitch  = 171;
+    const BYTE ireturn       = 172;
+    const BYTE lreturn       = 173;
+    const BYTE freturn       = 174;
+    const BYTE dreturn       = 175;
+    const BYTE areturn       = 176;
     const BYTE xreturn       = 177;
     const BYTE getstatic     = 178;
     const BYTE invokevirtual = 182;

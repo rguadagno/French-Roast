@@ -30,32 +30,6 @@
 using   namespace frenchroast;   
 
 
-TEST_CASE ("split") {
-
-  REQUIRE( split("hello::there", "::").size() == 2 );
-  REQUIRE( split("hello::there", "::")[0] == "hello" );
-  REQUIRE( split("hello::there", "::")[1] == "there" );
-  REQUIRE( split("hello::there::ok", "::")[2] == "ok" );
-
-  
-  REQUIRE( split("hello:::there", ":::")[0] == "hello" );
-  REQUIRE( split("hello:::there", ":::")[1] == "there" );
-  REQUIRE( split("hello:::there:::ok", ":::")[2] == "ok" );
-
-
-  REQUIRE( split("hello::there~func", "::")[1] == "there~func" );
-  REQUIRE( split("hello::there:func", "::")[1] == "there:func" );
-
-  REQUIRE( split("hello,there,func")[0] == "hello" );
-  REQUIRE( split("hello,there,func")[1] == "there" );
-  REQUIRE( split("hello,there,func")[2] == "func" );
-
-
-  
-  
-
-}
-
 
 TEST_CASE("simple load")
 {
