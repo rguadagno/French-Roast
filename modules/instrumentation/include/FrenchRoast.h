@@ -30,6 +30,7 @@
 #include "Info.h"
 #include "AccessFlags.h"
 #include "OpCode.h"
+#include "Method.h"
 
 
 namespace frenchroast {
@@ -121,6 +122,7 @@ namespace frenchroast {
     void load_magic(unsigned char* magic, unsigned char* buf);
     void reset();
     bool _opcodesLoaded;
+    void update_method(Method& meth, std::bitset<4> flags, int constPoolId);
   public:
     void load_from_buffer(const BYTE* buf);
     void load_to_buffer(BYTE* buf);
@@ -137,6 +139,7 @@ namespace frenchroast {
     
     static const std::bitset<4> METHOD_ENTER;
     static const std::bitset<4> METHOD_EXIT;
+    static const std::bitset<4> METHOD_TIMER;
   };
 
 }

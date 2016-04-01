@@ -42,7 +42,7 @@ namespace frenchroast { namespace monitoring {
 
     std::bitset<4> Hook::flags() const
     {
-      return frenchroast::FrenchRoast::METHOD_ENTER;
+      return _flags;
     }
 
     // -------------------------
@@ -85,6 +85,26 @@ namespace frenchroast { namespace monitoring {
 	replace(name,'.','/');
       }
     }
+
+
+
+    void parse_flags(std::bitset<4>& flags, std::string str)
+    {
+      for(auto& x : split(str,"|")) {
+	if ( x == "ENTER") {
+	  flags |= frenchroast::FrenchRoast::METHOD_ENTER;
+	}
+	else if (x == "EXIT") {
+	  flags |= frenchroast::FrenchRoast::METHOD_EXIT;
+      }
+	else if (x == "TIMER") {
+	  flags |= frenchroast::FrenchRoast::METHOD_TIMER;
+      }
+	else {
+	  throw std::invalid_argument("BAD flag: " + x);
+	}
+      }
+    }
     
     void Hooks::load(const std::string& filename)
     {
@@ -99,9 +119,12 @@ namespace frenchroast { namespace monitoring {
 	  std::string classname = split(line, "::")[0];
 	  convert_name(classname);
 	  std::string methName = split(split(line, '<')[0],"::")[1];
-          remove_blanks(methName);
+         remove_blanks(methName);
   	  convert_name(methName);
-	  _hlist[classname].push_back(Hook{methName, frenchroast::FrenchRoast::METHOD_ENTER});
+	  std::string flagStr = split(split(line, '<')[1],">")[0];
+	  std::bitset<4> flags;
+	  parse_flags(flags, flagStr);
+	  _hlist[classname].push_back(Hook{methName, flags});
 	  loaded = true;
 	}
         infile.close();

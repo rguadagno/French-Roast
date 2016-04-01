@@ -227,7 +227,8 @@ namespace frenchroast {
 
     
   const std::bitset<4> FrenchRoast::METHOD_ENTER{"0001"};
-  const std::bitset<4> FrenchRoast::METHOD_EXIT{"0010"};
+  const std::bitset<4> FrenchRoast::METHOD_EXIT {"0010"};
+  const std::bitset<4> FrenchRoast::METHOD_TIMER{"0100"};
 
     
   void FrenchRoast::reset()
@@ -344,7 +345,20 @@ namespace frenchroast {
     _opCodes.load(fileName);
     _opcodesLoaded = true;
   }
+
+
+  void FrenchRoast::update_method(Method& meth, std::bitset<4> flags, int constPoolId)
+  {
+    std::vector<Instruction> instructions;
+    instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  constPoolId));
+
+    //    if (flags
     
+    
+    
+  }
+  
+  
   void FrenchRoast::add_method_call(const std::string& callFrom, const std::string& callTo, std::bitset<4> flags)
   {
     if (!_methodsComponent.has_item(callFrom)) {
@@ -373,13 +387,18 @@ namespace frenchroast {
     int origNonCodeLength   = origAttributeLength - origCodeLength;
     std::vector<Instruction> instructions;
     int idxid =   _constPool.add_method_ref_index(callTo);
+
+
     instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  idxid));
     int startAddress = 0;
 
+
+    update_method(method, flags, idxid);
+    
     // ---------------> handle flags correctly
     // method.add_instructions(startAddress,instructions,true);
     //method.add_instructions(17,instructions,true);
-    method.add_instructions(30,instructions,true);
+    //    method.add_instructions(30,instructions,true);
     //method.add_instructions(50,instructions,false);
     
     if (methodAttributes.has_item("StackMapTable")) {
