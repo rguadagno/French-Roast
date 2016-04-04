@@ -122,7 +122,7 @@ namespace frenchroast {
     void load_magic(unsigned char* magic, unsigned char* buf);
     void reset();
     bool _opcodesLoaded;
-    void update_method(Method& meth, std::bitset<4> flags, int constPoolId);
+    void update_method(Method& meth, std::bitset<4> flags, const std::string& callTo, ConstantPoolComponent& constPool);
   public:
     void load_from_buffer(const BYTE* buf);
     void load_to_buffer(BYTE* buf);

@@ -111,6 +111,7 @@ namespace frenchroast {
     int add_info(BYTE tag, InfoHolder* item,bool& skip);
     int get_name_index(const std::string& tname);
     int add_name(const std::string& tname);
+    int add_string(const std::string& tname);
     int add_class(const std::string& tname);
     int add_class(int nameid);
     void display(std::ostream& out);

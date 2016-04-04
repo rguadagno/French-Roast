@@ -4,8 +4,8 @@ build := ..\build
 VPATH = src;include;build;..\build;
 
 
-bin\runner.exe : core Test_Util.obj Test.obj Test_Main.obj Test_OpCode.obj Test_Instruction.obj Test_Method.obj FrenchRoast.obj AccessFlags.obj ConstantPoolComponents.obj StackMapFrame.obj Util.obj Method.obj
-	link /out:bin\runner.exe build\Test_Util.obj build\Test.obj build\Test_Main.obj build\Test_OpCode.obj build\Test_Instruction.obj build\Test_Method.obj $(build)\FrenchRoast.obj $(build)\AccessFlags.obj $(build)\ConstantPoolComponents.obj $(build)\StackMapFrame.obj $(build)\Util.obj $(build)\OpCode.obj $(build)\Instruction.obj $(build)\Method.obj
+bin\runner.exe : core Test_Util.obj Test.obj Test_Main.obj Test_OpCode.obj Test_Instruction.obj Test_Method.obj FrenchRoast.obj AccessFlags.obj ConstantPoolComponents.obj StackMapFrame.obj Util.obj Method.obj Exception.obj
+	link /out:bin\runner.exe build\Test_Util.obj build\Test.obj build\Test_Main.obj build\Test_OpCode.obj build\Test_Instruction.obj build\Test_Method.obj $(build)\FrenchRoast.obj $(build)\AccessFlags.obj $(build)\ConstantPoolComponents.obj $(build)\StackMapFrame.obj $(build)\Util.obj $(build)\OpCode.obj $(build)\Instruction.obj $(build)\Method.obj $(build)\Exception.obj
 
 core: makefile
 	c:\devtools\gnumake.exe -C ..\
@@ -36,3 +36,4 @@ ConstantPoolComponents.obj :
 StackMapFrame.obj :
 Util.obj :
 Method.obj :
+Exception.obj :

@@ -36,6 +36,7 @@ namespace frenchroast {
     Instruction(const OpCode& opcode, short operand);
     ~Instruction();
     Instruction(Instruction&& ref);
+    void operator=( Instruction& ref);
     const std::string get_name() const;
     int size() const;
     int load_from_buffer(const BYTE* buf, int address, int& loaded);

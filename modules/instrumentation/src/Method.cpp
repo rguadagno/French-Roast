@@ -23,7 +23,7 @@
 
 
 namespace frenchroast {
-  void Method::load_from_buffer(const BYTE* buf)
+  void Method::load_from_buffer(const BYTE* buf,const BYTE* excepbuf)
   {
     _instructions.clear();
     _maxStack   = to_int(buf, 2);
@@ -41,9 +41,19 @@ namespace frenchroast {
       totalLen += instr.size();
       _instructions.push_back(std::move(instr));
     }
+
+    _exceptions.clear();
+    Exception excep;
+    int excepCount = to_int(excepbuf,2);
+    for(int idx = 0; idx < excepCount;idx++) {
+      excep.load_from_buffer(excepbuf + 2 + 8*idx);
+      _exceptions.push_back(std::move(excep));
+    }
+
+    
   }
 
-  void Method::load_to_buffer(BYTE* buf)
+  void Method::load_to_buffer(BYTE* buf,BYTE* excepbuf)
   {
     int offset = 0;
     write_big_e_bytes(buf + offset, &_maxStack);
@@ -54,6 +64,13 @@ namespace frenchroast {
     offset += sizeof(_codeLength);
     for(auto& x : _instructions) {
       offset += x.load_to_buffer(buf + offset);
+    }
+
+    write_bytes(excepbuf, _exceptions.size(),2);
+    int idx = 0;
+    for(auto& x: _exceptions) {
+      x.load_to_buffer(excepbuf + 2 + idx*8);
+      ++idx;
     }
   }
 
@@ -100,7 +117,13 @@ namespace frenchroast {
     return rv;
   }
 
-
+  void  update_exception(Exception& excep, std::unordered_map<int,int> origAddr, std::unordered_map<int,int> newAddr)
+  {
+    excep.set_start_pc(newAddr[origAddr[excep.get_start_pc()]]);
+    excep.set_end_pc(newAddr[origAddr[excep.get_end_pc()]]);
+    excep.set_handler_pc(newAddr[origAddr[excep.get_handler_pc()]]);
+  }
+  
   void update_targets(Instruction& inst, std::unordered_map<int,int> origAddr, std::unordered_map<int,int> newAddr, std::vector<int>& origTargets, int& nextTarget)
   {
     if ( !inst.is_branch()) {
@@ -193,6 +216,12 @@ namespace frenchroast {
 	update_targets(x, origAddr, newAddr, origTargets,idx);
       }
     }
+
+    for (auto& x : _exceptions) {
+      update_exception(x, origAddr, newAddr);
+    }
+
+    
     _codeLength = 0;
     for(auto& x : _instructions) {
       _codeLength += x.size();
@@ -209,6 +238,9 @@ namespace frenchroast {
 	  targets.insert(tg);
 	}
       }
+    }
+    for(auto& x : _exceptions) {
+      targets.insert(x.get_handler_pc());
     }
 
     if (frames.size() != targets.size()) {
@@ -232,10 +264,10 @@ namespace frenchroast {
       }
       
       if (!ptr->adjust_offset(offset - sub)) {
-	 if (*ptr == stackmapframe::same) {
-	   ptr = new SameFrameExtended();
-	   ptr->adjust_offset(offset - sub);
-	}
+	if (*ptr == stackmapframe::same) {
+	  ptr = new SameFrameExtended();
+	  ptr->adjust_offset(offset - sub);
+      	}
       }
       running += offset;
       ++idx;

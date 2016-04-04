@@ -179,9 +179,17 @@ namespace frenchroast {
     StringHolder(const BYTE* buf)
     {
       memcpy(_index, buf,   sizeof(_index));
+      _tag = TAG_String;
       _name = "String";
     }
 
+    StringHolder(short idx)
+    {
+      write_big_e_bytes(_index,&idx); 
+      _tag = TAG_String;
+      _name = "String";
+    }
+    
     std::string get_params() const
     {
       std::ostringstream ss;
@@ -535,15 +543,23 @@ namespace frenchroast {
     return _names[ntoa(classIndex) + "." + ntoa(nameAndTypeIndex)];;
   }
 
-  int ConstantPoolComponent::add_class(const std::string& tname) {
+  int ConstantPoolComponent::add_class(const std::string& tname)
+  {
     return add_class(add_name(tname));
   }
 
-  int ConstantPoolComponent::add_class(int nameid) {
+  int ConstantPoolComponent::add_class(int nameid)
+  {
     *this + new ClassHolder(nameid);
     return next_index();
   }
- 
+
+  int ConstantPoolComponent::add_string(const std::string& sname)
+  {
+    *this + new StringHolder(add_name(sname));
+    return next_index();    
+  }
+  
   int ConstantPoolComponent::add_method_ref_index(const std::string& name)
   {
     validate_method_name(name);

@@ -347,22 +347,65 @@ namespace frenchroast {
   }
 
 
-  void FrenchRoast::update_method(Method& meth, std::bitset<4> flags, int constPoolId)
+  void FrenchRoast::update_method(Method& meth, std::bitset<4> flags, const std::string& callTo, ConstantPoolComponent& constPool)
   {
-    std::vector<Instruction> instructions;
-    instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  constPoolId));
-
+    int hook_id =   _constPool.add_method_ref_index(callTo);
     if ((flags & METHOD_ENTER) == METHOD_ENTER) {
+      std::vector<Instruction> instructions;
+      instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  hook_id));
       meth.add_instructions(0,instructions, true);
+      if (meth.get_max_stack() == 0) {
+        meth.set_max_stack(1);
+      }
     }
-    std::cout << "=========== FLAGS " << flags << std::endl;
+    
     if ((flags & METHOD_EXIT) == METHOD_EXIT) {
+      std::vector<Instruction> instructions;
+      instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  hook_id));
       bool adjust = false;
-      for(auto& x : meth.get_return_addresses()) {
+      for (auto& x : meth.get_return_addresses()) {
 	 meth.add_instructions(x,instructions, adjust);
-	 std::cout << "=========== FLAGS B" << flags << std::endl;
 	 adjust = true;
       }
+      if (meth.get_max_stack() == 0) {
+        meth.set_max_stack(1);
+      }
+
+    }
+    if ((flags & METHOD_TIMER) == METHOD_TIMER) {
+      int enter_id = constPool.add_string("enter");
+      int exit_id = constPool.add_string("exit");
+      constPool.add_name("java/lang/System");
+      constPool.add_name("java/lang/Object");
+      constPool.add_name("java/lang/Thread");
+      constPool.add_name("java/lang/String");
+      
+      constPool.add_name("()Ljava/lang/Thread");
+      constPool.add_name("()Ljava/lang/String");
+	    
+      int currenttimeMillis_id =   constPool.add_method_ref_index("java/lang/System.currentTimeMillis:()J");
+      int currentThread_id =       constPool.add_method_ref_index("java/lang/Thread.currentThread:()Ljava/lang/Thread;");
+      int getname_id =             constPool.add_method_ref_index("java/lang/Thread.getName:()Ljava/lang/String;");
+      
+      std::vector<Instruction> instructions;
+      instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  currenttimeMillis_id));
+      instructions.push_back(Instruction(_opCodes[opcode::ldc],           enter_id));
+      instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  currentThread_id));
+      instructions.push_back(Instruction(_opCodes[opcode::invokevirtual], getname_id));
+      instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  hook_id));
+      meth.add_instructions(0,instructions, true);      
+
+      instructions[1] = std::move(Instruction(_opCodes[opcode::ldc], exit_id));
+      bool adjust = false;
+      for (auto& x : meth.get_return_addresses()) {
+	 meth.add_instructions(x,instructions, adjust);
+	 adjust = true;
+      }
+
+      if (meth.get_max_stack() < 4) {
+        meth.set_max_stack(4);
+      }
+      
     }
     
     
@@ -378,33 +421,21 @@ namespace frenchroast {
     Method method;
     // * LOAD
     BYTE* methodBuffer = _methodsComponent.get_item(callFrom).get_attribute("Code")._info;
-    method.load_from_buffer(methodBuffer);
-                        
-    if (method.get_max_stack() == 0) {
-      method.set_max_stack(1);
-    }
+    int code_length = to_int(methodBuffer +4,4);
+    int exception_table_length = to_int(methodBuffer + 8 + code_length ,2);
+    BYTE* exceptionBuffer = methodBuffer + 8 + code_length;
+    method.load_from_buffer(methodBuffer, exceptionBuffer);
 
-    int exception_table_length = to_int(methodBuffer + 8 + to_int(methodBuffer +4,4),2);
-    int attribStart = 8 + to_int(methodBuffer +4,4)  + exception_table_length + 2;
+    int attribStart = 8 + code_length  + exception_table_length * 8 +2;
 
     InfoComponent<FrenchRoast, Attribute<FrenchRoast>> methodAttributes{*this,"Attributes"};
     methodAttributes.load_from_buffer(methodBuffer + attribStart);
 
-
-    
     int origAttributeLength = _methodsComponent.get_item(callFrom).get_attribute("Code").get_length();
     int origCodeLength      = method.size_in_bytes();
     int origNonCodeLength   = origAttributeLength - origCodeLength;
-    std::vector<Instruction> instructions;
-    int idxid =   _constPool.add_method_ref_index(callTo);
 
-
-    instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  idxid));
-    int startAddress = 0;
-
-
-    update_method(method, flags, idxid);
-
+    update_method(method, flags, callTo, _constPool);
     
     if (methodAttributes.has_item("StackMapTable")) {
       BYTE* ptr = methodAttributes.get_item("StackMapTable")._info;
@@ -414,7 +445,6 @@ namespace frenchroast {
       for(auto& x : frames) {
 	 origframebytes += x->size_in_bytes();
       }
-
       origNonCodeLength -= origframebytes;
       method.adjust_frames(frames);
       delete[] methodAttributes.get_item("StackMapTable")._info;
@@ -432,13 +462,11 @@ namespace frenchroast {
     _methodsComponent.get_item(callFrom).get_attribute("Code").set_length(method.size_in_bytes() + origNonCodeLength);
 
     BYTE* newbuf = new BYTE[method.size_in_bytes() + origNonCodeLength ];
-    method.load_to_buffer(newbuf);
+    method.load_to_buffer(newbuf, exceptionBuffer);
     memcpy(newbuf + method.size_in_bytes(), _methodsComponent.get_item(callFrom).get_attribute("Code")._info + origCodeLength, origNonCodeLength);
     
     exception_table_length = to_int(newbuf + 8 + to_int(newbuf +4,4),2);
-    attribStart = 8 + to_int(newbuf +4,4)  + exception_table_length + 2;
-
-    
+    attribStart = 8 + to_int(newbuf +4,4)  + exception_table_length * 8 +2;
     methodAttributes.load_to_buffer(newbuf + attribStart);
     delete[] _methodsComponent.get_item(callFrom).get_attribute("Code")._info;
    _methodsComponent.get_item(callFrom).get_attribute("Code")._info = newbuf;

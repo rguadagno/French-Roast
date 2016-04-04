@@ -58,6 +58,22 @@ namespace frenchroast {
       _opbuf = nullptr;
     }
   }
+
+  void Instruction::operator=( Instruction& ref)
+  {
+    _opCode = ref._opCode;
+    _address = ref._address;
+    memcpy(_operand, ref._operand, 2);
+    _opbuf_size = ref._opbuf_size;
+    if ( _opCode.is_dynamic()) {
+      _opbuf = ref._opbuf;
+      ref._opbuf = nullptr;
+    }
+    else {
+      _opbuf = nullptr;
+    }
+  
+  }
   
   const std::string Instruction::get_name() const
   {

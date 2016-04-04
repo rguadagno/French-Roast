@@ -52,7 +52,16 @@ namespace frenchroast { namespace monitoring {
       return _hlist.count(name) > 0;
     }
 
-    std::unordered_map<std::string, std::string> Hooks::_type_map { {"int","I"},{"bool","Z"},{"void","V"}};
+    std::unordered_map<std::string, std::string> Hooks::_type_map { {"int","I"},
+	                                                             {"bool","Z"},
+								            {"void","V"},
+									     {"long","J"},
+									     {"byte","B"},
+		                                                      {"char","C"},
+                                                                    {"double","D"},
+								            {"float","F"},
+									     {"short","S"}
+									   };
     
     void Hooks::convert_name(std::string& name)
     {

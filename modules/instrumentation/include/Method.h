@@ -21,6 +21,7 @@
 #include <iostream>
 #include <vector>
 #include "Instruction.h"
+#include "Exception.h"
 #include "StackMapFrame.h"
 
 namespace frenchroast {
@@ -28,10 +29,11 @@ namespace frenchroast {
     short _maxStack;
     short _maxLocals;
     int   _codeLength;
-    std::vector<Instruction> _instructions; 
+    std::vector<Instruction> _instructions;
+    std::vector<Exception> _exceptions; 
   public:
-    void load_from_buffer(const BYTE* buf);
-    void load_to_buffer(BYTE* buf);
+    void load_from_buffer(const BYTE* buf, const BYTE* excep);
+    void load_to_buffer(BYTE* buf, BYTE* excepbuf);
     int get_max_stack() const;
     void set_max_stack(int v);
     int get_max_locals() const;
