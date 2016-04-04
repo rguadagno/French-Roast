@@ -34,7 +34,7 @@ mypackage.Example::fib:(int,int,int,int):void                           <ENTER>
 mypackage.Example::someslowfunc:(int):void                              <TIMER>
 ```
 
-The location tag can be `<ENTER>`, `<ENTER|EXIT>`, `<EXIT>`, <TIMEER>, or `<20,132>`
+The location tag can be `<ENTER>`, `<ENTER|EXIT>`, `<EXIT>`, `<TIMER>`, or `<20,132>`
 Currently  `<ENTER>`,  `<EXIT>`, `<ENTER|EXIT>`, `<TIMER>` is supported. The `<20,132>` means add the hook at these line numbers (for this to work the Java source must have been compiled with debug information).
 
 What this does is effectivly change the code to:
