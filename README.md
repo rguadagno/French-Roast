@@ -31,10 +31,11 @@ Assume in the above code that the fib method is called from many places in a lar
 First we edit the hooks_config.txt file to look like:
 ```
 mypackage.Example::fib:(int,int,int,int):void                           <ENTER>
+mypackage.Example::someslowfunc:(int):void                              <TIMER>
 ```
 
-The location tag can be `<ENTER>`, `<ENTER|EXIT>`, `<EXIT>`, or `<20,132>`
-Currently only `<ENTER>` is supported. The `<20,132>` means add the hook at these line numbers (for this to work the Java source must have been compiled with debug information).
+The location tag can be `<ENTER>`, `<ENTER|EXIT>`, `<EXIT>`, <TIMEER>, or `<20,132>`
+Currently  `<ENTER>`,  `<EXIT>`, `<ENTER|EXIT>`, `<TIMER>` is supported. The `<20,132>` means add the hook at these line numbers (for this to work the Java source must have been compiled with debug information).
 
 What this does is effectivly change the code to:
 ```Java
