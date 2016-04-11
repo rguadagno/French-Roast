@@ -14,7 +14,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+//    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
 #ifndef HOOKS_H
@@ -25,7 +25,7 @@
 #include <unordered_map>
 #include <bitset>
 
-namespace frenchroast { namespace monitoring {
+namespace frenchroast { namespace agent {
     class Hook {
       int            _line;
       std::string    _name;

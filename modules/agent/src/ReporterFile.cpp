@@ -16,23 +16,36 @@
 //    You should have received a copy of the GNU General Public License
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
+#include "ReporterImp.h"
 
-#ifndef FRCON_H
-#define FRCON_H
-#include <string>
-#include "Listener.h"
+namespace frenchroast { namespace agent {
 
-namespace frenchroast { namespace network {
+    void ReporterFile::init(const std::string& filename)
+    {
+      try {
+	_outfile.exceptions(std::ifstream::failbit);
+	_outfile.open(filename);
+      }
+      catch(std::ifstream::failure& e) {
+	if(!_outfile.eof())
+	  throw std::ifstream::failure("cannot open file: " + filename);
+      }
+    }  
 
-    class Connector {
-      Listener* _handler;
-    public:
-      void init_receiver(const std::string& ipaddr, int port, Listener* handler);
-      void init_sender(const std::string& ipaddr, int port);
-      void send_message(const std::string& msg);
-      void close_down();
-    };
+    void ReporterFile::signal(const std::string& tag)
+    {
+            _outfile << tag << std::endl;
+    }
+    
+    void ReporterFile::signal_timer(long long xtime, const std::string& direction, const std::string& tag, const std::string threadname)
+    {
+      _outfile << direction << "  " << tag << "  " << xtime << std::endl;
+    }
+    
+    void ReporterFile::close()
+    {
+      _outfile.close();
+    }
+
   }
 }
-
-#endif

@@ -20,7 +20,7 @@
 #include "Hooks.h"
 #include "FrenchRoast.h"
 
-namespace frenchroast { namespace monitoring {
+namespace frenchroast { namespace agent {
 
     Hook::Hook(const std::string& name, int lineno) : _name(name), _line(lineno)
     {

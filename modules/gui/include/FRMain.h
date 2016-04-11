@@ -17,22 +17,36 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef FRCON_H
-#define FRCON_H
-#include <string>
-#include "Listener.h"
+#ifndef MAINWIN_H
+#define MAINWIN_H
 
-namespace frenchroast { namespace network {
+#include <QMainWindow>
+#include <QLabel>
+#include <QListWidget>
+#include <unordered_map>
+#include "fr.h"
 
-    class Connector {
-      Listener* _handler;
-    public:
-      void init_receiver(const std::string& ipaddr, int port, Listener* handler);
-      void init_sender(const std::string& ipaddr, int port);
-      void send_message(const std::string& msg);
-      void close_down();
-    };
-  }
-}
+
+class FRMain : public QMainWindow {
+  Q_OBJECT
+
+ public:
+  FRMain(FRListener*);
+
+ private:
+  QListWidget* _list;
+  QListWidget* _timedlist;
+  std::unordered_map<std::string,QListWidgetItem*> _descriptors;
+ 
+ public slots:
+   void update_list(std::string, std::string,int);
+   void FRMain::update_timed_list(std::string ltype, std::string  descriptor, long elapsed, int last);
+   void update_status(std::string);
+
+
+ 
+
+};
+
 
 #endif

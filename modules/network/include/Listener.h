@@ -17,20 +17,15 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef FRCON_H
-#define FRCON_H
-#include <string>
-#include "Listener.h"
+#ifndef FRLISTENER_H
+#define FRLISTENER_H
+
 
 namespace frenchroast { namespace network {
 
-    class Connector {
-      Listener* _handler;
+    class Listener {
     public:
-      void init_receiver(const std::string& ipaddr, int port, Listener* handler);
-      void init_sender(const std::string& ipaddr, int port);
-      void send_message(const std::string& msg);
-      void close_down();
+      virtual void message(const std::string& msg) = 0;
     };
   }
 }

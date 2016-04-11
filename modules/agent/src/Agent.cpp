@@ -14,14 +14,14 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+//    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
 #include <iostream>
 #include <string>
 #include <fstream>
 #include "jvmti.h"
-#include "Monitor.h"
+#include "Agent.h"
 #include "Hooks.h"
 #include "FrenchRoast.h"
 #include "Util.h"
@@ -40,9 +40,9 @@ static int counter = 0;
 static GlobalAgentData g_data;
 static GlobalAgentData* gdata = &g_data;
 frenchroast::FrenchRoast fr;
-frenchroast::monitoring::Hooks _hooks;
-frenchroast::monitoring::Config _config;
-frenchroast::monitoring::Reporter _rptr;
+frenchroast::agent::Hooks _hooks;
+frenchroast::agent::Config _config;
+frenchroast::agent::Reporter _rptr;
 
 jvmtiEnv* genv;
 
@@ -67,9 +67,8 @@ void JNICALL
   std::cout << "*** About to get lock " << std::endl;
 }
 
-JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object)
+JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass object, jlong stime, jstring tag, jstring tname)
 {
-  //  std::cout << "XXXXXXXXXX hooked XXXXXXXXXXXX" << std::endl;
   jvmtiFrameInfo frames[5];
   jint count;
   jvmtiError err;
@@ -85,29 +84,42 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object
     if (err == JVMTI_ERROR_NONE) {
       std::string methodNameStr{methodName};
       std::string sigStr{sig};
-      //      std::cout << "CALLED FROM: " << methodNameStr << std::endl;
-      //@@@@      _rptr.hook(_hooks.get_tag(methodNameStr));
-      //@@ try getMehodDeclaringClass  <-- look at says this must be managed, maybe some clean up ... not sure...
-      //@@     GetClassSignature <-- call this to get the name
-      //@@     makes sense to pass back a tag ( or id or something) it shows that it is unique,
-      //@@     but then again... maybe a tag is really what is mentioned in config and passed back to
-      //@@     the java.lang.Package.thook(  tag )  <---
-      //       design, in config user can mention tag , if they do then use that text in call to thook, else
-      //       use "none", if in this call we get "none" then pass class::method"
-      //       for now just pass class::method in that tags are important when we can put hooks at any spot
-      //       so later if user says ok hook on borh ENTER and EXIT, then call of this method should be
-      //       for examples:
-      //       ENTER:sometag  <-- where "sometag" is a user tag
-      //       EXIT
-      //       ENTER
-      //       125
-      //       125:sometag
-      //
-      //       so if we are called with something that has a :  then we just send that tag back
-      //       else we must something like  ENTER::classsignature::methodsignature
-      //  for now just send back method signaure....
-            _rptr.hook(methodNameStr + ":" +sigStr);
+
+      jclass theclass;
+      genv->GetMethodDeclaringClass(frames[1].method, &theclass);
+      err = genv->GetClassSignature(theclass, &sig,&generic);
+      std::string classinfo{sig};
+
       
+      _rptr.signal_timer(stime, std::string(ptr->GetStringUTFChars(tag,0)), classinfo +"::" + methodNameStr + ":" +sigStr, std::string(ptr->GetStringUTFChars(tname,0)));
+    }
+  }
+}
+
+JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object)
+{
+  jvmtiFrameInfo frames[5];
+  jint count;
+  jvmtiError err;
+  jthread aThread;
+
+  genv->GetCurrentThread(&aThread);
+  err = genv->GetStackTrace(aThread, 0, 5, frames, &count);
+  if (err == JVMTI_ERROR_NONE && count >= 1) {
+    char *methodName;
+    char *sig;
+    char *generic;
+    err = genv->GetMethodName(frames[1].method, &methodName,&sig,&generic);
+    if (err == JVMTI_ERROR_NONE) {
+      std::string methodNameStr{methodName};
+      std::string sigStr{sig};
+
+      jclass theclass;
+      genv->GetMethodDeclaringClass(frames[1].method, &theclass);
+      err = genv->GetClassSignature(theclass, &sig,&generic);
+      std::string classinfo{sig};
+      _rptr.signal(classinfo + "::" + methodNameStr + ":" + sigStr + "~" + "somethread");
+
     }
   }
 }
@@ -128,9 +140,15 @@ void JNICALL
   std::string sname{name};
   if (sname == "java/lang/Package") {
     fr.load_from_buffer(class_data);
+    
     fr.add_name_to_pool("thook");
     fr.add_name_to_pool("()V");
     fr.add_native_method("thook", "()V");
+
+    fr.add_name_to_pool("timerhook");
+    fr.add_name_to_pool("(JLjava/lang/String;Ljava/lang/String;)V");
+    fr.add_native_method("timerhook", "(JLjava/lang/String;Ljava/lang/String;)V");
+
     jint size = fr.size_in_bytes();
     jvmtiError  err =    env->Allocate(size,new_class_data);
     *new_class_data_len = size;
@@ -139,20 +157,28 @@ void JNICALL
 
   if (_hooks.is_hook_class(sname)) {
     fr.load_from_buffer(class_data);
+    // check if below 2 lines needed, this maybe handled by const pool ad_method_ref
     fr.add_name_to_pool("thook");
     fr.add_name_to_pool("()V");
-    for (auto x : _hooks.get(sname)) {
+    fr.add_name_to_pool("timerhook");
+    
+    for (auto& x : _hooks.get(sname)) {
       if (x.line_number() > 0) {
-	fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
+	 fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
       }
       else {
-	fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.flags());
+	if ((x.flags() & frenchroast::FrenchRoast::METHOD_TIMER) == frenchroast::FrenchRoast::METHOD_TIMER) {
+	  fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
+	}
+	else {
+	  fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.flags());
+	}
       }
-    }
     jint size = fr.size_in_bytes();
     jvmtiError  err =    env->Allocate(size,new_class_data);
     *new_class_data_len = size;
     fr.load_to_buffer(*new_class_data);
+    }
   }
 }
 
@@ -201,8 +227,6 @@ void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
 
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 {
-  std::string opcodeFile = "";
-  std::string hooksFile  = "";
   std::string configFile;
   if (options != NULL)
     configFile = std::string{options};
@@ -211,47 +235,32 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     exit(0);
   }
 
-  //-----------------------------------------------------------
-  std::ifstream inconfig{configFile};
-  std::string line;
-  while (getline(inconfig,line)) {
-    frenchroast::remove_blanks(line);
-    if(frenchroast::split(line,'<')[0] == "opcodefile") {
-      opcodeFile = frenchroast::split(line,'<')[1];
-      opcodeFile = opcodeFile.substr(0,opcodeFile.length()-1);
+
+
+  try {
+    if (!_config.load(configFile)) {
+      exit(0);
     }
-    if(frenchroast::split(line,'<')[0] == "hooksfile") {
-      hooksFile = frenchroast::split(line,'<')[1];
-      hooksFile = hooksFile.substr(0,hooksFile.length()-1);
-     }
   }
-  inconfig.close();
-  
-  if (opcodeFile == "") {
-    std::cout << "opcodefile not set in config file" << std::endl;
+  catch(std::ifstream::failure& e) {
+    std::cout << e.what() << std::endl;
     exit(0);
   }
 
-  if (hooksFile == "") {
-    std::cout << "hooksfile not set in config file" << std::endl;
-    exit(0);
-  }
-
-  //-----------------------------------------------------------
   
   std::cout << "*** OnLoad() ********" << std::endl;
   try {
-    fr.load_op_codes(opcodeFile);
-    _hooks.load(hooksFile);
+    fr.load_op_codes(_config.get_opcode_file());
+    _hooks.load(_config.get_hooks_file());
   }
   catch(std::exception& e) {
     std::cout << "ERROR: " << e.what() << std::endl;
     exit(0);
   }
-  //@@ read from remote.config, rename .txt to config
-  _rptr.init(_config.reporterDescriptor());
 
+  std::cout << "===========> " << _config.get_reporter_descriptor() << std::endl;
   
+    _rptr.init(_config.get_reporter_descriptor());
   jvmtiError err;
   jvmtiEnv* env;
   vm->GetEnv((void**)&env, JVMTI_VERSION_1_0);
@@ -264,23 +273,14 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   xx->ClassFileLoadHook     = &ClassFileLoadHook;
   err =   env->SetEventCallbacks(xx, sizeof(jvmtiEventCallbacks));
 
-
-    jvmtiCapabilities capa;
+  jvmtiCapabilities capa;
   capa.can_generate_monitor_events = 1;
   capa.can_generate_all_class_hook_events = 1;
   jvmtiError errcapa  = env->AddCapabilities(&capa);
   std::cout << "err capa: " << errcapa << std::endl;
-
-
-  
-  //@@ std::cout << "*** OnLoad() SetEventCallbacks " << err << std::endl;
-   env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_CLASS_FILE_LOAD_HOOK,NULL);
-   env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_VM_INIT,NULL);
-   //   err = env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_THREAD_START,NULL);
-  //    err = env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_VM_START,nullptr);
-  //@@std::cout << "*** OnLoad() " << err << std::endl;
-
-    return 0;
+  env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_CLASS_FILE_LOAD_HOOK,NULL);
+  env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_VM_INIT,NULL);
+  return 0;
 }
 
 

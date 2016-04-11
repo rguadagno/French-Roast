@@ -16,23 +16,27 @@
 //    You should have received a copy of the GNU General Public License
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
+#include "ReporterImp.h"
+#include <iostream>
 
-#ifndef FRCON_H
-#define FRCON_H
-#include <string>
-#include "Listener.h"
+namespace frenchroast { namespace agent {
 
-namespace frenchroast { namespace network {
+    void ReporterOut::init(const std::string& initinfo)
+    {
+    }  
 
-    class Connector {
-      Listener* _handler;
-    public:
-      void init_receiver(const std::string& ipaddr, int port, Listener* handler);
-      void init_sender(const std::string& ipaddr, int port);
-      void send_message(const std::string& msg);
-      void close_down();
-    };
+    void ReporterOut::signal(const std::string& tag)
+    {
+      std::cout << tag << std::endl;
+    }
+    
+    void ReporterOut::signal_timer(long long xtime, const std::string& direction, const std::string& tag, const std::string threadname)
+    {
+      std::cout << direction << "  " << tag << "  " << xtime << std::endl;
+    }
+
+    void ReporterOut::close()
+    {
+    }
   }
 }
-
-#endif

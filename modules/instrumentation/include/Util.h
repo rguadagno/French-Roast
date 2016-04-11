@@ -34,8 +34,11 @@ namespace frenchroast {
   std::vector<std::string> split(const std::string& str);
   void remove_blanks(std::string&);
   void replace(std::string&, char form, char to);
+  void replace(std::string&, char form);
+  void replace(std::string& line, const std::string& from, const std::string& to);
   std::string ntoa(int);
   std::string ntoa(double);
+  std::string ntoa(long long);
 
 
   template

@@ -17,22 +17,20 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef FRCON_H
-#define FRCON_H
-#include <string>
-#include "Listener.h"
+#include <jni.h>
+#ifndef AGE_H
+#define AGE_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+JNIEXPORT void JNICALL Java_java_lang_Package_thook
+  (JNIEnv *, jclass);
 
-namespace frenchroast { namespace network {
+JNIEXPORT void JNICALL Java_java_lang_Package_timerhook
+  (JNIEnv *, jclass, jlong, jstring, jstring);
 
-    class Connector {
-      Listener* _handler;
-    public:
-      void init_receiver(const std::string& ipaddr, int port, Listener* handler);
-      void init_sender(const std::string& ipaddr, int port);
-      void send_message(const std::string& msg);
-      void close_down();
-    };
-  }
+  
+#ifdef __cplusplus
 }
-
+#endif
 #endif

@@ -17,22 +17,41 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef FRCON_H
-#define FRCON_H
+#ifndef FRLIST_H
+#define FRLIST_H
+
+#include <QTWidgets/QApplication>
+#include <QTWidgets/QLabel>
+#include <QTCore/QObject>
+#include <unordered_map>
 #include <string>
-#include "Listener.h"
 
-namespace frenchroast { namespace network {
 
-    class Connector {
-      Listener* _handler;
-    public:
-      void init_receiver(const std::string& ipaddr, int port, Listener* handler);
-      void init_sender(const std::string& ipaddr, int port);
-      void send_message(const std::string& msg);
-      void close_down();
-    };
-  }
-}
 
+Q_DECLARE_METATYPE(std::string);
+
+class FRListener : public QObject
+{
+  Q_OBJECT
+  
+  private:
+    std::unordered_map<std::string, int> _items;
+
+  public:
+    int getCount(const std::string& item);
+    void signal(const std::string& tag, int count);
+    void signal_timed(const std::string& tag, long elapsed, int last);
+    void connected(const std::string& addr);
+
+    public slots:
+    void init();
+
+  signals:
+    void thooked(const std::string& ltype, const std::string& info,int count);
+    void timersignal(const std::string& ltype, const std::string& info,long elapsed, int last);
+    void remoteconnected(const std::string& addr);
+
+
+
+};
 #endif

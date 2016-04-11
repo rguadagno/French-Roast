@@ -17,21 +17,27 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef FRCON_H
-#define FRCON_H
+#ifndef RRPT_H
+#define RRPT_H
 #include <string>
-#include "Listener.h"
+namespace frenchroast { namespace agent {
 
-namespace frenchroast { namespace network {
-
-    class Connector {
-      Listener* _handler;
+    class Reporter {
+      Reporter* _impPtr;
     public:
-      void init_receiver(const std::string& ipaddr, int port, Listener* handler);
-      void init_sender(const std::string& ipaddr, int port);
-      void send_message(const std::string& msg);
-      void close_down();
+      virtual void init(const std::string& initinfo);
+      // init examples
+      //
+      // "out"
+      // "file~/tmp/myapp.log"
+      // "server~send:127.0.01:6060"
+      // "server~recv:127.0.01:6070"
+      // "server~recv:127.0.01:6070:send:127.0.0.1:6060"
+      virtual void signal(const std::string& tag);
+      virtual void signal_timer(long long time, const std::string& direction, const std::string& tag, const std::string threadname);
+      virtual void close();
     };
+    
   }
 }
 

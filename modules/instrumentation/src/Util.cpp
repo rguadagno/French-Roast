@@ -106,6 +106,22 @@ namespace frenchroast {
     }
   }
 
+  void replace(std::string& line, const char from)
+  {
+    size_t pos;
+    while ((pos=line.find(from)) != std::string::npos) {
+      line.erase(pos,1);
+    }
+  }
+
+  void replace(std::string& line, const std::string& from, const std::string& to)
+  {
+    size_t pos;
+    while ((pos=line.find(from)) != std::string::npos) {
+      line.replace(pos, from.length(),to);
+    }
+  }
+
   
   std::string ntoa(int x)
   {
@@ -115,6 +131,13 @@ namespace frenchroast {
   }
 
   std::string ntoa(double x)
+  {
+    std::stringstream ss;
+    ss << x;
+    return ss.str();
+  }
+
+  std::string ntoa(long long x)
   {
     std::stringstream ss;
     ss << x;
@@ -152,15 +175,5 @@ namespace frenchroast {
     }  
   }
 
-  std::unique_ptr<const unsigned char> get_class_buf(const std::string& fileName)
-  {
-    std::ifstream klass{fileName, std::ios::binary};
-    std::filebuf* buf = klass.rdbuf();
-    std::size_t length = buf->pubseekoff(0,klass.end,klass.in);
-    buf->pubseekpos(0,klass.in);
-    std::unique_ptr<unsigned char> kbuf(new unsigned char[length]);
-    buf->sgetn(reinterpret_cast<char*>(kbuf.get()),length);
-    klass.close();
-    return kbuf;
-  }
+  
 }

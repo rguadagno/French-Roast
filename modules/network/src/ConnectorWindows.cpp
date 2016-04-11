@@ -14,11 +14,13 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+//    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
 
 #include "Connector.h"
+#include "Util.h"
+
 #include <winsock2.h>
 #include <windows.h>
 #include <iostream>
@@ -27,13 +29,14 @@
 #include <unordered_map>
 #include <thread>
 
+#include "Listener.h"
 
 namespace frenchroast { namespace network {
 
     SOCKET _listener_socket;
     SOCKET _sender_socket;
 
-    void Connector::init_receiver(const std::string& ipaddr, int port, void (*handler)(const std::string&))
+    void Connector::init_receiver(const std::string& ipaddr, int port, Listener* handler)
     {
       _handler = handler;
       WSADATA wsaData;
@@ -69,25 +72,22 @@ namespace frenchroast { namespace network {
         exit(0);
       }
 
-      SOCKET inSock = accept(_listener_socket,NULL,NULL);
-      std::thread t{[=]() {
-        int rv;
-        char databuf[500];
-        memset(databuf,0,500);
-        while(1) {
-          rv = recv(inSock, databuf, 500, 0);
-          if (rv < 0 ) {
-            std::cout << "ERROR: " << WSAGetLastError() << std::endl;
-            break;
-          }
-          std::string item{databuf};
-          _handler(item);
+      struct sockaddr_in    conn_from;
+      int len = sizeof(conn_from);
+      SOCKET inSock = accept(_listener_socket,(SOCKADDR*)&conn_from, &len);
+      _handler->message(std::string("connected~") + inet_ntoa(conn_from.sin_addr) + ":" + ntoa(htons(conn_from.sin_port)));
+      char databuf[500];
+      memset(databuf,0,500);
+      while(1) {
+        rv = recv(inSock, databuf, 500, 0);
+        if (rv < 0 ) {
+          std::cout << "ERROR: " << WSAGetLastError() << std::endl;
+          break;
         }
-     }
-    };
-     t.detach();
+        std::string item{databuf};
+         _handler->message(item);
+      }
     }
-
 
     void Connector::init_sender(const std::string& ipaddr, int port)
     {
@@ -116,11 +116,13 @@ namespace frenchroast { namespace network {
       }
       std::cout << "========== CONNECTED TO SERVER ============ " << std::endl;
     }
-    
+
+
     void Connector::send_message(const std::string& msg)
     {
       send(_sender_socket, msg.c_str(), msg.length()+1,0);
     }
+
 
     void Connector::close_down()
     {
