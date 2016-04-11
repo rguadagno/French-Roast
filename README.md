@@ -82,6 +82,9 @@ java.util.concurrent.ConcurrentHashMap$Segment::scanAndLockForPut:(java.lang.Obj
 
 ```
 
+### Qt Application
+(https://github.com/rguadagno/French-Roast/blob/master/docs/app.png)
+
 
 
 
