@@ -34,9 +34,9 @@ namespace frenchroast { namespace monitor {
 
 	};
 	
-      template
-      <typename T>
-	class Monitor : public network::Listener {
+    template
+    <typename T>
+      class Monitor : public network::Listener {
 	T& _handler;
 	network::Connector  _conn;
 	std::unordered_map<std::string, time_holder> _timed_signals;
@@ -47,31 +47,29 @@ namespace frenchroast { namespace monitor {
 	const int DIRECTION   = 2;
 	const int DESCRIPTOR  = 3;
 	const int THREAD_NAME = 4;
-
       public:
-      Monitor(T& handler) : _handler(handler)
-      {
-      }
+        Monitor(T& handler) : _handler(handler)
+        { 
+        }
       
-      void message(const std::string& msg)
-      {
-	std::vector<std::string> items = frenchroast::split(msg,"~");
-	 if (items[MSG_TYPE] == "signaltimer") {
-	   if (items[DIRECTION] == "exit") {
-	     std::string key = items[DESCRIPTOR] + items[THREAD_NAME];
-	     int elapsed = std::stoll(items[TIME]) - _timed_signals[key]._last;
-	     _timed_signals[key]._elapsed += elapsed;
-	     //	     _timed_signals.erase(key);
-	     _handler.signal_timed( translate_descriptor(items[DESCRIPTOR])+ " [" + items[THREAD_NAME] +"]",_timed_signals[key]._elapsed, elapsed);
-	   }
-	   if (items[DIRECTION] == "enter") {
-	     std::string key = items[DESCRIPTOR] + items[THREAD_NAME];
-	     _timed_signals[key]._last = std::stoll(items[TIME]);
-	   }
-	 }
-	 if (items[MSG_TYPE] == "signal") {
-	   _handler.signal(translate_descriptor(items[MSG]), ++_signals[items[MSG]]);
-	 }
+        void message(const std::string& msg)
+        {
+          std::vector<std::string> items = frenchroast::split(msg,"~");
+	  if (items[MSG_TYPE] == "signaltimer") {
+	    if (items[DIRECTION] == "exit") {
+	      std::string key = items[DESCRIPTOR] + items[THREAD_NAME];
+	      int elapsed = std::stoll(items[TIME]) - _timed_signals[key]._last;
+	      _timed_signals[key]._elapsed += elapsed;
+	      _handler.signal_timed( translate_descriptor(items[DESCRIPTOR])+ " [" + items[THREAD_NAME] +"]",_timed_signals[key]._elapsed, elapsed);
+	    }
+	    if (items[DIRECTION] == "enter") {
+	      std::string key = items[DESCRIPTOR] + items[THREAD_NAME];
+	      _timed_signals[key]._last = std::stoll(items[TIME]);
+	    }
+	  }
+	  if (items[MSG_TYPE] == "signal") {
+	    _handler.signal(translate_descriptor(items[MSG]) + " [" + items[2] +"]" , ++_signals[items[MSG]]);
+	  }
 	 if (items[MSG_TYPE] == "connected") {
 	   _handler.connected(items[MSG]);
 	 }

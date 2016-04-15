@@ -20,6 +20,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <mutex>
 #include "jvmti.h"
 #include "Agent.h"
 #include "Hooks.h"
@@ -43,7 +44,8 @@ frenchroast::FrenchRoast fr;
 frenchroast::agent::Hooks _hooks;
 frenchroast::agent::Config _config;
 frenchroast::agent::Reporter _rptr;
-
+std::mutex _sig_mutex;
+std::mutex _sig_time_mutex;
 jvmtiEnv* genv;
 
 void enter_section(jvmtiEnv *env) {
@@ -90,8 +92,9 @@ JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass obj
       err = genv->GetClassSignature(theclass, &sig,&generic);
       std::string classinfo{sig};
 
-      
+      _sig_time_mutex.lock();
       _rptr.signal_timer(stime, std::string(ptr->GetStringUTFChars(tag,0)), classinfo +"::" + methodNameStr + ":" +sigStr, std::string(ptr->GetStringUTFChars(tname,0)));
+      _sig_time_mutex.unlock();
     }
   }
 }
@@ -104,6 +107,8 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object
   jthread aThread;
 
   genv->GetCurrentThread(&aThread);
+  jvmtiThreadInfo info;
+  genv->GetThreadInfo(aThread, &info);
   err = genv->GetStackTrace(aThread, 0, 5, frames, &count);
   if (err == JVMTI_ERROR_NONE && count >= 1) {
     char *methodName;
@@ -118,8 +123,9 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object
       genv->GetMethodDeclaringClass(frames[1].method, &theclass);
       err = genv->GetClassSignature(theclass, &sig,&generic);
       std::string classinfo{sig};
-      _rptr.signal(classinfo + "::" + methodNameStr + ":" + sigStr + "~" + "somethread");
-
+      _sig_mutex.lock();
+      _rptr.signal(classinfo + "::" + methodNameStr + ":" + sigStr + "~" + std::string{info.name});
+      _sig_mutex.unlock();
     }
   }
 }
