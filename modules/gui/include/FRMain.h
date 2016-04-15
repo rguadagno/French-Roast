@@ -42,11 +42,6 @@ class FRMain : public QMainWindow {
    void update_list(std::string, std::string,int);
    void FRMain::update_timed_list(std::string ltype, std::string  descriptor, long elapsed, int last);
    void update_status(std::string);
-
-
- 
-
 };
-
 
 #endif

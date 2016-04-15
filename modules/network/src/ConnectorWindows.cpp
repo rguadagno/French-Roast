@@ -76,17 +76,45 @@ namespace frenchroast { namespace network {
       int len = sizeof(conn_from);
       SOCKET inSock = accept(_listener_socket,(SOCKADDR*)&conn_from, &len);
       _handler->message(std::string("connected~") + inet_ntoa(conn_from.sin_addr) + ":" + ntoa(htons(conn_from.sin_port)));
+      std::thread t1{[=](){
+      int rv;
       char databuf[500];
+      char flowbuf[1000];
+      char strbuf[500];
+      int start = 0;
+      int end = 0;
+      int buflen = 0;
+
       memset(databuf,0,500);
       while(1) {
         rv = recv(inSock, databuf, 500, 0);
         if (rv < 0 ) {
-          std::cout << "ERROR: " << WSAGetLastError() << std::endl;
+          std::cout << "RECV ERROR: " << WSAGetLastError() << std::endl;
           break;
         }
-        std::string item{databuf};
-         _handler->message(item);
+	memcpy(&flowbuf[buflen], databuf, rv);
+	int total_bytes = buflen + rv;
+
+	while(end < total_bytes) {
+	  if (flowbuf[end] == '\0') {
+	    memcpy(strbuf, &flowbuf[start],(end-start) + 1);
+	    std::string item{strbuf};
+	    _handler->message(item);
+	    start = end + 1;
+	}
+	++end;
       }
+      buflen = end-start;
+      if(buflen > 0) {
+	memcpy(flowbuf, &flowbuf[end], buflen);
+      }
+      end = 0;
+      start = 0;
+      }
+	}
+      };
+
+      t1.detach();
     }
 
     void Connector::init_sender(const std::string& ipaddr, int port)

@@ -17,64 +17,16 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef MON_H
-#define MON_H
+#ifndef FRMON_H
+#define FRMON_H
 #include <unordered_map>
 #include "Connector.h"
 #include "Listener.h"
 #include "Util.h"
 
 namespace frenchroast { namespace monitor {
-        std::unordered_map<char, std::string> _type_map { {'I',"int"},
-                                                             {'Z',"bool"},
-                                                             {'V',"void"},
-                                                             {'J',"long"},
-                                                             {'B',"byte"},
-                                                             {'C',"char"},
-                                                             {'D',"double"},
-                                                             {'F',"float"},
-			                                        {'S',"short"}
-		
-                                                           };
+    std::string translate_descriptor(const std::string& name);
     
-	std::string translate_descriptor(const std::string& name)
-	  {
-	    std::string rv = name.substr(1);
-	    replace(rv,'/','.');
-	    //	    
-	    std::string classname = split(rv,"::")[0];
-	    replace(classname,';');
-	    std::string methodname = split(split(rv,"::")[1],":")[0];
-	    std::string pstr = split(split(rv,"(")[1],")")[0];
-	    std::string rvstr = split(split(rv,")")[1],":")[0];
-
-	    std::string parms = "";
-	    int pos = 0;
-	    while(pos < pstr.length() ) {
-	      if (pstr[pos] == 'L') {
-		int nextsemi = pstr.find(";",pos);
-		parms += pstr.substr(pos+1,nextsemi-(pos+1)) + std::string(",");
-		pos = nextsemi +2;
-	      }
-	      else {
-		parms += _type_map[pstr[pos]] + std::string(",");
-		++pos;
-	      }
-	    }
-	    if(parms.length() > 1)
-	      parms.erase(parms.length()-1);
-	    
-	    if ( rvstr.length() == 1) {
-	      rvstr = _type_map[rvstr[0]];
-	    }
-	    else {
-	      rvstr = rvstr.substr(1);
-	      rvstr.erase(rvstr.length());
-	    }
-	      
-	    return classname + "::" + methodname + "(" + parms + "):" + rvstr;
-	  }
-
 
 	struct time_holder {
 	  long      _elapsed;

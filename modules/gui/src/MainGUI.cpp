@@ -36,7 +36,7 @@
 #include <unordered_map>
 #include <string>
 #include "fr.h"
-#include "Monitor.h"
+//#include "Monitor.h"
 #include "FRMain.h"
 
 std::string ntoa(int x,int pad = 0)
@@ -51,6 +51,10 @@ std::string ntoa(int x,int pad = 0)
     return rv;
   }
 
+
+FRListener::FRListener() : _mon(*this)
+{
+}
 
 int FRListener::getCount(const std::string& item)
 {
@@ -72,7 +76,7 @@ void FRListener::connected(const std::string& msg) {
 
 void FRListener::init()
 {
- frenchroast::monitor::Monitor<FRListener> _mon{*this};
+  //@@@ frenchroast::monitor::Monitor<FRListener> mon{*this};
  _mon.init_receiver("127.0.0.1",6060);
 }
 
@@ -161,6 +165,7 @@ int main(int argc, char* argv[]) {
  FRMain main(&roaster);
  QObject::connect(&roaster,&FRListener::thooked, &main, &FRMain::update_list);
  QObject::connect(&roaster,&FRListener::timersignal, &main, &FRMain::update_timed_list);
+
  QObject::connect(tt,&QThread::started, &roaster, &FRListener::init);
 
  tt->start();

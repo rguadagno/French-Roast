@@ -25,6 +25,7 @@
 #include <QTCore/QObject>
 #include <unordered_map>
 #include <string>
+#include "Monitor.h"
 
 
 
@@ -36,14 +37,16 @@ class FRListener : public QObject
   
   private:
     std::unordered_map<std::string, int> _items;
+    frenchroast::monitor::Monitor<FRListener> _mon;
 
   public:
     int getCount(const std::string& item);
     void signal(const std::string& tag, int count);
     void signal_timed(const std::string& tag, long elapsed, int last);
     void connected(const std::string& addr);
+    FRListener();
 
-    public slots:
+  public slots:
     void init();
 
   signals:
