@@ -1,0 +1,3 @@
+opcodefile  <c:\richg\French-Roast\modules\instrumentation\config\opcodes.txt>
+hooksfile   <c:\richg\French-Roast\modules\agent\config\example\hooks_config2.txt>
+reporterdescriptor <server~send:127.0.01:6060>

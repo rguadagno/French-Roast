@@ -1,0 +1,4 @@
+java.util.concurrent.ConcurrentHashMap$Segment::scanAndLockForPut:(java.lang.Object,int,java.lang.Object):java.util.concurrent.ConcurrentHashMap$HashEntry                               <ENTER>
+mypackage.MyClass::somefunc:(int):int                                 <TIMER>
+mypackage.MyClass::calcCost:(int):void                                <ENTER>
+
