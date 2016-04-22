@@ -132,7 +132,7 @@ namespace frenchroast {
 
     void set_attribute_value(const std::string& name, BYTE* value)
     {
-      <Attribute<ResolverType> attrib = _attributes[_attribute_index_map[name]];  
+      Attribute<ResolverType> attrib = _attributes[_attribute_index_map[name]];  
       attrib.setValueBytes(value);
     }
    

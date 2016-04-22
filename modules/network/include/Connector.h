@@ -25,6 +25,14 @@
 namespace frenchroast { namespace network {
 
     class Connector {
+#ifdef CONNECTOR_UNIX
+    int  _receiver_socket;
+    int  _sender_socket;
+#else
+    SOCKET _listener_socket;
+    SOCKET _sender_socket;
+#endif
+
       Listener* _handler;
     public:
       void init_receiver(const std::string& ipaddr, int port, Listener* handler);

@@ -163,11 +163,6 @@ void JNICALL
 
   if (_hooks.is_hook_class(sname)) {
     fr.load_from_buffer(class_data);
-    // check if below 2 lines needed, this maybe handled by const pool ad_method_ref
-    fr.add_name_to_pool("thook");
-    fr.add_name_to_pool("()V");
-    fr.add_name_to_pool("timerhook");
-    
     for (auto& x : _hooks.get(sname)) {
       if (x.line_number() > 0) {
 	 fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());

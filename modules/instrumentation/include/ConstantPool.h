@@ -75,13 +75,14 @@ namespace frenchroast {
   };
  
   class PoolInfo {
-    BYTE          _tag;
+
     InfoHolder*   _holder;
     //--------------------
     int           _index; 
     
     PoolInfo(const PoolInfo& ref);
   public:
+    BYTE          _tag;
     PoolInfo(unsigned char tag, int idx, InfoHolder* holder);
     PoolInfo(PoolInfo&& ref);
     int get_tag();
