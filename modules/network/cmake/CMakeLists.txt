@@ -5,6 +5,7 @@ include_directories(../include ../../instrumentation/include)
 if (UNIX)
    FILE(GLOB huh ../src/ConnectorUnix.cpp )
   add_definitions("-std=c++14")
+  add_definitions("-D=CONNECTOR_UNIX")
 endif (UNIX)
 
 if (WIN32)

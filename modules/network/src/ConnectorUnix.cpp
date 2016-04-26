@@ -28,7 +28,7 @@
 #include <cstring>
 #include <sstream>
 #include <unordered_map>
-#include <thread>
+
 
 #include "Listener.h"
 
@@ -47,7 +47,7 @@ namespace frenchroast { namespace network {
       memset(&serverinfo, 0, sizeof(serverinfo));
       serverinfo.sin_family = AF_INET;
       serverinfo.sin_addr.s_addr = inet_addr(ipaddr.c_str());
-      serverinfo.sin_port = htons(port);
+      serverinfo.sin_port = htonl(port);
       bind(_receiver_socket, (struct sockaddr *)&serverinfo, sizeof(serverinfo));
 
       listen(_receiver_socket, 1);
@@ -59,8 +59,6 @@ namespace frenchroast { namespace network {
       std::cout << "connected." << std::endl;
 
       _handler->message(std::string("connected~") + inet_ntoa(conn_from.sin_addr) + ":" + ntoa(htons(conn_from.sin_port)));
-	std::cout << "HER 1: " << std::endl;
-	//std::thread t1{[=](){
       int rv;
       char databuf[500];
       char flowbuf[1000];
@@ -96,59 +94,22 @@ namespace frenchroast { namespace network {
       end = 0;
       start = 0;
       }
-      //	}
-      //};
-
-      //t1.detach();
-
     }
 
     void Connector::init_sender(const std::string& ipaddr, int port)
     {
-
-      std::cout << "========== ConnectorUnix: HERE 1 ============ " << std::endl;
       _sender_socket = socket(AF_INET, SOCK_STREAM, 0);
       struct sockaddr_in serverinfo;
       memset(&serverinfo, 0, sizeof(serverinfo));
       serverinfo.sin_family = AF_INET;
       serverinfo.sin_addr.s_addr = inet_addr(ipaddr.c_str());
       serverinfo.sin_port = htons(port);
-      std::cout << "========== ConnectorUnix: HERE 2 " << ipaddr << "   " << port<< std::endl;
       int rv = connect(_sender_socket, (struct sockaddr *)&serverinfo, sizeof(serverinfo));
       if (rv != 0) {
         std::cout << "========== Unable to connect to server ============ " << std::endl;
         exit(0);
       }
       std::cout << "========== CONNECTED TO SERVER ============ " << std::endl;
-
-
-
-      /*
-      _sender_socket = INVALID_SOCKET;
-      WSADATA wsaData;
-      if (WSAStartup(MAKEWORD(2,2), &wsaData) != 0 ) {
-        std::cout << "ERROR: "  <<  "STARTUP FAILED " << std::endl;
-        exit(0);
-      }
-      
-      _sender_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-      if ( _sender_socket == INVALID_SOCKET) {
-        std::cout << "unable to create socket" << std::endl;
-        WSACleanup();
-        exit(0);
-      }
-
-      struct sockaddr_in    connectInfo;
-      connectInfo.sin_family      = AF_INET;
-      connectInfo.sin_addr.s_addr = inet_addr(ipaddr.c_str());  // @@ fix this
-      connectInfo.sin_port        = htons(port);
-      int rv = connect(_sender_socket, (SOCKADDR*)&connectInfo, sizeof(connectInfo));
-      if (rv != 0) {
-        std::cout << "========== Unable to connect to server ============ " << std::endl;
-        exit(0);
-      }
-      std::cout << "========== CONNECTED TO SERVER ============ " << std::endl;
-      */
     }
 
 
@@ -160,10 +121,7 @@ namespace frenchroast { namespace network {
 
     void Connector::close_down()
     {
-      /*
-      closesocket(_listener_socket);
-      WSACleanup();
-      */
+      //
     }
   }
 }
