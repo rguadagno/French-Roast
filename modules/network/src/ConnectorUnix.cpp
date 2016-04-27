@@ -47,7 +47,7 @@ namespace frenchroast { namespace network {
       memset(&serverinfo, 0, sizeof(serverinfo));
       serverinfo.sin_family = AF_INET;
       serverinfo.sin_addr.s_addr = inet_addr(ipaddr.c_str());
-      serverinfo.sin_port = htonl(port);
+      serverinfo.sin_port = htons(port);
       bind(_receiver_socket, (struct sockaddr *)&serverinfo, sizeof(serverinfo));
 
       listen(_receiver_socket, 1);
