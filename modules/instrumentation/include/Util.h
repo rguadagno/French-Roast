@@ -40,7 +40,7 @@ namespace frenchroast {
   std::string ntoa(double);
   std::string ntoa(long long);
 
-
+  
   template
   <typename IntegerType>
   IntegerType bits_to_int(IntegerType& result, const unsigned char* bits, bool little_endian=false)

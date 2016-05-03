@@ -23,6 +23,7 @@
 #include <QMainWindow>
 #include <QLabel>
 #include <QListWidget>
+#include <QTableWidget>
 #include <unordered_map>
 #include "fr.h"
 
@@ -36,12 +37,15 @@ class FRMain : public QMainWindow {
  private:
   QListWidget* _list;
   QListWidget* _timedlist;
+  QTableWidget* _traffic;
   std::unordered_map<std::string,QListWidgetItem*> _descriptors;
  
  public slots:
    void update_list(std::string, std::string,int);
-   void FRMain::update_timed_list(std::string ltype, std::string  descriptor, long elapsed, int last);
+   void update_timed_list(std::string ltype, std::string  descriptor, long elapsed, int last);
+   void update_traffic(std::vector<frenchroast::monitor::StackTrace> stacks);
    void update_status(std::string);
+   //   void show_deco(QTableWidgetItem*);
 };
 
 #endif

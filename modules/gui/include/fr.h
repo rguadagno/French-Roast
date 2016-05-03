@@ -53,7 +53,7 @@ class FRListener : public QObject
     void thooked(const std::string& ltype, const std::string& info,int count);
     void timersignal(const std::string& ltype, const std::string& info,long elapsed, int last);
     void remoteconnected(const std::string& addr);
-
+    void traffic_arrived();
 
 
 };

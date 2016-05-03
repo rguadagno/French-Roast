@@ -20,6 +20,7 @@
 #ifndef RRPT_H
 #define RRPT_H
 #include <string>
+
 namespace frenchroast { namespace agent {
 
     class Reporter {

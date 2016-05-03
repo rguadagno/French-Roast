@@ -25,6 +25,7 @@
 #include <QTWidgets/QListWidget>
 #include <QTWidgets/QMessageBox>
 #include <QTWidgets/QStatusBar>
+#include <QTWidgets/QTableWidget>
 #include <QTCore/QObject>
 #include <QThread>
 
@@ -36,7 +37,6 @@
 #include <unordered_map>
 #include <string>
 #include "fr.h"
-//#include "Monitor.h"
 #include "FRMain.h"
 
 std::string ntoa(int x,int pad = 0)
@@ -76,8 +76,8 @@ void FRListener::connected(const std::string& msg) {
 
 void FRListener::init()
 {
-  //@@@ frenchroast::monitor::Monitor<FRListener> mon{*this};
- _mon.init_receiver("127.0.0.1",6060);
+  frenchroast::monitor::Monitor<FRListener> mon{*this};
+ _mon.init_receiver("10.0.1.199",6060);
 }
 
 QWidget* setup_list(const std::string title, QListWidget* list_ptr)
@@ -95,19 +95,104 @@ QWidget* setup_list(const std::string title, QListWidget* list_ptr)
   return holder;
 }
 
+
+QWidget* build_traffic_viewer(QTableWidget* grid)
+{
+  QWidget* holder = new QWidget;
+  QVBoxLayout* vlayout = new QVBoxLayout();
+  vlayout->setSpacing(0);
+  holder->setLayout(vlayout);
+  grid->setStyleSheet("QTableWidget {border: 1px solid grey;background-color: black;font-size: 16px;font-family: \"Arial\"} QListWidget::item {color: orange;}");
+
+  vlayout->addWidget(grid);
+  
+  
+  
+
+  return holder;
+}
+
+QWidget* setup_central(QWidget* lists, QTableWidget* grid)
+{
+  QWidget* holder = new QWidget;
+  holder->setStyleSheet("QWidget {background-color: black;}");
+  QVBoxLayout* vlayout = new QVBoxLayout();
+  vlayout->setSpacing(0);
+  holder->setLayout(vlayout);
+  vlayout->addWidget(lists);
+  vlayout->addWidget(build_traffic_viewer(grid));
+  
+  return holder;
+}
+
+
+
+//class FR
+/*
+  map<name, vector<vector<string>>
+>    somefunc1:somefunc5:somefunc7
+>    somefunc1:somefunc8:...
+
+     somefunc1 -->  somefunc5
+     somefunc1 --> somefunc8 
+
+
+
+ */
+
+class FunctionPoint : public QTableWidgetItem {
+  QString _name;
+public:
+  void set_decorated_name(const QString& name)
+  {
+    _name = name;
+  }
+  QString get_name() const
+  {
+    return _name;
+  }
+};
+
+void FRMain::show_deco(QTableWidgetItem* item)
+{
+  QMessageBox box;
+  FunctionPoint* ptr = dynamic_cast<FunctionPoint*>(item);
+  box.setText(ptr->get_name());
+  box.exec();
+}
+
 FRMain::FRMain(FRListener* listener)
 {
   resize(1300,300);
   _list = new QListWidget;
   _timedlist = new QListWidget;
-
+  _traffic = new QTableWidget;
+  
   QWidget* datalists = new QWidget;
   QHBoxLayout* layout = new QHBoxLayout();
   datalists->setLayout(layout);
   datalists->setStyleSheet("QWidget {background-color: black;}");
   layout->addWidget(setup_list("Signals", _list));
   layout->addWidget(setup_list("Timers", _timedlist));
-  setCentralWidget(datalists);
+
+
+  //setCentralWidget(datalists);
+  setCentralWidget(setup_central(datalists,_traffic));
+  FunctionPoint* item = new FunctionPoint;
+  item->setForeground(QBrush{Qt::red});
+  item->setFont(QFont{"Courier"});
+  item->setText(QString{"somefunc() -->"});
+  item->set_decorated_name(QString{"somefunc(int)string -->"});
+  
+  //  _traffic->insertRow(0);
+  for(int idx = 1; idx <= 10; idx++) {
+    _traffic->insertColumn(0);
+  }
+  
+  //  _traffic->setItem(0,1,item);
+
+  QObject::connect(_traffic,&QTableWidget::itemDoubleClicked, this, &FRMain::show_deco);
+  
   statusBar()->showMessage("waiting for connection...");
   QObject::connect(listener,&FRListener::remoteconnected, this, &FRMain::update_status);
 }
@@ -127,6 +212,39 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, int count)
     _descriptors[descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(ntoa(count)));
 }
 
+
+
+void FRMain::update_traffic(std::vector<frenchroast::monitor::StackTrace> stacks)
+{
+  for(auto& x : stacks) {
+    if (_traffic_keys.count(x.key()) == 0) {
+      int currRow = _traffic->rowCount();
+      if(_traffic_keys.count(x.thread_name() == 0)) {
+	_traffic->insertRow(currRow);
+	FunctionPoint* tname = new FunctionPoint;
+	tname->setText(QString{x.thread_name()});
+	_traffic->insertItem(currRow,0, tname);
+	_traffic_keys[x.thread_name()] = tname;
+      }
+      else {
+	currRow = _traffic_keys[x.thread_name()].row() + 1;
+	_traffic->insertRow(currRow);
+      }
+      std::string runningKey = x.thread_name();
+      for(auto& fp : x.frames()) {
+	if (_traffic_keys.count(runningKey + fp.key()) == 0) {
+	  FunctionPoint* fpitem = new FunctionPoint;
+	  fpitem->setText(fp.get_name());
+	  fpitem->set_decorated_name(fp.get_decorated_name());
+	  _traffic.insertItem(currRow, _traffic_keys[runningKey].column() + 1, fpitem);
+	  _traffic_keys[runningKey + fp.key()] = fpitem;
+	}
+	  runningKey += fp.key();
+      }
+
+    }
+  }
+}
 
 
 std::string format_millis(long millis)
@@ -165,7 +283,8 @@ int main(int argc, char* argv[]) {
  FRMain main(&roaster);
  QObject::connect(&roaster,&FRListener::thooked, &main, &FRMain::update_list);
  QObject::connect(&roaster,&FRListener::timersignal, &main, &FRMain::update_timed_list);
-
+ QObject::connect(&roaster,&FRListener::traffic_arrived, &main, &FRMain::update_traffic);
+ 
  QObject::connect(tt,&QThread::started, &roaster, &FRListener::init);
 
  tt->start();
