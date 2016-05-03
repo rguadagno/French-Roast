@@ -17,30 +17,29 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef FRCON_H
-#define FRCON_H
+#ifndef FRSTACKTRACE_H
+#define FRSTACKTRACE_H
+
+#include <vector>
 #include <string>
-#include "Listener.h"
+#include "StackFrame.h"
 
-namespace frenchroast { namespace network {
+namespace frenchroast { namespace monitor {
 
-    class Connector {
-#ifdef CONNECTOR_UNIX
-    int  _receiver_socket;
-    int  _sender_socket;
-#else
-    SOCKET _listener_socket;
-    SOCKET _sender_socket;
-#endif
-
-      Listener* _handler;
+    class StackTrace {
+      std::string _key;
+      std::string _thread_name;
+      std::vector<StackFrame> _frames;
     public:
-      void wait_for_client_connection(const std::string& ipaddr, int port, Listener* handler);
-      void connect_to_server(const std::string& ipaddr, int port, Listener* handler);
-      void send_message(const std::string& msg);
-      void close_down();
+      StackTrace(const std::string tname);
+      std::string key()  const;
+      std::string thread_name()  const;
+      const std::vector<StackFrame>& frames() const;
+      void addFrame(const StackFrame& frame);
     };
+
   }
 }
+
 
 #endif

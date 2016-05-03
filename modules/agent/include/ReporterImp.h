@@ -25,12 +25,14 @@
 
 #include "Reporter.h"
 #include "Connector.h"
+#include "Listener.h"
 
 namespace frenchroast { namespace agent {
 
     class ReporterOut : public Reporter {
     public:
-      void init(const std::string& initinfo);
+      //      void init(const std::string& initinfo);
+      void traffic(const std::string& initinfo);
       void signal(const std::string& tag);
       void signal_timer(long long time, const std::string& direction, const std::string& tag, const std::string threadname);
       void close();
@@ -39,19 +41,23 @@ namespace frenchroast { namespace agent {
     class ReporterFile : public Reporter {
       std::ofstream _outfile;
     public:
-      void init(const std::string& initinfo);
+      void traffic(const std::string& initinfo);
+      void init(const std::string& initinfo, CommandListener*);
       void signal(const std::string& tag);
       void signal_timer(long long time, const std::string& direction, const std::string& tag, const std::string threadname);
       void close();
     };
 
-    class ReporterServer : public Reporter {
+    class ReporterServer : public Reporter, public network::Listener {
       network::Connector _conn;
+      CommandListener* _cl;
     public:
-      void init(const std::string& initinfo);
+      void init(const std::string& initinfo, CommandListener*);
+      void traffic(const std::string& tag);
       void signal(const std::string& tag);
       void signal_timer(long long time, const std::string& direction, const std::string& tag, const std::string threadname);
       void close();
+      void message(const std::string& msg);
     };
 
   }

@@ -19,10 +19,12 @@
 #include <vector>
 #include "ReporterImp.h"
 #include "Util.h"
+#include "Listener.h"
+#include "CommandListener.h"
 
 namespace frenchroast { namespace agent {
 
-    void ReporterServer::init(const std::string& serverinfo)
+    void ReporterServer::init(const std::string& serverinfo, CommandListener* cl)
     {
       std::vector<std::string> items = frenchroast::split(serverinfo,":");
       if (items.size() != 3) {
@@ -31,12 +33,30 @@ namespace frenchroast { namespace agent {
       if (items[0] != "send") {
 	 throw std::invalid_argument("ReporterSever, bad server info: " + serverinfo);
       }
-      _conn.init_sender(items[1], atoi(items[2].c_str()));
+      _conn.connect_to_server(items[1], atoi(items[2].c_str()),this);
+      _cl = cl;
     }  
+
+    void ReporterServer::message(const std::string& msg)
+    {
+      std::vector<std::string> items = frenchroast::split(msg,"~");
+
+      if (items[0] == "stop_watch_traffic") { 
+	_cl->stop_watch_traffic();
+      }
+      if (items.size() == 2 && items[0] == "watch_traffic") {
+	_cl->watch_traffic(atoi(items[1].c_str()));
+      }
+    }
 
     void ReporterServer::signal(const std::string& tag)
     {
       _conn.send_message("signal~" + tag);
+    }
+
+    void ReporterServer::traffic(const std::string& tag)
+    {
+      _conn.send_message("traffic~" + tag);
     }
     
     void ReporterServer::signal_timer(long long xtime, const std::string& direction, const std::string& tag, const std::string threadname)

@@ -23,7 +23,7 @@
 
 namespace frenchroast { namespace agent {
 
-    void Reporter::init(const std::string& initinfo)
+    void Reporter::init(const std::string& initinfo,CommandListener* cl)
     {
       std::vector<std::string> items = frenchroast::split(initinfo,"~");
       if (items[0] == "out") {
@@ -31,17 +31,22 @@ namespace frenchroast { namespace agent {
       }
       if (items[0] == "file") {
 	_impPtr = new ReporterFile();
-	_impPtr->init(items[1]);
+	_impPtr->init(items[1],cl);
       }
       if (items[0] == "server") {
 	_impPtr = new ReporterServer();
-	_impPtr->init(items[1]);
+	_impPtr->init(items[1],cl);
       }
     }  
 
     void Reporter::signal(const std::string& tag)
     {
       _impPtr->signal(tag);
+    }
+
+    void Reporter::traffic(const std::string& tag)
+    {
+      _impPtr->traffic(tag);
     }
     
     void Reporter::signal_timer(long long time, const std::string& direction, const std::string& tag, const std::string threadname)

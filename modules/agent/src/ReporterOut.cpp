@@ -21,10 +21,10 @@
 
 namespace frenchroast { namespace agent {
 
-    void ReporterOut::init(const std::string& initinfo)
-    {
-    }  
-
+    //    void ReporterOut::init(const std::string& initinfo)
+    // {
+    //}  
+    void ReporterOut::traffic(const std::string& tag) {}
     void ReporterOut::signal(const std::string& tag)
     {
       std::cout << tag << std::endl;

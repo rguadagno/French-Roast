@@ -21,6 +21,9 @@
 #include <string>
 #include <fstream>
 #include <mutex>
+#include <thread>
+#include <atomic>
+#include <condition_variable>
 #include "jvmti.h"
 #include "Agent.h"
 #include "Hooks.h"
@@ -28,7 +31,7 @@
 #include "Util.h"
 #include "Reporter.h"
 #include "Config.h"
-
+#include "CommandListener.h"
 
 struct GlobalAgentData {
 
@@ -37,6 +40,32 @@ struct GlobalAgentData {
 
 };
 
+std::mutex _traffic_mutex;
+
+class CommandBridge : public frenchroast::agent::CommandListener {
+  
+public:
+  std::atomic<int> _millis{};
+  std::condition_variable _traffic_cond;
+
+  void watch_traffic(const int interval_millis)
+  {
+    std::lock_guard<std::mutex> lck{_traffic_mutex};
+    _millis.store(interval_millis);
+    _traffic_cond.notify_one();
+  }
+
+  void stop_watch_traffic()
+  {
+    std::lock_guard<std::mutex> lck{_traffic_mutex};
+    _millis.store(-1);
+    _traffic_cond.notify_one();
+  }
+
+
+};
+
+
 static int counter = 0;
 static GlobalAgentData g_data;
 static GlobalAgentData* gdata = &g_data;
@@ -44,9 +73,13 @@ frenchroast::FrenchRoast fr;
 frenchroast::agent::Hooks _hooks;
 frenchroast::agent::Config _config;
 frenchroast::agent::Reporter _rptr;
+CommandBridge _commandListener;
+
 std::mutex _sig_mutex;
 std::mutex _sig_time_mutex;
+
 jvmtiEnv* genv;
+JavaVM*   g_java_vm;
 
 void enter_section(jvmtiEnv *env) {
 
@@ -196,6 +229,89 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   exit_section(env);
 }
 
+
+
+bool traffic_predicate() 
+{
+  return _commandListener._millis.load() > 0;
+}
+void traffic_monitor() 
+{
+  jvmtiEnv* xenv;
+  g_java_vm->AttachCurrentThread((void**)&xenv,(void*)NULL);
+
+  jvmtiStackInfo* stack_info;
+  jint thread_count;
+  jvmtiThreadInfo tinfo;
+
+  char *methodName;
+  char *sig;
+  char *class_sig;
+  char *generic;
+ 
+  int delay = _commandListener._millis.load();
+
+  if (!traffic_predicate()) {
+    std::unique_lock<std::mutex> lck{_traffic_mutex};
+    _commandListener._traffic_cond.wait(lck,&traffic_predicate);
+    delay = _commandListener._millis.load();
+  }
+
+  while(1) {
+    genv->GetAllStackTraces(10, &stack_info, &thread_count);
+
+    std::string rv = "";
+    for(int idx = 0; idx < thread_count; idx++) {
+      jvmtiStackInfo* stackptr = &stack_info[idx];
+      jthread thd  = stackptr->thread;
+      genv->GetThreadInfo(thd, &tinfo);
+      if (stackptr->frame_count >= 1) {
+	rv += std::string{tinfo.name} + "^";
+      }
+      else {
+	continue;
+      }  
+      for(int fidx = stackptr->frame_count - 1; fidx >= 0; fidx--) {
+	jvmtiError   err = genv->GetMethodName(stackptr->frame_buffer[fidx].method, &methodName,&sig,&generic);
+
+	jclass theclass;
+	genv->GetMethodDeclaringClass(stackptr->frame_buffer[fidx].method, &theclass);
+	err = genv->GetClassSignature(theclass, &class_sig,&generic);
+	std::string classinfo{class_sig};
+	rv += classinfo + "::";
+	rv +=  std::string{methodName} + ":" + std::string{sig} + "#";
+      }
+      rv.erase(rv.end() -1);
+      rv += "%";
+    }
+    
+    rv.erase(rv.end() -1);
+  
+ 
+    _sig_mutex.lock();
+    _rptr.traffic(rv);
+    std::cout << rv << std::endl;
+    _sig_mutex.unlock();
+    
+    
+    if (!traffic_predicate()) {
+      std::unique_lock<std::mutex> lck{_traffic_mutex};
+      _commandListener._traffic_cond.wait(lck,&traffic_predicate);
+      delay = _commandListener._millis.load();
+    }
+    else {
+      std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+    }
+    if (!traffic_predicate()) {
+      std::unique_lock<std::mutex> lck{_traffic_mutex};
+      _commandListener._traffic_cond.wait(lck,&traffic_predicate);
+      delay = _commandListener._millis.load();
+    }
+
+	
+  }
+  }
+
 void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
 {
   std::cout << "*** INIT() " << std::endl;
@@ -221,13 +337,16 @@ void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
     std::cout << "thread: " << info.name << " ( " << (info.is_daemon == true) << " ) " << std::endl;
   }
   env->Deallocate((unsigned char *)threads);
-}
 
+  std::thread t1{traffic_monitor};
+  t1.detach();
+}
 
 
 
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 {
+  g_java_vm = vm;
   std::string configFile;
   if (options != NULL)
     configFile = std::string{options};
@@ -260,8 +379,8 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   }
 
   std::cout << "===========> " << _config.get_reporter_descriptor() << std::endl;
-  
-    _rptr.init(_config.get_reporter_descriptor());
+
+  _rptr.init(_config.get_reporter_descriptor(),&_commandListener);
   jvmtiError err;
   jvmtiEnv* env;
   vm->GetEnv((void**)&env, JVMTI_VERSION_1_0);

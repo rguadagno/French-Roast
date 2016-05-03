@@ -23,10 +23,11 @@
 #include "Connector.h"
 #include "Listener.h"
 #include "Util.h"
+#include "StackTrace.h"
 
 namespace frenchroast { namespace monitor {
     std::string translate_descriptor(const std::string& name);
-    
+    std::vector<StackTrace> construct_traffic(const std::string& msg);
 
 	struct time_holder {
 	  long      _elapsed;
@@ -52,6 +53,7 @@ namespace frenchroast { namespace monitor {
         { 
         }
       
+
         void message(const std::string& msg)
         {
           std::vector<std::string> items = frenchroast::split(msg,"~");
@@ -70,6 +72,10 @@ namespace frenchroast { namespace monitor {
 	  if (items[MSG_TYPE] == "signal") {
 	    _handler.signal(translate_descriptor(items[MSG]) + " [" + items[2] +"]" , ++_signals[items[MSG]]);
 	  }
+	  if (items[MSG_TYPE] == "traffic") {
+	    _handler.traffic( construct_traffic(msg));
+	  }
+
 	 if (items[MSG_TYPE] == "connected") {
 	   _handler.connected(items[MSG]);
 	 }
@@ -78,7 +84,18 @@ namespace frenchroast { namespace monitor {
 
       void init_receiver(const std::string& ipAddr, int port)
       {
-        _conn.init_receiver(ipAddr, port, this);
+        _conn.wait_for_client_connection(ipAddr, port, this);
+      }
+
+      void watch_traffic(const int interval_millis)
+      {
+	_conn.send_message("watch_traffic~" + ntoa(interval_millis));
+      }
+
+      void stop_watch_traffic()
+      {
+     std::cout << "************ SENT STOP **********" << std::endl;
+	_conn.send_message("stop_watch_traffic~" );
       }
 
 

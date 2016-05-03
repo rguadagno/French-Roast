@@ -21,6 +21,7 @@
 
 
 #include "Util.h"
+#include "StackTrace.h"
 #include <unordered_map>
 #include <string>
 
@@ -76,5 +77,22 @@ std::string translate_descriptor(const std::string& name)
 	      
 	    return classname + "::" + methodname + "(" + parms + "):" + rvstr;
 	  }
+
+
+    std::vector<StackTrace> construct_traffic(const std::string& msg)
+    {
+      std::vector<StackTrace> rv;
+      std::vector<std::string> items = split(msg, "%");
+      for(auto& x : items) {
+	StackTrace st{split(x,"^")[0]};
+	for(auto& y : split(split(x,"^")[1],"#")) {
+	  st.addFrame(StackFrame{translate_descriptor(y),y});
+	}
+	rv.push_back(st);
+      }
+
+      return rv;
+    }
+
 
   }}
