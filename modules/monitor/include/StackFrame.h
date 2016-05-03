@@ -17,30 +17,34 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef FRCON_H
-#define FRCON_H
-#include <string>
-#include "Listener.h"
+#ifndef FRSTACKFRAME_H
+#define FRSTACKFRAME_H
 
-namespace frenchroast { namespace network {
+#include <vector>
 
-    class Connector {
-#ifdef CONNECTOR_UNIX
-    int  _receiver_socket;
-    int  _sender_socket;
-#else
-    SOCKET _listener_socket;
-    SOCKET _sender_socket;
-#endif
+namespace frenchroast { namespace monitor {
 
-      Listener* _handler;
+    class StackFrame {
+      std::string _name;
+      std::string _decorated_name;
     public:
-      void wait_for_client_connection(const std::string& ipaddr, int port, Listener* handler);
-      void connect_to_server(const std::string& ipaddr, int port, Listener* handler);
-      void send_message(const std::string& msg);
-      void close_down();
+    StackFrame(const std::string& name, const std::string& deco) : _name(name), _decorated_name(deco)
+      {
+      }
+
+      std::string get_name()  const 
+      {
+        return _name;
+      }
+
+      std::string get_decorated_name()  const
+      {
+	return _decorated_name;
+      }
     };
+
   }
 }
+
 
 #endif

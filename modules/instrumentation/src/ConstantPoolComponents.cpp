@@ -14,7 +14,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+//    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
 #include "FrenchRoast.h"
@@ -22,6 +22,7 @@
 #include "Util.h"
 #include <sstream>
 #include <exception>
+#include <cmath>
 
 
 namespace frenchroast {
@@ -210,9 +211,10 @@ namespace frenchroast {
   };
 
   class Utf8Holder : public InfoHolder {
-    BYTE                       _length[2];
+
     std::vector<BYTE>          _data;      
   public:
+    BYTE                       _length[2];
     Utf8Holder(const BYTE* bufstart)
     {
       _name = "Utf8";
@@ -572,6 +574,14 @@ namespace frenchroast {
     if (classIndex == 0) {
       throw std::invalid_argument(std::string("name: ") +  classstr + "  NOT in Pool");
     }
+    if (_names.count(typestr) == 0 ) {
+      add_name(typestr);
+    }
+
+    if (_names.count(namestr) == 0 ) {
+      add_name(namestr);
+    }
+
     int nameAndTypeIndex = _names[ntoa(_names[namestr]) + "." + ntoa(_names[ typestr ])];
     if(nameAndTypeIndex == 0) {
       NameAndTypeHolder* ptr = new NameAndTypeHolder(_names[namestr],_names[typestr]);

@@ -17,10 +17,11 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 #include "ReporterImp.h"
+#include "CommandListener.h"
 
 namespace frenchroast { namespace agent {
 
-    void ReporterFile::init(const std::string& filename)
+    void ReporterFile::init(const std::string& filename, CommandListener*)
     {
       try {
 	_outfile.exceptions(std::ifstream::failbit);
@@ -31,7 +32,9 @@ namespace frenchroast { namespace agent {
 	  throw std::ifstream::failure("cannot open file: " + filename);
       }
     }  
+    void ReporterFile::traffic(const std::string& tag) {
 
+    }
     void ReporterFile::signal(const std::string& tag)
     {
             _outfile << tag << std::endl;

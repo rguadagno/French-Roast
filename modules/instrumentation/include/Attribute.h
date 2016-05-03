@@ -84,7 +84,7 @@ namespace frenchroast {
       return bytesWrite;
     }
 
-    int Attribute<ResolverType>::size_in_bytes() const
+    int size_in_bytes() const
     {
       return sizeof(_nameIndex) + sizeof(_length) + to_int(_length,sizeof(_length));
     }

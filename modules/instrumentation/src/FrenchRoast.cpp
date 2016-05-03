@@ -394,8 +394,9 @@ namespace frenchroast {
       instructions.push_back(Instruction(_opCodes[opcode::invokevirtual], getname_id));
       instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  hook_id));
       meth.add_instructions(0,instructions, true);      
-
-      instructions[1] = std::move(Instruction(_opCodes[opcode::ldc], exit_id));
+      Instruction ninst{_opCodes[opcode::ldc], exit_id};
+      instructions[1] = ninst;
+      //@@@      instructions[1] = std::move(Instruction(_opCodes[opcode::ldc], exit_id));
       bool adjust = false;
       for (auto& x : meth.get_return_addresses()) {
 	 meth.add_instructions(x,instructions, adjust);

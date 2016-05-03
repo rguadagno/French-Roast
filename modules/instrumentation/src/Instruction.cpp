@@ -86,7 +86,7 @@ namespace frenchroast {
   }
 
 
-  int Instruction::calc_pad(int startAddress) const
+  int Instruction::calc_pad(int startAddress) 
   {
     return 4 - (startAddress % 4 + 1);
   }

@@ -22,6 +22,8 @@
 #include <fstream>
 #include <vector>
 #include <memory>
+#include <cstring>
+
 namespace frenchroast {
 
   using BYTE =  unsigned char;

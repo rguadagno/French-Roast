@@ -20,13 +20,14 @@
 #ifndef RRPT_H
 #define RRPT_H
 #include <string>
+#include "CommandListener.h"
 
 namespace frenchroast { namespace agent {
 
     class Reporter {
       Reporter* _impPtr;
     public:
-      virtual void init(const std::string& initinfo);
+      virtual void init(const std::string& initinfo, CommandListener*);
       // init examples
       //
       // "out"
@@ -34,6 +35,7 @@ namespace frenchroast { namespace agent {
       // "server~send:127.0.01:6060"
       // "server~recv:127.0.01:6070"
       // "server~recv:127.0.01:6070:send:127.0.0.1:6060"
+      virtual void traffic(const std::string& tag);
       virtual void signal(const std::string& tag);
       virtual void signal_timer(long long time, const std::string& direction, const std::string& tag, const std::string threadname);
       virtual void close();
