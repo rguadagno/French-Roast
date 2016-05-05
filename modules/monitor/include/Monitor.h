@@ -71,9 +71,10 @@ namespace frenchroast { namespace monitor {
 	  }
 	  if (items[MSG_TYPE] == "signal") {
 	    _handler.signal(translate_descriptor(items[MSG]) + " [" + items[2] +"]" , ++_signals[items[MSG]]);
-	  }
+
+	   }
 	  if (items[MSG_TYPE] == "traffic") {
-	    _handler.traffic( construct_traffic(msg));
+	    _handler.traffic( construct_traffic(items[MSG]));
 	  }
 
 	 if (items[MSG_TYPE] == "connected") {
@@ -94,7 +95,6 @@ namespace frenchroast { namespace monitor {
 
       void stop_watch_traffic()
       {
-     std::cout << "************ SENT STOP **********" << std::endl;
 	_conn.send_message("stop_watch_traffic~" );
       }
 

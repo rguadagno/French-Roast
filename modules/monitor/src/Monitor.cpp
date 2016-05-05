@@ -39,12 +39,11 @@ namespace frenchroast { namespace monitor {
                                                            };
     
 
-std::string translate_descriptor(const std::string& name)
-  
-	  {
-	    std::string rv = name.substr(1);
-	    replace(rv,'/','.');
-	    //	    
+    std::string translate_descriptor(const std::string& name)
+    {
+      std::string rv = name.substr(1);
+      replace(rv,'/','.');
+      //	    
 	    std::string classname = split(rv,"::")[0];
 	    replace(classname,';');
 	    std::string methodname = split(split(rv,"::")[1],":")[0];
@@ -85,8 +84,10 @@ std::string translate_descriptor(const std::string& name)
       std::vector<std::string> items = split(msg, "%");
       for(auto& x : items) {
 	StackTrace st{split(x,"^")[0]};
-	for(auto& y : split(split(x,"^")[1],"#")) {
-	  st.addFrame(StackFrame{translate_descriptor(y),y});
+	//	for(auto& y : split(split(x,"^")[1],"#")) {
+	std::vector<std::string> fitems = split(split(x,"^")[1],"#");
+	for(int idx = fitems.size()-1;idx >= 0; idx--) {
+	  st.addFrame(StackFrame{translate_descriptor(fitems[idx]),fitems[idx]});
 	}
 	rv.push_back(st);
       }

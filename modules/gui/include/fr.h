@@ -26,10 +26,12 @@
 #include <unordered_map>
 #include <string>
 #include "Monitor.h"
+#include "StackTrace.h"
 
 
 
 Q_DECLARE_METATYPE(std::string);
+Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::StackTrace>);
 
 class FRListener : public QObject
 {
@@ -38,22 +40,27 @@ class FRListener : public QObject
   private:
     std::unordered_map<std::string, int> _items;
     frenchroast::monitor::Monitor<FRListener> _mon;
+    std::string _ip;
+    int         _port;
+    int         _trafficRate{-1};
 
   public:
     int getCount(const std::string& item);
     void signal(const std::string& tag, int count);
+    void traffic(std::vector<frenchroast::monitor::StackTrace>&);
     void signal_timed(const std::string& tag, long elapsed, int last);
     void connected(const std::string& addr);
-    FRListener();
+    FRListener(const std::string ip, int port);
 
   public slots:
     void init();
+    void start_traffic(int);
 
   signals:
     void thooked(const std::string& ltype, const std::string& info,int count);
     void timersignal(const std::string& ltype, const std::string& info,long elapsed, int last);
     void remoteconnected(const std::string& addr);
-    void traffic_arrived();
+    void traffic_signal(const std::vector<frenchroast::monitor::StackTrace>&);
 
 
 };

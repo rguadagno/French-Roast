@@ -3,10 +3,10 @@
 ######################################################################
 
 TEMPLATE = app
-TARGET = src
+TARGET = roaster
 INCLUDEPATH += ..\include ..\..\network\include ..\..\instrumentation\include ..\..\monitor\include
 QT += core gui widgets
 # Input
-SOURCES += ..\src\*.cpp ..\..\network\src\ConnectorWindows.cpp ..\..\instrumentation\src\Util.cpp ..\..\monitor\src\Monitor.cpp
+SOURCES += ..\src\*.cpp ..\..\network\src\ConnectorWindows.cpp ..\..\network\src\Connector.cpp ..\..\instrumentation\src\Util.cpp ..\..\monitor\src\Monitor.cpp ..\..\monitor\src\StackTrace.cpp
 HEADERS += ..\include\*.h
 LIBS +=  ws2_32.lib

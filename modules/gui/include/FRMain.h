@@ -24,8 +24,35 @@
 #include <QLabel>
 #include <QListWidget>
 #include <QTableWidget>
+#include <QPushButton>
+#include <QLineEdit>
 #include <unordered_map>
 #include "fr.h"
+
+
+
+class FunctionPoint : public QTableWidgetItem {
+  QString _name;
+
+public:
+  void set_decorated_name(const QString& name);
+  QString get_name() const;
+};
+
+
+
+class StackRow {
+  int _totalRows{1};
+  int _col{0};
+  FunctionPoint* _threadName;
+  QTableWidget* _tptr;
+  //  std::unordred_map<std::string, std::vector<std::vector<FunctionPoint>> _keys;
+  std::unordered_map<std::string, std::vector<FunctionPoint*>> _keys;
+  //  std::vector<std::vector<FunctionPoint> _cols;
+ public:
+  StackRow::StackRow(const std::string tname, int row, QTableWidget* tptr);
+  void add(const frenchroast::monitor::StackTrace& st);
+};
 
 
 class FRMain : public QMainWindow {
@@ -38,14 +65,22 @@ class FRMain : public QMainWindow {
   QListWidget* _list;
   QListWidget* _timedlist;
   QTableWidget* _traffic;
+  QPushButton*  _buttonStartTraffic;
+  QPushButton*  _buttonStopTraffic;
+  QLineEdit*    _rate;
   std::unordered_map<std::string,QListWidgetItem*> _descriptors;
- 
+  std::unordered_map<std::string,StackRow*> _traffic_keys;
+
+ signals:
+   void start_traffic(int rate);
+  
  public slots:
+   void show_deco(QTableWidgetItem* item);
    void update_list(std::string, std::string,int);
    void update_timed_list(std::string ltype, std::string  descriptor, long elapsed, int last);
-   void update_traffic(std::vector<frenchroast::monitor::StackTrace> stacks);
+   void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void update_status(std::string);
-   //   void show_deco(QTableWidgetItem*);
+   void update_traffic_rate();
 };
 
 #endif
