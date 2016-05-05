@@ -18,8 +18,6 @@
 //
 
 
-#include "Connector.h"
-#include "Util.h"
 
 #include <winsock2.h>
 #include <windows.h>
@@ -28,15 +26,14 @@
 #include <sstream>
 #include <unordered_map>
 #include <thread>
+#include "Connector.h"
+#include "Util.h"
 
 #include "Listener.h"
 
 namespace frenchroast { namespace network {
 
-    SOCKET _listener_socket;
-    SOCKET _sender_socket;
-
-    void Connector::init_receiver(const std::string& ipaddr, int port, Listener* handler)
+    void Connector::wait_for_client_connection(const std::string& ipaddr, int port, Listener* handler)
     {
       _handler = handler;
       WSADATA wsaData;
@@ -46,9 +43,9 @@ namespace frenchroast { namespace network {
         exit(0);
       }
 
-      _listener_socket = INVALID_SOCKET;
-      _listener_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-      if ( _listener_socket == INVALID_SOCKET) {
+      _receiver_socket = INVALID_SOCKET;
+      _receiver_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+      if ( _receiver_socket == INVALID_SOCKET) {
         std::cout << "unable to create socket" << std::endl;
         WSACleanup();
         exit(0);
@@ -58,15 +55,15 @@ namespace frenchroast { namespace network {
       connectInfo.sin_family      = AF_INET;
       connectInfo.sin_addr.s_addr = inet_addr(ipaddr.c_str());
       connectInfo.sin_port        = htons(port);
-      int rv = bind(_listener_socket, (SOCKADDR*)&connectInfo, sizeof(connectInfo));
+      int rv = bind(_receiver_socket, (SOCKADDR*)&connectInfo, sizeof(connectInfo));
       if (rv == SOCKET_ERROR) {
-        closesocket(_listener_socket);
+        closesocket(_receiver_socket);
         std::cout << "unable to bind to socket" << std::endl;
         WSACleanup();
         exit(0);
       }
 
-      if (listen(_listener_socket, SOMAXCONN) == SOCKET_ERROR) {
+      if (listen(_receiver_socket, SOMAXCONN) == SOCKET_ERROR) {
         std::cout << "ERROR waiting..." << std::endl;
         WSACleanup();
         exit(0);
@@ -74,50 +71,15 @@ namespace frenchroast { namespace network {
 
       struct sockaddr_in    conn_from;
       int len = sizeof(conn_from);
-      SOCKET inSock = accept(_listener_socket,(SOCKADDR*)&conn_from, &len);
+      SOCKET inSock = accept(_receiver_socket,(SOCKADDR*)&conn_from, &len);
+      _sender_socket = inSock;
       _handler->message(std::string("connected~") + inet_ntoa(conn_from.sin_addr) + ":" + ntoa(htons(conn_from.sin_port)));
-      std::thread t1{[=](){
-      int rv;
-      char databuf[500];
-      char flowbuf[1000];
-      char strbuf[500];
-      int start = 0;
-      int end = 0;
-      int buflen = 0;
-
-      memset(databuf,0,500);
-      while(1) {
-        rv = recv(inSock, databuf, 500, 0);
-        if (rv < 0 ) {
-          std::cout << "RECV ERROR: " << WSAGetLastError() << std::endl;
-          break;
-        }
-	memcpy(&flowbuf[buflen], databuf, rv);
-	int total_bytes = buflen + rv;
-
-	while(end < total_bytes) {
-	  if (flowbuf[end] == '\0') {
-	    memcpy(strbuf, &flowbuf[start],(end-start) + 1);
-	    std::string item{strbuf};
-	    _handler->message(item);
-	    start = end + 1;
-	}
-	++end;
-      }
-      buflen = end-start;
-      if(buflen > 0) {
-	memcpy(flowbuf, &flowbuf[end], buflen);
-      }
-      end = 0;
-      start = 0;
-      }
-	}
-      };
-
+      std::thread t1{process_instream,inSock,_handler};
       t1.detach();
+
     }
 
-    void Connector::init_sender(const std::string& ipaddr, int port)
+    void Connector::connect_to_server(const std::string& ipaddr, int port, Listener* handler)
     {
       _sender_socket = INVALID_SOCKET;
       WSADATA wsaData;
@@ -143,6 +105,9 @@ namespace frenchroast { namespace network {
         exit(0);
       }
       std::cout << "========== CONNECTED TO SERVER ============ " << std::endl;
+      std::thread t1{process_instream,_sender_socket,handler};
+      t1.detach();
+
     }
 
 
@@ -154,7 +119,7 @@ namespace frenchroast { namespace network {
 
     void Connector::close_down()
     {
-      closesocket(_listener_socket);
+      closesocket(_receiver_socket);
       WSACleanup();
     }
   }

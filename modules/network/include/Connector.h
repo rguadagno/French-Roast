@@ -22,14 +22,22 @@
 #include <string>
 #include "Listener.h"
 
-namespace frenchroast { namespace network {
 
+#ifdef CONNECTOR_UNIX
+#else
+    #include <winsock2.h>
+#endif
+
+namespace frenchroast { namespace network {
+    
+    void process_instream(int connfd, Listener* handler);
+    
     class Connector {
 #ifdef CONNECTOR_UNIX
     int  _receiver_socket;
     int  _sender_socket;
 #else
-    SOCKET _listener_socket;
+    SOCKET _receiver_socket;
     SOCKET _sender_socket;
 #endif
 

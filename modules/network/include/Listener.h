@@ -19,7 +19,7 @@
 
 #ifndef FRLISTENER_H
 #define FRLISTENER_H
-
+#include <string>
 
 namespace frenchroast { namespace network {
 
