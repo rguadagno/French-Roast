@@ -54,7 +54,6 @@ std::string ntoa(int x,int pad = 0)
     return rv;
   }
 
-
 FRListener::FRListener(const std::string ip, int port) : _ip(ip), _port(port), _mon(*this)
 {
 }
@@ -91,6 +90,11 @@ void FRListener::init()
 void FRListener::start_traffic(int rate)
 {
   _mon.watch_traffic(rate);
+}
+
+void FRListener::stop_traffic()
+{
+  _mon.stop_watch_traffic();
 }
 
 
@@ -194,6 +198,7 @@ void FRMain::show_deco(QTableWidgetItem* item)
   box.exec();
 }
 
+
 FRMain::FRMain(FRListener* listener)
 {
   resize(1300,300);
@@ -216,6 +221,7 @@ FRMain::FRMain(FRListener* listener)
     
   QObject::connect(_traffic,&QTableWidget::itemDoubleClicked, this, &FRMain::show_deco);
   QObject::connect(_buttonStartTraffic, &QPushButton::clicked, this, &FRMain::update_traffic_rate);
+    QObject::connect(_buttonStopTraffic, &QPushButton::clicked, listener, &FRListener::stop_traffic);
   QObject::connect(this, &FRMain::start_traffic, listener, &FRListener::start_traffic);
   
   statusBar()->showMessage("waiting for connection...");
@@ -254,16 +260,16 @@ void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>&
       continue;
     }
     int currRow = _traffic->rowCount();
-    if(_traffic_keys.count(x.thread_name()) == 0) {
+    if(_traffic_rows.count(x.thread_name()) == 0) {
       _traffic->insertRow(currRow);
-      StackRow* sr = new StackRow{x.thread_name(), currRow, _traffic};
-      _traffic_keys[x.thread_name()] = sr;
+      StackRow* sr = new StackRow{x.thread_name(), currRow, _traffic, _traffic_keys};
+      _traffic_rows[x.thread_name()] = sr;
     }
-    _traffic_keys[x.thread_name()]->add(x);
+    _traffic_rows[x.thread_name()]->add(x);
   }
 }
 
-StackRow::StackRow(const std::string tname, int row, QTableWidget* tptr) : _tptr(tptr)
+StackRow::StackRow(const std::string tname, int row, QTableWidget* tptr, std::unordered_map<std::string,int>& keys) : _tptr(tptr), _keys(keys)
 {
 
   _threadName = new FunctionPoint;
@@ -273,68 +279,70 @@ StackRow::StackRow(const std::string tname, int row, QTableWidget* tptr) : _tptr
 
 }
 
+FunctionPoint* StackRow::thread_name()
+{
+  return _threadName;
+}
+
+void StackRow::append_to_column(int col, const frenchroast::monitor::StackTrace& st)
+{
+
+  add_column(st,col);
+}
+
+void StackRow::add_column(const frenchroast::monitor::StackTrace& st, int col)
+{
+  int count = 0;
+  std::string runningKey = "";
+  int extra = st.frames().size() - _totalRows;
+      for(int idx = 1; idx <= extra; idx++){
+	_tptr->insertRow(_threadName->row() + _totalRows++);
+      }
+      
+      for(auto& frame : st.frames()) {
+	FunctionPoint* fpitem = new FunctionPoint;
+	fpitem->setText(QString::fromStdString(frame.get_name()  ));
+	fpitem->set_decorated_name(QString::fromStdString( frame.get_decorated_name()));
+	if (count == 0) {
+	  fpitem->setBackground(QColor(64,64,64));
+	}
+	_tptr->setItem(_threadName->row() + count, col, fpitem);
+	++count;
+	runningKey += frame.get_decorated_name();
+	_keys[runningKey] = col;
+      }
+
+
+}
+
 void StackRow::add(const frenchroast::monitor::StackTrace& st)
 {
   if (_keys.count(st.key()) != 0) return;
 
-  // look for partial key
-  for(auto itr = _keys.begin(); itr != _keys.end(); itr++) {
-    if (st.key().find(   itr->first ) != std::string::npos) {
-      //------ expand --
-      int extra = st.frames().size() - _totalRows;
-      for(int idx = 1; idx <= extra; idx++){
-	_tptr->insertRow(_threadName->row() + _totalRows++);
-      }
-      //--------
-      int col = 1;
-      for(auto frameitr = itr->second.rbegin(); frameitr != itr->second.rend(); frameitr++   ) {
-	_tptr->setItem((*frameitr)->row() + extra, (*frameitr)->column(), *frameitr);
-      }
-      int count = 0;
-      std::string runningKey = st.key();
-      for(int idx = st.frames().size() - 1 - extra; idx < st.frames().size(); idx++) {
-	  FunctionPoint* fpitem = new FunctionPoint;
-	  _keys[runningKey].push_back(fpitem);
-	  fpitem->setText(QString::fromStdString(st.frames()[idx].get_name()  ));
-	  fpitem->set_decorated_name(QString::fromStdString( st.frames()[idx].get_decorated_name()));
-	  
-	  _tptr->setItem(_threadName->row() - extra + count, _keys[st.key()][0]->column(), fpitem);
-	  ++count;
-	  _keys[runningKey + st.frames()[idx].get_decorated_name()] = _keys[runningKey];
-	  runningKey += st.frames()[idx].get_decorated_name();
-
-      }
-      return; 
+  std::string partialkey = "";
+  for(auto& x : _complete_keys) {
+    if (st.key().find(x) != std::string::npos) {
+      partialkey = x;
     }
   }
-
-  // add new col
-  _tptr->insertColumn(_tptr->columnCount());
-    ++_col;      
-  int count = 0;
-  std::string runningKey = "";
-  std::vector<FunctionPoint*> vec;
   
-  int extra = st.frames().size() - _totalRows;
-  for(int idx = 1; idx <= extra; idx++){
-    _tptr->insertRow(_threadName->row() + _totalRows++);
+  if (partialkey != "") {
+    append_to_column(_keys[partialkey], st);
   }
-
-  for(auto& frame : st.frames()) {
-    FunctionPoint* fpitem = new FunctionPoint;
-    vec.push_back(fpitem);
-    fpitem->setText(QString::fromStdString(frame.get_name()  ));
-    fpitem->set_decorated_name(QString::fromStdString( frame.get_decorated_name()));
-    if (count == 0) {
-      fpitem->setBackground(QColor(64,64,64));
+  else {
+    ++_col;
+    if (_tptr->columnCount() < _col) {
+      _tptr->insertColumn(_tptr->columnCount());
     }
-    _tptr->setItem(_threadName->row() + count, _col, fpitem);
-    ++count;
-    runningKey += frame.get_decorated_name();
-   _keys[runningKey] = vec;
+    add_column(st, _col -1 );
+  }
+  
+  _complete_keys.clear();
+  _complete_keys.insert(st.key());
+  
   }
 
-}
+
 
 
 std::string format_millis(long millis)

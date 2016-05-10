@@ -55,6 +55,7 @@ class FRListener : public QObject
   public slots:
     void init();
     void start_traffic(int);
+    void stop_traffic();
 
   signals:
     void thooked(const std::string& ltype, const std::string& info,int count);
