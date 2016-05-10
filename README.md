@@ -85,7 +85,8 @@ java.util.concurrent.ConcurrentHashMap$Segment::scanAndLockForPut:(java.lang.Obj
 ### Qt Application
 ![alt text](https://github.com/rguadagno/French-Roast/blob/master/docs/app.png "app")
 
-
+#### Traffic
+Using the JVMTI api call ```GetAllStackTraces``` running in a thread in the agent we can send back to the monitor all stacks to see what exactly the application is doing. The idea is then copy/paste from the traffic grid into the hooks file a method of interest.
 
 
 
