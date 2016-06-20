@@ -124,11 +124,14 @@ namespace frenchroast { namespace agent {
 	std::string line;
 	while (getline(infile,line))
 	{
+	  if (line[0] == '#') {
+	    continue;
+	  }
 	  validate(line);
 	  std::string classname = split(line, "::")[0];
 	  convert_name(classname);
 	  std::string methName = split(split(line, '<')[0],"::")[1];
-         remove_blanks(methName);
+          remove_blanks(methName);
   	  convert_name(methName);
 	  std::string flagStr = split(split(line, '<')[1],">")[0];
 	  std::bitset<4> flags;
@@ -141,7 +144,7 @@ namespace frenchroast { namespace agent {
 	  throw std::invalid_argument{"hooks file empty"};
 	}
       }
-      catch(std::ifstream::failure& e) {
+      catch(std::ifstream::failure&) {
 	throw std::ifstream::failure("cannot open file: " + filename);
       }
     }
