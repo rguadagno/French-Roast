@@ -290,7 +290,6 @@ void traffic_monitor()
  
     _sig_mutex.lock();
     _rptr.traffic(rv);
-    std::cout << rv << std::endl;
     _sig_mutex.unlock();
     
     
