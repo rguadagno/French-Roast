@@ -340,7 +340,7 @@ namespace frenchroast {
   {
     if (_opcodesLoaded)
       {
-	return;
+        return;
       }
     _opCodes.load(fileName);
     _opcodesLoaded = true;
@@ -364,8 +364,8 @@ namespace frenchroast {
       instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  hook_id));
       bool adjust = false;
       for (auto& x : meth.get_return_addresses()) {
-	 meth.add_instructions(x,instructions, adjust);
-	 adjust = true;
+         meth.add_instructions(x,instructions, adjust);
+         adjust = true;
       }
       if (meth.get_max_stack() == 0) {
         meth.set_max_stack(1);
@@ -382,7 +382,7 @@ namespace frenchroast {
       
       constPool.add_name("()Ljava/lang/Thread");
       constPool.add_name("()Ljava/lang/String");
-	    
+            
       int currenttimeMillis_id =   constPool.add_method_ref_index("java/lang/System.currentTimeMillis:()J");
       int currentThread_id =       constPool.add_method_ref_index("java/lang/Thread.currentThread:()Ljava/lang/Thread;");
       int getname_id =             constPool.add_method_ref_index("java/lang/Thread.getName:()Ljava/lang/String;");
@@ -394,13 +394,13 @@ namespace frenchroast {
       instructions.push_back(Instruction(_opCodes[opcode::invokevirtual], getname_id));
       instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  hook_id));
       meth.add_instructions(0,instructions, true);      
-      Instruction ninst{_opCodes[opcode::ldc], exit_id};
+      Instruction ninst{_opCodes[opcode::ldc], static_cast<short>(exit_id)};
       instructions[1] = ninst;
       //@@@      instructions[1] = std::move(Instruction(_opCodes[opcode::ldc], exit_id));
       bool adjust = false;
       for (auto& x : meth.get_return_addresses()) {
-	 meth.add_instructions(x,instructions, adjust);
-	 adjust = true;
+         meth.add_instructions(x,instructions, adjust);
+         adjust = true;
       }
 
       if (meth.get_max_stack() < 4) {
@@ -444,14 +444,14 @@ namespace frenchroast {
       std::vector<StackMapFrame*> frames = load_frames_from_buffer(frameCount, ptr + 2);
       int origframebytes = 0;
       for(auto& x : frames) {
-	 origframebytes += x->size_in_bytes();
+         origframebytes += x->size_in_bytes();
       }
       origNonCodeLength -= origframebytes;
       method.adjust_frames(frames);
       delete[] methodAttributes.get_item("StackMapTable")._info;
       int framebytes = 0;
       for(auto& x : frames) {
-	framebytes += x->size_in_bytes();
+        framebytes += x->size_in_bytes();
       }
       origNonCodeLength += framebytes;
       methodAttributes.get_item("StackMapTable")._info = new BYTE[framebytes +2];

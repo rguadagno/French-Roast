@@ -23,7 +23,7 @@
 
 namespace frenchroast {
 
-
+  
   void write_bytes(BYTE* out, int value, int size)
   {
     if (size == 1) {
@@ -49,12 +49,12 @@ namespace frenchroast {
     while ((idx = str.find(delim,pos)) != std::string::npos) {
       rv.push_back(str.substr(pos,idx-pos));
       if (len == 1) {
-	++idx;
-	pos = idx ;
+        ++idx;
+        pos = idx ;
       }
       else {
-	idx += len-1;
-	pos = idx + delim.length();
+        idx += len-1;
+        pos = idx + delim.length();
       }
        
 

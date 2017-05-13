@@ -220,7 +220,7 @@ namespace frenchroast {
       _name = "Utf8";
       memcpy(_length,bufstart,sizeof(_length));
       for (short idx = sizeof(_length); idx <= to_int(_length,sizeof(_length))+1; idx++) {
-	_data.push_back(*(bufstart + idx));
+        _data.push_back(*(bufstart + idx));
       }
     }
       
@@ -228,7 +228,7 @@ namespace frenchroast {
     {
       std::ostringstream ss;
       for (const auto& x : _data) {
-	ss << x ;
+        ss << x ;
       }
       return ss.str();
     }
@@ -237,7 +237,7 @@ namespace frenchroast {
       memcpy(buf, _length, sizeof(_length));
       int idx = sizeof(_length);
       for (auto& x : _data) {
-	memcpy(buf + (idx++), &x, sizeof(x));
+        memcpy(buf + (idx++), &x, sizeof(x));
       }
     }
   
@@ -493,7 +493,7 @@ namespace frenchroast {
       skip = true;
     }
     if(_info.size() == _count) {
-	return 0;
+        return 0;
     }  
     _names[item->get_params()] = ++_nextIndex;
     _ids[_nextIndex] = item->get_params();
@@ -611,8 +611,8 @@ namespace frenchroast {
     for(int idx = 1; idx < to_int(_bcount,sizeof(_bcount));idx++) {
       nextByte = add_info_from_raw(nextByte, buf,skip) + 1;
       if(skip) {
-	++idx;
-	skip = false;
+        ++idx;
+        skip = false;
       }
     }
   }

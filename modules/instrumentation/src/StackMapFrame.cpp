@@ -142,7 +142,7 @@ namespace frenchroast {
     bool adjust_offset(short offset)
     {
       if (offset > 63) {
-	 return false;
+         return false;
       }
       _frameType = offset;
       return true;
@@ -221,7 +221,7 @@ namespace frenchroast {
     bool adjust_offset(short offset)
     {
       if (offset > 63) {
-	return false;
+        return false;
       }
       _frameType = 64 + offset;
       return true;
@@ -238,7 +238,7 @@ namespace frenchroast {
       load_verification_items(1, buf + 1, _verificationInfoList);
       _size = 1;
       for (auto& x : _verificationInfoList) {
-	_size += x->size_in_bytes();
+        _size += x->size_in_bytes();
       }
     }
 
@@ -283,7 +283,7 @@ namespace frenchroast {
       load_verification_items(totalVerificationTypes, buf + 3, _verificationInfoList);
       _size = 3;
       for (auto& x : _verificationInfoList) {
-	_size += x->size_in_bytes();
+        _size += x->size_in_bytes();
       }
     }
 
@@ -334,7 +334,7 @@ namespace frenchroast {
       load_verification_items(total, buf + 5, _verificationLocals);
       _size = 5;
       for (auto& x : _verificationLocals) {
-	_size += x->size_in_bytes();
+        _size += x->size_in_bytes();
       }
       
       memcpy(_stackCount,buf + _size, 2);
@@ -342,7 +342,7 @@ namespace frenchroast {
       total = to_int(_stackCount, 2);
       load_verification_items(total, buf + _size, _verificationStack);
       for(auto& x : _verificationStack) {
-	_size += x->size_in_bytes();
+        _size += x->size_in_bytes();
       }
     }
 
@@ -355,7 +355,7 @@ namespace frenchroast {
       int size = 5;
       memcpy(buf + size , _localsCount,2);
       for (auto& x : _verificationLocals) {
-	size += x->size_in_bytes();
+        size += x->size_in_bytes();
       }
       memcpy(buf + size, _stackCount,2);
       save_verification_items(buf +  size, _verificationStack);
@@ -412,32 +412,32 @@ namespace frenchroast {
       BYTE ftype =  *(buf + startPos);
 
       if (ftype >= 0 && ftype <= 63) {
-	ptr = new SameFrame();
+        ptr = new SameFrame();
       }
 
       if (ftype >= 64 && ftype <= 127) {
-	ptr = new SameLocalsOneStackFrame();
+        ptr = new SameLocalsOneStackFrame();
       }
 
       if (ftype >= 252 && ftype <= 254) {
-	ptr = new AppendFrame();
+        ptr = new AppendFrame();
       }
 
       if (ftype >= 248 && ftype <= 250) {
-	ptr = new ChopFrame();
+        ptr = new ChopFrame();
       }
 
       if (ftype == 251) {
-	ptr = new SameFrameExtended();
+        ptr = new SameFrameExtended();
       }
       
       if (ftype == 255) {
-	ptr = new FullFrame();
+        ptr = new FullFrame();
       }
 
       if(ptr == nullptr) {
-	std::cout << "MISSING STACK FRAME: " << (int)ftype << std::endl;
-	exit(0);
+        std::cout << "MISSING STACK FRAME: " << (int)ftype << std::endl;
+        exit(0);
       }
     
       ptr->load_from_buffer(buf + startPos);

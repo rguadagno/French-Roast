@@ -28,10 +28,10 @@ namespace frenchroast { namespace agent {
     {
       std::vector<std::string> items = frenchroast::split(serverinfo,":");
       if (items.size() != 3) {
-	 throw std::invalid_argument("ReporterSever, bad server info: " + serverinfo);
+         throw std::invalid_argument("ReporterSever, bad server info: " + serverinfo);
       }
       if (items[0] != "send") {
-	 throw std::invalid_argument("ReporterSever, bad server info: " + serverinfo);
+         throw std::invalid_argument("ReporterSever, bad server info: " + serverinfo);
       }
       _conn.connect_to_server(items[1], atoi(items[2].c_str()),this);
       _cl = cl;
@@ -42,10 +42,10 @@ namespace frenchroast { namespace agent {
       std::vector<std::string> items = frenchroast::split(msg,"~");
 
       if (items[0] == "stop_watch_traffic") { 
-	_cl->stop_watch_traffic();
+        _cl->stop_watch_traffic();
       }
       if (items.size() == 2 && items[0] == "watch_traffic") {
-	_cl->watch_traffic(atoi(items[1].c_str()));
+        _cl->watch_traffic(atoi(items[1].c_str()));
       }
     }
 

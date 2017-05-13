@@ -41,26 +41,26 @@ namespace frenchroast { namespace network {
       int total = 0;
       while(1) {
         rv = recv(connfd, databuf, sizeof(databuf), 0);
-	total += rv;
+        total += rv;
         if (rv < 0 ) {
           std::cout << "RECV ERROR: " << std::endl;
           break;
         }
 
-	memcpy(&flowbuf[buflen], databuf, rv);
-	int total_bytes = buflen + rv;
-	while(end < total_bytes) {
-	  if (flowbuf[end] == '\0') {
-	    memcpy(strbuf, &flowbuf[start],(end-start) + 1);
-	    std::string item{strbuf};
-	    handler->message(item);
-	    start = end + 1;
-	}
-	++end;
+        memcpy(&flowbuf[buflen], databuf, rv);
+        int total_bytes = buflen + rv;
+        while(end < total_bytes) {
+          if (flowbuf[end] == '\0') {
+            memcpy(strbuf, &flowbuf[start],(end-start) + 1);
+            std::string item{strbuf};
+            handler->message(item);
+            start = end + 1;
+        }
+        ++end;
       }
-	buflen = (end - start);
-	if(buflen > 0) {
-	  memcpy(flowbuf, &flowbuf[end - buflen], buflen);
+        buflen = (end - start);
+        if(buflen > 0) {
+          memcpy(flowbuf, &flowbuf[end - buflen], buflen);
       }
       end = 0;
       start = 0;

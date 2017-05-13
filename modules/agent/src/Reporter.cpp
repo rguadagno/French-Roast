@@ -30,12 +30,12 @@ namespace frenchroast { namespace agent {
         _impPtr = new ReporterOut();
       }
       if (items[0] == "file") {
-	_impPtr = new ReporterFile();
-	_impPtr->init(items[1],cl);
+        _impPtr = new ReporterFile();
+        _impPtr->init(items[1],cl);
       }
       if (items[0] == "server") {
-	_impPtr = new ReporterServer();
-	_impPtr->init(items[1],cl);
+        _impPtr = new ReporterServer();
+        _impPtr->init(items[1],cl);
       }
     }  
 

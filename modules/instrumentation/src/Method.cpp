@@ -36,8 +36,8 @@ namespace frenchroast {
     while (totalLen < _codeLength) {
       address += instr.load_from_buffer(buf+8+address,address,loaded);
       if (!loaded ) {
-	break;
-	 }
+        break;
+         }
       totalLen += instr.size();
       _instructions.push_back(std::move(instr));
     }
@@ -105,7 +105,7 @@ namespace frenchroast {
       int pairs = to_int(inst.get_buffer() + Instruction::calc_pad(inst.address())+4,4);
       rv.push_back(inst.address() +   to_int(inst.get_buffer() + Instruction::calc_pad(inst.address()),4));
       for(int idx = 0; idx < pairs; idx++) {
-	rv.push_back( inst.address() + to_int(inst.get_buffer() + Instruction::calc_pad(inst.address())+ 8 + 4 + idx * 8 ,4)   );
+        rv.push_back( inst.address() + to_int(inst.get_buffer() + Instruction::calc_pad(inst.address())+ 8 + 4 + idx * 8 ,4)   );
       }
 
       return rv;
@@ -139,12 +139,12 @@ namespace frenchroast {
       write_bytes(inst.get_buffer() + Instruction::calc_pad(inst.address()),  defaultoffset+ offsetChange,4);
       int pairs = to_int(inst.get_buffer() + Instruction::calc_pad(inst.address())+4,4);
       for(int idx = 0; idx < pairs; idx++) {
-	 BYTE* offsetPtr = inst.get_buffer() + Instruction::calc_pad(inst.address())+ 8 + 4 + idx * 8 ;
-	 int intendedTarget = newAddr[origAddr[origTargets[nextTarget]]];
-	 ++nextTarget;
-	 int target = inst.address() + to_int(offsetPtr,4);
-	 int offsetChange = intendedTarget - target;
-	 write_bytes(offsetPtr , to_int(offsetPtr,4) + offsetChange,4);
+         BYTE* offsetPtr = inst.get_buffer() + Instruction::calc_pad(inst.address())+ 8 + 4 + idx * 8 ;
+         int intendedTarget = newAddr[origAddr[origTargets[nextTarget]]];
+         ++nextTarget;
+         int target = inst.address() + to_int(offsetPtr,4);
+         int offsetChange = intendedTarget - target;
+         write_bytes(offsetPtr , to_int(offsetPtr,4) + offsetChange,4);
       }
       return;
     }
@@ -175,8 +175,8 @@ namespace frenchroast {
       origAddr[x.address()] = ++instIdx;
       if (x.is_branch()) {
         for (auto& target : get_targets(x)) {
-	  origTargets.push_back(target);
-	 }
+          origTargets.push_back(target);
+         }
       }
     }
 
@@ -187,21 +187,21 @@ namespace frenchroast {
     newvec.reserve(ilist.size() + _instructions.size());
     for (auto& x : _instructions) {
        if (x.address() == insertAt) {
-	  for (auto& instruc : ilist) {
-	    instruc.set_address(nextAddr);
-	    nextAddr += instruc.size();
-	    newvec.push_back(std::move(instruc));
-	  }
+          for (auto& instruc : ilist) {
+            instruc.set_address(nextAddr);
+            nextAddr += instruc.size();
+            newvec.push_back(std::move(instruc));
+          }
        }
        
        x.adjust(nextAddr);
        int oldaddr = x.address();
        x.set_address(nextAddr);
        if (sticky) {
-	  newAddr[++instIdx] = x.address();
+          newAddr[++instIdx] = x.address();
        }
        else {
-	  newAddr[++instIdx] = oldaddr;
+          newAddr[++instIdx] = oldaddr;
        }
        nextAddr += x.size();
        newvec.push_back(std::move(x));
@@ -213,7 +213,7 @@ namespace frenchroast {
     int idx = 0;
     for (auto& x : _instructions) {
       if ( x.is_branch()) {
-	update_targets(x, origAddr, newAddr, origTargets,idx);
+        update_targets(x, origAddr, newAddr, origTargets,idx);
       }
     }
 
@@ -235,8 +235,8 @@ namespace frenchroast {
     for(auto& x : _instructions) {
       if( x.is_branch()) {
         for(auto& tg : get_targets(x)) {
-	  targets.insert(tg);
-	}
+          targets.insert(tg);
+        }
       }
     }
     for(auto& x : _exceptions) {
@@ -264,17 +264,17 @@ namespace frenchroast {
       }
       
       if (!ptr->adjust_offset(offset - sub)) {
-	if (*ptr == stackmapframe::same) {
-	  ptr = new SameFrameExtended();
-	  ptr->adjust_offset(offset - sub);
-      	}
+        if (*ptr == stackmapframe::same) {
+          ptr = new SameFrameExtended();
+          ptr->adjust_offset(offset - sub);
+        }
       }
       running += offset;
       ++idx;
     }
 
   }
-			
+                        
 
   Instruction& Method::operator[](int idx)
   {
@@ -298,12 +298,12 @@ namespace frenchroast {
         rv.push_back(_instructions[idx].address());
       }
       if (_instructions[idx] == opcode::ireturn ||
-	   _instructions[idx] == opcode::lreturn ||
-	  _instructions[idx] == opcode::freturn ||
-	  _instructions[idx] == opcode::dreturn ||
-	  _instructions[idx] == opcode::areturn 
-	  ) {
-	rv.push_back(_instructions[idx-1].address());
+           _instructions[idx] == opcode::lreturn ||
+          _instructions[idx] == opcode::freturn ||
+          _instructions[idx] == opcode::dreturn ||
+          _instructions[idx] == opcode::areturn 
+          ) {
+        rv.push_back(_instructions[idx-1].address());
       }
 
     }

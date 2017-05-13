@@ -82,5 +82,5 @@ namespace  frenchroast {
     local &= ~flag;
     write_big_e_bytes(_flags,&local); 
   }
-	    
+            
 }

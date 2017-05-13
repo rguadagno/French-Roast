@@ -100,17 +100,17 @@ namespace frenchroast {
     if (_opCode.is_dynamic()) {
       if (_opCode.get_code() == opcode::lookupswitch) {
         _opbuf_size = calc_pad(_address);
-	 _opbuf_size += 4;
-	 _opbuf_size += (8 * to_int(buf + 1 + _opbuf_size, 4));
-	 _opbuf_size += 4;
+         _opbuf_size += 4;
+         _opbuf_size += (8 * to_int(buf + 1 + _opbuf_size, 4));
+         _opbuf_size += 4;
       }
       else if (_opCode.get_code() == opcode::tableswitch) {
-	 int pad = calc_pad(_address);
+         int pad = calc_pad(_address);
         _opbuf_size = pad + 4 + 4 + 4;
-	int low = to_int(buf + 1 + pad + 4,4);
-	int high = to_int(buf + 1 + pad + 4 + 4,4);
-	int offsets = (high - low) + 1;
-	_opbuf_size += 4 * offsets;
+        int low = to_int(buf + 1 + pad + 4,4);
+        int high = to_int(buf + 1 + pad + 4 + 4,4);
+        int offsets = (high - low) + 1;
+        _opbuf_size += 4 * offsets;
       }
       _opbuf = new BYTE[_opbuf_size];
       memcpy(_opbuf, buf + 1, _opbuf_size);
@@ -119,13 +119,13 @@ namespace frenchroast {
     else {
       memset(_operand,0,2);
       if (_opCode.get_size() == 0) {
-	loaded=0;
+        loaded=0;
       }
       if (_opCode.get_size() == 3) {
-	memcpy(&_operand[0],buf+1,2);
+        memcpy(&_operand[0],buf+1,2);
       }
       if(_opCode.get_size() == 2) {
-	memcpy(&_operand[1],buf+1,1);
+        memcpy(&_operand[1],buf+1,1);
       }
       return _opCode.get_size();
     }
@@ -142,7 +142,7 @@ namespace frenchroast {
         memcpy(buf + 1,&_operand[0], 2);
       }
       if (_opCode.get_size()==2) {
-	 memcpy(buf + 1,&_operand[1], 1);
+         memcpy(buf + 1,&_operand[1], 1);
       }
     }
     return size();
@@ -170,20 +170,20 @@ namespace frenchroast {
       int defaultoffset = to_int(_opbuf + pad,4 ) + adjustPad * -1;
       write_big_e_bytes(_opbuf + pad, &defaultoffset);
       if (_opCode.get_code() == opcode::lookupswitch) {
-	int totalPairs = to_int(_opbuf + pad + 4,4 );
-	for(int idx = 0; idx < totalPairs; idx++) {
-	  defaultoffset = to_int(_opbuf + pad + 8 + (8 * idx) + 4,4 ) + adjustPad * -1;
-	  write_big_e_bytes(_opbuf + pad + 8 + (8 * idx) + 4, &defaultoffset);
-	}
+        int totalPairs = to_int(_opbuf + pad + 4,4 );
+        for(int idx = 0; idx < totalPairs; idx++) {
+          defaultoffset = to_int(_opbuf + pad + 8 + (8 * idx) + 4,4 ) + adjustPad * -1;
+          write_big_e_bytes(_opbuf + pad + 8 + (8 * idx) + 4, &defaultoffset);
+        }
       }
       if ( _opCode.get_code() == opcode::tableswitch) {
-	int low = to_int(_opbuf  + pad + 4,4);
-	int high = to_int(_opbuf  + pad + 4 + 4,4);
-	int offsets = (high - low) + 1;
-	for(int idx = 0; idx < offsets; idx++) {
-	  defaultoffset = to_int(_opbuf + pad + 8 + (4 * idx) + 4,4 ) + adjustPad * -1;
-	  write_big_e_bytes(_opbuf + pad + 8 + (4 * idx) + 4, &defaultoffset);
-	}
+        int low = to_int(_opbuf  + pad + 4,4);
+        int high = to_int(_opbuf  + pad + 4 + 4,4);
+        int offsets = (high - low) + 1;
+        for(int idx = 0; idx < offsets; idx++) {
+          defaultoffset = to_int(_opbuf + pad + 8 + (4 * idx) + 4,4 ) + adjustPad * -1;
+          write_big_e_bytes(_opbuf + pad + 8 + (4 * idx) + 4, &defaultoffset);
+        }
       }
     }
   }

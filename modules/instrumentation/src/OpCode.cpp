@@ -65,8 +65,8 @@ namespace frenchroast {
     OpCode& OpCode::operator[](BYTE op)
     {
       if(_op_codes.count(op) == 0) {
-	std::cout << "MISSING OPCODE: " << (int)op << std::endl;op = 0;
-	exit(0);
+        std::cout << "MISSING OPCODE: " << (int)op << std::endl;op = 0;
+        exit(0);
       }
       return _op_codes[op];
     }
@@ -79,37 +79,37 @@ namespace frenchroast {
     void OpCode::load(const std::string& fileName)
     {
       try {
-	std::ifstream in;
-	in.open(fileName);
-	std::string line;
-	while (getline(in,line)) {
-	  bool isDynamic = false;
-	  size_t pos;
-	  while ((pos=line.find(" ")) != std::string::npos) {
-	    line.erase(pos,1);
-	  }
-	  std::string sz{split(split(line,'<')[1],'>')[1]};
+        std::ifstream in;
+        in.open(fileName);
+        std::string line;
+        while (getline(in,line)) {
+          bool isDynamic = false;
+          size_t pos;
+          while ((pos=line.find(" ")) != std::string::npos) {
+            line.erase(pos,1);
+          }
+          std::string sz{split(split(line,'<')[1],'>')[1]};
 
 
-	  int osize = 0;
-	  if (sz  == "*") {
-	   isDynamic = true;
-	  }
-	  else {
-	    osize = atoi(sz.c_str());  
-	  }
-	  
-	  BYTE op = static_cast<BYTE>(atoi(split(split(line,'<')[1],'>')[0].c_str()));
-	  const std::string name = split(line,'<')[0];
-	  if (split(line,'<').size() > 2) 
-	    _op_codes[op] = OpCode(op,osize,name,true,isDynamic);
-	  else
-	    _op_codes[op] = OpCode(op,osize,name,false,isDynamic);
-	}
-	in.close();
+          int osize = 0;
+          if (sz  == "*") {
+           isDynamic = true;
+          }
+          else {
+            osize = atoi(sz.c_str());  
+          }
+          
+          BYTE op = static_cast<BYTE>(atoi(split(split(line,'<')[1],'>')[0].c_str()));
+          const std::string name = split(line,'<')[0];
+          if (split(line,'<').size() > 2) 
+            _op_codes[op] = OpCode(op,osize,name,true,isDynamic);
+          else
+            _op_codes[op] = OpCode(op,osize,name,false,isDynamic);
+        }
+        in.close();
       }
       catch(std::ifstream::failure& e) {
-	throw std::ifstream::failure("cannot open file: " + fileName);
+        throw std::ifstream::failure("cannot open file: " + fileName);
       }
     }
   

@@ -24,12 +24,12 @@ namespace frenchroast { namespace agent {
     void ReporterFile::init(const std::string& filename, CommandListener*)
     {
       try {
-	_outfile.exceptions(std::ifstream::failbit);
-	_outfile.open(filename);
+        _outfile.exceptions(std::ifstream::failbit);
+        _outfile.open(filename);
       }
-      catch(std::ifstream::failure& e) {
-	if(!_outfile.eof())
-	  throw std::ifstream::failure("cannot open file: " + filename);
+      catch(std::ifstream::failure&) {
+        if(!_outfile.eof())
+          throw std::ifstream::failure("cannot open file: " + filename);
       }
     }  
     void ReporterFile::traffic(const std::string& tag) {

@@ -34,8 +34,8 @@ namespace frenchroast { namespace monitor {
                                                              {'C',"char"},
                                                              {'D',"double"},
                                                              {'F',"float"},
-			                                        {'S',"short"}
-		
+                                                                {'S',"short"}
+                
                                                            };
     
 
@@ -43,39 +43,39 @@ namespace frenchroast { namespace monitor {
     {
       std::string rv = name.substr(1);
       replace(rv,'/','.');
-      //	    
-	    std::string classname = split(rv,"::")[0];
-	    replace(classname,';');
-	    std::string methodname = split(split(rv,"::")[1],":")[0];
-	    std::string pstr = split(split(rv,"(")[1],")")[0];
-	    std::string rvstr = split(split(rv,")")[1],":")[0];
+      //            
+            std::string classname = split(rv,"::")[0];
+            replace(classname,';');
+            std::string methodname = split(split(rv,"::")[1],":")[0];
+            std::string pstr = split(split(rv,"(")[1],")")[0];
+            std::string rvstr = split(split(rv,")")[1],":")[0];
 
-	    std::string parms = "";
-	    int pos = 0;
-	    while(pos < pstr.length() ) {
-	      if (pstr[pos] == 'L') {
-		int nextsemi = pstr.find(";",pos);
-		parms += pstr.substr(pos+1,nextsemi-(pos+1)) + std::string(",");
-		pos = nextsemi +2;
-	      }
-	      else {
-		parms += _type_map[pstr[pos]] + std::string(",");
-		++pos;
-	      }
-	    }
-	    if(parms.length() > 1)
-	      parms.erase(parms.length()-1);
-	    
-	    if ( rvstr.length() == 1) {
-	      rvstr = _type_map[rvstr[0]];
-	    }
-	    else {
-	      rvstr = rvstr.substr(1);
-	      rvstr.erase(rvstr.length());
-	    }
-	      
-	    return classname + "::" + methodname + "(" + parms + "):" + rvstr;
-	  }
+            std::string parms = "";
+            int pos = 0;
+            while(pos < pstr.length() ) {
+              if (pstr[pos] == 'L') {
+                int nextsemi = pstr.find(";",pos);
+                parms += pstr.substr(pos+1,nextsemi-(pos+1)) + std::string(",");
+                pos = nextsemi +2;
+              }
+              else {
+                parms += _type_map[pstr[pos]] + std::string(",");
+                ++pos;
+              }
+            }
+            if(parms.length() > 1)
+              parms.erase(parms.length()-1);
+            
+            if ( rvstr.length() == 1) {
+              rvstr = _type_map[rvstr[0]];
+            }
+            else {
+              rvstr = rvstr.substr(1);
+              rvstr.erase(rvstr.length());
+            }
+              
+            return classname + "::" + methodname + "(" + parms + "):" + rvstr;
+          }
 
 
     std::vector<StackTrace> construct_traffic(const std::string& msg)
@@ -83,13 +83,13 @@ namespace frenchroast { namespace monitor {
       std::vector<StackTrace> rv;
       std::vector<std::string> items = split(msg, "%");
       for(auto& x : items) {
-	StackTrace st{split(x,"^")[0]};
-	//	for(auto& y : split(split(x,"^")[1],"#")) {
-	std::vector<std::string> fitems = split(split(x,"^")[1],"#");
-	for(int idx = fitems.size()-1;idx >= 0; idx--) {
-	  st.addFrame(StackFrame{translate_descriptor(fitems[idx]),fitems[idx]});
-	}
-	rv.push_back(st);
+        StackTrace st{split(x,"^")[0]};
+        //      for(auto& y : split(split(x,"^")[1],"#")) {
+        std::vector<std::string> fitems = split(split(x,"^")[1],"#");
+        for(int idx = fitems.size()-1;idx >= 0; idx--) {
+          st.addFrame(StackFrame{translate_descriptor(fitems[idx]),fitems[idx]});
+        }
+        rv.push_back(st);
       }
 
       return rv;

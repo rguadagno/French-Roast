@@ -26,8 +26,8 @@ namespace frenchroast { namespace agent {
     {
       std::string rv = value;
       if(frenchroast::split(line,'<')[0] ==  key) {
-	 rv = frenchroast::split(line,'<')[1];
-	 rv = rv.substr(0,rv.length()-1);
+         rv = frenchroast::split(line,'<')[1];
+         rv = rv.substr(0,rv.length()-1);
       }
       return rv;
     }
@@ -56,36 +56,36 @@ namespace frenchroast { namespace agent {
     {
       std::ifstream inconfig;
       try {
-	inconfig.exceptions(std::ifstream::failbit);
-	inconfig.open(filename);
-	std::string line;
-	while (getline(inconfig,line)) {
-	  frenchroast::remove_blanks(line);
-	  _opcodeFile         = get_value("opcodefile",_opcodeFile,line);
-	  _hooksFile          = get_value("hooksfile",_hooksFile, line);
-	  _reporterDescriptor = get_value("reporterdescriptor",_reporterDescriptor, line);
-	}
-	inconfig.close();
-	
-	if (_opcodeFile == "") {
-	  std::cout << "opcodefile not set in config file" << std::endl;
-	  return false;
-	}
+        inconfig.exceptions(std::ifstream::failbit);
+        inconfig.open(filename);
+        std::string line;
+        while (getline(inconfig,line)) {
+          frenchroast::remove_blanks(line);
+          _opcodeFile         = get_value("opcodefile",_opcodeFile,line);
+          _hooksFile          = get_value("hooksfile",_hooksFile, line);
+          _reporterDescriptor = get_value("reporterdescriptor",_reporterDescriptor, line);
+        }
+        inconfig.close();
+        
+        if (_opcodeFile == "") {
+          std::cout << "opcodefile not set in config file" << std::endl;
+          return false;
+        }
 
-	if (_hooksFile == "") {
-	  std::cout << "hooksfile not set in config file" << std::endl;
-	  return false;
-	}
-	
-	if (_reporterDescriptor == "") {
-	  std::cout << "hooksfile not set in config file" << std::endl;
-	  return false;
-	}
+        if (_hooksFile == "") {
+          std::cout << "hooksfile not set in config file" << std::endl;
+          return false;
+        }
+        
+        if (_reporterDescriptor == "") {
+          std::cout << "hooksfile not set in config file" << std::endl;
+          return false;
+        }
 
       }
-      catch(std::ifstream::failure& e) {
-	if(!inconfig.eof())
-	  throw std::ifstream::failure("cannot open file: " + filename);
+      catch(std::ifstream::failure& ) {
+        if(!inconfig.eof())
+          throw std::ifstream::failure("cannot open file: " + filename);
       }
       return true;
     }

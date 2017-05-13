@@ -29,23 +29,23 @@ namespace frenchroast { namespace monitor {
 
       std::string StackTrace::key()  const
       {
-	return _key;
+        return _key;
       }
 
       const std::vector<StackFrame>& StackTrace::frames() const
       {
-	return _frames;
+        return _frames;
       }
 
       void StackTrace::addFrame(const StackFrame& frame) 
       {
-	_key += frame.get_decorated_name();
-	_frames.push_back(frame);
+        _key += frame.get_decorated_name();
+        _frames.push_back(frame);
       }
 
       std::string StackTrace::thread_name()  const 
       {
-	return _thread_name;
+        return _thread_name;
       }
 
   }

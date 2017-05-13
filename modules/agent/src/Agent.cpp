@@ -198,15 +198,15 @@ void JNICALL
     fr.load_from_buffer(class_data);
     for (auto& x : _hooks.get(sname)) {
       if (x.line_number() > 0) {
-	 fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
+         fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
       }
       else {
-	if ((x.flags() & frenchroast::FrenchRoast::METHOD_TIMER) == frenchroast::FrenchRoast::METHOD_TIMER) {
-	  fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
-	}
-	else {
-	  fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.flags());
-	}
+        if ((x.flags() & frenchroast::FrenchRoast::METHOD_TIMER) == frenchroast::FrenchRoast::METHOD_TIMER) {
+          fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
+        }
+        else {
+          fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.flags());
+        }
       }
     jint size = fr.size_in_bytes();
     jvmtiError  err =    env->Allocate(size,new_class_data);
@@ -266,20 +266,20 @@ void traffic_monitor()
       jthread thd  = stackptr->thread;
       genv->GetThreadInfo(thd, &tinfo);
       if (stackptr->frame_count >= 1) {
-	rv += std::string{tinfo.name} + "^";
+        rv += std::string{tinfo.name} + "^";
       }
       else {
-	continue;
+        continue;
       }  
       for(int fidx = stackptr->frame_count - 1; fidx >= 0; fidx--) {
-	jvmtiError   err = genv->GetMethodName(stackptr->frame_buffer[fidx].method, &methodName,&sig,&generic);
+        jvmtiError   err = genv->GetMethodName(stackptr->frame_buffer[fidx].method, &methodName,&sig,&generic);
 
-	jclass theclass;
-	genv->GetMethodDeclaringClass(stackptr->frame_buffer[fidx].method, &theclass);
-	err = genv->GetClassSignature(theclass, &class_sig,&generic);
-	std::string classinfo{class_sig};
-	rv += classinfo + "::";
-	rv +=  std::string{methodName} + ":" + std::string{sig} + "#";
+        jclass theclass;
+        genv->GetMethodDeclaringClass(stackptr->frame_buffer[fidx].method, &theclass);
+        err = genv->GetClassSignature(theclass, &class_sig,&generic);
+        std::string classinfo{class_sig};
+        rv += classinfo + "::";
+        rv +=  std::string{methodName} + ":" + std::string{sig} + "#";
       }
       rv.erase(rv.end() -1);
       rv += "%";
@@ -307,7 +307,7 @@ void traffic_monitor()
       delay = _commandListener._millis.load();
     }
 
-	
+        
   }
   }
 
