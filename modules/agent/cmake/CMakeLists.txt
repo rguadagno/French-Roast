@@ -15,15 +15,18 @@ if(JAVA_INCLUDE_DIR)
   endif ()
 
   if (WIN32)
-    FILE(GLOB huh ../src/*.cpp ../../instrumentation/src/*.cpp ../../network/src/ConnectorWindows.cpp)	
-    target_link_libraries(agent  ws2_32.lib)
+    FILE(GLOB huh ../src/*.cpp ../../instrumentation/src/*.cpp ../../network/src/ConnectorWindows.cpp ../../network/src/Connector.cpp)	
   endif ()
+
   add_library(agent SHARED ${huh} )
   GENERATE_EXPORT_HEADER(agent
   BASE_NAME agent
   EXPORT_MACRO_NAME agent_EXPORT
   EXPORT_FILE_NAME agent_Export.h
   STATIC_DEFINE monitor_BUILT_AS_STATIC)
+  if (WIN32)
+      target_link_libraries(agent  ws2_32.lib)
+  endif()      
 else()
   message(FATAL_ERROR "env variable JAVA_INCLUDE_DIR must be defined, the dir where jvmti.h and jni.h are located.")
 endif()
