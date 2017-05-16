@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include "Listener.h"
+#include <cstring>
 
 #ifdef CONNECTOR_UNIX
 #include <sys/socket.h>
