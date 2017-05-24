@@ -4,79 +4,38 @@
 #include "Monitor.h"
 #include <string>
 #include <signal.h>
-
+#include "CursesFrameWork.h"
+#include "SignalWindow.h"
 
 namespace frenchroast { namespace monitor {
-int maxy=0;
-int maxx=0;
+    //-------------------------------------------------------------------------
     void refresh_status();
-    class RefreshHandler;
-std::string _connectedMsg = "waiting for connection...";
-frenchroast::monitor::RefreshHandler* refreshHandPtr{nullptr};
-void refresh_status();
+    std::string _connectedMsg = "waiting for connection...";
+    SignalWindow* sigptr{nullptr};
 
 
-void draw_label(WINDOW* win, int ypos, int xpos, const std::string& text) {
-  mvwaddstr(win, ypos,xpos, text.c_str());    
-  mvwchgat(win,ypos,xpos,text.length(), A_REVERSE, 0,NULL);
-  //refresh();
-  wrefresh(win);
-}
+    //-------------------------------------------------------------------------
 
 
 
-class BasicHandler {
-  WINDOW* _wptr;
-  int row =1;
-  std::unordered_map<std::string, int> _sigmap;
-public:
-  BasicHandler(WINDOW* ptr) : _wptr(ptr) {}
-  std::unordered_map<std::string, int>& get_sig_map() { return _sigmap; }
-  void signal_timed(const std::string& str, int t1, int t2) {}
-  void signal(const std::string& tag, int t1) {
-    if(_sigmap[tag] == 0) {
-      _sigmap[tag] = ++row;;
-    }
-    mvwaddstr(_wptr,_sigmap[tag], 0, (tag + " [" + std::to_string(t1) + "]").c_str());
-    wrefresh(_wptr);
-  }
-  //    mvwchgat(0,0,200, A_REVERSE, 0,NULL);
+    class EventHandler {
+      SignalWindow& _sigwin;
 
-  
-void traffic(std::vector<StackTrace> items) {}
-void connected(const std::string& msg) {
-  _connectedMsg = "connected: " + msg;
-  refresh_status();
-}
-};
-
-    class RefreshHandler {
-      std::unordered_map<std::string, int>& _sigmap;
-      WINDOW* _sigptr;
     public:
-      RefreshHandler(WINDOW* sigptr, std::unordered_map<std::string, int>& sigmap) : _sigptr(sigptr), _sigmap(sigmap) {}
-
-      void frrefresh() {
-        refresh_status();
-        draw_label(_sigptr,0,0,"         Signals         ");
-        for(auto& item : _sigmap) {
-          mvwaddstr(_sigptr, item.second, 0, item.first.c_str());
-         
-        }
-        wrefresh(_sigptr);
-        refresh();
+      EventHandler(SignalWindow& sw) : _sigwin(sw) {}
+      void signal_timed(const std::string& str, int t1, int t2) {}
+      void signal(const std::string& tag, int t1) {
+        _sigwin.add_signal(tag, t1);
       }
-
+      
+      void traffic(std::vector<StackTrace> items) {}
+      void connected(const std::string& msg) {
+        _connectedMsg = "connected: " + msg;
+        refresh_status();
+      }
     };
 
     
-
-
-
-WINDOW* win;
-
-
-
 void refresh_status() {
     int maxy =0;
     int maxx =0;
@@ -93,7 +52,9 @@ void refresh_all(int x) {
   
     erase();
     endwin();
-    refreshHandPtr->frrefresh();
+    refresh_status();
+    sigptr->redraw();
+    wrefresh(*sigptr);
     refresh();
 }
 
@@ -102,40 +63,34 @@ int main(int argc, char* argv[]) {
   initscr();
   cbreak();
   noecho();
-  WINDOW* win = stdscr;
-
-
-  
-  keypad(win,TRUE);
+  keypad(stdscr,TRUE);
   erase();
-  
-  WINDOW* sigwin = newwin(8, 45, 0,0);
 
-  scrollok(sigwin,true);
-  
   refresh();
-  wrefresh(sigwin);
+  SignalWindow sig_window{8,45,0,0, "Signals"};
+  sigptr = &sig_window;
+
+  wrefresh(sig_window);
+  refresh();
 
   
-  draw_label(sigwin,0,0,"         Signals         ");
-
-  getmaxyx(win, maxy,maxx);
+  int maxy = 0;
+  int maxx = 0;
+  getmaxyx(stdscr, maxy,maxx);
   --maxy;
   mvaddstr(maxy,0, "waiting for connection...");    
   mvchgat(maxy,0,200, A_REVERSE, 0,NULL);
 
-
-  
-  frenchroast::monitor::BasicHandler hand{sigwin};
-  refreshHandPtr = new frenchroast::monitor::RefreshHandler{sigwin, hand.get_sig_map()};
-  //  void (frenchroast::monitor::RefreshHandler::*fptr)(int) = &frenchroast::monitor::RefreshHandler::refresh_all;
-  //  fptr = refreshHand.
   signal(SIGWINCH, refresh_all);
-  frenchroast::monitor::Monitor<frenchroast::monitor::BasicHandler> mon{hand};
+  
+  
+  
+  frenchroast::monitor::EventHandler hand{sig_window};
+  frenchroast::monitor::Monitor<frenchroast::monitor::EventHandler> mon{hand};
 
   std::thread t1{[&]() { mon.init_receiver("127.0.0.1", 6060);}};
 
-
+  
 
 
 
@@ -151,9 +106,6 @@ int main(int argc, char* argv[]) {
     case QUIT:
 
         endwin();
-
-      //delwin(sigwin);
-      //      delwin(win);
       exit(0);
             
       break;

@@ -10,7 +10,10 @@ project(gui_curses)
   )
 
   if (UNIX)
-    FILE(GLOB huh ../src/*.cpp
+    FILE(GLOB huh
+    ../src/main.cpp
+    ../src/CursesFrameWork.cpp
+    ../src/SignalWindow.cpp
     ../../network/src/ConnectorUnix.cpp
     ../../network/src/Connector.cpp
     ../../monitor/src/Monitor.cpp
