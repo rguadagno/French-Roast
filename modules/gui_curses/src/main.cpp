@@ -5,9 +5,14 @@
 #include <string>
 #include <signal.h>
 
+
+namespace frenchroast { namespace monitor {
 int maxy=0;
 int maxx=0;
+    void refresh_status();
+    class RefreshHandler;
 std::string _connectedMsg = "waiting for connection...";
+frenchroast::monitor::RefreshHandler* refreshHandPtr{nullptr};
 void refresh_status();
 
 
@@ -18,7 +23,7 @@ void draw_label(WINDOW* win, int ypos, int xpos, const std::string& text) {
   wrefresh(win);
 }
 
-namespace frenchroast { namespace monitor {
+
 
 class BasicHandler {
   WINDOW* _wptr;
@@ -26,6 +31,7 @@ class BasicHandler {
   std::unordered_map<std::string, int> _sigmap;
 public:
   BasicHandler(WINDOW* ptr) : _wptr(ptr) {}
+  std::unordered_map<std::string, int>& get_sig_map() { return _sigmap; }
   void signal_timed(const std::string& str, int t1, int t2) {}
   void signal(const std::string& tag, int t1) {
     if(_sigmap[tag] == 0) {
@@ -44,10 +50,30 @@ void connected(const std::string& msg) {
 }
 };
 
-}}
+    class RefreshHandler {
+      std::unordered_map<std::string, int>& _sigmap;
+      WINDOW* _sigptr;
+    public:
+      RefreshHandler(WINDOW* sigptr, std::unordered_map<std::string, int>& sigmap) : _sigptr(sigptr), _sigmap(sigmap) {}
+
+      void frrefresh() {
+        refresh_status();
+        draw_label(_sigptr,0,0,"         Signals         ");
+        for(auto& item : _sigmap) {
+          mvwaddstr(_sigptr, item.second, 0, item.first.c_str());
+         
+        }
+        wrefresh(_sigptr);
+        refresh();
+      }
+
+    };
+
+    
+
+
 
 WINDOW* win;
-
 
 
 
@@ -63,15 +89,13 @@ void refresh_status() {
 
 }
 
-void doit(int x) {
+void refresh_all(int x) {
   
     erase();
     endwin();
-    refresh_status();
+    refreshHandPtr->frrefresh();
     refresh();
 }
-
-
 
 
 int main(int argc, char* argv[]) {
@@ -80,7 +104,7 @@ int main(int argc, char* argv[]) {
   noecho();
   WINDOW* win = stdscr;
 
-  signal(SIGWINCH,doit);
+
   
   keypad(win,TRUE);
   erase();
@@ -89,7 +113,7 @@ int main(int argc, char* argv[]) {
 
   scrollok(sigwin,true);
   
-   refresh();
+  refresh();
   wrefresh(sigwin);
 
   
@@ -103,6 +127,10 @@ int main(int argc, char* argv[]) {
 
   
   frenchroast::monitor::BasicHandler hand{sigwin};
+  refreshHandPtr = new frenchroast::monitor::RefreshHandler{sigwin, hand.get_sig_map()};
+  //  void (frenchroast::monitor::RefreshHandler::*fptr)(int) = &frenchroast::monitor::RefreshHandler::refresh_all;
+  //  fptr = refreshHand.
+  signal(SIGWINCH, refresh_all);
   frenchroast::monitor::Monitor<frenchroast::monitor::BasicHandler> mon{hand};
 
   std::thread t1{[&]() { mon.init_receiver("127.0.0.1", 6060);}};
@@ -120,28 +148,22 @@ int main(int argc, char* argv[]) {
    while(running) {
     int ch = getch();
     switch(ch) {
-    case ENTER:
-
-      //      redrawwin(curscr);
-
-      //     
-      doupdate();
-      //redrawwin(win);
-          refresh();
-      //wrefresh(sigwin);
-
-      // wrefresh(win);
-
-      //      redrawwin(sigwin);
-      //wrefresh(sigwin);
-
-      break;
     case QUIT:
-      endwin();
-      delwin(sigwin);
+
+        endwin();
+
+      //delwin(sigwin);
+      //      delwin(win);
       exit(0);
+            
       break;
     }
      }
    
+}
+}}
+
+int main(int argc, char* argv[]) {
+  frenchroast::monitor::main(argc, argv);
+
 }
