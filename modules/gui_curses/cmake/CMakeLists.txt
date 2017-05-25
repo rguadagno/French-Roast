@@ -14,9 +14,11 @@ project(gui_curses)
     ../src/main.cpp
     ../src/CursesFrameWork.cpp
     ../src/SignalWindow.cpp
+    ../src/SignalTimerWindow.cpp
     ../../network/src/ConnectorUnix.cpp
     ../../network/src/Connector.cpp
     ../../monitor/src/Monitor.cpp
+    ../../monitor/src/MonitorUtil.cpp    
     ../../monitor/src/StackTrace.cpp
     ../../instrumentation/src/Util.cpp
     )	

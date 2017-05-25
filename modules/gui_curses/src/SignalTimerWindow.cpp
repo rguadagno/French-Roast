@@ -1,21 +1,23 @@
 
-#include "SignalWindow.h"
+#include "SignalTimerWindow.h"
+#include "MonitorUtil.h"
 
 
-
-void frenchroast::monitor::SignalWindow::add_signal(const std::string& tag, int t1)
+void frenchroast::monitor::SignalTimerWindow::add_signal(const std::string& tag, long  totalElapsed, int elapsed)
 {
+  
   if(_sigmap[tag] == 0) {
     _sigmap[tag] = ++_row;
   }
-  std::string countStr = " [" + std::to_string(t1) + "]";
+  std::string countStr = " [" + format_millis(totalElapsed) + "]";
   mvwaddstr(_wptr,_sigmap[tag], 0, (tag + countStr ).c_str());
   _current_map[_sigmap[tag]] = tag + countStr;
   wrefresh(_wptr);
+  
 }
 
 
-void frenchroast::monitor::SignalWindow::redraw()
+void frenchroast::monitor::SignalTimerWindow::redraw()
 {
   draw_title();
   refresh();
@@ -25,3 +27,6 @@ void frenchroast::monitor::SignalWindow::redraw()
   wrefresh(_wptr);
   refresh();
 }
+
+
+
