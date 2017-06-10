@@ -41,7 +41,7 @@ namespace frenchroast { namespace network {
       return ss.str();
     }
 
-    void Connector::wait_for_client_connection(const std::string& ipaddr, int port, Listener* handler)
+    void Connector::wait_for_client_connection(const std::string& ipaddr, int port, Listener* handler, bool silent)
     {
       _handler = handler;
       _receiver_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -54,11 +54,13 @@ namespace frenchroast { namespace network {
 
       listen(_receiver_socket, 1);
 
-      std::cout << "waiting..." << std::flush;
+      if(!silent)
+        std::cout << "waiting..." << std::flush;
       struct sockaddr_in conn_from;
       unsigned int len = sizeof(conn_from);
       int connfd = accept(_receiver_socket, (struct sockaddr *) &conn_from, &len);
-      std::cout << "connected." << std::endl;
+      if(!silent)
+        std::cout << "connected." << std::endl;
       _sender_socket = connfd;
       _handler->message(std::string("connected~") + inet_ntoa(conn_from.sin_addr) + ":" + ntoa(htons(conn_from.sin_port)));
       std::thread t1{process_instream,connfd,_handler};

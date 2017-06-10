@@ -33,7 +33,7 @@
 
 namespace frenchroast { namespace network {
 
-    void Connector::wait_for_client_connection(const std::string& ipaddr, int port, Listener* handler)
+    void Connector::wait_for_client_connection(const std::string& ipaddr, int port, Listener* handler, bool silent)
     {
       _handler = handler;
       WSADATA wsaData;

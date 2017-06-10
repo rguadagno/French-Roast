@@ -43,7 +43,7 @@ namespace frenchroast { namespace network {
 
       Listener* _handler;
     public:
-      void wait_for_client_connection(const std::string& ipaddr, int port, Listener* handler);
+      void wait_for_client_connection(const std::string& ipaddr, int port, Listener* handler, bool silent=true);
       void connect_to_server(const std::string& ipaddr, int port, Listener* handler);
       void send_message(const std::string& msg);
       void close_down();
