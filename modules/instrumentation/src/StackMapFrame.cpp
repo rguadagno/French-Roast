@@ -353,12 +353,13 @@ namespace frenchroast {
       memcpy(buf +3, _localsCount,2);
       save_verification_items(buf +  5, _verificationLocals);
       int size = 5;
-      memcpy(buf + size , _localsCount,2);
+      
       for (auto& x : _verificationLocals) {
         size += x->size_in_bytes();
       }
+      
       memcpy(buf + size, _stackCount,2);
-      save_verification_items(buf +  size, _verificationStack);
+      save_verification_items(buf +  size + 2, _verificationStack);
     }
   };
 
