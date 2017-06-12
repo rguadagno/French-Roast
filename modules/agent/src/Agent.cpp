@@ -33,12 +33,14 @@
 #include "Config.h"
 #include "CommandListener.h"
 
+/*
 struct GlobalAgentData {
 
-  std::ofstream _out{"c:\\temp\\out.log"};
+  
   jrawMonitorID _lock;
 
 };
+*/
 
 std::mutex _traffic_mutex;
 
@@ -67,8 +69,8 @@ public:
 
 
 static int counter = 0;
-static GlobalAgentData g_data;
-static GlobalAgentData* gdata = &g_data;
+
+
 frenchroast::FrenchRoast fr;
 frenchroast::agent::Hooks _hooks;
 frenchroast::agent::Config _config;
@@ -81,6 +83,7 @@ std::mutex _sig_time_mutex;
 jvmtiEnv* genv;
 JavaVM*   g_java_vm;
 
+/*
 void enter_section(jvmtiEnv *env) {
 
   env->RawMonitorEnter(gdata->_lock);
@@ -89,6 +92,7 @@ void enter_section(jvmtiEnv *env) {
 void exit_section(jvmtiEnv *env) {
   env->RawMonitorExit(gdata->_lock);
 }
+*/
 
 void JNICALL
 ThreadStart(jvmtiEnv *env, JNIEnv* jni_env, jthread thread) {
@@ -216,7 +220,7 @@ void JNICALL
   }
 }
 
-
+/*
 void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread thread, jobject object)
 {
   enter_section(env);
@@ -224,11 +228,11 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   char* signature;
   char* generic;
   env->GetClassSignature(klass, &signature, &generic);
-  gdata->_out << "*** Blocked on : " << signature << std::endl;
+  // gdata->_out << "*** Blocked on : " << signature << std::endl;
   ++counter;
   exit_section(env);
 }
-
+*/
 
 
 bool traffic_predicate() 
@@ -319,7 +323,7 @@ void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
   xx->VMInit                = &VMInit;
   xx->ThreadStart           = &ThreadStart;
   xx->MonitorWait           = &MonitorWait;
-  xx->MonitorContendedEnter = &MonitorContendedEnter;
+  //  xx->MonitorContendedEnter = &MonitorContendedEnter;
   xx->ClassFileLoadHook     = &ClassFileLoadHook;
   
   jvmtiError  err = env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_MONITOR_WAIT,NULL);
@@ -388,7 +392,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   xx->VMInit                = &VMInit;
   xx->ThreadStart           = &ThreadStart;
   xx->MonitorWait           = &MonitorWait;
-  xx->MonitorContendedEnter = &MonitorContendedEnter;
+  //  xx->MonitorContendedEnter = &MonitorContendedEnter;
   xx->ClassFileLoadHook     = &ClassFileLoadHook;
   err =   env->SetEventCallbacks(xx, sizeof(jvmtiEventCallbacks));
 
