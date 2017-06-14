@@ -402,18 +402,6 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 
   std::cout << "===========> " << _config.get_reporter_descriptor() << std::endl;
 
-
-  //  _rptr.init(_config.get_reporter_descriptor(),&_commandListener);
-
-
-
-
-  
-  //  if(_config.command_listener_required()) {
-  //_commandListener = new CommandListener{};
-  //}
-
-
   if(_config.is_server_required()) {
     _conn.connect_to_server(frenchroast::split(_config.get_server(),":")[0],
                             atoi(frenchroast::split(_config.get_server(),":")[1].c_str()),
@@ -435,14 +423,6 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   
   _rptr.setTransport(tptr);
   
-  //@@
-  
-  //       _conn.connect_to_server(items[1], atoi(items[2].c_str()),this);
-  //  _conn = setup_connection(_config.get_server_info());
-  
-  //  _rptr.init(_config.get_reporter_descriptor(), _conn);
-
-
     
   jvmtiError err;
   jvmtiEnv* env;
