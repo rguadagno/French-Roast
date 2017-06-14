@@ -1,4 +1,4 @@
-// copyright (c) 2016 Richard Guadagno
+// copyright (c) 2017 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -17,35 +17,21 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef RPT_H
-#define RPT_H
+#ifndef FILETRANS_H
+#define FILETRANS_H
+
 #include <string>
+#include <fstream>
+#include "Transport.h"
 
 namespace frenchroast { namespace agent {
 
-    class Config {
-      std::string _reporterDescriptor{""};
-      std::string _opcodeFile{""};
-      std::string _hooksFile{""};
-      std::string _server{""};
-      bool        _serverRequired{false};
-      
+    class FileTransport : public Transport {
+      std::ofstream _outfile;
     public:
-      Config();
-      bool load(const std::string& configFile);
-      std::string get_reporter_descriptor() const;
-      std::string get_opcode_file() const;
-      std::string get_hooks_file() const;
-      std::string get_server() const;
-      std::string get_report_filename() const;
-      bool is_server_required() const;
-      bool is_cout_reporter() const;
-      bool is_file_reporter() const;
-      bool is_server_reporter() const;
+      FileTransport(const std::string& filename);
+      void out(const std::string& str);
+
     };
-  }
-}
-
-
-
+  }}
 #endif

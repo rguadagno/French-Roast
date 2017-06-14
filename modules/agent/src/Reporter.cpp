@@ -17,12 +17,10 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 #include "Reporter.h"
-#include "ReporterImp.h"
-
 #include "Util.h"
 
 namespace frenchroast { namespace agent {
-
+    /*
     void Reporter::init(const std::string& initinfo,CommandListener* cl)
     {
       std::vector<std::string> items = frenchroast::split(initinfo,"~");
@@ -31,33 +29,41 @@ namespace frenchroast { namespace agent {
       }
       if (items[0] == "file") {
         _impPtr = new ReporterFile();
-        _impPtr->init(items[1],cl);
+        _impPtr->init(items[1]);
       }
       if (items[0] == "server") {
         _impPtr = new ReporterServer();
         _impPtr->init(items[1],cl);
       }
     }  
-
+    */
+    void Reporter::setTransport(Transport* ptr)
+    {
+      if(ptr == nullptr) throw std::invalid_argument("Transport is nullptr");
+      _ptr = ptr;
+    }
+    
     void Reporter::signal(const std::string& tag)
     {
-      _impPtr->signal(tag);
+      _ptr->out("signal~" + tag);
     }
 
     void Reporter::traffic(const std::string& tag)
     {
-      _impPtr->traffic(tag);
+      _ptr->out("traffic~" + tag);
     }
     
-    void Reporter::signal_timer(long long time, const std::string& direction, const std::string& tag, const std::string threadname)
+    void Reporter::signal_timer(long long xtime, const std::string& direction, const std::string& tag, const std::string threadname)
     {
-      _impPtr->signal_timer(time, direction, tag, threadname);
+      _ptr->out("signaltimer~" + frenchroast::ntoa(xtime) +"~" + direction + "~" + tag + "~" + threadname);
     }
 
-    void Reporter::close()
-    {
-      _impPtr->close();
-    }
+    //    void Reporter::close()
+    //{
+    //_impPtr->close();
+    //}
 
   }
 }
+
+

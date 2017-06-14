@@ -1,4 +1,4 @@
-// copyright (c) 2016 Richard Guadagno
+// copyright (c) 2017 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -16,12 +16,12 @@
 //    You should have received a copy of the GNU General Public License
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
-#include "ReporterImp.h"
-#include "CommandListener.h"
+#include "FileTransport.h"
+
 
 namespace frenchroast { namespace agent {
 
-    void ReporterFile::init(const std::string& filename, CommandListener*)
+    FileTransport::FileTransport(const std::string& filename)
     {
       try {
         _outfile.exceptions(std::ifstream::failbit);
@@ -32,23 +32,16 @@ namespace frenchroast { namespace agent {
           throw std::ifstream::failure("cannot open file: " + filename);
       }
     }  
-    void ReporterFile::traffic(const std::string& tag) {
 
-    }
-    void ReporterFile::signal(const std::string& tag)
+    void FileTransport::out(const std::string& tag)
     {
-            _outfile << tag << std::endl;
+      _outfile << tag << std::endl;
     }
     
-    void ReporterFile::signal_timer(long long xtime, const std::string& direction, const std::string& tag, const std::string threadname)
-    {
-      _outfile << direction << "  " << tag << "  " << xtime << std::endl;
-    }
-    
-    void ReporterFile::close()
+    /*void ReporterFile::close()
     {
       _outfile.close();
-    }
+      }*/
 
   }
 }

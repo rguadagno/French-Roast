@@ -16,7 +16,11 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
   endif ()
 
   if (WIN32)
-    FILE(GLOB huh ../src/*.cpp ../../instrumentation/src/*.cpp ../../network/src/ConnectorWindows.cpp ../../network/src/Connector.cpp)	
+    FILE(GLOB huh
+    ../src/*.cpp
+    ../../instrumentation/src/*.cpp
+    ../../network/src/ConnectorWindows.cpp
+    ../../network/src/Connector.cpp)	
   endif ()
 
   add_library(agent SHARED ${huh} )
