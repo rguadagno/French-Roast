@@ -30,23 +30,29 @@ namespace frenchroast { namespace agent {
       int            _line;
       std::string    _name;
       std::bitset<4> _flags;
+      std::vector<std::string> _fieldInfo;
     public:
       Hook(const std::string& name, int lineno);
-      Hook(const std::string& name, std::bitset<4>);
+      Hook(const std::string& name, std::bitset<4>, std::vector<std::string> fieldInfo);
       int            line_number() const;
       std::string    method_name() const;
       std::bitset<4> flags() const;
+      const std::vector<std::string>& field_info() const;
     };
     
     class Hooks {
-      std::unordered_map<std::string,std::vector<Hook>> _hlist;
+      static std::unordered_map<std::string, std::string>      _type_map;
+      std::unordered_map<std::string,std::vector<Hook>>        _hlist;
+      std::unordered_map<std::string,std::vector<std::string>> _markerFields;
+      
       void validate(const std::string& method);
       void convert_name(std::string& name);
-      static std::unordered_map<std::string, std::string> _type_map;
+
     public:
       bool is_hook_class(const std::string& name) const;
       const std::vector<Hook>& get(const std::string& name);
       void load(const std::string& filename);
+      const std::vector<std::string>& get_marker_fields(const std::string& className, const std::string& key) ;
     };
   }
 }

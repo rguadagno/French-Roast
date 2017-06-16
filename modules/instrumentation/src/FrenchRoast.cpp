@@ -352,6 +352,7 @@ namespace frenchroast {
     int hook_id =   _constPool.add_method_ref_index(callTo);
     if ((flags & METHOD_ENTER) == METHOD_ENTER) {
       std::vector<Instruction> instructions;
+      instructions.push_back(Instruction(_opCodes[opcode::aload_0]));
       instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  hook_id));
       meth.add_instructions(0,instructions, true);
       if (meth.get_max_stack() == 0) {
@@ -361,6 +362,7 @@ namespace frenchroast {
     
     if ((flags & METHOD_EXIT) == METHOD_EXIT) {
       std::vector<Instruction> instructions;
+      instructions.push_back(Instruction(_opCodes[opcode::aload_0]));
       instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  hook_id));
       bool adjust = false;
       for (auto& x : meth.get_return_addresses()) {
