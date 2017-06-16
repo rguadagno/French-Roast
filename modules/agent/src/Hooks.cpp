@@ -26,7 +26,7 @@ namespace frenchroast { namespace agent {
     {
     }
 
-    Hook::Hook(const std::string& name, std::bitset<4> flags, std::vector<std::string> fields) : _name(name), _flags(flags), _line(0), _fieldInfo(fields)
+    Hook::Hook(const std::string& name, std::bitset<4> flags) : _name(name), _flags(flags), _line(0)
     {
     }
     
@@ -43,11 +43,6 @@ namespace frenchroast { namespace agent {
     std::bitset<4> Hook::flags() const
     {
       return _flags;
-    }
-
-    const std::vector<std::string>& Hook::field_info() const
-    {
-      return _fieldInfo;
     }
 
     // -------------------------
@@ -161,7 +156,7 @@ namespace frenchroast { namespace agent {
           }
 
           _markerFields["L" + classname + ";" + methName] = fields;
-          _hlist[classname].push_back(Hook{methName, flags, fields});
+          _hlist[classname].push_back(Hook{methName, flags});
           loaded = true;
         }
         infile.close();
