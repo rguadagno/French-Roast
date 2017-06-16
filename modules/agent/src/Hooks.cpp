@@ -120,6 +120,8 @@ namespace frenchroast { namespace agent {
       std::ifstream infile;
       try {
         infile.open(filename);
+        if(infile.fail())
+           throw std::ios_base::failure("cannot open file: " + filename);
         bool loaded = false;
         std::string line;
         while (getline(infile,line))
@@ -144,8 +146,8 @@ namespace frenchroast { namespace agent {
           throw std::invalid_argument{"hooks file empty"};
         }
       }
-      catch(std::ifstream::failure&) {
-        throw std::ifstream::failure("cannot open file: " + filename);
+      catch(std::ios_base::failure&) {
+        throw std::ios_base::failure("cannot open file: " + filename);
       }
     }
 

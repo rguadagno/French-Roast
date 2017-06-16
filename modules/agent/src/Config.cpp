@@ -32,7 +32,7 @@ namespace frenchroast { namespace agent {
       return rv;
     }
     
-    Config::Config() : _reporterDescriptor(""), _opcodeFile(""), _hooksFile("")
+    Config::Config()
     {
     }
     
@@ -51,22 +51,57 @@ namespace frenchroast { namespace agent {
       return _hooksFile;
     }
 
+    std::string Config::get_server() const
+    {
+      return _server;
+    }
 
+
+    bool Config::is_server_required() const
+    {
+      return _serverRequired;
+    }
+
+    bool Config::is_cout_reporter() const
+    {
+      return _reporterDescriptor.find("cout") != std::string::npos;;
+    }
+
+    bool Config::is_file_reporter() const
+    {
+      return _reporterDescriptor.find("file:") != std::string::npos;;
+    }
+
+    bool Config::is_server_reporter() const
+    {
+      return _reporterDescriptor.find("server") != std::string::npos;;
+    }
+
+    std::string Config::get_report_filename() const
+    {
+      return _reporterDescriptor.substr(std::string{"file:"}.size());
+    }
+
+
+
+    
     bool Config::load(const std::string& filename)
     {
       std::ifstream inconfig;
       try {
-        inconfig.exceptions(std::ifstream::failbit);
         inconfig.open(filename);
+        if(inconfig.fail()) {
+           throw std::ios_base::failure("cannot open file: " + filename);
+        }
         std::string line;
         while (getline(inconfig,line)) {
           frenchroast::remove_blanks(line);
-          _opcodeFile         = get_value("opcodefile",_opcodeFile,line);
-          _hooksFile          = get_value("hooksfile",_hooksFile, line);
-          _reporterDescriptor = get_value("reporterdescriptor",_reporterDescriptor, line);
+          _opcodeFile         = get_value("opcodefile",         _opcodeFile,line);
+          _hooksFile          = get_value("hooksfile",          _hooksFile, line);
+          _reporterDescriptor = get_value("reporter_descriptor",_reporterDescriptor, line);
+          _server             = get_value("server",             _server, line);
         }
         inconfig.close();
-        
         if (_opcodeFile == "") {
           std::cout << "opcodefile not set in config file" << std::endl;
           return false;
@@ -78,10 +113,13 @@ namespace frenchroast { namespace agent {
         }
         
         if (_reporterDescriptor == "") {
-          std::cout << "hooksfile not set in config file" << std::endl;
+          std::cout << "reporter descriptor not set in config file" << std::endl;
           return false;
         }
-
+       std::cout << "server: " << _server << std::endl;       
+        if(_server != "") {
+          _serverRequired = true;
+        }
       }
       catch(std::ifstream::failure& ) {
         if(!inconfig.eof())

@@ -32,6 +32,10 @@
 #include "Reporter.h"
 #include "Config.h"
 #include "CommandListener.h"
+#include "CoutTransport.h"
+#include "FileTransport.h"
+#include "ServerTransport.h"
+#include "Listener.h"
 
 /*
 struct GlobalAgentData {
@@ -43,13 +47,27 @@ struct GlobalAgentData {
 */
 
 std::mutex _traffic_mutex;
+frenchroast::network::Connector  _conn;
 
-class CommandBridge : public frenchroast::agent::CommandListener {
+class CommandBridge : public frenchroast::agent::CommandListener, public frenchroast::network::Listener {
   
 public:
   std::atomic<int> _millis{};
   std::condition_variable _traffic_cond;
 
+    void message(const std::string& msg)
+    {
+      std::vector<std::string> items = frenchroast::split(msg,"~");
+
+      if (items[0] == "stop_watch_traffic") { 
+        stop_watch_traffic();
+      }
+      if (items.size() == 2 && items[0] == "watch_traffic") {
+        watch_traffic(atoi(items[1].c_str()));
+      }
+    }
+
+  
   void watch_traffic(const int interval_millis)
   {
     std::lock_guard<std::mutex> lck{_traffic_mutex};
@@ -75,7 +93,7 @@ frenchroast::FrenchRoast fr;
 frenchroast::agent::Hooks _hooks;
 frenchroast::agent::Config _config;
 frenchroast::agent::Reporter _rptr;
-CommandBridge _commandListener;
+CommandBridge               _commandListener;
 
 std::mutex _sig_mutex;
 std::mutex _sig_time_mutex;
@@ -239,6 +257,7 @@ bool traffic_predicate()
 {
   return _commandListener._millis.load() > 0;
 }
+
 void traffic_monitor() 
 {
   jvmtiEnv* xenv;
@@ -383,7 +402,28 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 
   std::cout << "===========> " << _config.get_reporter_descriptor() << std::endl;
 
-  _rptr.init(_config.get_reporter_descriptor(),&_commandListener);
+  if(_config.is_server_required()) {
+    _conn.connect_to_server(frenchroast::split(_config.get_server(),":")[0],
+                            atoi(frenchroast::split(_config.get_server(),":")[1].c_str()),
+                            &_commandListener);
+  }
+
+  frenchroast::agent::Transport* tptr{nullptr};
+  if(_config.is_cout_reporter()) {
+    tptr = new frenchroast::agent::CoutTransport{};
+  }
+
+  if(_config.is_file_reporter()) {
+    tptr = new frenchroast::agent::FileTransport{_config.get_report_filename()};
+  }
+
+  if(_config.is_server_reporter()) {
+    tptr = new frenchroast::agent::ServerTransport{_conn};
+  }
+  
+  _rptr.setTransport(tptr);
+  
+    
   jvmtiError err;
   jvmtiEnv* env;
   vm->GetEnv((void**)&env, JVMTI_VERSION_1_0);

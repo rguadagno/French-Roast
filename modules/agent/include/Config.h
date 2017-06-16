@@ -23,16 +23,38 @@
 
 namespace frenchroast { namespace agent {
 
+    /*
+    //        Example config file
+    
+opcodefile  <c:\richg\code\french_roast\French-Roast\modules\instrumentation\config\opcodes.txt>
+hooksfile   <c:\richg\code\french_roast\French-Roast\modules\agent\hooks_config3.txt>
+server             <127.0.0.1:6060>
+reporter_descriptor    <server>
+command_descriptor     <server>
+
+
+    
+    */
+    
     class Config {
-      std::string _reporterDescriptor;
-      std::string _opcodeFile;
-      std::string _hooksFile;
+      std::string _reporterDescriptor{""};
+      std::string _opcodeFile{""};
+      std::string _hooksFile{""};
+      std::string _server{""};
+      bool        _serverRequired{false};
+      
     public:
       Config();
       bool load(const std::string& configFile);
       std::string get_reporter_descriptor() const;
       std::string get_opcode_file() const;
       std::string get_hooks_file() const;
+      std::string get_server() const;
+      std::string get_report_filename() const;
+      bool is_server_required() const;
+      bool is_cout_reporter() const;
+      bool is_file_reporter() const;
+      bool is_server_reporter() const;
     };
   }
 }

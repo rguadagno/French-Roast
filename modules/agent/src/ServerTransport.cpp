@@ -1,4 +1,4 @@
-// copyright (c) 2016 Richard Guadagno
+// copyright (c) 2017 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -16,27 +16,20 @@
 //    You should have received a copy of the GNU General Public License
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
-
-#ifndef RRPT_H
-#define RRPT_H
-#include <string>
-#include "Transport.h"
+#include <vector>
+#include "ServerTransport.h"
 
 namespace frenchroast { namespace agent {
 
-        
-    class Reporter {
-      Transport* _ptr;
-    public:
-      void traffic(const std::string& tag);
-      void setTransport(Transport* ptr);
-      void signal(const std::string& tag);
-      void signal_timer(long long time, const std::string& direction, const std::string& tag, const std::string threadname);
-      void close();
 
-    };
+    ServerTransport::ServerTransport(network::Connector& conn) : _conn(conn)
+    {
+    }
+    
+    void ServerTransport::out(const std::string& tag)
+    {
+      _conn.send_message(tag);
+    }
 
   }
 }
-
-#endif
