@@ -38,8 +38,8 @@ TEST_CASE ("write_bytes") {
 
   BYTE b2[2];
   write_bytes(b2, 600, 2); 
-  REQUIRE(b2[0] ==  2);
-  REQUIRE(b2[1] ==  88);
+  REQUIRE(b2[0] ==  2);      
+  REQUIRE(b2[1] ==  88);     
 
   BYTE b3[2];
   short ss = 600;
@@ -68,5 +68,10 @@ TEST_CASE ("write_bytes") {
   REQUIRE( split("hello,there,func")[0] == "hello" );
   REQUIRE( split("hello,there,func")[1] == "there" );
   REQUIRE( split("hello,there,func")[2] == "func" );
+
+  REQUIRE( split("[hello][there]", "][")[0] == "[hello" );
+  REQUIRE( split("[hello][there]", "][")[1] == "there]" );
+
+  
 }
 
