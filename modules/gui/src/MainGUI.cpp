@@ -78,7 +78,12 @@ void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace>& items)
 }
 
 void FRListener::connected(const std::string& msg) {
-  remoteconnected(msg);
+  remoteconnected("remote agent connected: " + msg);
+  start_traffic(_trafficRate);
+}
+
+void FRListener::unloaded(const std::string& msg) {
+  remoteunloaded("remote agent disconnected: " + msg);
   start_traffic(_trafficRate);
 }
 
@@ -225,7 +230,9 @@ FRMain::FRMain(FRListener* listener)
   QObject::connect(this, &FRMain::start_traffic, listener, &FRListener::start_traffic);
   
   statusBar()->showMessage("waiting for connection...");
+
   QObject::connect(listener,&FRListener::remoteconnected, this, &FRMain::update_status);
+  QObject::connect(listener,&FRListener::remoteunloaded, this, &FRMain::update_unloaded_status);
 
 }
 
@@ -238,8 +245,18 @@ void FRMain::update_traffic_rate()
 
 void FRMain::update_status(std::string msg)
 {
-  statusBar()->showMessage(QString::fromStdString("remote agent connected: " + msg));
+  statusBar()->showMessage(QString::fromStdString(msg));
 }
+
+void FRMain::update_unloaded_status(std::string msg)
+{
+  statusBar()->setStyleSheet("QWidget {background-color: #ab1e1e;}");
+  statusBar()->showMessage(QString::fromStdString(msg));
+}
+
+
+
+
 
 void FRMain::update_list(std::string ltype, std::string  descriptor, int count)
 {
@@ -387,6 +404,7 @@ int main(int argc, char* argv[]) {
   roaster.moveToThread(tt);
 
  FRMain main(&roaster);
+ DetailsWin details;
  QObject::connect(&roaster,&FRListener::thooked, &main, &FRMain::update_list);
  QObject::connect(&roaster,&FRListener::timersignal, &main, &FRMain::update_timed_list);
  QObject::connect(&roaster,&FRListener::traffic_signal, &main, &FRMain::update_traffic);

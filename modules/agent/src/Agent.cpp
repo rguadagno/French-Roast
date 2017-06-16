@@ -518,5 +518,11 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 }
 
 
+JNIEXPORT void JNICALL
+Agent_OnUnload(JavaVM* vm)
+{
 
+  std::cout << "unloaded" << std::endl;
+  _rptr.unloaded("now");
+}
   

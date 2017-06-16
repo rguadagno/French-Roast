@@ -87,7 +87,26 @@ class FRMain : public QMainWindow {
    void update_timed_list(std::string ltype, std::string  descriptor, long elapsed, int last);
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void update_status(std::string);
+   void update_unloaded_status(std::string);
    void update_traffic_rate();
 };
+
+class DetailsWin : public QMainWindow {
+  Q_OBJECT
+
+ public:
+
+
+ private:
+
+ signals:
+  //void start_traffic(int rate);
+  
+ public slots:
+
+   //   void update_list(std::string, std::string,int);
+
+};
+
 
 #endif

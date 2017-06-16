@@ -34,7 +34,7 @@ namespace frenchroast { namespace monitor {
                                                              {'C',"char"},
                                                              {'D',"double"},
                                                              {'F',"float"},
-                                                                {'S',"short"}
+                                                             {'S',"short"}
                 
                                                            };
     
