@@ -28,6 +28,16 @@
 
 using namespace frenchroast;
 
+
+BYTE* build_zero_exceptions()
+{
+  BYTE* buf = new BYTE[2];
+  short exceptionCount = 0;
+  write_big_e_bytes(buf, &exceptionCount);
+  return buf;
+}
+
+
 BYTE* build_simple_method(int& size)
 {
 /*
@@ -63,21 +73,6 @@ BYTE* build_simple_method(int& size)
 }
 
 
-BYTE* build_stack_maps_for_simple()
-{
-  BYTE* buf = new BYTE[1];
-  *buf = 11;
-  return buf;
-}
-
-BYTE* build_stack_maps_for_lookupswitch()
-{
-  BYTE* buf = new BYTE[3];
-  *(buf + 0) = 28;
-  *(buf + 1) = 10;
-  *(buf + 2) = 7;
-  return buf;
-}
 
 
 
@@ -87,15 +82,15 @@ BYTE* build_lookupswitch_method(int& size)
    ----------- method ------------------
 
 public void something(int x) {
-	switch(x) {
-	case 10:   
-	    System.out.println("okok");     
-	    break;
+        switch(x) {
+        case 10:   
+            System.out.println("okok");     
+            break;
     
-	case 20:
-	    System.out.println("xxx");
-	    break;
-	}
+        case 20:
+            System.out.println("xxx");
+            break;
+        }
     }
 
 */
@@ -135,25 +130,27 @@ public void something(int x) {
   return buf;
 }
 
+
 BYTE* build_lookupswitch_return_method(int& size)
 {
-/*
-   ----------- method ------------------
+  
 
-public void something(int x) {
-	switch(x) {
-	case 10:   
-	    System.out.println("okok");     
-	    return;
-    
-	case 20
-	    System.out.println("xxx");
-	    break;
-	}
-	System.out.println("NOTHING");
-    }
+  //   ----------- method ------------------
 
-*/
+  //public void something(int x) {
+  //    switch(x) {
+  //    case 10:   
+  //        System.out.println("okok");     
+  //        return;
+  //
+  //    case 20
+  //        System.out.println("xxx");
+  //        break;
+  //    }
+  //    System.out.println("NOTHING");
+  //}
+
+
 
   size = 54;
   BYTE* buf = new BYTE[size + 8];
@@ -197,22 +194,24 @@ public void something(int x) {
 BYTE* build_multi_return_method(int& size)
 {
 
-/*
-    public int yeah(int i) {
-	if( i < 10) {
-	    System.out.println("less 10");
-	    return  0;
-	}
-	else if (i < 100 ) {
-	    System.out.println("less 100");
-	    return 1;
-	}
-	else {
-	    System.out.println("neg");
-	    return -1;
-	}
-    }
-*/
+
+
+//    public int yeah(int i) {
+//      if( i < 10) {
+//          System.out.println("less 10");
+//          return  0;
+//      }
+//      else if (i < 100 ) {
+//          System.out.println("less 100");
+//          return 1;
+//      }
+//      else {
+//          System.out.println("neg");
+//          return -1;
+//      }
+  //  }
+
+  
   const int DOES_NOT_MATTER = 1; // since code is not to be run just make it clear
   size = 42;
   BYTE* buf = new BYTE[size + 8];
@@ -250,6 +249,23 @@ BYTE* build_multi_return_method(int& size)
   return buf;
 }
 
+BYTE* build_stack_maps_for_simple()
+{
+  BYTE* buf = new BYTE[1];
+  *buf = 11;
+  return buf;
+}
+
+BYTE* build_stack_maps_for_lookupswitch()
+{
+  BYTE* buf = new BYTE[3];
+  *(buf + 0) = 28;
+  *(buf + 1) = 10;
+  *(buf + 2) = 7;
+  return buf;
+}
+
+
 
 TEST_CASE ( "method) = opcode:: [simple] load from buffer")
 {
@@ -258,19 +274,22 @@ TEST_CASE ( "method) = opcode:: [simple] load from buffer")
 
   int size;
   BYTE* buf = build_simple_method(size);
+  BYTE* excepbuf = build_zero_exceptions();
   Method meth;
-  meth.load_from_buffer(buf);
+  meth.load_from_buffer(buf, excepbuf);
   REQUIRE(meth.size_in_bytes() == size + 8);
-  std::vector<Instruction> list;
-  OpCode ops;
+
   REQUIRE(meth[7].address() == 11);
-  REQUIRE(meth[7].opcode()  == opcode::xreturn  );
+  REQUIRE((meth[7].opcode()  == opcode::xreturn)  );
   REQUIRE(meth[3].offset() == 8);
   REQUIRE(meth[3].address() == 3);
 
   
   delete[] buf;
+  delete[] excepbuf;
 }
+
+
 
 TEST_CASE ( "method: [simple]  add instructions at begin")
 {
@@ -280,21 +299,23 @@ TEST_CASE ( "method: [simple]  add instructions at begin")
   int size;
   BYTE* buf = build_simple_method(size);
   Method meth;
-  meth.load_from_buffer(buf);
+  meth.load_from_buffer(buf, build_zero_exceptions());
   REQUIRE(meth.size_in_bytes() == size + 8);
   std::vector<Instruction> list;
   OpCode ops;
   list.push_back(Instruction{ops[opcode::invokestatic], 9});
+
+  
   REQUIRE(meth[7].address() == 11);
-  REQUIRE(meth[7].opcode()  == opcode::xreturn  );
+  REQUIRE((meth[7].opcode()  == opcode::xreturn ) );
   REQUIRE(meth[3].offset() == 8);
   REQUIRE(meth.size_in_bytes() == size + 8);
 
   meth.add_instructions(0,list,true);
-
+  std::cout << "-----\n" << meth << "\n-------" << std::endl;
   REQUIRE(meth.size_in_bytes() == size + 8 + 3);
   REQUIRE(meth[8].address() == 14);
-  REQUIRE(opcode::xreturn == meth[8].opcode() );
+  REQUIRE((opcode::xreturn == meth[8].opcode()) );
   REQUIRE(meth[4].address() == 6);
   REQUIRE(meth[4].offset() == 8);
   
@@ -309,20 +330,20 @@ TEST_CASE ( "method: [simple]  add instructions at end before call to something(
   int size;
   BYTE* buf = build_simple_method(size);
   Method meth;
-  meth.load_from_buffer(buf);
+  meth.load_from_buffer(buf, build_zero_exceptions());
   REQUIRE(meth.size_in_bytes() == size + 8);
   std::vector<Instruction> list;
   OpCode ops;
   list.push_back(Instruction{ops[opcode::invokestatic], 9});
   REQUIRE(meth[7].address() == 11);
-  REQUIRE(meth[7].opcode()  == opcode::xreturn  );
+  REQUIRE((meth[7].opcode()  == opcode::xreturn)  );
   REQUIRE(meth[3].offset() == 8);
   meth.add_instructions(6,list,true);// logical intention is since we inserted instructions at the return (address 11) the
   REQUIRE(meth[3].offset() == 11);   // branch should put us at the new instruction, 
                                   
   REQUIRE(meth.size_in_bytes() == size + 8 + 3);
   REQUIRE(meth[8].address() == 14);
-  REQUIRE(opcode::xreturn == meth[8].opcode() );
+  REQUIRE((opcode::xreturn == meth[8].opcode()) );
 
   
   delete[] buf;
@@ -337,13 +358,13 @@ TEST_CASE ( "method: [simple]  add instructions at end after call to something()
   int size;
   BYTE* buf = build_simple_method(size);
   Method meth;
-  meth.load_from_buffer(buf);
+  meth.load_from_buffer(buf,build_zero_exceptions());
   REQUIRE(meth.size_in_bytes() == size + 8);
   std::vector<Instruction> list;
   OpCode ops;
   list.push_back(Instruction{ops[opcode::invokestatic], 9});
   REQUIRE(meth[7].address() == 11);
-  REQUIRE(meth[7].opcode()  == opcode::xreturn  );
+  REQUIRE((meth[7].opcode()  == opcode::xreturn)  );
   REQUIRE(meth[3].offset() == 8);
   meth.add_instructions(11,list,true);
   REQUIRE(meth[3].offset() == 11);
@@ -351,7 +372,7 @@ TEST_CASE ( "method: [simple]  add instructions at end after call to something()
                                   
   REQUIRE(meth.size_in_bytes() == size + 8 + 3);
   REQUIRE(meth[8].address() == 14);
-  REQUIRE(opcode::xreturn == meth[8].opcode() );
+  REQUIRE((opcode::xreturn == meth[8].opcode()) );
 
   
   delete[] buf;
@@ -366,13 +387,13 @@ TEST_CASE ( "method: [simple]  add instructions at end , always called, not part
   int size;
   BYTE* buf = build_simple_method(size);
   Method meth;
-  meth.load_from_buffer(buf);
+  meth.load_from_buffer(buf,build_zero_exceptions());
   REQUIRE(meth.size_in_bytes() == size + 8);
   std::vector<Instruction> list;
   OpCode ops;
   list.push_back(Instruction{ops[opcode::invokestatic], 9});
   REQUIRE(meth[7].address() == 11);
-  REQUIRE(meth[7].opcode()  == opcode::xreturn  );
+  REQUIRE((meth[7].opcode()  == opcode::xreturn)  );
   REQUIRE(meth[3].offset() == 8);
 
   meth.add_instructions(11,list,false);
@@ -382,7 +403,7 @@ TEST_CASE ( "method: [simple]  add instructions at end , always called, not part
                                   
   REQUIRE(meth.size_in_bytes() == size + 8 + 3);
   REQUIRE(meth[8].address() == 14);
-  REQUIRE(opcode::xreturn == meth[8].opcode() );
+  REQUIRE((opcode::xreturn == meth[8].opcode()) );
 
   
   delete[] buf;
@@ -398,7 +419,7 @@ TEST_CASE ( "method: [lookupswitch]  add instructions at begin")
   int size;
   BYTE* buf = build_lookupswitch_method(size);
   Method meth;
-  meth.load_from_buffer(buf);
+  meth.load_from_buffer(buf, build_zero_exceptions());
   REQUIRE(meth.size_in_bytes() == size + 8);
   std::vector<Instruction> list;
   OpCode ops;
@@ -413,7 +434,7 @@ TEST_CASE ( "method: [lookupswitch]  add instructions at begin")
   REQUIRE(meth[10].address() == 47 +1 );
   REQUIRE(meth[3].is_branch() );
   REQUIRE(meth[3].address() == 4 );
-  REQUIRE(meth[7].opcode() == opcode::xgoto);
+  REQUIRE((meth[7].opcode() == opcode::xgoto));
   REQUIRE(meth[7].address() == 40);
   REQUIRE(meth[7].offset() == 11);
   BYTE* ibuf = meth[3].get_buffer();
@@ -421,12 +442,12 @@ TEST_CASE ( "method: [lookupswitch]  add instructions at begin")
   int defaultOffset = to_int(ibuf + Instruction::calc_pad(meth[3].address()), 4);
   REQUIRE(meth[3].address() + firstOffset ==  32);
   REQUIRE(meth[3].address() + defaultOffset ==  47 + 3 +1); // orig target + 3 new bytes + 1 byte adjustment
-  REQUIRE(opcode::xreturn == meth[11].opcode() );
+  REQUIRE((opcode::xreturn == meth[11].opcode()) );
 
   meth.add_instructions(51,list,false);
 
   REQUIRE(meth.size_in_bytes() == size + 8 + 3 + 1 + 3);
-  REQUIRE(meth[7].opcode() == opcode::xgoto);
+  REQUIRE((meth[7].opcode() == opcode::xgoto));
   REQUIRE(meth[7].address() == 40);
   REQUIRE(meth[7].offset() == 11);
 
@@ -435,7 +456,7 @@ TEST_CASE ( "method: [lookupswitch]  add instructions at begin")
   defaultOffset = to_int(ibuf + Instruction::calc_pad(meth[3].address()), 4);
   REQUIRE(meth[3].address() + firstOffset ==  32);
   REQUIRE(meth[3].address() + defaultOffset ==  47 + 3 +1); // orig target + 3 new bytes + 1 byte adjustment
-  REQUIRE(opcode::xreturn == meth[12].opcode() );
+  REQUIRE((opcode::xreturn == meth[12].opcode()) );
 
 
   
@@ -451,7 +472,7 @@ TEST_CASE ( "method: [simple]   SameFrame  adjusted")
   int size;
   BYTE* buf = build_simple_method(size);
   Method meth;
-  meth.load_from_buffer(buf);
+  meth.load_from_buffer(buf, build_zero_exceptions());
   BYTE* sbuf = build_stack_maps_for_simple();
   std::vector<StackMapFrame*> frames = load_frames_from_buffer(1, sbuf);
   REQUIRE(frames.size() == 1);
@@ -459,7 +480,7 @@ TEST_CASE ( "method: [simple]   SameFrame  adjusted")
   std::vector<Instruction> list;
   OpCode ops;
   list.push_back(Instruction{ops[opcode::invokestatic], 9});
-  REQUIRE(meth[3].address() + meth[3].offset() == 11);
+  revisit: REQUIRE(meth[3].address() + meth[3].offset() == 11);
   
   meth.add_instructions(0,list,true);
   meth.adjust_frames(frames);
@@ -477,7 +498,7 @@ TEST_CASE ( "method: [simple]   SameFrame  promoted to SameFrameExtended ")
   int size;
   BYTE* buf = build_simple_method(size);
   Method meth;
-  meth.load_from_buffer(buf);
+  meth.load_from_buffer(buf, build_zero_exceptions());
   BYTE* sbuf = build_stack_maps_for_simple();
   std::vector<StackMapFrame*> frames = load_frames_from_buffer(1, sbuf);
   REQUIRE(frames.size() == 1);
@@ -506,7 +527,7 @@ TEST_CASE ( "method: [simple]   multiple SameFrame  adjusted")
   int size;
   BYTE* buf = build_lookupswitch_method(size);
   Method meth;
-  meth.load_from_buffer(buf);
+  meth.load_from_buffer(buf, build_zero_exceptions());
   BYTE* sbuf = build_stack_maps_for_lookupswitch();
   std::vector<StackMapFrame*> frames = load_frames_from_buffer(3, sbuf);
   REQUIRE(frames.size() == 3);
@@ -537,7 +558,7 @@ TEST_CASE ( "method: [simple]   multiple SameFrame  adjusted, with return in mid
   int size;
   BYTE* buf = build_lookupswitch_return_method(size);
   Method meth;
-  meth.load_from_buffer(buf);
+  meth.load_from_buffer(buf, build_zero_exceptions());
   BYTE* sbuf = build_stack_maps_for_lookupswitch();
   std::vector<StackMapFrame*> frames = load_frames_from_buffer(3, sbuf);
   REQUIRE(frames.size() == 3);
@@ -567,13 +588,14 @@ TEST_CASE ( "method: [simple]   multiple SameFrame  adjusted, with return in mid
 }
 
 
+
 TEST_CASE ( "method : get_return_addresses")
 {
 
   int size;
   BYTE* buf = build_multi_return_method(size);
   Method meth;
-  meth.load_from_buffer(buf);
+  meth.load_from_buffer(buf, build_zero_exceptions());
 
   std::vector<int> rlist = meth.get_return_addresses();
   REQUIRE(rlist.size() == 3);
