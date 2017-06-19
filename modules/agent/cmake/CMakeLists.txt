@@ -5,9 +5,18 @@ set(JAVA_INCLUDE_DIR "$ENV{JAVA_INCLUDE_DIR}")
 set(JAVA_INCLUDE_DIR2 "$ENV{JAVA_INCLUDE_DIR2}")
 if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
   include(GenerateExportHeader)
-  include_directories(../include ../../instrumentation/include ../../network/include ${JAVA_INCLUDE_DIR}  ${JAVA_INCLUDE_DIR2})
+  include_directories(
+  ../include
+  ../../instrumentation/include
+  ../../network/include
+  ${JAVA_INCLUDE_DIR}
+  ${JAVA_INCLUDE_DIR2})
   if (UNIX)
-    FILE(GLOB huh ../src/*.cpp ../../instrumentation/src/*.cpp ../../network/src/ConnectorUnix.cpp ../../network/src/Connector.cpp)	
+    FILE(GLOB huh
+    ../src/*.cpp
+    ../../instrumentation/src/*.cpp
+    ../../network/src/ConnectorUnix.cpp
+    ../../network/src/Connector.cpp)	
     find_package(Threads)
     add_definitions("-std=c++14")
     add_definitions(-DCONNECTOR_UNIX)

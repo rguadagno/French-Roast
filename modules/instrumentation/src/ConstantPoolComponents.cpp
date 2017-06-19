@@ -534,15 +534,15 @@ namespace frenchroast {
     std::string namestr = split(split(name, '.')[1],':')[0];
     std::string typestr = split(split(name, '.')[1],':')[1];
 
-    int classIndex = _names[ntoa(_names[classstr])];
+    int classIndex = _names[std::to_string(_names[classstr])];
     if(classIndex == 0) {
       return 0;
     }
-    int nameAndTypeIndex = _names[ntoa(_names[namestr]) + "." + ntoa(_names[ typestr ])];
+    int nameAndTypeIndex = _names[std::to_string(_names[namestr]) + "." + std::to_string(_names[ typestr ])];
     if(nameAndTypeIndex == 0) {
       return 0;
     }
-    return _names[ntoa(classIndex) + "." + ntoa(nameAndTypeIndex)];;
+    return _names[std::to_string(classIndex) + "." + std::to_string(nameAndTypeIndex)];;
   }
 
   int ConstantPoolComponent::add_class(const std::string& tname)
@@ -574,7 +574,7 @@ namespace frenchroast {
     std::string typestr = split(split(name, '.')[1],':')[1];
 
     add_class(classstr);
-    int classIndex = _names[ntoa(_names[classstr])];
+    int classIndex = _names[std::to_string(_names[classstr])];
     if (classIndex == 0) {
       throw std::invalid_argument(std::string("name: ") +  classstr + "  NOT in Pool");
     }
@@ -586,14 +586,14 @@ namespace frenchroast {
       add_name(namestr);
     }
 
-    int nameAndTypeIndex = _names[ntoa(_names[namestr]) + "." + ntoa(_names[ typestr ])];
+    int nameAndTypeIndex = _names[std::to_string(_names[namestr]) + "." + std::to_string(_names[ typestr ])];
     if(nameAndTypeIndex == 0) {
       NameAndTypeHolder* ptr = new NameAndTypeHolder(_names[namestr],_names[typestr]);
       *this + ptr;
       nameAndTypeIndex = _names[ptr->get_params()];
     }
     *this + new MethodRefHolder(classIndex,nameAndTypeIndex);
-    return _names[ntoa(classIndex) + "." + ntoa(nameAndTypeIndex)];
+    return _names[std::to_string(classIndex) + "." + std::to_string(nameAndTypeIndex)];
   }
     
   void ConstantPoolComponent::display(std::ostream& out)

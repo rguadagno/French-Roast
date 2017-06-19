@@ -39,7 +39,7 @@ namespace frenchroast { namespace agent {
     
     void Reporter::signal_timer(long long xtime, const std::string& direction, const std::string& tag, const std::string threadname)
     {
-      _ptr->out("signaltimer~" + frenchroast::ntoa(xtime) +"~" + direction + "~" + tag + "~" + threadname);
+      _ptr->out("signaltimer~" + std::to_string(xtime) +"~" + direction + "~" + tag + "~" + threadname);
     }
 
     void Reporter::unloaded(const std::string& msg)

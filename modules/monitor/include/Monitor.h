@@ -94,7 +94,7 @@ namespace frenchroast { namespace monitor {
 
       void watch_traffic(const int interval_millis)
       {
-	_conn.send_message("watch_traffic~" + ntoa(interval_millis));
+	_conn.send_message("watch_traffic~" + std::to_string(interval_millis));
       }
 
       void stop_watch_traffic()

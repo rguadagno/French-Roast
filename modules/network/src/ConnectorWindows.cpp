@@ -73,7 +73,7 @@ namespace frenchroast { namespace network {
       int len = sizeof(conn_from);
       SOCKET inSock = accept(_receiver_socket,(SOCKADDR*)&conn_from, &len);
       _sender_socket = inSock;
-      _handler->message(std::string("connected~") + inet_ntoa(conn_from.sin_addr) + ":" + ntoa(htons(conn_from.sin_port)));
+      _handler->message(std::string("connected~") + inet_ntoa(conn_from.sin_addr) + ":" + std::to_string(htons(conn_from.sin_port)));
       std::thread t1{process_instream,inSock,_handler};
       t1.detach();
 

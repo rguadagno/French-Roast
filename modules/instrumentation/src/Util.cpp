@@ -123,27 +123,6 @@ namespace frenchroast {
   }
 
   
-  std::string ntoa(int x)
-  {
-    std::stringstream ss;
-    ss << x;
-    return ss.str();
-  }
-
-  std::string ntoa(double x)
-  {
-    std::stringstream ss;
-    ss << x;
-    return ss.str();
-  }
-
-  std::string ntoa(long long x)
-  {
-    std::stringstream ss;
-    ss << x;
-    return ss.str();
-  }
-
   int to_int(const BYTE* buf, int length)
   {
     if (length == 4) {

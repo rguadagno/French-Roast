@@ -34,12 +34,6 @@
 #include "Listener.h"
 
 namespace frenchroast { namespace network {
-    std::string ntoa(int x) 
-    {
-      std::stringstream ss;
-      ss << x;
-      return ss.str();
-    }
 
     void Connector::wait_for_client_connection(const std::string& ipaddr, int port, Listener* handler, bool silent)
     {
@@ -62,7 +56,7 @@ namespace frenchroast { namespace network {
       if(!silent)
         std::cout << "connected." << std::endl;
       _sender_socket = connfd;
-      _handler->message(std::string("connected~") + inet_ntoa(conn_from.sin_addr) + ":" + ntoa(htons(conn_from.sin_port)));
+      _handler->message(std::string("connected~") + inet_ntoa(conn_from.sin_addr) + ":" + std::to_string(htons(conn_from.sin_port)));
       std::thread t1{process_instream,connfd,_handler};
       t1.detach();
     }

@@ -54,6 +54,7 @@ namespace frenchroast { namespace monitor {
       void signal(const std::string& tag, int t1);
       void traffic(std::vector<StackTrace> items);
       void connected(const std::string& msg);
+      void unloaded(const std::string& msg);
     };
     
     std::string _connectedMsg = "waiting for connection...";
@@ -144,7 +145,13 @@ namespace frenchroast { namespace monitor {
       _connectedMsg = "connected: " + msg;
       refresh_status();
     }
-   
+
+    void EventHandler::unloaded(const std::string& msg)
+    {
+      _connectedMsg = "disconnected: " + msg;
+      refresh_status();
+    }
+
 
     
     void refresh_status()
