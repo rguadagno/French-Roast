@@ -61,18 +61,6 @@ namespace frenchroast {
     return result;
   }
 
-  template
-  <typename IntegerType>
-  void write_big_endian_bytes(std::ostream& out, IntegerType* obits, bool little_endian=false)
-  {
-    unsigned char* bits = (unsigned char*) obits;
-    char tempout;
-    for (int n = sizeof( IntegerType )-1; n >=0; n--) {
-      memset(&tempout,0,sizeof(tempout));
-      tempout  = (tempout << 8) +bits[n];
-      out.write(&tempout,1);
-    }
-  }
 
   void write_bytes(BYTE* out, int value, int size);
   
