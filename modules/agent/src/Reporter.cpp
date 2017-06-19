@@ -20,23 +20,7 @@
 #include "Util.h"
 
 namespace frenchroast { namespace agent {
-    /*
-    void Reporter::init(const std::string& initinfo,CommandListener* cl)
-    {
-      std::vector<std::string> items = frenchroast::split(initinfo,"~");
-      if (items[0] == "out") {
-        _impPtr = new ReporterOut();
-      }
-      if (items[0] == "file") {
-        _impPtr = new ReporterFile();
-        _impPtr->init(items[1]);
-      }
-      if (items[0] == "server") {
-        _impPtr = new ReporterServer();
-        _impPtr->init(items[1],cl);
-      }
-    }  
-    */
+
     void Reporter::setTransport(Transport* ptr)
     {
       if(ptr == nullptr) throw std::invalid_argument("Transport is nullptr");
@@ -58,6 +42,12 @@ namespace frenchroast { namespace agent {
       _ptr->out("signaltimer~" + frenchroast::ntoa(xtime) +"~" + direction + "~" + tag + "~" + threadname);
     }
 
+    void Reporter::unloaded(const std::string& msg)
+    {
+      _ptr->out("unloaded~"+msg);
+    }
+
+    
     //    void Reporter::close()
     //{
     //_impPtr->close();

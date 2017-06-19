@@ -39,14 +39,18 @@ namespace frenchroast { namespace agent {
     };
     
     class Hooks {
-      std::unordered_map<std::string,std::vector<Hook>> _hlist;
+      static std::unordered_map<std::string, std::string>      _type_map;
+      std::unordered_map<std::string,std::vector<Hook>>        _hlist;
+      std::unordered_map<std::string,std::vector<std::string>> _markerFields;
+      
       void validate(const std::string& method);
       void convert_name(std::string& name);
-      static std::unordered_map<std::string, std::string> _type_map;
+
     public:
       bool is_hook_class(const std::string& name) const;
       const std::vector<Hook>& get(const std::string& name);
       void load(const std::string& filename);
+      const std::vector<std::string>& get_marker_fields(const std::string& className, const std::string& key) ;
     };
   }
 }

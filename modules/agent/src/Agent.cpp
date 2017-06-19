@@ -86,6 +86,26 @@ public:
 };
 
 
+
+
+class FieldInfo {
+public:
+  std::string _name{};
+  std::string _type{};
+  jfieldID    _id;
+  
+  FieldInfo(std::string name, std::string typ, jfieldID id) : _name(name), _type(typ), _id(id)
+  {
+  }
+  
+  FieldInfo()
+  {
+  }
+  
+};
+
+
+std::unordered_map<std::string, FieldInfo> _reportingFields;
 static int counter = 0;
 
 
@@ -154,7 +174,40 @@ JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass obj
   }
 }
 
-JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object)
+
+std::string get_value(JNIEnv* ptr, jobject obj, FieldInfo& field)
+{
+  if(field._type == "I") return field._name + ":" + std::to_string(ptr->GetIntField(obj, field._id)) + ";";
+  if(field._type == "J") return field._name + ":" + std::to_string(ptr->GetLongField(obj, field._id)) + ";";
+  if(field._type == "Ljava/lang/String;") return ptr->GetStringUTFChars(jstring(ptr->GetObjectField(obj, field._id)),0);
+
+  return "none for type = " + field._type;
+}
+
+
+void populate_class_fields_info(std::string classDescriptor, jclass theclass, std::unordered_map<std::string, FieldInfo>& gfieldinfo)
+{
+
+  jint fieldcount=0;
+  jfieldID* idPtr;
+  genv->GetClassFields(theclass, &fieldcount, &idPtr);
+
+  char* nameptr;
+  char* sigptr;
+  char* genericptr;
+
+
+  for(int idx = 0; idx < fieldcount; idx++) {
+    genv->GetFieldName(theclass,  *(idPtr + idx), &nameptr, &sigptr, &genericptr);
+    std::string fieldName{nameptr};
+    gfieldinfo[classDescriptor + ">" + fieldName] = FieldInfo{fieldName, std::string{sigptr}, *(idPtr + idx)};
+  }
+}
+
+
+
+
+JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass, jobject obj)
 {
   jvmtiFrameInfo frames[5];
   jint count;
@@ -171,6 +224,9 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object
     char *generic;
     err = genv->GetMethodName(frames[1].method, &methodName,&sig,&generic);
     if (err == JVMTI_ERROR_NONE) {
+
+      
+      
       std::string methodNameStr{methodName};
       std::string sigStr{sig};
 
@@ -178,12 +234,26 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass object
       genv->GetMethodDeclaringClass(frames[1].method, &theclass);
       err = genv->GetClassSignature(theclass, &sig,&generic);
       std::string classinfo{sig};
+      
+      std::string key = classinfo + "::" + methodNameStr + ":" + sigStr;
+      std::string fieldValues = "";
+      for(auto& fieldname : _hooks.get_marker_fields(classinfo, methodNameStr + ":" + sigStr)) {
+        if(_reportingFields.count(classinfo + ">" + fieldname) == 0) {
+          populate_class_fields_info(classinfo, theclass, _reportingFields);          
+        }
+        fieldValues += get_value(ptr, obj, _reportingFields[classinfo + ">" + fieldname]);       
+      }
+        
+      std::cout << "VALS:  " << fieldValues << std::endl;                           
       _sig_mutex.lock();
       _rptr.signal(classinfo + "::" + methodNameStr + ":" + sigStr + "~" + std::string{info.name});
       _sig_mutex.unlock();
+      
     }
   }
 }
+
+
 
 void JNICALL
      ClassFileLoadHook(
@@ -203,9 +273,9 @@ void JNICALL
     fr.load_from_buffer(class_data);
     
     fr.add_name_to_pool("thook");
-    fr.add_name_to_pool("()V");
-    fr.add_native_method("thook", "()V");
-
+    fr.add_name_to_pool("(Ljava/lang/Object;)V");
+    fr.add_native_method("thook", "(Ljava/lang/Object;)V");
+    
     fr.add_name_to_pool("timerhook");
     fr.add_name_to_pool("(JLjava/lang/String;Ljava/lang/String;)V");
     fr.add_native_method("timerhook", "(JLjava/lang/String;Ljava/lang/String;)V");
@@ -217,6 +287,7 @@ void JNICALL
   }
 
   if (_hooks.is_hook_class(sname)) {
+
     fr.load_from_buffer(class_data);
     for (auto& x : _hooks.get(sname)) {
       if (x.line_number() > 0) {
@@ -227,7 +298,7 @@ void JNICALL
           fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
         }
         else {
-          fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.flags());
+          fr.add_method_call(x.method_name(), "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
         }
       }
     jint size = fr.size_in_bytes();
@@ -447,5 +518,11 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 }
 
 
+JNIEXPORT void JNICALL
+Agent_OnUnload(JavaVM* vm)
+{
 
+  std::cout << "unloaded" << std::endl;
+  _rptr.unloaded("now");
+}
   

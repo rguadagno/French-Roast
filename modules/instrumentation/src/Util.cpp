@@ -76,7 +76,7 @@ namespace frenchroast {
     rv.push_back(str.substr(pos));
     return rv;
   }
-
+  
   
   std::vector<std::string> split(const std::string& str, const char delim)
   {

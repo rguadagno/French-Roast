@@ -46,22 +46,28 @@ namespace frenchroast { namespace agent {
     }
 
     // -------------------------
+
+
+    const std::vector<std::string>& Hooks::get_marker_fields(const std::string& className, const std::string& key) 
+    {
+      return _markerFields[className + key];
+    }
     
     bool Hooks::is_hook_class(const std::string& name) const
     {
       return _hlist.count(name) > 0;
     }
 
-    std::unordered_map<std::string, std::string> Hooks::_type_map { {"int","I"},
+    std::unordered_map<std::string, std::string> Hooks::_type_map {  {"int","I"},
                                                                      {"bool","Z"},
-                                                                            {"void","V"},
-                                                                             {"long","J"},
-                                                                             {"byte","B"},
-                                                                      {"char","C"},
-                                                                    {"double","D"},
-                                                                            {"float","F"},
-                                                                             {"short","S"}
-                                                                           };
+                                                                     {"void","V"},
+                                                                     {"long","J"},
+                                                                     {"byte","B"},
+                                                                     {"char","C"},
+                                                                     {"double","D"},
+                                                                     {"float","F"},
+                                                                     {"short","S"}
+                                                                  };
     
     void Hooks::convert_name(std::string& name)
     {
@@ -138,6 +144,18 @@ namespace frenchroast { namespace agent {
           std::string flagStr = split(split(line, '<')[1],">")[0];
           std::bitset<4> flags;
           parse_flags(flags, flagStr);
+          std::string fieldStr = split(line, '>')[1];
+          remove_blanks(fieldStr);
+          std::vector<std::string> fields;
+          for(auto& x : split(fieldStr, "][")) {
+            replace(x, '[');
+            replace(x, ']');
+            if(x != "") {
+              fields.push_back(x);
+            }
+          }
+
+          _markerFields["L" + classname + ";" + methName] = fields;
           _hlist[classname].push_back(Hook{methName, flags});
           loaded = true;
         }
@@ -151,7 +169,7 @@ namespace frenchroast { namespace agent {
       }
     }
 
-    const std::vector<Hook>& Hooks::get(const std::string& name)
+    const std::vector<Hook>& Hooks::get(const std::string& name) 
     {
       return _hlist[name];
     }

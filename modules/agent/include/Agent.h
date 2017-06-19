@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 JNIEXPORT void JNICALL Java_java_lang_Package_thook
-  (JNIEnv *, jclass);
+(JNIEnv *, jclass, jobject);
 
 JNIEXPORT void JNICALL Java_java_lang_Package_timerhook
   (JNIEnv *, jclass, jlong, jstring, jstring);

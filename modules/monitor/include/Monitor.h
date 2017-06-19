@@ -80,7 +80,11 @@ namespace frenchroast { namespace monitor {
 	 if (items[MSG_TYPE] == "connected") {
 	   _handler.connected(items[MSG]);
 	 }
-	 
+         
+	 if (items[MSG_TYPE] == "unloaded") {
+	   _handler.unloaded(items[MSG]);
+	 }
+         
       }
 
       void init_receiver(const std::string& ipAddr, int port)
