@@ -76,8 +76,8 @@ class FRMain : public QMainWindow {
   std::unordered_map<std::string,QListWidgetItem*> _descriptors;
   std::unordered_map<std::string,StackRow*> _traffic_rows;
   std::unordered_map<std::string, int> _traffic_keys;
-
-
+  QDockWidget* setup_list(const std::string title, QListWidget* list_ptr);
+  QDockWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QPushButton* bstop, QLineEdit* rate);
  signals:
    void start_traffic(int rate);
   

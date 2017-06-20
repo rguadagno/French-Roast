@@ -28,6 +28,7 @@
 #include <QTWidgets/QSizePolicy>
 #include <QTWidgets/QPushButton>
 #include <QTWidgets/QTableWidget>
+#include <QTWidgets/QDockWidget>
 #include <QTCore/QObject>
 #include <QThread>
 #include <QHeaderView>
@@ -103,29 +104,39 @@ void FRListener::stop_traffic()
 }
 
 
-QWidget* setup_list(const std::string title, QListWidget* list_ptr)
+QDockWidget* FRMain::setup_list(const std::string title, QListWidget* list_ptr)
 {
   list_ptr->setStyleSheet("QListWidget {border: 1px solid grey;background-color: black;font-size: 16px;font-family: \"Arial\"} QListWidget::item {color: orange;}");
 
-  QWidget* holder = new QWidget;
-  QVBoxLayout* vlayout = new QVBoxLayout();
-  vlayout->setSpacing(0);
-  holder->setLayout(vlayout);
+  QDockWidget* holder = new QDockWidget(QString::fromStdString(title), this);
+  holder->setStyleSheet("QWidget {border: 0px solid grey;background-color: grey;font-size:16px;font-family: \"Arial\"}");
+
+
   QLabel* sigLabel = new QLabel(QString::fromStdString(title));
-  vlayout->addWidget(sigLabel);
-  sigLabel->setStyleSheet("QLabel {border: 1px solid grey;qproperty-alignment: AlignHCenter;background-color: grey;font-size:16px;font-family: \"Arial\"}");
-  vlayout->addWidget(list_ptr);
+  QWidget* titlebar = new QWidget();
+  QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight);
+  layout->addWidget(sigLabel);
+  titlebar->setLayout(layout);
+  sigLabel->setStyleSheet("QLabel {border: 1px solid grey;qproperty-alignment: AlignHCenter;color:#bababa;foreground-color:white;background-color: grey;font-size:16px;font-family: \"Arial\"}");
+  holder->setTitleBarWidget(titlebar);
+  
+  holder->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+  QVBoxLayout* vlayout = new QVBoxLayout();
+   holder->setLayout(vlayout);
+  holder->setWidget(list_ptr);
+
   return holder;
 }
 
 
 
-QWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QPushButton* bstop, QLineEdit* rate)
+QDockWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QPushButton* bstop, QLineEdit* rate)
 {
   QWidget* buttonHolder = new QWidget;
   QHBoxLayout* hlayout = new QHBoxLayout();
-  QLabel* desc = new QLabel{QString::fromStdString("traffic rate (millisec):")};
+  QLabel* desc = new QLabel{QString::fromStdString("rate (millisec):")};
   desc->setAlignment(Qt::AlignRight);
+  desc->setStyleSheet("QLabel {font-size:16px;font-family: \"Arial\"}");
   
   buttonHolder->setLayout(hlayout);
   rate->setText("100");
@@ -152,14 +163,17 @@ QWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QPushButt
     bstop->setStyleSheet("QPushButton {padding: 2px; border: 1px solid black;background-color: #8F6A82;font-size: 16px;font-family: \"Arial\"} QPushButton::hover:!pressed {font-size: 20px;} ");
     bstop->setFixedWidth(70);
 
+    QDockWidget* docwin = new QDockWidget(QString::fromStdString("Traffic"), this);
+    QWidget* holder = new QWidget();
 
-    
-  QWidget* holder = new QWidget;
-  QVBoxLayout* vlayout = new QVBoxLayout();
-  vlayout->setSpacing(0);
-  vlayout->addWidget(buttonHolder);
-  holder->setLayout(vlayout);
-  grid->setStyleSheet("QTableWidget {border: 1px solid grey;background-color: black;font-size: 16px;font-family: \"Arial\"} QTableWidget::item {color: orange;}");
+    docwin->setWidget(holder);
+
+    QVBoxLayout* vlayout = new QVBoxLayout();
+    vlayout->setSpacing(0);
+    holder->setLayout(vlayout);
+
+   
+  grid->setStyleSheet("QTableWidget {border: 0px solid grey;background-color: black;font-size: 16px;font-family: \"Arial\"} QTableWidget::item {color: orange;}");
 
   grid->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
   grid->horizontalHeader()->hide();
@@ -167,10 +181,27 @@ QWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QPushButt
   grid->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   
   vlayout->addWidget(grid);
-  return holder;
+
+  QLabel* sigLabel = new QLabel(QString::fromStdString("Traffic"));
+  QWidget* titlebar = new QWidget();
+  QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight);
+  layout->setSpacing(0);
+  layout->addWidget(buttonHolder,1,Qt::AlignLeft);
+  layout->addWidget(sigLabel,1, Qt::AlignLeft);
+  
+  titlebar->setLayout(layout);
+  sigLabel->setStyleSheet("QLabel {border: 1px solid grey;qproperty-alignment: AlignHCenter;color:#bababa;background-color: grey;font-size:16px;font-family: \"Arial\"}");
+  docwin->setTitleBarWidget(titlebar);
+
+  QVBoxLayout* doclayout = new QVBoxLayout();
+  holder->setStyleSheet("QWidget {border: 0px solid grey;background-color: black;font-size:16px;font-family: \"Arial\"}");
+  docwin->setStyleSheet("QWidget {border: 1px solid grey;background-color: grey;font-size:16px;font-family: \"Arial\"}");
+
+  return docwin;
 }
 
-QWidget* setup_central(QWidget* lists, QTableWidget* grid, QPushButton* bstart, QPushButton* bstop, QLineEdit* rate)
+
+QWidget* setup_central(QWidget* lists)
 {
   QWidget* holder = new QWidget;
   holder->setStyleSheet("QWidget {background-color: black;}");
@@ -178,8 +209,6 @@ QWidget* setup_central(QWidget* lists, QTableWidget* grid, QPushButton* bstart, 
   vlayout->setSpacing(0);
   holder->setLayout(vlayout);
   vlayout->addWidget(lists);
-  vlayout->addWidget(build_traffic_viewer(grid,bstart,bstop,rate));
-  
   return holder;
 }
 
@@ -218,15 +247,19 @@ FRMain::FRMain(FRListener* listener)
   QHBoxLayout* layout = new QHBoxLayout();
   datalists->setLayout(layout);
   datalists->setStyleSheet("QWidget {background-color: black;}");
-  layout->addWidget(setup_list("Signals", _list));
-  layout->addWidget(setup_list("Timers", _timedlist));
+  addDockWidget(Qt::TopDockWidgetArea, setup_list("Signals", _list));
+  addDockWidget(Qt::TopDockWidgetArea, setup_list("Timers", _timedlist));
 
-  setCentralWidget(setup_central(datalists,_traffic,_buttonStartTraffic, _buttonStopTraffic,_rate));
+  setCentralWidget(setup_central(datalists));
+
+  addDockWidget(Qt::BottomDockWidgetArea, build_traffic_viewer(_traffic,_buttonStartTraffic,_buttonStopTraffic,_rate));
+  
   _traffic->insertColumn(0);
-    
+
+  
   QObject::connect(_traffic,&QTableWidget::itemDoubleClicked, this, &FRMain::show_deco);
   QObject::connect(_buttonStartTraffic, &QPushButton::clicked, this, &FRMain::update_traffic_rate);
-    QObject::connect(_buttonStopTraffic, &QPushButton::clicked, listener, &FRListener::stop_traffic);
+  QObject::connect(_buttonStopTraffic, &QPushButton::clicked, listener, &FRListener::stop_traffic);
   QObject::connect(this, &FRMain::start_traffic, listener, &FRListener::start_traffic);
   
   statusBar()->showMessage("waiting for connection...");
@@ -402,18 +435,17 @@ int main(int argc, char* argv[]) {
   QThread* tt = new QThread(&roaster);
 
   roaster.moveToThread(tt);
+  
+  FRMain main(&roaster);
 
- FRMain main(&roaster);
- DetailsWin details;
- QObject::connect(&roaster,&FRListener::thooked, &main, &FRMain::update_list);
- QObject::connect(&roaster,&FRListener::timersignal, &main, &FRMain::update_timed_list);
- QObject::connect(&roaster,&FRListener::traffic_signal, &main, &FRMain::update_traffic);
- 
- QObject::connect(tt,&QThread::started, &roaster, &FRListener::init);
+  QObject::connect(&roaster,&FRListener::thooked, &main, &FRMain::update_list);
+  QObject::connect(&roaster,&FRListener::timersignal, &main, &FRMain::update_timed_list);
+  QObject::connect(&roaster,&FRListener::traffic_signal, &main, &FRMain::update_traffic);
+  QObject::connect(tt,&QThread::started, &roaster, &FRListener::init);
 
- tt->start();
- main.setWindowTitle("French Roast");
- main.show();
+  tt->start();
+  main.setWindowTitle("French Roast");
+  main.show();
 
  return app.exec();
 }
