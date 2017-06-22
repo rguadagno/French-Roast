@@ -43,7 +43,25 @@
 #include "fr.h"
 #include "FRMain.h"
 
-std::string ntoa(int x,int pad = 0)
+
+
+std::string ntoa(int x,int pad = 0);
+
+
+class SignalItem : public QListWidgetItem {
+  QString _text;
+public:
+  SignalItem(const QString& text, int total) : _text(text), QListWidgetItem( "  " + QString::fromStdString(ntoa(total)))
+  {
+  }
+
+  const QString& gettext() const {
+    return _text;
+  }
+
+};
+
+std::string ntoa(int x,int pad )
   {
     std::stringstream ss;
     ss << x;
@@ -64,13 +82,14 @@ int FRListener::getCount(const std::string& item)
    return _items[item];
 }
 
-void FRListener::signal_timed(const std::string& tag, long elapsed, int last) {
+void FRListener::signal_timed(const std::string& tag, long elapsed, int last)
+{
   timersignal("timer",tag,elapsed,last);
 }
 
-void FRListener::signal(const std::string& tag, int count) {
-   QString qtag = QString::fromStdString(tag);
-  thooked("signal",tag,count);
+void FRListener::signal(const std::string& tag, int count, std::vector<frenchroast::monitor::MarkerField>& markers)
+{
+  thooked("signal",tag,count, markers);
 }
 
 void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace>& items)
@@ -78,14 +97,15 @@ void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace>& items)
   traffic_signal(items);
 }
 
-void FRListener::connected(const std::string& msg) {
+void FRListener::connected(const std::string& msg)
+{
   remoteconnected("remote agent connected: " + msg);
   start_traffic(_trafficRate);
 }
 
-void FRListener::unloaded(const std::string& msg) {
+void FRListener::unloaded(const std::string& msg)
+{
   remoteunloaded("remote agent disconnected: " + msg);
-  start_traffic(_trafficRate);
 }
 
 void FRListener::init()
@@ -193,7 +213,6 @@ QDockWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstar
   sigLabel->setStyleSheet("QLabel {border: 1px solid grey;qproperty-alignment: AlignHCenter;color:#bababa;background-color: grey;font-size:16px;font-family: \"Arial\"}");
   docwin->setTitleBarWidget(titlebar);
 
-  QVBoxLayout* doclayout = new QVBoxLayout();
   holder->setStyleSheet("QWidget {border: 0px solid grey;background-color: black;font-size:16px;font-family: \"Arial\"}");
   docwin->setStyleSheet("QWidget {border: 1px solid grey;background-color: grey;font-size:16px;font-family: \"Arial\"}");
 
@@ -232,6 +251,16 @@ void FRMain::show_deco(QTableWidgetItem* item)
   box.exec();
 }
 
+void FRMain::show_detail(QListWidgetItem* item)
+{
+  SignalItem* ptr = dynamic_cast<SignalItem*>(item);
+  std::string sname{ptr->gettext().toStdString()};
+  _detailLists[sname] = new QListWidget(); // later do check for alrady open and just show
+
+  addDockWidget(Qt::TopDockWidgetArea, setup_list(sname, _detailLists[sname]));
+  update_detail_list(_detailLists[ sname ], _detailDescriptors[sname]);
+}
+
 
 FRMain::FRMain(FRListener* listener)
 {
@@ -250,14 +279,12 @@ FRMain::FRMain(FRListener* listener)
   addDockWidget(Qt::TopDockWidgetArea, setup_list("Signals", _list));
   addDockWidget(Qt::TopDockWidgetArea, setup_list("Timers", _timedlist));
 
-  setCentralWidget(setup_central(datalists));
-
   addDockWidget(Qt::BottomDockWidgetArea, build_traffic_viewer(_traffic,_buttonStartTraffic,_buttonStopTraffic,_rate));
   
   _traffic->insertColumn(0);
-
   
   QObject::connect(_traffic,&QTableWidget::itemDoubleClicked, this, &FRMain::show_deco);
+  QObject::connect(_list,   &QListWidget::itemDoubleClicked, this, &FRMain::show_detail);
   QObject::connect(_buttonStartTraffic, &QPushButton::clicked, this, &FRMain::update_traffic_rate);
   QObject::connect(_buttonStopTraffic, &QPushButton::clicked, listener, &FRListener::stop_traffic);
   QObject::connect(this, &FRMain::start_traffic, listener, &FRListener::start_traffic);
@@ -288,20 +315,34 @@ void FRMain::update_unloaded_status(std::string msg)
 }
 
 
-
-
-
-void FRMain::update_list(std::string ltype, std::string  descriptor, int count)
+void FRMain::update_list(std::string ltype, std::string  descriptor, int count, const std::vector<frenchroast::monitor::MarkerField>& markers)
 {
+  _detailDescriptors[descriptor] = markers;
   if (_descriptors.count(descriptor) == 0 ) {
-    _descriptors[descriptor] = new QListWidgetItem(QString::fromStdString(descriptor) + "  " + QString::fromStdString(ntoa(count)));
-      _list->addItem(_descriptors[descriptor]);
+    _descriptors[descriptor] = new SignalItem(QString::fromStdString(descriptor), count);
+    _list->addItem(_descriptors[descriptor]);
   }
-  else
+  else {
     _descriptors[descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(ntoa(count)));
+      if(_detailLists.count(descriptor) == 1) { 
+        update_detail_list(_detailLists[descriptor], markers);
+      }
+  }
 }
 
+void FRMain::update_detail_list(QListWidget* list, const std::vector<frenchroast::monitor::MarkerField>& markers)
+{
 
+  for(auto& item : markers) {
+    if(_detailItems.count(item._descriptor) == 0) {
+      _detailItems[item._descriptor] = new QListWidgetItem(QString::fromStdString(item._descriptor) + "  " + QString::fromStdString(ntoa(item._count)));   
+      list->addItem(_detailItems[item._descriptor]);
+    }
+    else {
+      _detailItems[item._descriptor]->setText(QString::fromStdString(item._descriptor) + "  " + QString::fromStdString(ntoa(item._count)));      
+    }
+  }
+}
 
 void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks)
 {
@@ -361,8 +402,6 @@ void StackRow::add_column(const frenchroast::monitor::StackTrace& st, int col)
 	runningKey += frame.get_decorated_name();
 	_keys[runningKey] = col;
       }
-
-
 }
 
 void StackRow::add(const frenchroast::monitor::StackTrace& st)
@@ -421,7 +460,9 @@ void FRMain::update_timed_list(std::string ltype, std::string  descriptor, long 
 
 int main(int argc, char* argv[]) {
   qRegisterMetaType<std::string>();
-  qRegisterMetaType< std::vector<frenchroast::monitor::StackTrace>>();
+  qRegisterMetaType<std::vector<frenchroast::monitor::StackTrace>>();
+  qRegisterMetaType<std::vector<frenchroast::monitor::MarkerField>>();
+  
   QApplication app(argc,argv);
 
   if (argc != 3) {

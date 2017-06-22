@@ -22,6 +22,7 @@
 
 #include "Util.h"
 #include "StackTrace.h"
+#include "MarkerField.h"
 #include <unordered_map>
 #include <string>
 

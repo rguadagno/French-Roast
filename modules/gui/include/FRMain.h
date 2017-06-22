@@ -73,17 +73,22 @@ class FRMain : public QMainWindow {
   QPushButton*  _buttonStartTraffic;
   QPushButton*  _buttonStopTraffic;
   QLineEdit*    _rate;
-  std::unordered_map<std::string,QListWidgetItem*> _descriptors;
+  std::unordered_map<std::string,QListWidgetItem*>    _descriptors;
+  std::unordered_map<std::string,QListWidgetItem*>    _detailItems;
+  std::unordered_map<std::string,QListWidget*>        _detailLists;
+  std::unordered_map<std::string, std::vector<frenchroast::monitor::MarkerField>> _detailDescriptors;
   std::unordered_map<std::string,StackRow*> _traffic_rows;
   std::unordered_map<std::string, int> _traffic_keys;
   QDockWidget* setup_list(const std::string title, QListWidget* list_ptr);
+  void update_detail_list(QListWidget*, const std::vector<frenchroast::monitor::MarkerField>& markers);
   QDockWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QPushButton* bstop, QLineEdit* rate);
  signals:
    void start_traffic(int rate);
   
  public slots:
    void show_deco(QTableWidgetItem* item);
-   void update_list(std::string, std::string,int);
+   void show_detail(QListWidgetItem* item);
+   void update_list(std::string, std::string,int, const std::vector<frenchroast::monitor::MarkerField>&);
    void update_timed_list(std::string ltype, std::string  descriptor, long elapsed, int last);
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void update_status(std::string);
@@ -91,22 +96,6 @@ class FRMain : public QMainWindow {
    void update_traffic_rate();
 };
 
-class DetailsWin : public QMainWindow {
-  Q_OBJECT
-
- public:
-
-
- private:
-
- signals:
-  //void start_traffic(int rate);
-  
- public slots:
-
-   //   void update_list(std::string, std::string,int);
-
-};
 
 
 #endif

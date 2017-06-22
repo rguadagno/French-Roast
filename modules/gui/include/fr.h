@@ -25,6 +25,7 @@
 #include <QTCore/QObject>
 #include <unordered_map>
 #include <string>
+#include <QMetaType>
 #include "Monitor.h"
 #include "StackTrace.h"
 
@@ -32,6 +33,8 @@
 
 Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::StackTrace>);
+Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::MarkerField>);
+
 
 class FRListener : public QObject
 {
@@ -46,7 +49,7 @@ class FRListener : public QObject
 
   public:
     int getCount(const std::string& item);
-    void signal(const std::string& tag, int count);
+    void signal(const std::string& tag, int count,  std::vector<frenchroast::monitor::MarkerField>&);
     void traffic(std::vector<frenchroast::monitor::StackTrace>&);
     void signal_timed(const std::string& tag, long elapsed, int last);
     void connected(const std::string& addr);
@@ -59,7 +62,7 @@ class FRListener : public QObject
     void stop_traffic();
 
   signals:
-    void thooked(const std::string& ltype, const std::string& info,int count);
+    void thooked(const std::string& ltype, const std::string& info,int count, const std::vector<frenchroast::monitor::MarkerField>&);
     void timersignal(const std::string& ltype, const std::string& info,long elapsed, int last);
     void remoteconnected(const std::string& addr);
     void remoteunloaded(const std::string& msg);

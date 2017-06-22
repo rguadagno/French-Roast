@@ -179,7 +179,7 @@ std::string get_value(JNIEnv* ptr, jobject obj, FieldInfo& field)
 {
   if(field._type == "I") return field._name + ":" + std::to_string(ptr->GetIntField(obj, field._id)) + ";";
   if(field._type == "J") return field._name + ":" + std::to_string(ptr->GetLongField(obj, field._id)) + ";";
-  if(field._type == "Ljava/lang/String;") return ptr->GetStringUTFChars(jstring(ptr->GetObjectField(obj, field._id)),0);
+  if(field._type == "Ljava/lang/String;") return field._name + ":" +  ptr->GetStringUTFChars(jstring(ptr->GetObjectField(obj, field._id)),0);
 
   return "none for type = " + field._type;
 }
@@ -246,7 +246,7 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
         
       std::cout << "VALS:  " << fieldValues << std::endl;                           
       _sig_mutex.lock();
-      _rptr.signal(classinfo + "::" + methodNameStr + ":" + sigStr + "~" + std::string{info.name});
+      _rptr.signal(classinfo + "::" + methodNameStr + ":" + sigStr + "~" + std::string{info.name} + "~" + fieldValues);
       _sig_mutex.unlock();
       
     }

@@ -24,8 +24,12 @@
 #include "Listener.h"
 #include "Util.h"
 #include "StackTrace.h"
+#include "MarkerField.h"
+
 
 namespace frenchroast { namespace monitor {
+
+    
     std::string translate_descriptor(const std::string& name);
     std::vector<StackTrace> construct_traffic(const std::string& msg);
 
@@ -42,8 +46,12 @@ namespace frenchroast { namespace monitor {
 	network::Connector  _conn;
 	std::unordered_map<std::string, time_holder> _timed_signals;
 	std::unordered_map<std::string, int>         _signals;
+        std::unordered_map<std::string, int>         _markers;
+        
 	const int MSG_TYPE    = 0;
 	const int MSG         = 1;
+        const int MARKER      = 3;
+
 	const int TIME        = 1;
 	const int DIRECTION   = 2;
 	const int DESCRIPTOR  = 3;
@@ -70,7 +78,12 @@ namespace frenchroast { namespace monitor {
 	    }
 	  }
 	  if (items[MSG_TYPE] == "signal") {
-	    _handler.signal(translate_descriptor(items[MSG]) + " [" + items[2] +"]" , ++_signals[items[MSG]]);
+            ++_markers[items[MARKER]];
+            std::vector<MarkerField> mfields;
+            for(auto& item : _markers) {
+              mfields.emplace_back(item.first, item.second);
+            }
+            _handler.signal(translate_descriptor(items[MSG]) + " [" + items[2] +"]" , ++_signals[items[MSG]], mfields );
 
 	   }
 	  if (items[MSG_TYPE] == "traffic") {
