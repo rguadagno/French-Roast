@@ -44,29 +44,19 @@
 #include <string>
 #include "fr.h"
 #include "FRMain.h"
-
-
-
-std::string ntoa(int x,int pad = 0);
+#include "MonitorUtil.h"
 
 
 class SignalItem : public QListWidgetItem {
   QString _text;
 
 public:
-  SignalItem(const QString& text, int total) : _text(text), QListWidgetItem( "  " + QString::fromStdString(ntoa(total)))
+  SignalItem(const QString& text, int total) : _text(text), QListWidgetItem( text + "  " + QString::fromStdString(frenchroast::monitor::ntoa(total)))
   {
   }
 
-
-  ~SignalItem()
+  const QString& gettext() const
   {
-        // qInfo("* DESTROYED");
-  }
-
-  
-  
-  const QString& gettext() const {
     return _text;
   }
 
@@ -74,17 +64,6 @@ public:
 
 
 
-std::string ntoa(int x,int pad )
-  {
-    std::stringstream ss;
-    ss << x;
-    std::string rv = ss.str();
-    if (rv.length() < pad) {
-      std::string pstr = "00000";
-      rv = pstr.substr(0, pad - rv.length()) + rv;
-    }
-    return rv;
-  }
 
 FRListener::FRListener(const std::string ip, int port) : _ip(ip), _port(port), _mon(*this)
 {
@@ -360,7 +339,7 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, int count, 
     _list->addItem(_descriptors[descriptor]);
   }
   else {
-    _descriptors[descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(ntoa(count)));
+    _descriptors[descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(frenchroast::monitor::ntoa(count)));
       if(_detailLists.count(descriptor) == 1) { 
         update_detail_list(_detailLists[descriptor], markers);
       }
@@ -371,12 +350,12 @@ void FRMain::update_detail_list(QListWidget* list, const std::vector<frenchroast
 {
   for(auto& item : markers) {
     if(_detailItems.count(item._descriptor) == 0) {
-      _detailItems[item._descriptor] = new QListWidgetItem(QString::fromStdString(item._descriptor) + "  " + QString::fromStdString(ntoa(item._count)));
+      _detailItems[item._descriptor] = new QListWidgetItem(QString::fromStdString(item._descriptor) + "  " + QString::fromStdString(frenchroast::monitor::ntoa(item._count)));
       list->addItem(_detailItems[item._descriptor]);
       _detailItemsPerList[ list->objectName().toStdString() ].push_back(item._descriptor);
     }
     else {
-      _detailItems[item._descriptor]->setText(QString::fromStdString(item._descriptor) + "  " + QString::fromStdString(ntoa(item._count)));      
+      _detailItems[item._descriptor]->setText(QString::fromStdString(item._descriptor) + "  " + QString::fromStdString(frenchroast::monitor::ntoa(item._count)));      
     }
   }
 }
@@ -468,26 +447,15 @@ void StackRow::add(const frenchroast::monitor::StackTrace& st)
 
 
 
-std::string format_millis(long millis)
-{
-  int hours = millis / (3600000);
-  millis -= hours * 3600000;
-  int min   = millis / 60000;
-  millis -= min * 60000;
-  int sec   = millis / 1000;
-  millis -=  sec * 1000;
-
-  return ntoa(hours) + ":" + ntoa(min,2) + ":" + ntoa(sec,2) + ":" + ntoa(millis,3);
-}
 
 void FRMain::update_timed_list(std::string  descriptor, long elapsed)
 {
   if (_descriptors.count(descriptor) == 0 ) {
-    _descriptors[descriptor] = new QListWidgetItem(QString::fromStdString(descriptor) + "  " + QString::fromStdString(format_millis(elapsed)));
+    _descriptors[descriptor] = new QListWidgetItem(QString::fromStdString(descriptor) + "  " + QString::fromStdString(frenchroast::monitor::format_millis(elapsed)));
     _timedlist->addItem(_descriptors[descriptor]);
   }
   else
-    _descriptors[descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(format_millis(elapsed)));
+    _descriptors[descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(frenchroast::monitor::format_millis(elapsed)));
 }
 
 void FRMain::handle_exit()
