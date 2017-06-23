@@ -30,8 +30,10 @@
 #include <QTWidgets/QTableWidget>
 #include <QTWidgets/QDockWidget>
 #include <QTCore/QObject>
+#include <QtGlobal>
 #include <QThread>
 #include <QHeaderView>
+#include <QAction>
 
 #include <winsock2.h>
 #include <windows.h>
@@ -50,16 +52,27 @@ std::string ntoa(int x,int pad = 0);
 
 class SignalItem : public QListWidgetItem {
   QString _text;
+
 public:
   SignalItem(const QString& text, int total) : _text(text), QListWidgetItem( "  " + QString::fromStdString(ntoa(total)))
   {
   }
 
+
+  ~SignalItem()
+  {
+        // qInfo("* DESTROYED");
+  }
+
+  
+  
   const QString& gettext() const {
     return _text;
   }
 
 };
+
+
 
 std::string ntoa(int x,int pad )
   {
@@ -124,7 +137,7 @@ void FRListener::stop_traffic()
 }
 
 
-QDockWidget* FRMain::setup_list(const std::string title, QListWidget* list_ptr)
+QDockWidget* FRMain::setup_list(const std::string title, QListWidget* list_ptr, QDockWidget::DockWidgetFeatures features)
 {
   list_ptr->setStyleSheet("QListWidget {border: 1px solid grey;background-color: black;font-size: 16px;font-family: \"Arial\"} QListWidget::item {color: orange;}");
 
@@ -136,13 +149,19 @@ QDockWidget* FRMain::setup_list(const std::string title, QListWidget* list_ptr)
   QWidget* titlebar = new QWidget();
   QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight);
   layout->addWidget(sigLabel);
+  if((features & QDockWidget::DockWidgetClosable) == QDockWidget::DockWidgetClosable) {
+    QPushButton* btn = new QPushButton();
+    QObject::connect(btn, &QPushButton::clicked, holder, &QDockWidget::close);
+    btn->setIcon(style()->standardIcon(QStyle::SP_DockWidgetCloseButton));
+    layout->addWidget(btn,1, Qt::AlignRight);
+  }
   titlebar->setLayout(layout);
   sigLabel->setStyleSheet("QLabel {border: 1px solid grey;qproperty-alignment: AlignHCenter;color:#bababa;foreground-color:white;background-color: grey;font-size:16px;font-family: \"Arial\"}");
   holder->setTitleBarWidget(titlebar);
-  
-  holder->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+  holder->setAttribute(Qt::WA_DeleteOnClose);
+  holder->setFeatures(features);
   QVBoxLayout* vlayout = new QVBoxLayout();
-   holder->setLayout(vlayout);
+  holder->setLayout(vlayout);
   holder->setWidget(list_ptr);
 
   return holder;
@@ -255,12 +274,30 @@ void FRMain::show_detail(QListWidgetItem* item)
 {
   SignalItem* ptr = dynamic_cast<SignalItem*>(item);
   std::string sname{ptr->gettext().toStdString()};
-  _detailLists[sname] = new QListWidget(); // later do check for alrady open and just show
-
+  if(_detailLists.count(sname) > 0) {
+    return;
+  }
+  _detailLists[sname] = new QListWidget(); 
+  _detailLists[sname]->setObjectName(QString::fromStdString(sname));
+  QObject::connect(_detailLists[sname], &QListWidget::destroyed, this, &FRMain::destroy_list);  
   addDockWidget(Qt::TopDockWidgetArea, setup_list(sname, _detailLists[sname]));
   update_detail_list(_detailLists[ sname ], _detailDescriptors[sname]);
+
 }
 
+void FRMain::destroy_list(QObject* obj)
+{
+  if(_exit) return;
+  std::string name = obj->objectName().toStdString();
+  if(_detailItemsPerList.count(name) == 1) {
+    for(auto& x : _detailItemsPerList[name]) {
+      _detailItems.erase(x);
+    }
+    _detailItemsPerList.erase(name);
+  }
+  _detailLists.erase(name);
+  
+}
 
 FRMain::FRMain(FRListener* listener)
 {
@@ -276,8 +313,8 @@ FRMain::FRMain(FRListener* listener)
   QHBoxLayout* layout = new QHBoxLayout();
   datalists->setLayout(layout);
   datalists->setStyleSheet("QWidget {background-color: black;}");
-  addDockWidget(Qt::TopDockWidgetArea, setup_list("Signals", _list));
-  addDockWidget(Qt::TopDockWidgetArea, setup_list("Timers", _timedlist));
+  addDockWidget(Qt::TopDockWidgetArea, setup_list("Signals", _list, QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
+  addDockWidget(Qt::TopDockWidgetArea, setup_list("Timers", _timedlist, QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
 
   addDockWidget(Qt::BottomDockWidgetArea, build_traffic_viewer(_traffic,_buttonStartTraffic,_buttonStopTraffic,_rate));
   
@@ -332,11 +369,11 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, int count, 
 
 void FRMain::update_detail_list(QListWidget* list, const std::vector<frenchroast::monitor::MarkerField>& markers)
 {
-
   for(auto& item : markers) {
     if(_detailItems.count(item._descriptor) == 0) {
-      _detailItems[item._descriptor] = new QListWidgetItem(QString::fromStdString(item._descriptor) + "  " + QString::fromStdString(ntoa(item._count)));   
+      _detailItems[item._descriptor] = new QListWidgetItem(QString::fromStdString(item._descriptor) + "  " + QString::fromStdString(ntoa(item._count)));
       list->addItem(_detailItems[item._descriptor]);
+      _detailItemsPerList[ list->objectName().toStdString() ].push_back(item._descriptor);
     }
     else {
       _detailItems[item._descriptor]->setText(QString::fromStdString(item._descriptor) + "  " + QString::fromStdString(ntoa(item._count)));      
@@ -362,12 +399,10 @@ void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>&
 
 StackRow::StackRow(const std::string tname, int row, QTableWidget* tptr, std::unordered_map<std::string,int>& keys) : _tptr(tptr), _keys(keys)
 {
-
   _threadName = new FunctionPoint;
   _threadName->setBackground(QColor(64,64,64));
   _threadName->setText(QString::fromStdString(tname));
   _tptr->setItem(row, 0, _threadName);
-
 }
 
 FunctionPoint* StackRow::thread_name()
@@ -377,7 +412,6 @@ FunctionPoint* StackRow::thread_name()
 
 void StackRow::append_to_column(int col, const frenchroast::monitor::StackTrace& st)
 {
-
   add_column(st,col);
 }
 
@@ -456,7 +490,10 @@ void FRMain::update_timed_list(std::string ltype, std::string  descriptor, long 
     _descriptors[descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(format_millis(elapsed)));
 }
 
-
+void FRMain::handle_exit()
+{
+  _exit = true;
+}
 
 int main(int argc, char* argv[]) {
   qRegisterMetaType<std::string>();
@@ -483,7 +520,9 @@ int main(int argc, char* argv[]) {
   QObject::connect(&roaster,&FRListener::timersignal, &main, &FRMain::update_timed_list);
   QObject::connect(&roaster,&FRListener::traffic_signal, &main, &FRMain::update_traffic);
   QObject::connect(tt,&QThread::started, &roaster, &FRListener::init);
+  QObject::connect(&app, &QApplication::aboutToQuit, &main, &FRMain::handle_exit);
 
+  
   tt->start();
   main.setWindowTitle("French Roast");
   main.show();

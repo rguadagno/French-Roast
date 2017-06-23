@@ -26,6 +26,7 @@
 #include <QTableWidget>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QDockWidget>
 #include <unordered_map>
 #include <unordered_set>
 #include "fr.h"
@@ -60,6 +61,7 @@ class StackRow {
 };
 
 
+
 class FRMain : public QMainWindow {
   Q_OBJECT
 
@@ -67,6 +69,7 @@ class FRMain : public QMainWindow {
   FRMain(FRListener*);
 
  private:
+  bool _exit{false};
   QListWidget* _list;
   QListWidget* _timedlist;
   QTableWidget* _traffic;
@@ -76,10 +79,13 @@ class FRMain : public QMainWindow {
   std::unordered_map<std::string,QListWidgetItem*>    _descriptors;
   std::unordered_map<std::string,QListWidgetItem*>    _detailItems;
   std::unordered_map<std::string,QListWidget*>        _detailLists;
+  std::unordered_map<std::string, std::vector<std::string>> _detailItemsPerList;
+    
   std::unordered_map<std::string, std::vector<frenchroast::monitor::MarkerField>> _detailDescriptors;
   std::unordered_map<std::string,StackRow*> _traffic_rows;
   std::unordered_map<std::string, int> _traffic_keys;
-  QDockWidget* setup_list(const std::string title, QListWidget* list_ptr);
+  QDockWidget* setup_list(const std::string title, QListWidget* list_ptr,
+                          QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
   void update_detail_list(QListWidget*, const std::vector<frenchroast::monitor::MarkerField>& markers);
   QDockWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QPushButton* bstop, QLineEdit* rate);
  signals:
@@ -88,6 +94,8 @@ class FRMain : public QMainWindow {
  public slots:
    void show_deco(QTableWidgetItem* item);
    void show_detail(QListWidgetItem* item);
+   void destroy_list(QObject* obj);
+   void handle_exit();
    void update_list(std::string, std::string,int, const std::vector<frenchroast::monitor::MarkerField>&);
    void update_timed_list(std::string ltype, std::string  descriptor, long elapsed, int last);
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
