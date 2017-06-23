@@ -97,7 +97,7 @@ int FRListener::getCount(const std::string& item)
 
 void FRListener::signal_timed(const std::string& tag, long elapsed, int last)
 {
-  timersignal("timer",tag,elapsed,last);
+  timersignal(tag,elapsed);
 }
 
 void FRListener::signal(const std::string& tag, int count, std::vector<frenchroast::monitor::MarkerField>& markers)
@@ -480,7 +480,7 @@ std::string format_millis(long millis)
   return ntoa(hours) + ":" + ntoa(min,2) + ":" + ntoa(sec,2) + ":" + ntoa(millis,3);
 }
 
-void FRMain::update_timed_list(std::string ltype, std::string  descriptor, long elapsed, int last)
+void FRMain::update_timed_list(std::string  descriptor, long elapsed)
 {
   if (_descriptors.count(descriptor) == 0 ) {
     _descriptors[descriptor] = new QListWidgetItem(QString::fromStdString(descriptor) + "  " + QString::fromStdString(format_millis(elapsed)));

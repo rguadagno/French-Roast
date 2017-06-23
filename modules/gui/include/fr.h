@@ -63,7 +63,7 @@ class FRListener : public QObject
 
   signals:
     void thooked(const std::string& ltype, const std::string& info,int count, const std::vector<frenchroast::monitor::MarkerField>&);
-    void timersignal(const std::string& ltype, const std::string& info,long elapsed, int last);
+    void timersignal(const std::string& info,long elapsed);
     void remoteconnected(const std::string& addr);
     void remoteunloaded(const std::string& msg);
     void traffic_signal(const std::vector<frenchroast::monitor::StackTrace>&);

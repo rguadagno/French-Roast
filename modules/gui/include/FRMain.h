@@ -97,7 +97,7 @@ class FRMain : public QMainWindow {
    void destroy_list(QObject* obj);
    void handle_exit();
    void update_list(std::string, std::string,int, const std::vector<frenchroast::monitor::MarkerField>&);
-   void update_timed_list(std::string ltype, std::string  descriptor, long elapsed, int last);
+   void update_timed_list(std::string  descriptor, long elapsed);
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void update_status(std::string);
    void update_unloaded_status(std::string);
