@@ -46,7 +46,7 @@ namespace frenchroast { namespace monitor {
 	network::Connector  _conn;
 	std::unordered_map<std::string, time_holder> _timed_signals;
 	std::unordered_map<std::string, int>         _signals;
-        std::unordered_map<std::string, int>         _markers;
+        std::unordered_map<std::string, std::unordered_map<std::string, int>>         _markers;
         
 	const int MSG_TYPE    = 0;
 	const int MSG         = 1;
@@ -78,10 +78,12 @@ namespace frenchroast { namespace monitor {
 	    }
 	  }
 	  if (items[MSG_TYPE] == "signal") {
-            ++_markers[items[MARKER]];
             std::vector<MarkerField> mfields;
-            for(auto& item : _markers) {
-              mfields.emplace_back(item.first, item.second);
+            if(items[MARKER] != "") {
+              ++((_markers[items[MSG]])[items[MARKER]]);
+              for(auto& item : _markers[items[MSG]]) {
+                mfields.emplace_back(item.first, item.second);
+              }
             }
             _handler.signal(translate_descriptor(items[MSG]) + " [" + items[2] +"]" , ++_signals[items[MSG]], mfields );
 
