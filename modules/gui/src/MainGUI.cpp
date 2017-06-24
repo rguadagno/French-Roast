@@ -17,8 +17,6 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <iostream>
-#include <fstream>
 #include <QTWidgets/QApplication>
 #include <QTWidgets/QLabel>
 #include <QTWidgets/QHBoxLayout>
@@ -34,25 +32,21 @@
 #include <QThread>
 #include <QHeaderView>
 #include <QAction>
-
-#include <winsock2.h>
-#include <windows.h>
-#include <iostream>
-#include <ws2tcpip.h>
-#include <sstream>
-#include <unordered_map>
+#include <QFont>
 #include <string>
 #include "fr.h"
 #include "FRMain.h"
 #include "MonitorUtil.h"
+#include "StackRow.h"
 
 
 class SignalItem : public QListWidgetItem {
   QString _text;
-
+  static QFont _font;
 public:
   SignalItem(const QString& text, int total) : _text(text), QListWidgetItem( text + "  " + QString::fromStdString(frenchroast::monitor::ntoa(total)))
   {
+    setFont(_font);
   }
 
   const QString& gettext() const
@@ -61,6 +55,17 @@ public:
   }
 
 };
+
+
+class CodeFont : public QFont {
+public:
+  CodeFont() : QFont(QString::fromStdString("Inconsolata"), 12, QFont::Normal)
+  {
+    setStyleHint(QFont::TypeWriter);
+  }
+};
+
+QFont SignalItem::_font = CodeFont();
 
 
 
@@ -253,7 +258,7 @@ void FRMain::show_detail(QListWidgetItem* item)
 {
   SignalItem* ptr = dynamic_cast<SignalItem*>(item);
   std::string sname{ptr->gettext().toStdString()};
-  if(_detailLists.count(sname) > 0) {
+  if(_detailLists.count(sname) > 0 || sname.find("[M]") == std::string::npos) {
     return;
   }
   _detailLists[sname] = new QListWidget(); 
@@ -287,6 +292,8 @@ FRMain::FRMain(FRListener* listener)
   _buttonStartTraffic = new QPushButton{"Start"};
   _buttonStopTraffic = new QPushButton{"Stop"};
   _rate = new QLineEdit;
+
+
   
   QWidget* datalists = new QWidget;
   QHBoxLayout* layout = new QHBoxLayout();
@@ -333,6 +340,13 @@ void FRMain::update_unloaded_status(std::string msg)
 
 void FRMain::update_list(std::string ltype, std::string  descriptor, int count, const std::vector<frenchroast::monitor::MarkerField>& markers)
 {
+  if(markers.size() > 0) {
+    descriptor = "[M] " + descriptor;
+  }
+  else {
+ descriptor = "    " + descriptor;
+  }
+  
   _detailDescriptors[descriptor] = markers;
   if (_descriptors.count(descriptor) == 0 ) {
     _descriptors[descriptor] = new SignalItem(QString::fromStdString(descriptor), count);
@@ -376,76 +390,6 @@ void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>&
   }
 }
 
-StackRow::StackRow(const std::string tname, int row, QTableWidget* tptr, std::unordered_map<std::string,int>& keys) : _tptr(tptr), _keys(keys)
-{
-  _threadName = new FunctionPoint;
-  _threadName->setBackground(QColor(64,64,64));
-  _threadName->setText(QString::fromStdString(tname));
-  _tptr->setItem(row, 0, _threadName);
-}
-
-FunctionPoint* StackRow::thread_name()
-{
-  return _threadName;
-}
-
-void StackRow::append_to_column(int col, const frenchroast::monitor::StackTrace& st)
-{
-  add_column(st,col);
-}
-
-void StackRow::add_column(const frenchroast::monitor::StackTrace& st, int col)
-{
-  int count = 0;
-  std::string runningKey = "";
-  int extra = st.frames().size() - _totalRows;
-      for(int idx = 1; idx <= extra; idx++){
-	_tptr->insertRow(_threadName->row() + _totalRows++);
-      }
-      
-      for(auto& frame : st.frames()) {
-	FunctionPoint* fpitem = new FunctionPoint;
-	fpitem->setText(QString::fromStdString(frame.get_name()  ));
-	fpitem->set_decorated_name(QString::fromStdString( frame.get_decorated_name()));
-	if (count == 0) {
-	  fpitem->setBackground(QColor(64,64,64));
-	}
-	_tptr->setItem(_threadName->row() + count, col, fpitem);
-	++count;
-	runningKey += frame.get_decorated_name();
-	_keys[runningKey] = col;
-      }
-}
-
-void StackRow::add(const frenchroast::monitor::StackTrace& st)
-{
-  if (_keys.count(st.key()) != 0) return;
-
-  std::string partialkey = "";
-  for(auto& x : _complete_keys) {
-    if (st.key().find(x) != std::string::npos) {
-      partialkey = x;
-    }
-  }
-  
-  if (partialkey != "") {
-    append_to_column(_keys[partialkey], st);
-  }
-  else {
-    ++_col;
-    if (_tptr->columnCount() < _col) {
-      _tptr->insertColumn(_tptr->columnCount());
-    }
-    add_column(st, _col -1 );
-  }
-  
-  _complete_keys.clear();
-  _complete_keys.insert(st.key());
-  
-  }
-
-
-
 
 
 void FRMain::update_timed_list(std::string  descriptor, long elapsed)
@@ -463,7 +407,11 @@ void FRMain::handle_exit()
   _exit = true;
 }
 
+
 int main(int argc, char* argv[]) {
+
+
+  
   qRegisterMetaType<std::string>();
   qRegisterMetaType<std::vector<frenchroast::monitor::StackTrace>>();
   qRegisterMetaType<std::vector<frenchroast::monitor::MarkerField>>();

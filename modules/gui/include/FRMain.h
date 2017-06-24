@@ -30,37 +30,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "fr.h"
-
-
-
-class FunctionPoint : public QTableWidgetItem {
-  QString _name;
-
-public:
-  void set_decorated_name(const QString& name);
-  QString get_name() const;
-};
-
-
-
-class StackRow {
-  int _totalRows{1};
-  int _col{1};
-  FunctionPoint* _threadName;
-  QTableWidget* _tptr;
-  std::unordered_map<std::string, int>& _keys;
-  std::unordered_set<std::string> _complete_keys;
-
-  void add_column(const frenchroast::monitor::StackTrace& st, int col);
-  void append_to_column(int col, const frenchroast::monitor::StackTrace& st);
- public:
-  StackRow::StackRow(const std::string tname, int row, QTableWidget* tptr, std::unordered_map<std::string,int>& keys);
-  FunctionPoint* thread_name();
-  void add(const frenchroast::monitor::StackTrace& st);
-
-};
-
-
+#include "StackRow.h"
 
 class FRMain : public QMainWindow {
   Q_OBJECT
