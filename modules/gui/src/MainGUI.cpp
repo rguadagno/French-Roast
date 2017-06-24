@@ -40,6 +40,40 @@
 #include "StackRow.h"
 
 
+int main(int argc, char* argv[]) {
+  qRegisterMetaType<std::string>();
+  qRegisterMetaType<std::vector<frenchroast::monitor::StackTrace>>();
+  qRegisterMetaType<std::vector<frenchroast::monitor::MarkerField>>();
+  
+  QApplication app(argc,argv);
+
+  if (argc != 3) {
+    QMessageBox box;
+    box.setText("usage: roaster IP PORT\nexample: roaster 127.0.0.1 6060");
+    box.exec();
+    exit(0);
+  }
+
+  FRListener roaster{std::string{argv[1]}, atoi(argv[2])};
+  QThread* tt = new QThread(&roaster);
+
+  roaster.moveToThread(tt);
+  
+  FRMain main(&roaster);
+
+  QObject::connect(&roaster, &FRListener::thooked,        &main,    &FRMain::update_list);
+  QObject::connect(&roaster, &FRListener::timersignal,    &main,    &FRMain::update_timed_list);
+  QObject::connect(&roaster, &FRListener::traffic_signal, &main,    &FRMain::update_traffic);
+  QObject::connect(tt,       &QThread::started,           &roaster, &FRListener::init);
+  QObject::connect(&app,     &QApplication::aboutToQuit,  &main,    &FRMain::handle_exit);
+
+  tt->start();
+  main.setWindowTitle("French Roast");
+  main.show();
+
+ return app.exec();
+}
+
 class SignalItem : public QListWidgetItem {
   QString _text;
   static QFont _font;
@@ -67,57 +101,31 @@ public:
 
 QFont SignalItem::_font = CodeFont();
 
-
-
-
-FRListener::FRListener(const std::string ip, int port) : _ip(ip), _port(port), _mon(*this)
+FRMain::FRMain(FRListener* listener)
 {
-}
+  resize(1300,300);
+  _list               = new QListWidget;
+  _timedlist          = new QListWidget;
+  _traffic            = new QTableWidget;
+  _buttonStartTraffic = new QPushButton{"Start"};
+  _buttonStopTraffic  = new QPushButton{"Stop"};
+  _rate               = new QLineEdit;
 
-int FRListener::getCount(const std::string& item)
-{
-   return _items[item];
-}
-
-void FRListener::signal_timed(const std::string& tag, long elapsed, int last)
-{
-  timersignal(tag,elapsed);
-}
-
-void FRListener::signal(const std::string& tag, int count, std::vector<frenchroast::monitor::MarkerField>& markers)
-{
-  thooked("signal",tag,count, markers);
-}
-
-void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace>& items)
-{
-  traffic_signal(items);
-}
-
-void FRListener::connected(const std::string& msg)
-{
-  remoteconnected("remote agent connected: " + msg);
-  start_traffic(_trafficRate);
-}
-
-void FRListener::unloaded(const std::string& msg)
-{
-  remoteunloaded("remote agent disconnected: " + msg);
-}
-
-void FRListener::init()
-{
-  _mon.init_receiver(_ip, _port);
-}
-
-void FRListener::start_traffic(int rate)
-{
-  _mon.watch_traffic(rate);
-}
-
-void FRListener::stop_traffic()
-{
-  _mon.stop_watch_traffic();
+  addDockWidget(Qt::TopDockWidgetArea,    setup_list("Signals", _list, QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
+  addDockWidget(Qt::TopDockWidgetArea,    setup_list("Timers", _timedlist, QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
+  addDockWidget(Qt::BottomDockWidgetArea, build_traffic_viewer(_traffic,_buttonStartTraffic,_buttonStopTraffic,_rate));
+  
+  _traffic->insertColumn(0);
+  
+  QObject::connect(_traffic,            &QTableWidget::itemDoubleClicked, this,     &FRMain::show_deco);
+  QObject::connect(_list,               &QListWidget::itemDoubleClicked,  this,     &FRMain::show_detail);
+  QObject::connect(_buttonStartTraffic, &QPushButton::clicked,            this,     &FRMain::update_traffic_rate);
+  QObject::connect(_buttonStopTraffic,  &QPushButton::clicked,            listener, &FRListener::stop_traffic);
+  QObject::connect(this,                &FRMain::start_traffic,           listener, &FRListener::start_traffic);
+  QObject::connect(listener,            &FRListener::remoteconnected,     this,     &FRMain::update_status);
+  QObject::connect(listener,            &FRListener::remoteunloaded,      this,     &FRMain::update_unloaded_status);
+  
+  statusBar()->showMessage("waiting for connection...");
 }
 
 
@@ -283,41 +291,6 @@ void FRMain::destroy_list(QObject* obj)
   
 }
 
-FRMain::FRMain(FRListener* listener)
-{
-  resize(1300,300);
-  _list      = new QListWidget;
-  _timedlist = new QListWidget;
-  _traffic   = new QTableWidget;
-  _buttonStartTraffic = new QPushButton{"Start"};
-  _buttonStopTraffic = new QPushButton{"Stop"};
-  _rate = new QLineEdit;
-
-
-  
-  QWidget* datalists = new QWidget;
-  QHBoxLayout* layout = new QHBoxLayout();
-  datalists->setLayout(layout);
-  datalists->setStyleSheet("QWidget {background-color: black;}");
-  addDockWidget(Qt::TopDockWidgetArea, setup_list("Signals", _list, QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
-  addDockWidget(Qt::TopDockWidgetArea, setup_list("Timers", _timedlist, QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
-
-  addDockWidget(Qt::BottomDockWidgetArea, build_traffic_viewer(_traffic,_buttonStartTraffic,_buttonStopTraffic,_rate));
-  
-  _traffic->insertColumn(0);
-  
-  QObject::connect(_traffic,&QTableWidget::itemDoubleClicked, this, &FRMain::show_deco);
-  QObject::connect(_list,   &QListWidget::itemDoubleClicked, this, &FRMain::show_detail);
-  QObject::connect(_buttonStartTraffic, &QPushButton::clicked, this, &FRMain::update_traffic_rate);
-  QObject::connect(_buttonStopTraffic, &QPushButton::clicked, listener, &FRListener::stop_traffic);
-  QObject::connect(this, &FRMain::start_traffic, listener, &FRListener::start_traffic);
-  
-  statusBar()->showMessage("waiting for connection...");
-
-  QObject::connect(listener,&FRListener::remoteconnected, this, &FRMain::update_status);
-  QObject::connect(listener,&FRListener::remoteunloaded, this, &FRMain::update_unloaded_status);
-
-}
 
 void FRMain::update_traffic_rate()
 {
@@ -408,43 +381,6 @@ void FRMain::handle_exit()
 }
 
 
-int main(int argc, char* argv[]) {
-
-
-  
-  qRegisterMetaType<std::string>();
-  qRegisterMetaType<std::vector<frenchroast::monitor::StackTrace>>();
-  qRegisterMetaType<std::vector<frenchroast::monitor::MarkerField>>();
-  
-  QApplication app(argc,argv);
-
-  if (argc != 3) {
-    QMessageBox box;
-    box.setText("usage: roaster IP PORT\nexample: roaster 127.0.0.1 6060");
-    box.exec();
-    exit(0);
-  }
-
-  FRListener roaster{std::string{argv[1]}, atoi(argv[2])};
-  QThread* tt = new QThread(&roaster);
-
-  roaster.moveToThread(tt);
-  
-  FRMain main(&roaster);
-
-  QObject::connect(&roaster,&FRListener::thooked, &main, &FRMain::update_list);
-  QObject::connect(&roaster,&FRListener::timersignal, &main, &FRMain::update_timed_list);
-  QObject::connect(&roaster,&FRListener::traffic_signal, &main, &FRMain::update_traffic);
-  QObject::connect(tt,&QThread::started, &roaster, &FRListener::init);
-  QObject::connect(&app, &QApplication::aboutToQuit, &main, &FRMain::handle_exit);
-
-  
-  tt->start();
-  main.setWindowTitle("French Roast");
-  main.show();
-
- return app.exec();
-}
 
 
 
