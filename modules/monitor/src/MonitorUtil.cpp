@@ -2,16 +2,23 @@
 #include "MonitorUtil.h"
 
 
-std::string frenchroast::monitor::ntoa(int x, int pad )
+std::string frenchroast::monitor::ntoa(int x, int amount, char ch )
 {
   std::string rv = std::to_string(x);
-  if (rv.length() < pad) {
-    std::string pstr = "00000";
-    rv = pstr.substr(0, pad - rv.length()) + rv;
-  }
-  return rv;
+  return std::string(  rv.length() < amount ? std::string(amount - rv.length(), ch) : "").append(rv);
 }
 
+void frenchroast::monitor::pad(std::string& str, int amount, char ch)
+{
+  str.append(std::string(  str.length() < amount ? std::string(amount - str.length(), ch) : ""));
+}
+
+std::string  frenchroast::monitor::pad(const std::string& str, int amount, char ch)
+{
+  std::string rv{str};
+  pad(rv, amount, ch);
+  return rv;
+}
 
 std::string frenchroast::monitor::format_millis(long millis)
 {
@@ -22,7 +29,7 @@ std::string frenchroast::monitor::format_millis(long millis)
   int sec   = millis / 1000;
   millis -=  sec * 1000;
 
-  return ntoa(hours) + ":" + ntoa(min,2) + ":" + ntoa(sec,2) + ":" + ntoa(millis,3);
+  return ntoa(hours,0) + ":" + ntoa(min,2) + ":" + ntoa(sec,2) + ":" + ntoa(millis,3);
 }
 
 const char* frenchroast::monitor::get_env_variable(const std::string& var, const std::string& msg) 

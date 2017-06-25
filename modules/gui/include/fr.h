@@ -49,9 +49,9 @@ class FRListener : public QObject
 
   public:
     int getCount(const std::string& item);
-    void signal(const std::string& tag, int count,  std::vector<frenchroast::monitor::MarkerField>&);
+    void signal(const std::string& tag, const std::string& tname, int count,  std::vector<frenchroast::monitor::MarkerField>&);
     void traffic(std::vector<frenchroast::monitor::StackTrace>&);
-    void signal_timed(const std::string& tag, long elapsed, int last);
+    void signal_timed(const std::string& tag, const std::string& tname, long elapsed, int last);
     void connected(const std::string& addr);
     void unloaded(const std::string& addr);
     FRListener(const std::string ip, int port);
@@ -62,8 +62,8 @@ class FRListener : public QObject
     void stop_traffic();
 
   signals:
-    void thooked(const std::string& ltype, const std::string& info,int count, const std::vector<frenchroast::monitor::MarkerField>&);
-    void timersignal(const std::string& info,long elapsed);
+    void thooked(const std::string& ltype, const std::string& info,const std::string& tname, int count, const std::vector<frenchroast::monitor::MarkerField>&);
+    void timersignal(const std::string& info, const std::string& tname, long elapsed);
     void remoteconnected(const std::string& addr);
     void remoteunloaded(const std::string& msg);
     void traffic_signal(const std::vector<frenchroast::monitor::StackTrace>&);

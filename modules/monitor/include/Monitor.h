@@ -70,7 +70,7 @@ namespace frenchroast { namespace monitor {
 	      std::string key = items[DESCRIPTOR] + items[THREAD_NAME];
 	      int elapsed = std::stoll(items[TIME]) - _timed_signals[key]._last;
 	      _timed_signals[key]._elapsed += elapsed;
-	      _handler.signal_timed( translate_descriptor(items[DESCRIPTOR])+ " [" + items[THREAD_NAME] +"]",_timed_signals[key]._elapsed, elapsed);
+	      _handler.signal_timed( translate_descriptor(items[DESCRIPTOR]), items[THREAD_NAME] , _timed_signals[key]._elapsed, elapsed);
 	    }
 	    if (items[DIRECTION] == "enter") {
 	      std::string key = items[DESCRIPTOR] + items[THREAD_NAME];
@@ -85,7 +85,7 @@ namespace frenchroast { namespace monitor {
                 mfields.emplace_back(item.first, item.second);
               }
             }
-            _handler.signal(translate_descriptor(items[MSG]) + " [" + items[2] +"]" , ++_signals[items[MSG]], mfields );
+            _handler.signal(translate_descriptor(items[MSG]) , items[2] , ++_signals[items[MSG]], mfields );
 
 	   }
 	  if (items[MSG_TYPE] == "traffic") {

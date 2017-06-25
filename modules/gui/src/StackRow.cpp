@@ -22,6 +22,7 @@
 StackRow::StackRow(const std::string tname, int row, QTableWidget* tptr, std::unordered_map<std::string,int>& keys) : _tptr(tptr), _keys(keys)
 {
   _threadName = new FunctionPoint;
+  _threadName->setFont(_font);
   _threadName->setBackground(QColor(64,64,64));
   _threadName->setText(QString::fromStdString(tname));
   _tptr->setItem(row, 0, _threadName);
@@ -48,6 +49,7 @@ void StackRow::add_column(const frenchroast::monitor::StackTrace& st, int col)
       
       for(auto& frame : st.frames()) {
 	FunctionPoint* fpitem = new FunctionPoint;
+        fpitem->setFont(_font);
 	fpitem->setText(QString::fromStdString(frame.get_name()  ));
 	fpitem->set_decorated_name(QString::fromStdString( frame.get_decorated_name()));
 	if (count == 0) {

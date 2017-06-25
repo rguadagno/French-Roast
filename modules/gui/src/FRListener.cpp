@@ -28,14 +28,14 @@ int FRListener::getCount(const std::string& item)
    return _items[item];
 }
 
-void FRListener::signal_timed(const std::string& tag, long elapsed, int last)
+void FRListener::signal_timed(const std::string& tag, const std::string& tname, long elapsed, int last)
 {
-  timersignal(tag,elapsed);
+  timersignal(tag,tname,elapsed);
 }
 
-void FRListener::signal(const std::string& tag, int count, std::vector<frenchroast::monitor::MarkerField>& markers)
+void FRListener::signal(const std::string& tag, const std::string& tname, int count, std::vector<frenchroast::monitor::MarkerField>& markers)
 {
-  thooked("signal",tag,count, markers);
+  thooked("signal",tag, tname, count, markers);
 }
 
 void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace>& items)

@@ -43,7 +43,8 @@ class StackRow {
   QTableWidget* _tptr;
   std::unordered_map<std::string, int>& _keys;
   std::unordered_set<std::string> _complete_keys;
-
+  static QFont _font;
+  
   void add_column(const frenchroast::monitor::StackTrace& st, int col);
   void append_to_column(int col, const frenchroast::monitor::StackTrace& st);
  public:

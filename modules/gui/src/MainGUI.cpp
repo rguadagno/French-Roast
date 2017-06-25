@@ -79,15 +79,15 @@ int main(int argc, char* argv[]) {
 }
 
 class SignalItem : public QListWidgetItem {
-  QString _text;
+  std::string  _text;
   static QFont _font;
 public:
-  SignalItem(const QString& text, int total) : _text(text), QListWidgetItem( text + "  " + QString::fromStdString(frenchroast::monitor::ntoa(total)))
+  SignalItem(const std::string& text, const std::string& total) : _text(text), QListWidgetItem( QString::fromStdString(text) + "  " + QString::fromStdString(total))
   {
     setFont(_font);
   }
 
-  const QString& gettext() const
+  const std::string& gettext() const
   {
     return _text;
   }
@@ -100,11 +100,13 @@ public:
   CodeFont() : QFont(QString::fromStdString("Inconsolata"), 12, QFont::Normal)
   {
     setStyleHint(QFont::TypeWriter);
+    setStyleStrategy(QFont::PreferAntialias);
   }
 };
 
 
 QFont SignalItem::_font = CodeFont();
+QFont StackRow::_font = CodeFont();
 
 FRMain::FRMain(FRListener* listener, QSettings& settings) : _settings(settings)
 {
@@ -261,7 +263,7 @@ void FRMain::show_deco(QTableWidgetItem* item)
 void FRMain::show_detail(QListWidgetItem* item)
 {
   SignalItem* ptr = dynamic_cast<SignalItem*>(item);
-  std::string sname{ptr->gettext().toStdString()};
+  std::string sname = ptr->gettext();
   if(_detailLists.count(sname) > 0 || sname.find("[M]") == std::string::npos) {
     return;
   }
@@ -302,27 +304,31 @@ void FRMain::update_status(std::string msg)
 
 void FRMain::update_unloaded_status(std::string msg)
 {
-  statusBar()->setStyleSheet(_settings.value("disconnected_style").toString);
+  statusBar()->setStyleSheet(_settings.value("disconnected_style").toString());
   statusBar()->showMessage(QString::fromStdString(msg));
 }
 
 
-void FRMain::update_list(std::string ltype, std::string  descriptor, int count, const std::vector<frenchroast::monitor::MarkerField>& markers)
+void FRMain::update_list(std::string ltype, std::string  descriptor, std::string tname, int count, const std::vector<frenchroast::monitor::MarkerField>& markers)
 {
   if(markers.size() > 0) {
     descriptor = "[M] " + descriptor;
   }
   else {
- descriptor = "    " + descriptor;
+    descriptor = "    " + descriptor;
   }
+  tname = "[ " + tname + " ]";
+  frenchroast::monitor::pad(descriptor, 50);
+  frenchroast::monitor::pad(tname, 10);
   
+  descriptor.append(tname);
   _detailDescriptors[descriptor] = markers;
   if (_descriptors.count(descriptor) == 0 ) {
-    _descriptors[descriptor] = new SignalItem(QString::fromStdString(descriptor), count);
+    _descriptors[descriptor] = new SignalItem(descriptor, frenchroast::monitor::ntoa(count,5,' '));
     _list->addItem(_descriptors[descriptor]);
   }
   else {
-    _descriptors[descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(frenchroast::monitor::ntoa(count)));
+    _descriptors[descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(frenchroast::monitor::ntoa(count,5, ' ')));
       if(_detailLists.count(descriptor) == 1) { 
         update_detail_list(_detailLists[descriptor], markers);
       }
@@ -332,13 +338,14 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, int count, 
 void FRMain::update_detail_list(QListWidget* list, const std::vector<frenchroast::monitor::MarkerField>& markers)
 {
   for(auto& item : markers) {
+    frenchroast::monitor::pad(item._descriptor, 50);
     if(_detailItems.count(item._descriptor) == 0) {
-      _detailItems[item._descriptor] = new QListWidgetItem(QString::fromStdString(item._descriptor) + "  " + QString::fromStdString(frenchroast::monitor::ntoa(item._count)));
+      _detailItems[item._descriptor] = new SignalItem(frenchroast::monitor::pad(item._descriptor,50), frenchroast::monitor::ntoa(item._count,5,' '));
       list->addItem(_detailItems[item._descriptor]);
       _detailItemsPerList[ list->objectName().toStdString() ].push_back(item._descriptor);
     }
     else {
-      _detailItems[item._descriptor]->setText(QString::fromStdString(item._descriptor) + "  " + QString::fromStdString(frenchroast::monitor::ntoa(item._count)));      
+      _detailItems[item._descriptor]->setText(QString::fromStdString(frenchroast::monitor::pad(item._descriptor,50)) + QString::fromStdString(frenchroast::monitor::ntoa(item._count,5,' ')));      
     }
   }
 }
@@ -361,14 +368,20 @@ void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>&
 
 
 
-void FRMain::update_timed_list(std::string  descriptor, long elapsed)
+void FRMain::update_timed_list(std::string  descriptor, std::string tname, long elapsed)
 {
+
+  std::string desc{descriptor};
+  tname = "[ " + tname + " ]";
+  frenchroast::monitor::pad(desc, 50);
+  frenchroast::monitor::pad(tname, 10);
+  desc.append(tname);
   if (_descriptors.count(descriptor) == 0 ) {
-    _descriptors[descriptor] = new QListWidgetItem(QString::fromStdString(descriptor) + "  " + QString::fromStdString(frenchroast::monitor::format_millis(elapsed)));
+    _descriptors[descriptor] = new SignalItem(desc, frenchroast::monitor::format_millis(elapsed));
     _timedlist->addItem(_descriptors[descriptor]);
   }
   else
-    _descriptors[descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(frenchroast::monitor::format_millis(elapsed)));
+    _descriptors[descriptor]->setText(QString::fromStdString(desc) + "  " + QString::fromStdString(frenchroast::monitor::format_millis(elapsed)));
 }
 
 void FRMain::handle_exit()
