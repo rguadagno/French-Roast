@@ -27,6 +27,7 @@
 #include <QPushButton>
 #include <QLineEdit>
 #include <QDockWidget>
+#include <QSettings>
 #include <unordered_map>
 #include <unordered_set>
 #include "fr.h"
@@ -36,12 +37,13 @@ class FRMain : public QMainWindow {
   Q_OBJECT
 
  public:
-  FRMain(FRListener*);
+  FRMain(FRListener*, QSettings&);
 
  private:
-  bool _exit{false};
-  QListWidget* _list;
-  QListWidget* _timedlist;
+  QSettings&    _settings;
+  bool          _exit{false};
+  QListWidget*  _list;
+  QListWidget*  _timedlist;
   QTableWidget* _traffic;
   QPushButton*  _buttonStartTraffic;
   QPushButton*  _buttonStopTraffic;
@@ -50,10 +52,10 @@ class FRMain : public QMainWindow {
   std::unordered_map<std::string,QListWidgetItem*>    _detailItems;
   std::unordered_map<std::string,QListWidget*>        _detailLists;
   std::unordered_map<std::string, std::vector<std::string>> _detailItemsPerList;
-    
   std::unordered_map<std::string, std::vector<frenchroast::monitor::MarkerField>> _detailDescriptors;
   std::unordered_map<std::string,StackRow*> _traffic_rows;
   std::unordered_map<std::string, int> _traffic_keys;
+  
   QDockWidget* setup_list(const std::string title, QListWidget* list_ptr,
                           QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
   void update_detail_list(QListWidget*, const std::vector<frenchroast::monitor::MarkerField>& markers);

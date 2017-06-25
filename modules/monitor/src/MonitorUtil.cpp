@@ -1,4 +1,4 @@
-
+#include <iostream>
 #include "MonitorUtil.h"
 
 
@@ -23,4 +23,15 @@ std::string frenchroast::monitor::format_millis(long millis)
   millis -=  sec * 1000;
 
   return ntoa(hours) + ":" + ntoa(min,2) + ":" + ntoa(sec,2) + ":" + ntoa(millis,3);
+}
+
+const char* frenchroast::monitor::get_env_variable(const std::string& var, const std::string& msg) 
+{
+  const char* rv = std::getenv(var.c_str());
+  if(rv == nullptr) {
+    std::cout << "environment variable: " + var + " is not set: " << msg << std::endl;
+    exit(0);
+  }
+  
+  return rv;
 }

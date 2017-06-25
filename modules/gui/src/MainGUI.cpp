@@ -38,9 +38,13 @@
 #include "FRMain.h"
 #include "MonitorUtil.h"
 #include "StackRow.h"
+#include <QSettings>
+
 
 
 int main(int argc, char* argv[]) {
+
+  QSettings config{frenchroast::monitor::get_env_variable("INI_FULL_PATH","example /home/richg/French-Roast/modules/gui/config/fr.ini"), QSettings::IniFormat};
   qRegisterMetaType<std::string>();
   qRegisterMetaType<std::vector<frenchroast::monitor::StackTrace>>();
   qRegisterMetaType<std::vector<frenchroast::monitor::MarkerField>>();
@@ -59,7 +63,7 @@ int main(int argc, char* argv[]) {
 
   roaster.moveToThread(tt);
   
-  FRMain main(&roaster);
+  FRMain main(&roaster, config);
 
   QObject::connect(&roaster, &FRListener::thooked,        &main,    &FRMain::update_list);
   QObject::connect(&roaster, &FRListener::timersignal,    &main,    &FRMain::update_timed_list);
@@ -99,9 +103,10 @@ public:
   }
 };
 
+
 QFont SignalItem::_font = CodeFont();
 
-FRMain::FRMain(FRListener* listener)
+FRMain::FRMain(FRListener* listener, QSettings& settings) : _settings(settings)
 {
   resize(1300,300);
   _list               = new QListWidget;
@@ -131,12 +136,9 @@ FRMain::FRMain(FRListener* listener)
 
 QDockWidget* FRMain::setup_list(const std::string title, QListWidget* list_ptr, QDockWidget::DockWidgetFeatures features)
 {
-  list_ptr->setStyleSheet("QListWidget {border: 1px solid grey;background-color: black;font-size: 16px;font-family: \"Arial\"} QListWidget::item {color: orange;}");
-
+  list_ptr->setStyleSheet(_settings.value("list_style").toString());
   QDockWidget* holder = new QDockWidget(QString::fromStdString(title), this);
-  holder->setStyleSheet("QWidget {border: 0px solid grey;background-color: grey;font-size:16px;font-family: \"Arial\"}");
-
-
+  holder->setStyleSheet(_settings.value("dock_widget_style").toString());
   QLabel* sigLabel = new QLabel(QString::fromStdString(title));
   QWidget* titlebar = new QWidget();
   QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight);
@@ -148,14 +150,13 @@ QDockWidget* FRMain::setup_list(const std::string title, QListWidget* list_ptr, 
     layout->addWidget(btn,1, Qt::AlignRight);
   }
   titlebar->setLayout(layout);
-  sigLabel->setStyleSheet("QLabel {border: 1px solid grey;qproperty-alignment: AlignHCenter;color:#bababa;foreground-color:white;background-color: grey;font-size:16px;font-family: \"Arial\"}");
+  sigLabel->setStyleSheet(_settings.value("dock_title_style").toString());
   holder->setTitleBarWidget(titlebar);
   holder->setAttribute(Qt::WA_DeleteOnClose);
   holder->setFeatures(features);
   QVBoxLayout* vlayout = new QVBoxLayout();
   holder->setLayout(vlayout);
   holder->setWidget(list_ptr);
-
   return holder;
 }
 
@@ -167,7 +168,7 @@ QDockWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstar
   QHBoxLayout* hlayout = new QHBoxLayout();
   QLabel* desc = new QLabel{QString::fromStdString("rate (millisec):")};
   desc->setAlignment(Qt::AlignRight);
-  desc->setStyleSheet("QLabel {font-size:16px;font-family: \"Arial\"}");
+  desc->setStyleSheet(_settings.value("descriptive_text_style").toString());
   
   buttonHolder->setLayout(hlayout);
   rate->setText("100");
@@ -179,38 +180,34 @@ QDockWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstar
   hlayout->addWidget(rate,0,Qt::AlignLeft);
   hlayout->addWidget(bstart,0,Qt::AlignLeft);
   
-  buttonHolder->setStyleSheet("QWidget {border: 1px solid grey;background-color: grey;font-size: 16px;font-family: \"Arial\"} ");
-  rate->setStyleSheet("QLineEdit {padding: 2px; border: 1px solid black;background-color: #C9C9C9;font-size: 16px;font-family: \"Arial\"}  ");
+  buttonHolder->setStyleSheet(_settings.value("button_holder_style").toString());
+  rate->setStyleSheet(_settings.value("data_entry_style").toString());
 
   rate->setFixedWidth(50);
   rate->setInputMask("0000");
   rate->setAlignment(Qt::AlignRight);
 
-    bstart->setStyleSheet("QPushButton {padding: 2px; border: 1px solid black;background-color: #CF78CA;font-size: 16px;font-family: \"Arial\"} QPushButton::hover:!pressed {font-size: 20px;} ");
-    bstart->setFixedWidth(70);
+  bstart->setStyleSheet(_settings.value("traffic_start_style").toString());
+  bstart->setFixedWidth(70);
 
+  hlayout->addWidget(bstop,1,Qt::AlignLeft);
+  bstop->setStyleSheet(_settings.value("traffic_stop_style").toString());
+  bstop->setFixedWidth(70);
 
-    hlayout->addWidget(bstop,1,Qt::AlignLeft);
-    bstop->setStyleSheet("QPushButton {padding: 2px; border: 1px solid black;background-color: #8F6A82;font-size: 16px;font-family: \"Arial\"} QPushButton::hover:!pressed {font-size: 20px;} ");
-    bstop->setFixedWidth(70);
+  QDockWidget* docwin = new QDockWidget(QString::fromStdString("Traffic"), this);
+  QWidget* holder = new QWidget();
 
-    QDockWidget* docwin = new QDockWidget(QString::fromStdString("Traffic"), this);
-    QWidget* holder = new QWidget();
-
-    docwin->setWidget(holder);
-
-    QVBoxLayout* vlayout = new QVBoxLayout();
-    vlayout->setSpacing(0);
-    holder->setLayout(vlayout);
-
+  docwin->setWidget(holder);
+  
+  QVBoxLayout* vlayout = new QVBoxLayout();
+  vlayout->setSpacing(0);
+  holder->setLayout(vlayout);
    
-  grid->setStyleSheet("QTableWidget {border: 0px solid grey;background-color: black;font-size: 16px;font-family: \"Arial\"} QTableWidget::item {color: orange;}");
-
+  grid->setStyleSheet(_settings.value("traffic_grid_style").toString());
   grid->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
   grid->horizontalHeader()->hide();
   grid->verticalHeader()->hide();
   grid->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-  
   vlayout->addWidget(grid);
 
   QLabel* sigLabel = new QLabel(QString::fromStdString("Traffic"));
@@ -221,12 +218,11 @@ QDockWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstar
   layout->addWidget(sigLabel,1, Qt::AlignLeft);
   
   titlebar->setLayout(layout);
-  sigLabel->setStyleSheet("QLabel {border: 1px solid grey;qproperty-alignment: AlignHCenter;color:#bababa;background-color: grey;font-size:16px;font-family: \"Arial\"}");
+  sigLabel->setStyleSheet(_settings.value("dock_title_style").toString());
   docwin->setTitleBarWidget(titlebar);
 
-  holder->setStyleSheet("QWidget {border: 0px solid grey;background-color: black;font-size:16px;font-family: \"Arial\"}");
-  docwin->setStyleSheet("QWidget {border: 1px solid grey;background-color: grey;font-size:16px;font-family: \"Arial\"}");
-
+  holder->setStyleSheet(_settings.value("zero_border_style").toString());
+  docwin->setStyleSheet(_settings.value("button_holder_style").toString());
   return docwin;
 }
 
@@ -306,7 +302,7 @@ void FRMain::update_status(std::string msg)
 
 void FRMain::update_unloaded_status(std::string msg)
 {
-  statusBar()->setStyleSheet("QWidget {background-color: #ab1e1e;}");
+  statusBar()->setStyleSheet(_settings.value("disconnected_style").toString);
   statusBar()->showMessage(QString::fromStdString(msg));
 }
 
