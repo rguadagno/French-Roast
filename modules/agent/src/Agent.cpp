@@ -243,12 +243,9 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
         }
         fieldValues += get_value(ptr, obj, _reportingFields[classinfo + ">" + fieldname]);       
       }
-        
-      std::cout << "VALS:  " << fieldValues << std::endl;                           
       _sig_mutex.lock();
       _rptr.signal(classinfo + "::" + methodNameStr + ":" + sigStr + "~" + std::string{info.name} + "~" + fieldValues);
       _sig_mutex.unlock();
-      
     }
   }
 }

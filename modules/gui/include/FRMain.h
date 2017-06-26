@@ -58,7 +58,8 @@ class FRMain : public QMainWindow {
   std::unordered_map<std::string, std::vector<frenchroast::monitor::MarkerField>> _detailDescriptors;
   std::unordered_map<std::string,StackRow*> _traffic_rows;
   std::unordered_map<std::string, int> _traffic_keys;
-  
+
+  std::string format_markers(const std::string markers);
   QDockWidget* setup_list(const std::string title, QListWidget* list_ptr,
                           QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
   void update_detail_list(QListWidget*, const std::vector<frenchroast::monitor::MarkerField>& markers);

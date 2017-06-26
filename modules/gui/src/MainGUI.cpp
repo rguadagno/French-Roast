@@ -338,16 +338,27 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
 void FRMain::update_detail_list(QListWidget* list, const std::vector<frenchroast::monitor::MarkerField>& markers)
 {
   for(auto& item : markers) {
-    frenchroast::monitor::pad(item._descriptor, 50);
     if(_detailItems.count(item._descriptor) == 0) {
-      _detailItems[item._descriptor] = new SignalItem(frenchroast::monitor::pad(item._descriptor,50), frenchroast::monitor::ntoa(item._count,5,' '));
+      _detailItems[item._descriptor] = new SignalItem(frenchroast::monitor::pad(format_markers(item._descriptor),50), frenchroast::monitor::ntoa(item._count,5,' '));
       list->addItem(_detailItems[item._descriptor]);
       _detailItemsPerList[ list->objectName().toStdString() ].push_back(item._descriptor);
     }
     else {
-      _detailItems[item._descriptor]->setText(QString::fromStdString(frenchroast::monitor::pad(item._descriptor,50)) + QString::fromStdString(frenchroast::monitor::ntoa(item._count,5,' ')));      
+      _detailItems[item._descriptor]->setText(QString::fromStdString(frenchroast::monitor::pad(format_markers(item._descriptor),50)) + QString::fromStdString(frenchroast::monitor::ntoa(item._count,5,' ')));      
     }
   }
+}
+
+std::string FRMain::format_markers(const std::string markers)
+{
+  using namespace frenchroast::monitor;
+  using namespace frenchroast;
+  
+  std::string rv = "";
+  for(auto& itempair : frenchroast::split(markers,";")) {
+    rv.append(  pad( split(itempair,":")[0] + "[ " + split(itempair,":")[1] + " ] ", 20));
+  }
+  return rv;
 }
 
 void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks)
