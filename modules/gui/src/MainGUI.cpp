@@ -151,12 +151,13 @@ QDockWidget* FRMain::setup_list(const std::string title, QListWidget* list_ptr, 
   QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight);
   layout->addWidget(sigLabel);
   if((features & QDockWidget::DockWidgetClosable) == QDockWidget::DockWidgetClosable) {
-    QPushButton* btn = new QPushButton();
+    QPushButton* btn = new QPushButton("X");
+    btn->setStyleSheet(_settings.value("close_style").toString());
     QObject::connect(btn, &QPushButton::clicked, holder, &QDockWidget::close);
-    btn->setIcon(style()->standardIcon(QStyle::SP_DockWidgetCloseButton));
     layout->addWidget(btn,1, Qt::AlignRight);
   }
   titlebar->setLayout(layout);
+  titlebar->setStyleSheet(_settings.value("dock_win_header_style").toString());
   sigLabel->setStyleSheet(_settings.value("dock_title_style").toString());
   holder->setTitleBarWidget(titlebar);
   holder->setAttribute(Qt::WA_DeleteOnClose);
@@ -225,6 +226,7 @@ QDockWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstar
   layout->addWidget(sigLabel,1, Qt::AlignLeft);
   
   titlebar->setLayout(layout);
+  titlebar->setStyleSheet(_settings.value("dock_win_header_style").toString());
   sigLabel->setStyleSheet(_settings.value("dock_title_style").toString());
   docwin->setTitleBarWidget(titlebar);
 
