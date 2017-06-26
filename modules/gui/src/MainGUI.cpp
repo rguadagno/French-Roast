@@ -39,6 +39,7 @@
 #include "MonitorUtil.h"
 #include "StackRow.h"
 #include <QSettings>
+#include <QDesktopWidget>
 
 
 
@@ -110,7 +111,11 @@ QFont StackRow::_font = CodeFont();
 
 FRMain::FRMain(FRListener* listener, QSettings& settings) : _settings(settings)
 {
-  resize(1300,300);
+  QDesktopWidget* dw = QApplication::desktop();
+  int height = dw->availableGeometry(dw->primaryScreen()).height() * 0.6;
+  int width  = dw->availableGeometry(dw->primaryScreen()).width() * 0.7;
+  
+  resize(width,height);
   _list               = new QListWidget;
   _timedlist          = new QListWidget;
   _traffic            = new QTableWidget;
