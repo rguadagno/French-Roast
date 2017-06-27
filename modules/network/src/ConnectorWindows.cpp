@@ -71,12 +71,13 @@ namespace frenchroast { namespace network {
 
       struct sockaddr_in    conn_from;
       int len = sizeof(conn_from);
-      SOCKET inSock = accept(_receiver_socket,(SOCKADDR*)&conn_from, &len);
-      _sender_socket = inSock;
-      _handler->message(std::string("connected~") + inet_ntoa(conn_from.sin_addr) + ":" + std::to_string(htons(conn_from.sin_port)));
-      std::thread t1{process_instream,inSock,_handler};
-      t1.detach();
-
+      while(1) {
+        SOCKET inSock = accept(_receiver_socket,(SOCKADDR*)&conn_from, &len);
+        _sender_socket = inSock;
+        _handler->message(std::string("connected~") + inet_ntoa(conn_from.sin_addr) + ":" + std::to_string(htons(conn_from.sin_port)));
+        std::thread t1{process_instream,inSock,_handler};
+        t1.detach();
+      }
     }
 
     void Connector::connect_to_server(const std::string& ipaddr, int port, Listener* handler)
@@ -120,6 +121,7 @@ namespace frenchroast { namespace network {
     void Connector::close_down()
     {
       closesocket(_receiver_socket);
+      closesocket(_sender_socket);
       WSACleanup();
     }
   }
