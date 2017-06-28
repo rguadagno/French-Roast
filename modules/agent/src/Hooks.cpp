@@ -143,8 +143,10 @@ namespace frenchroast { namespace agent {
    }
 
                    
-    void Hooks::load(const std::string& line)
+    void Hooks::load(const std::string& pline)
     {
+      std::string line{pline};
+      frenchroast::replace(line, " ", "");
       if (line[0] == '#' || line == "") {
         return;
       }
