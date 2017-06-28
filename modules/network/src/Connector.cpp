@@ -47,6 +47,10 @@ namespace frenchroast { namespace network {
           std::cout << "RECV ERROR: " << std::endl;
           break;
         }
+        if (rv == 0 ) {
+          std::cout << "CLOSED. " << std::endl;
+          break;
+        }
 
         memcpy(&flowbuf[buflen], databuf, rv);
         int total_bytes = buflen + rv;
