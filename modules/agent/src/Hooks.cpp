@@ -145,7 +145,7 @@ namespace frenchroast { namespace agent {
                    
     void Hooks::load(const std::string& line)
     {
-      if (line[0] == '#') {
+      if (line[0] == '#' || line == "") {
         return;
       }
       validate(line);
