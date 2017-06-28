@@ -48,13 +48,13 @@ class FRListener : public QObject
     int         _trafficRate{-1};
 
   public:
+    FRListener(const std::string ip, int port, const std::string& opcodFile, const std::string& hooksFile);
     int getCount(const std::string& item);
     void signal(const std::string& tag, const std::string& tname, int count,  std::vector<frenchroast::monitor::MarkerField>&);
     void traffic(std::vector<frenchroast::monitor::StackTrace>&);
     void signal_timed(const std::string& tag, const std::string& tname, long elapsed, int last);
     void connected(const std::string& addr);
     void unloaded(const std::string& addr);
-    FRListener(const std::string ip, int port);
 
   public slots:
     void init();

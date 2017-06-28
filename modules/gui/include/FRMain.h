@@ -51,6 +51,7 @@ class FRMain : public QMainWindow {
   QPushButton*  _buttonStartTraffic;
   QPushButton*  _buttonStopTraffic;
   QLineEdit*    _rate;
+  FRListener*   _listener;
   std::unordered_map<std::string,SignalItem*>        _descriptors;
   std::unordered_map<std::string,SignalItem*>         _detailItems;
   std::unordered_map<std::string,QListWidget*>        _detailLists;
@@ -64,8 +65,10 @@ class FRMain : public QMainWindow {
                           QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
   void update_detail_list(QListWidget*, const std::vector<frenchroast::monitor::MarkerField>& markers);
   QDockWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QPushButton* bstop, QLineEdit* rate);
+  
  signals:
-   void start_traffic(int rate);
+  
+   void xstart_traffic(int);
   
  public slots:
    void show_deco(QTableWidgetItem* item);

@@ -28,6 +28,7 @@
 #include "Agent.h"
 #include "Hooks.h"
 #include "FrenchRoast.h"
+#include "OpCode.h"
 #include "Util.h"
 #include "Reporter.h"
 #include "Config.h"
@@ -57,6 +58,7 @@ public:
 
     void message(const std::string& msg)
     {
+      std::cout << "XXXX CMD XXXX " << msg << std::endl;
       std::vector<std::string> items = frenchroast::split(msg,"~");
 
       if (items[0] == "stop_watch_traffic") { 
@@ -69,7 +71,7 @@ public:
 
   
   void watch_traffic(const int interval_millis)
-  {
+  {    
     std::lock_guard<std::mutex> lck{_traffic_mutex};
     _millis.store(interval_millis);
     _traffic_cond.notify_one();
@@ -104,19 +106,17 @@ public:
   
 };
 
-
-std::unordered_map<std::string, FieldInfo> _reportingFields;
 static int counter = 0;
 
-
-frenchroast::FrenchRoast fr;
-frenchroast::agent::Hooks _hooks;
-frenchroast::agent::Config _config;
-frenchroast::agent::Reporter _rptr;
-CommandBridge               _commandListener;
-
-std::mutex _sig_mutex;
-std::mutex _sig_time_mutex;
+std::unordered_map<std::string, FieldInfo> _reportingFields;
+frenchroast::OpCode                        _opcodes;
+frenchroast::FrenchRoast                   _fr{_opcodes};
+frenchroast::agent::Hooks                  _hooks;
+frenchroast::agent::Config                 _config;
+frenchroast::agent::Reporter               _rptr;
+CommandBridge                              _commandListener;
+std::mutex                                 _sig_mutex;
+std::mutex                                 _sig_time_mutex;
 
 jvmtiEnv* genv;
 JavaVM*   g_java_vm;
@@ -267,41 +267,41 @@ void JNICALL
   
   std::string sname{name};
   if (sname == "java/lang/Package") {
-    fr.load_from_buffer(class_data);
+    _fr.load_from_buffer(class_data);
     
-    fr.add_name_to_pool("thook");
-    fr.add_name_to_pool("(Ljava/lang/Object;)V");
-    fr.add_native_method("thook", "(Ljava/lang/Object;)V");
+    _fr.add_name_to_pool("thook");
+    _fr.add_name_to_pool("(Ljava/lang/Object;)V");
+    _fr.add_native_method("thook", "(Ljava/lang/Object;)V");
     
-    fr.add_name_to_pool("timerhook");
-    fr.add_name_to_pool("(JLjava/lang/String;Ljava/lang/String;)V");
-    fr.add_native_method("timerhook", "(JLjava/lang/String;Ljava/lang/String;)V");
+    _fr.add_name_to_pool("timerhook");
+    _fr.add_name_to_pool("(JLjava/lang/String;Ljava/lang/String;)V");
+    _fr.add_native_method("timerhook", "(JLjava/lang/String;Ljava/lang/String;)V");
 
-    jint size = fr.size_in_bytes();
+    jint size = _fr.size_in_bytes();
     jvmtiError  err =    env->Allocate(size,new_class_data);
     *new_class_data_len = size;
-    fr.load_to_buffer(*new_class_data); 
+    _fr.load_to_buffer(*new_class_data); 
   }
 
   if (_hooks.is_hook_class(sname)) {
 
-    fr.load_from_buffer(class_data);
+    _fr.load_from_buffer(class_data);
     for (auto& x : _hooks.get(sname)) {
       if (x.line_number() > 0) {
-         fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
+         _fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
       }
       else {
         if ((x.flags() & frenchroast::FrenchRoast::METHOD_TIMER) == frenchroast::FrenchRoast::METHOD_TIMER) {
-          fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
+          _fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
         }
         else {
-          fr.add_method_call(x.method_name(), "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
+          _fr.add_method_call(x.method_name(), "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
         }
       }
-    jint size = fr.size_in_bytes();
+    jint size = _fr.size_in_bytes();
     jvmtiError  err =    env->Allocate(size,new_class_data);
     *new_class_data_len = size;
-    fr.load_to_buffer(*new_class_data);
+    _fr.load_to_buffer(*new_class_data);
     }
   }
 }
@@ -380,6 +380,8 @@ void traffic_monitor()
   
  
     _sig_mutex.lock();
+    if(rv.find("calc") != std::string::npos)
+      std::cout << rv << std::endl;
     _rptr.traffic(rv);
     _sig_mutex.unlock();
     
@@ -436,48 +438,30 @@ void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
 
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 {
+    std::cout << "*** OnLoad() ********" << std::endl;
   g_java_vm = vm;
-  std::string configFile;
+  std::string configDescriptor;
   if (options != NULL)
-    configFile = std::string{options};
+    configDescriptor = std::string{options};
   else {
     std::cout << "config file path missing from options";
     exit(0);
   }
 
-
-
-  try {
-    if (!_config.load(configFile)) {
-      exit(0);
-    }
-  }
-  catch(std::ifstream::failure& e) {
-    std::cout << e.what() << std::endl;
+  if(!_config.load(configDescriptor, _opcodes, _hooks)) {
+    std::cout << "ERROR loading Config" << std::endl;
     exit(0);
   }
-
-  
-  std::cout << "*** OnLoad() ********" << std::endl;
-  try {
-    fr.load_op_codes(_config.get_opcode_file());
-    _hooks.load(_config.get_hooks_file());
-  }
-  catch(std::exception& e) {
-    std::cout << "ERROR: " << e.what() << std::endl;
-    exit(0);
-  }
-
-  std::cout << "===========> " << _config.get_reporter_descriptor() << std::endl;
-
+    
   if(_config.is_server_required()) {
-    _conn.connect_to_server(frenchroast::split(_config.get_server(),":")[0],
-                            atoi(frenchroast::split(_config.get_server(),":")[1].c_str()),
-                            &_commandListener);
+    _conn.connect_to_server(_config.get_server_ip(), _config.get_server_port(), &_commandListener);
   }
 
+    
   frenchroast::agent::Transport* tptr{nullptr};
-  if(_config.is_cout_reporter()) {
+
+  /*
+   if(_config.is_cout_reporter()) {
     tptr = new frenchroast::agent::CoutTransport{};
   }
 
@@ -488,10 +472,9 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   if(_config.is_server_reporter()) {
     tptr = new frenchroast::agent::ServerTransport{_conn};
   }
-  
+  */
+  tptr = new frenchroast::agent::ServerTransport{_conn};
   _rptr.setTransport(tptr);
-  
-    
   jvmtiError err;
   jvmtiEnv* env;
   vm->GetEnv((void**)&env, JVMTI_VERSION_1_0);

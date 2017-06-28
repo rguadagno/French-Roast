@@ -20,6 +20,8 @@
 #ifndef RPT_H
 #define RPT_H
 #include <string>
+#include "Opcode.h"
+#include "Hooks.h"
 
 namespace frenchroast { namespace agent {
 
@@ -41,15 +43,17 @@ command_descriptor     <server>
       std::string _opcodeFile{""};
       std::string _hooksFile{""};
       std::string _server{""};
+      std::string _serverip{""};
+      int          _serverPort{6060};
       bool        _serverRequired{false};
       
     public:
       Config();
-      bool load(const std::string& configFile);
-      std::string get_reporter_descriptor() const;
+      bool load(std::string, frenchroast::OpCode&, Hooks&);
       std::string get_opcode_file() const;
       std::string get_hooks_file() const;
-      std::string get_server() const;
+      const std::string& get_server_ip() const;
+      int get_server_port() const;
       std::string get_report_filename() const;
       bool is_server_required() const;
       bool is_cout_reporter() const;

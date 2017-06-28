@@ -42,7 +42,8 @@ namespace frenchroast {
     bool is_dynamic() const;
     std::string get_name() const;
     BYTE get_code() const;
-    static void load(const std::string& fileName);
+    static void load(std::string);
+    static void load_from_file(const std::string&);
   };
 }
 

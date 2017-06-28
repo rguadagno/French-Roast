@@ -32,6 +32,7 @@ namespace frenchroast { namespace monitor {
     
     std::string translate_descriptor(const std::string& name);
     std::vector<StackTrace> construct_traffic(const std::string& msg);
+    void transmit_lines(const std::string& fileName, frenchroast::network::Connector&);
 
 	struct time_holder {
 	  long      _elapsed;
@@ -42,11 +43,13 @@ namespace frenchroast { namespace monitor {
     template
     <typename T>
       class Monitor : public network::Listener {
-	T& _handler;
-	network::Connector  _conn;
-	std::unordered_map<std::string, time_holder> _timed_signals;
-	std::unordered_map<std::string, int>         _signals;
-        std::unordered_map<std::string, std::unordered_map<std::string, int>>         _markers;
+	T&                                                                     _handler;
+	network::Connector                                                     _conn;
+	std::unordered_map<std::string, time_holder>                           _timed_signals;
+	std::unordered_map<std::string, int>                                   _signals;
+        std::unordered_map<std::string, std::unordered_map<std::string, int>>  _markers;
+        std::string                                                            _opcodeFile;
+        std::string                                                            _hooksFile;
         
 	const int MSG_TYPE    = 0;
 	const int MSG         = 1;
@@ -56,8 +59,9 @@ namespace frenchroast { namespace monitor {
 	const int DIRECTION   = 2;
 	const int DESCRIPTOR  = 3;
 	const int THREAD_NAME = 4;
-      public:
-        Monitor(T& handler) : _handler(handler)
+        
+    public:
+    Monitor(T& handler, const std::string& opcodeFile, const std::string& hooksFile) : _handler(handler), _opcodeFile(opcodeFile), _hooksFile(hooksFile)
         { 
         }
       
@@ -91,14 +95,20 @@ namespace frenchroast { namespace monitor {
 	  if (items[MSG_TYPE] == "traffic") {
 	    _handler.traffic( construct_traffic(items[MSG]));
 	  }
-
-	 if (items[MSG_TYPE] == "connected") {
-	   _handler.connected(items[MSG]);
-	 }
-         
-	 if (items[MSG_TYPE] == "unloaded") {
-	   _handler.unloaded(items[MSG]);
-	 }
+          
+          if (items[MSG_TYPE] == "connected") {
+            _handler.connected(items[MSG]);
+          }
+          
+          if (items[MSG_TYPE] == "unloaded") {
+            _handler.unloaded(items[MSG]);
+          }
+          if(items[MSG_TYPE] == "transmit-opcodes") {
+            transmit_lines(_opcodeFile, _conn);
+          }
+          if(items[MSG_TYPE] == "transmit-hooks") {
+            transmit_lines(_hooksFile, _conn);           
+          }
          
       }
 

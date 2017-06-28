@@ -20,6 +20,9 @@
 #include <fstream>
 #include "Config.h"
 #include "Util.h"
+#include "Listener.h"
+#include "Opcode.h"
+#include "Connector.h"
 
 namespace frenchroast { namespace agent {
     std::string get_value(const std::string& key, const std::string& value, const std::string& line)
@@ -36,11 +39,6 @@ namespace frenchroast { namespace agent {
     {
     }
     
-    std::string Config::get_reporter_descriptor() const
-    {
-      return _reporterDescriptor;
-    }
-
     std::string Config::get_opcode_file() const
     {
       return _opcodeFile;
@@ -50,12 +48,6 @@ namespace frenchroast { namespace agent {
     {
       return _hooksFile;
     }
-
-    std::string Config::get_server() const
-    {
-      return _server;
-    }
-
 
     bool Config::is_server_required() const
     {
@@ -82,16 +74,65 @@ namespace frenchroast { namespace agent {
       return _reporterDescriptor.substr(std::string{"file:"}.size());
     }
 
+template
+<typename LineLoadable>
+    class LocalListener : public frenchroast::network::Listener {
+      LineLoadable&             _dest;
+      frenchroast::network::Connector& _conn;
+      
+    public:
+      LocalListener(LineLoadable& dest, frenchroast::network::Connector& conn) : _dest(dest), _conn(conn)
+      {
+      }
+      
+      void message(const std::string& msg)
+      {
+        std::cout << "msg: " << msg << std::endl;
+        if(msg.find("<end>") != std::string::npos) {
+          _conn.close_down();
+      }
+      else {
+        _dest.load(msg);
+      }
+      }
+    };
 
 
-    
-    bool Config::load(const std::string& filename)
+    const std::string& Config::get_server_ip() const
     {
+      return _serverip;
+    }
+
+    int Config::get_server_port() const 
+    {
+      return _serverPort;
+    }
+    
+    bool Config::load(std::string descriptor, frenchroast::OpCode& opcodes, Hooks& hooks)
+      {
+
+        if(descriptor.find("server:") != std::string::npos) {
+          frenchroast::replace(descriptor, "server:", "");
+          _serverip = frenchroast::split(descriptor,":")[0];
+          _serverPort = atoi(frenchroast::split(descriptor,":")[1].c_str());
+          frenchroast::network::Connector conn;
+          conn.connect_to_server(_serverip, _serverPort);
+          conn.send_message("transmit-opcodes");
+          conn.blocked_listen(new LocalListener<OpCode>(opcodes, conn));
+          conn.connect_to_server(_serverip, _serverPort);
+          conn.send_message("transmit-hooks");
+          conn.blocked_listen(new LocalListener<Hooks>(hooks, conn));
+          _serverRequired = true;
+          return true;
+        }
+
+
+      
       std::ifstream inconfig;
       try {
-        inconfig.open(filename);
+        inconfig.open(descriptor);
         if(inconfig.fail()) {
-           throw std::ios_base::failure("cannot open file: " + filename);
+           throw std::ios_base::failure("cannot open file: " + descriptor);
         }
         std::string line;
         while (getline(inconfig,line)) {
@@ -116,14 +157,12 @@ namespace frenchroast { namespace agent {
           std::cout << "reporter descriptor not set in config file" << std::endl;
           return false;
         }
-       std::cout << "server: " << _server << std::endl;       
-        if(_server != "") {
-          _serverRequired = true;
-        }
+
+        opcodes.load_from_file(_opcodeFile);
       }
       catch(std::ifstream::failure& ) {
         if(!inconfig.eof())
-          throw std::ifstream::failure("cannot open file: " + filename);
+          throw std::ifstream::failure("cannot open file: " + descriptor);
       }
       return true;
     }

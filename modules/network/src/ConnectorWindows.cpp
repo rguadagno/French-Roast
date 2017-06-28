@@ -106,12 +106,18 @@ namespace frenchroast { namespace network {
         exit(0);
       }
       std::cout << "========== CONNECTED TO SERVER ============ " << std::endl;
-      std::thread t1{process_instream,_sender_socket,handler};
-      t1.detach();
+      if(handler != nullptr) {
 
+        std::thread t1{process_instream,_sender_socket,handler};
+        t1.detach();
+      }
     }
 
-
+    void Connector::blocked_listen(Listener* handler)
+    {
+      process_instream(_sender_socket,handler);
+    }
+    
     void Connector::send_message(const std::string& msg)
     {
       send(_sender_socket, msg.c_str(), msg.length()+1,0);

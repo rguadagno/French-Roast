@@ -19,7 +19,7 @@
 
 #include "fr.h"
 
-FRListener::FRListener(const std::string ip, int port) : _ip(ip), _port(port), _mon(*this)
+FRListener::FRListener(const std::string ip, int port, const std::string& opcodeFile, const std::string& hooksFile ) : _ip(ip), _port(port), _mon(*this, opcodeFile, hooksFile)
 {
 }
 
@@ -46,7 +46,6 @@ void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace>& items)
 void FRListener::connected(const std::string& msg)
 {
   remoteconnected("remote agent connected: " + msg);
-  start_traffic(_trafficRate);
 }
 
 void FRListener::unloaded(const std::string& msg)

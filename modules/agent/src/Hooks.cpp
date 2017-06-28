@@ -120,53 +120,56 @@ namespace frenchroast { namespace agent {
         }
       }
     }
-    
-    void Hooks::load(const std::string& filename)
-    {
+
+   
+   void Hooks::load_from_file(const std::string& filename)
+   {
       std::ifstream infile;
       try {
         infile.open(filename);
         if(infile.fail())
            throw std::ios_base::failure("cannot open file: " + filename);
-        bool loaded = false;
         std::string line;
         while (getline(infile,line))
         {
-          if (line[0] == '#') {
-            continue;
-          }
-          validate(line);
-          std::string classname = split(line, "::")[0];
-          convert_name(classname);
-          std::string methName = split(split(line, '<')[0],"::")[1];
-          remove_blanks(methName);
-          convert_name(methName);
-          std::string flagStr = split(split(line, '<')[1],">")[0];
-          std::bitset<4> flags;
-          parse_flags(flags, flagStr);
-          std::string fieldStr = split(line, '>')[1];
-          remove_blanks(fieldStr);
-          std::vector<std::string> fields;
-          for(auto& x : split(fieldStr, "][")) {
-            replace(x, '[');
-            replace(x, ']');
-            if(x != "") {
-              fields.push_back(x);
-            }
-          }
-
-          _markerFields["L" + classname + ";" + methName] = fields;
-          _hlist[classname].push_back(Hook{methName, flags});
-          loaded = true;
+          load(line);
         }
         infile.close();
-        if(!loaded) {
-          throw std::invalid_argument{"hooks file empty"};
-        }
       }
       catch(std::ios_base::failure&) {
         throw std::ios_base::failure("cannot open file: " + filename);
       }
+     
+   }
+
+                   
+    void Hooks::load(const std::string& line)
+    {
+      if (line[0] == '#') {
+        return;
+      }
+      validate(line);
+      std::string classname = split(line, "::")[0];
+      convert_name(classname);
+      std::string methName = split(split(line, '<')[0],"::")[1];
+      remove_blanks(methName);
+      convert_name(methName);
+      std::string flagStr = split(split(line, '<')[1],">")[0];
+      std::bitset<4> flags;
+      parse_flags(flags, flagStr);
+      std::string fieldStr = split(line, '>')[1];
+      remove_blanks(fieldStr);
+      std::vector<std::string> fields;
+      for(auto& x : split(fieldStr, "][")) {
+        replace(x, '[');
+        replace(x, ']');
+        if(x != "") {
+          fields.push_back(x);
+        }
+      }
+      
+      _markerFields["L" + classname + ";" + methName] = fields;
+      _hlist[classname].push_back(Hook{methName, flags});
     }
 
     const std::vector<Hook>& Hooks::get(const std::string& name) 

@@ -121,7 +121,6 @@ namespace frenchroast {
   
     void load_magic(unsigned char* magic, unsigned char* buf);
     void reset();
-    bool _opcodesLoaded;
     void update_method(Method& meth, std::bitset<4> flags, const std::string& callTo, ConstantPoolComponent& constPool);
   public:
     void load_from_buffer(const BYTE* buf);
@@ -134,8 +133,7 @@ namespace frenchroast {
     void add_method_call(const std::string& callFrom, const std::string& callTo, std::bitset<4> flags);
     short add_constant_integer_value(int value);
     void modify_constant(const std::string& fieldname, short descriptorIndex);
-    FrenchRoast();
-    void load_op_codes(const std::string& fileName);
+    FrenchRoast(OpCode opcodes);
     
     static const std::bitset<4> METHOD_ENTER;
     static const std::bitset<4> METHOD_EXIT;

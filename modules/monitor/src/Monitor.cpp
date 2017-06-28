@@ -25,6 +25,7 @@
 #include "MarkerField.h"
 #include <unordered_map>
 #include <string>
+#include "Connector.h"
 
 namespace frenchroast { namespace monitor {
             std::unordered_map<char, std::string> _type_map { {'I',"int"},
@@ -97,4 +98,23 @@ namespace frenchroast { namespace monitor {
     }
 
 
+    void transmit_lines(const std::string& fileName, frenchroast::network::Connector& conn)
+    {
+      try {
+        std::ifstream in;
+        in.open(fileName);
+        std::string line;
+        while (getline(in,line)) {
+          conn.send_message(line);
+        }
+        in.close();
+        conn.send_message("<end>");
+      }
+      catch(std::ifstream::failure& ) {
+        throw std::ifstream::failure("cannot open file: " + fileName);
+      }
+      
+    }
+
+    
   }}

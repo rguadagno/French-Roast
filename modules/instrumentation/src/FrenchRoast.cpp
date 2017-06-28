@@ -238,7 +238,7 @@ namespace frenchroast {
     }
   }
     
-  FrenchRoast::FrenchRoast() : _opcodesLoaded(false)
+  FrenchRoast::FrenchRoast(frenchroast::OpCode opcodes) : _opCodes(opcodes)
   {
   }
 
@@ -334,18 +334,6 @@ namespace frenchroast {
     method.set_descriptor_index(descriptorIndex);
     _methodsComponent.add_item(method);
   }
-
-
-  void FrenchRoast::load_op_codes(const std::string& fileName)
-  {
-    if (_opcodesLoaded)
-      {
-        return;
-      }
-    _opCodes.load(fileName);
-    _opcodesLoaded = true;
-  }
-
 
   void FrenchRoast::update_method(Method& meth, std::bitset<4> flags, const std::string& callTo, ConstantPoolComponent& constPool)
   {

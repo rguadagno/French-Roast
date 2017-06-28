@@ -46,24 +46,24 @@
 int main(int argc, char* argv[]) {
 
   QSettings config{frenchroast::monitor::get_env_variable("INI_FULL_PATH","example /home/richg/French-Roast/modules/gui/config/fr.ini"), QSettings::IniFormat};
+  std::string path_to_opcodes = frenchroast::monitor::get_env_variable("OPCODES_FULL_PATH","example /home/richg/French-Roast/modules/instrumentation/opcodes.txt");
   qRegisterMetaType<std::string>();
   qRegisterMetaType<std::vector<frenchroast::monitor::StackTrace>>();
   qRegisterMetaType<std::vector<frenchroast::monitor::MarkerField>>();
   
   QApplication app(argc,argv);
 
-  if (argc != 3) {
+  if (argc != 4) {
     QMessageBox box;
-    box.setText("usage: roaster IP PORT\nexample: roaster 127.0.0.1 6060");
+    box.setText("usage: roaster <ip> <port> <path to hooks file>\nexample: roaster 127.0.0.1 6060 /home/richg/code/hooks.txt");
     box.exec();
     exit(0);
   }
 
-  FRListener roaster{std::string{argv[1]}, atoi(argv[2])};
+  FRListener roaster{std::string{argv[1]}, atoi(argv[2]), path_to_opcodes, argv[3]};
   QThread* tt = new QThread(&roaster);
 
   roaster.moveToThread(tt);
-  
   FRMain main(&roaster, config);
 
   QObject::connect(&roaster, &FRListener::thooked,        &main,    &FRMain::update_list);
@@ -109,7 +109,7 @@ public:
 QFont SignalItem::_font = CodeFont();
 QFont StackRow::_font = CodeFont();
 
-FRMain::FRMain(FRListener* listener, QSettings& settings) : _settings(settings)
+FRMain::FRMain(FRListener* listener, QSettings& settings) : _settings(settings), _listener(listener)
 {
   QDesktopWidget* dw = QApplication::desktop();
   int height = dw->availableGeometry(dw->primaryScreen()).height() * 0.6;
@@ -133,7 +133,6 @@ FRMain::FRMain(FRListener* listener, QSettings& settings) : _settings(settings)
   QObject::connect(_list,               &QListWidget::itemDoubleClicked,  this,     &FRMain::show_detail);
   QObject::connect(_buttonStartTraffic, &QPushButton::clicked,            this,     &FRMain::update_traffic_rate);
   QObject::connect(_buttonStopTraffic,  &QPushButton::clicked,            listener, &FRListener::stop_traffic);
-  QObject::connect(this,                &FRMain::start_traffic,           listener, &FRListener::start_traffic);
   QObject::connect(listener,            &FRListener::remoteconnected,     this,     &FRMain::update_status);
   QObject::connect(listener,            &FRListener::remoteunloaded,      this,     &FRMain::update_unloaded_status);
   
@@ -299,7 +298,7 @@ void FRMain::destroy_list(QObject* obj)
 
 void FRMain::update_traffic_rate()
 {
-  start_traffic(atoi(_rate->text().toStdString().c_str()));
+  _listener->start_traffic(atoi(_rate->text().toStdString().c_str()));
 }
 
 
