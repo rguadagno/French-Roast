@@ -18,6 +18,7 @@
 //
 
 #include "StackRow.h"
+#include <iostream>
 
 StackRow::StackRow(const std::string tname, int row, QTableWidget* tptr, std::unordered_map<std::string,int>& keys) : _tptr(tptr), _keys(keys)
 {
@@ -43,36 +44,40 @@ void StackRow::add_column(const frenchroast::monitor::StackTrace& st, int col)
   int count = 0;
   std::string runningKey = "";
   int extra = st.frames().size() - _totalRows;
-      for(int idx = 1; idx <= extra; idx++){
-	_tptr->insertRow(_threadName->row() + _totalRows++);
-      }
+  for(int idx = 1; idx <= extra; idx++){
+    _tptr->insertRow(_threadName->row() + _totalRows++);
+  }
       
-      for(auto& frame : st.frames()) {
-	FunctionPoint* fpitem = new FunctionPoint;
-        fpitem->setFont(_font);
-	fpitem->setText(QString::fromStdString(frame.get_name()  ));
-	fpitem->set_decorated_name(QString::fromStdString( frame.get_decorated_name()));
-	if (count == 0) {
-	  fpitem->setBackground(QColor(64,64,64));
-	}
-	_tptr->setItem(_threadName->row() + count, col, fpitem);
-	++count;
-	runningKey += frame.get_decorated_name();
-	_keys[runningKey] = col;
-      }
+  for(auto& frame : st.frames()) {
+    FunctionPoint* fpitem = new FunctionPoint;
+    fpitem->setFont(_font);
+    fpitem->setText(QString::fromStdString(frame.get_name()  ));
+    fpitem->set_decorated_name(QString::fromStdString( frame.get_decorated_name()));
+    if (count == 0) {
+      fpitem->setBackground(QColor(64,64,64));
+    }
+    _tptr->setItem(_threadName->row() + count, col, fpitem);
+    ++count;
+    runningKey += frame.get_decorated_name();
+    _keys[runningKey] = col;
+  }
 }
 
 void StackRow::add(const frenchroast::monitor::StackTrace& st)
 {
-  if (_keys.count(st.key()) != 0) return;
+  if (_keys.count(st.key()) != 0) {
+    return;
+  }
 
   std::string partialkey = "";
   for(auto& x : _complete_keys) {
-    if (st.key().find(x) != std::string::npos) {
+    if (x.find(st.key()) != std::string::npos ) {  
+      return;
+    }
+    if (st.key().find(x) != std::string::npos ) {
       partialkey = x;
     }
   }
-  
   if (partialkey != "") {
     append_to_column(_keys[partialkey], st);
   }
@@ -83,11 +88,5 @@ void StackRow::add(const frenchroast::monitor::StackTrace& st)
     }
     add_column(st, _col -1 );
   }
-  
-  _complete_keys.clear();
   _complete_keys.insert(st.key());
-  
-  }
-
-
-
+}

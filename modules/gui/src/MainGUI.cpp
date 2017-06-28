@@ -40,7 +40,7 @@
 #include "StackRow.h"
 #include <QSettings>
 #include <QDesktopWidget>
-
+#include <algorithm>
 
 
 int main(int argc, char* argv[]) {
@@ -132,7 +132,7 @@ FRMain::FRMain(FRListener* listener, QSettings& settings) : _settings(settings),
   QObject::connect(_traffic,            &QTableWidget::itemDoubleClicked, this,     &FRMain::show_deco);
   QObject::connect(_list,               &QListWidget::itemDoubleClicked,  this,     &FRMain::show_detail);
   QObject::connect(_buttonStartTraffic, &QPushButton::clicked,            this,     &FRMain::update_traffic_rate);
-  QObject::connect(_buttonStopTraffic,  &QPushButton::clicked,            listener, &FRListener::stop_traffic);
+  QObject::connect(_buttonStopTraffic,  &QPushButton::clicked,            this,     &FRMain::stop_traffic);
   QObject::connect(listener,            &FRListener::remoteconnected,     this,     &FRMain::update_status);
   QObject::connect(listener,            &FRListener::remoteunloaded,      this,     &FRMain::update_unloaded_status);
   
@@ -302,6 +302,12 @@ void FRMain::update_traffic_rate()
 }
 
 
+void FRMain::stop_traffic()
+{
+  _listener->stop_traffic();
+}
+
+
 
 void FRMain::update_status(std::string msg)
 {
@@ -370,9 +376,6 @@ std::string FRMain::format_markers(const std::string markers)
 void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks)
 {
   for(auto& x : stacks) {
-    if (_traffic_keys.count(x.key()) != 0) {
-      continue;
-    }
     int currRow = _traffic->rowCount();
     if(_traffic_rows.count(x.thread_name()) == 0) {
       _traffic->insertRow(currRow);

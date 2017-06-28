@@ -66,9 +66,6 @@ class FRMain : public QMainWindow {
   void update_detail_list(QListWidget*, const std::vector<frenchroast::monitor::MarkerField>& markers);
   QDockWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QPushButton* bstop, QLineEdit* rate);
   
- signals:
-  
-   void xstart_traffic(int);
   
  public slots:
    void show_deco(QTableWidgetItem* item);
@@ -81,6 +78,7 @@ class FRMain : public QMainWindow {
    void update_status(std::string);
    void update_unloaded_status(std::string);
    void update_traffic_rate();
+   void stop_traffic();
 };
 
 
