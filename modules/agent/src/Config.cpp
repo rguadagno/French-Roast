@@ -87,7 +87,6 @@ template
       
       void message(const std::string& msg)
       {
-        std::cout << "msg: " << msg << std::endl;
         if(msg.find("<end>") != std::string::npos) {
           _conn.close_down();
       }

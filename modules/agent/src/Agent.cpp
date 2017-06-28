@@ -58,7 +58,6 @@ public:
 
     void message(const std::string& msg)
     {
-      std::cout << "XXXX CMD XXXX " << msg << std::endl;
       std::vector<std::string> items = frenchroast::split(msg,"~");
 
       if (items[0] == "stop_watch_traffic") { 
