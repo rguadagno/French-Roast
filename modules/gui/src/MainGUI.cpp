@@ -365,9 +365,9 @@ std::string FRMain::format_markers(const std::string markers)
 {
   using namespace frenchroast::monitor;
   using namespace frenchroast;
-  
   std::string rv = "";
   for(auto& itempair : frenchroast::split(markers,";")) {
+    if(itempair.find(":") == std::string::npos) continue;
     rv.append(  pad( split(itempair,":")[0] + "[ " + split(itempair,":")[1] + " ] ", 20));
   }
   return rv;
