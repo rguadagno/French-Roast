@@ -38,6 +38,7 @@
 #include "FRMain.h"
 #include "MonitorUtil.h"
 #include "StackRow.h"
+#include "HooksSyntax.h"
 #include <QSettings>
 #include <QDesktopWidget>
 #include <QMenuBar>
@@ -286,6 +287,7 @@ void FRMain::edit_hooks()
   
     _hooksEditor->document()->setPlainText(QString::fromStdString(text));
     _hooksEditor->setFont(CodeFont());
+    HooksSyntax* syntax = new HooksSyntax(_hooksEditor->document());
     QDockWidget* editdoc = setup_dock_window("hooks", _hooksEditor, "edit_style");
     editdoc->setFloating(true);
     editdoc->resize(width(),200);
