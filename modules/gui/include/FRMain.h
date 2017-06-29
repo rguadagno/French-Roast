@@ -28,6 +28,7 @@
 #include <QLineEdit>
 #include <QDockWidget>
 #include <QSettings>
+#include <QTextEdit>
 #include <unordered_map>
 #include <unordered_set>
 #include "fr.h"
@@ -40,11 +41,12 @@ class FRMain : public QMainWindow {
   Q_OBJECT
 
  public:
-  FRMain(FRListener*, QSettings&);
+  FRMain(FRListener*, QSettings&, const std::string&);
 
  private:
   QSettings&    _settings;
   bool          _exit{false};
+  QTextEdit*    _hooksEditor{nullptr};
   QListWidget*  _list;
   QListWidget*  _timedlist;
   QTableWidget* _traffic;
@@ -59,15 +61,16 @@ class FRMain : public QMainWindow {
   std::unordered_map<std::string, std::vector<frenchroast::monitor::MarkerField>> _detailDescriptors;
   std::unordered_map<std::string,StackRow*> _traffic_rows;
   std::unordered_map<std::string, int> _traffic_keys;
-
+  std::string                          _hooksfile;
   std::string format_markers(const std::string markers);
-  QDockWidget* setup_list(const std::string title, QListWidget* list_ptr,
-                          QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+  QDockWidget* setup_dock_window(const std::string& title, QWidget* wptr, const std::string& wstyle,QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+    
   void update_detail_list(QListWidget*, const std::vector<frenchroast::monitor::MarkerField>& markers);
   QDockWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QPushButton* bstop, QLineEdit* rate);
   
   
  public slots:
+      void edit_hooks();
    void show_deco(QTableWidgetItem* item);
    void show_detail(QListWidgetItem* item);
    void destroy_list(QObject* obj);
