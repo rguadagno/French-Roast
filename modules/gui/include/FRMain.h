@@ -33,6 +33,7 @@
 #include <unordered_set>
 #include "fr.h"
 #include "StackRow.h"
+#include "ActionBar.h"
 
 
 class SignalItem;
@@ -63,14 +64,17 @@ class FRMain : public QMainWindow {
   std::unordered_map<std::string, int> _traffic_keys;
   std::string                          _hooksfile;
   std::string format_markers(const std::string markers);
-  QDockWidget* setup_dock_window(const std::string& title, QWidget* wptr, const std::string& wstyle,QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
     
   void update_detail_list(QListWidget*, const std::vector<frenchroast::monitor::MarkerField>& markers);
   QDockWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QPushButton* bstop, QLineEdit* rate);
+
+  QDockWidget* setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* aptr, const std::string& wstyle,QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+
   
   
  public slots:
-      void edit_hooks();
+   void edit_hooks();
+   void save_hooks();
    void show_deco(QTableWidgetItem* item);
    void show_detail(QListWidgetItem* item);
    void destroy_list(QObject* obj);

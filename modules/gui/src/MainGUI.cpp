@@ -130,8 +130,8 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
   _buttonStopTraffic  = new QPushButton{"Stop"};
   _rate               = new QLineEdit;
 
-  addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Signals", _list, "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
-  addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Timers", _timedlist, "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
+  addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Signals", _list, new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
+  addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Timers", _timedlist, new ActionBar(),  "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
 
   addDockWidget(Qt::BottomDockWidgetArea, build_traffic_viewer(_traffic,_buttonStartTraffic,_buttonStopTraffic,_rate));
   
@@ -149,8 +149,12 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
   statusBar()->showMessage("waiting for connection...");
 }
 
-QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, const std::string& wstyle, QDockWidget::DockWidgetFeatures features)
+
+
+
+QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* actionptr, const std::string& wstyle, QDockWidget::DockWidgetFeatures features)
 {
+
   wptr->setStyleSheet(_settings.value(QString::fromStdString(wstyle)).toString());
   QDockWidget* holder = new QDockWidget(QString::fromStdString(title), this);
   holder->setStyleSheet(_settings.value("dock_widget_style").toString());
@@ -158,14 +162,15 @@ QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, 
   QWidget* titlebar = new QWidget();
   QGridLayout* layout = new QGridLayout();
   
-    layout->addWidget(sigLabel,1,1);
-    layout->setColumnStretch(1,10);  
-  if((features & QDockWidget::DockWidgetClosable) == QDockWidget::DockWidgetClosable) {
-    QPushButton* btn = new QPushButton("X");
-    btn->setStyleSheet(_settings.value("close_style").toString());
-    QObject::connect(btn, &QPushButton::clicked, holder, &QDockWidget::close);
-    layout->addWidget(btn,1, 5);
-  }
+  layout->addWidget(sigLabel,1,1);
+  layout->setColumnStretch(1,10);
+  layout->setContentsMargins(1,1,1,1);
+    //if((features & QDockWidget::DockWidgetClosable) == QDockWidget::DockWidgetClosable) {
+    // QPushButton* btn = new QPushButton("X");
+    //btn->setStyleSheet(_settings.value("close_style").toString());
+    //QObject::connect(btn, &QPushButton::clicked, holder, &QDockWidget::close);
+    layout->addWidget(actionptr,1, 5);
+    //}
   titlebar->setLayout(layout);
   titlebar->setStyleSheet(_settings.value("dock_win_header_style").toString());
   sigLabel->setStyleSheet(_settings.value("dock_title_style").toString());
@@ -177,7 +182,6 @@ QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, 
   holder->setWidget(wptr);
   return holder;
 }
-
 
 
 
@@ -288,12 +292,31 @@ void FRMain::edit_hooks()
     _hooksEditor->document()->setPlainText(QString::fromStdString(text));
     _hooksEditor->setFont(CodeFont());
     HooksSyntax* syntax = new HooksSyntax(_hooksEditor->document());
-    QObject::connect(_hooksEditor, &QTextEdit::destroyed, this, &FRMain::reset_editor);  
-    QDockWidget* editdoc = setup_dock_window("hooks", _hooksEditor, "edit_style");
+
+    
+    QObject::connect(_hooksEditor, &QTextEdit::destroyed, this, &FRMain::reset_editor);
+    ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::Save);
+
+    QDockWidget* editdoc = setup_dock_window("hooks", _hooksEditor, abar, "edit_style");
+
+    QObject::connect(abar, &ActionBar::close_clicked, editdoc, &QDockWidget::close);
+    QObject::connect(abar, &ActionBar::save_clicked,  this, &FRMain::save_hooks);
+    
     editdoc->setFloating(true);
     editdoc->resize(width(),200);
     addDockWidget(Qt::TopDockWidgetArea, editdoc);
   }
+}
+
+void FRMain::save_hooks()
+{
+  if(_hooksEditor == nullptr) return;
+
+  std::ofstream out;
+  out.open(_hooksfile);
+  QString outstr = _hooksEditor->document()->toPlainText();
+  out << outstr.toStdString();
+  out.close();
 }
 
 
@@ -307,7 +330,6 @@ void FRMain::show_deco(QTableWidgetItem* item)
 
 void FRMain::show_detail(QListWidgetItem* item)
 {
-
   SignalItem* ptr = dynamic_cast<SignalItem*>(item);
   std::string sname = ptr->gettext();
   if(_detailLists.count(sname) > 0 || sname.find("[M]") == std::string::npos) {
@@ -315,16 +337,20 @@ void FRMain::show_detail(QListWidgetItem* item)
   }
   _detailLists[sname] = new QListWidget();
   _detailLists[sname]->setObjectName(QString::fromStdString(sname));
-  QObject::connect(_detailLists[sname], &QListWidget::destroyed, this, &FRMain::destroy_list);  
-  addDockWidget(Qt::TopDockWidgetArea, setup_dock_window(sname, _detailLists[sname], "list_style"));
+  QObject::connect(_detailLists[sname], &QListWidget::destroyed, this, &FRMain::destroy_list);
+  ActionBar* abar = new ActionBar(ActionBar::Close);
+  
+  QDockWidget* dockwin = setup_dock_window(sname, _detailLists[sname], abar ,"list_style");
+  QObject::connect(abar, &ActionBar::close_clicked, dockwin, &QDockWidget::close);
+  addDockWidget(Qt::TopDockWidgetArea, dockwin);
   update_detail_list(_detailLists[ sname ], _detailDescriptors[sname]);
-
 }
 
 void FRMain::reset_editor(QObject* obj)
 {
   _hooksEditor = nullptr;
 }
+
 void FRMain::destroy_list(QObject* obj)
 {
   if(_exit) return;
@@ -336,7 +362,6 @@ void FRMain::destroy_list(QObject* obj)
     _detailItemsPerList.erase(name);
   }
   _detailLists.erase(name);
-  
 }
 
 

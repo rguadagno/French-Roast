@@ -29,8 +29,6 @@
 #include "Monitor.h"
 #include "StackTrace.h"
 
-
-
 Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::StackTrace>);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::MarkerField>);
@@ -70,4 +68,6 @@ class FRListener : public QObject
 
 
 };
+
+
 #endif
