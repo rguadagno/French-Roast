@@ -74,6 +74,7 @@ class FRMain : public QMainWindow {
    void show_deco(QTableWidgetItem* item);
    void show_detail(QListWidgetItem* item);
    void destroy_list(QObject* obj);
+   void reset_editor(QObject* obj);
    void handle_exit();
    void update_list(std::string, std::string, std::string,int, const std::vector<frenchroast::monitor::MarkerField>&);
    void update_timed_list(std::string  descriptor, std::string, long elapsed);

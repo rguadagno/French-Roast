@@ -288,6 +288,7 @@ void FRMain::edit_hooks()
     _hooksEditor->document()->setPlainText(QString::fromStdString(text));
     _hooksEditor->setFont(CodeFont());
     HooksSyntax* syntax = new HooksSyntax(_hooksEditor->document());
+    QObject::connect(_hooksEditor, &QTextEdit::destroyed, this, &FRMain::reset_editor);  
     QDockWidget* editdoc = setup_dock_window("hooks", _hooksEditor, "edit_style");
     editdoc->setFloating(true);
     editdoc->resize(width(),200);
@@ -320,6 +321,10 @@ void FRMain::show_detail(QListWidgetItem* item)
 
 }
 
+void FRMain::reset_editor(QObject* obj)
+{
+  _hooksEditor = nullptr;
+}
 void FRMain::destroy_list(QObject* obj)
 {
   if(_exit) return;
