@@ -50,7 +50,7 @@ namespace frenchroast {
     _address = ref._address;
     memcpy(_operand, ref._operand, 2);
     _opbuf_size = ref._opbuf_size;
-    if ( _opCode.is_dynamic()) {
+    if ( _opCode.is_dynamic() || _opCode.is_raw()) {
       _opbuf = ref._opbuf;
       ref._opbuf = nullptr;
     }
@@ -65,7 +65,7 @@ namespace frenchroast {
     _address = ref._address;
     memcpy(_operand, ref._operand, 2);
     _opbuf_size = ref._opbuf_size;
-    if ( _opCode.is_dynamic()) {
+    if ( _opCode.is_dynamic() || _opCode.is_raw()) {
       _opbuf = ref._opbuf;
       ref._opbuf = nullptr;
     }
@@ -98,39 +98,59 @@ namespace frenchroast {
     _opCode = _opCode[*buf];
     _opbuf = nullptr;
     if (_opCode.is_dynamic()) {
-      if (_opCode.get_code() == opcode::lookupswitch) {
+      return load_dynamic_from_buffer(buf, address );
+    }
+    else {
+      return load_fixed_from_buffer(buf, address, loaded );
+    }
+  }
+
+  int Instruction::load_fixed_from_buffer(const BYTE* buf, int address, int& loaded)
+  {
+    memset(_operand,0,2);
+
+    if(_opCode.is_raw()) {
+      _opbuf_size = _opCode.get_size() -1;
+      _opbuf = new BYTE[_opbuf_size];
+      memcpy(_opbuf, buf + 1, _opbuf_size );
+      return _opCode.get_size();
+    }
+    
+    if (_opCode.get_size() == 0) {
+      loaded=0;
+    }
+    if (_opCode.get_size() == 3) {
+      memcpy(&_operand[0],buf+1,2);
+    }
+    if(_opCode.get_size() == 2) {
+      memcpy(&_operand[1],buf+1,1);
+    }
+    return _opCode.get_size();
+  }
+
+  int Instruction::load_dynamic_from_buffer(const BYTE* buf, int address)
+  {
+    if (_opCode.get_code() == opcode::lookupswitch)
+      {
         _opbuf_size = calc_pad(_address);
-         _opbuf_size += 4;
-         _opbuf_size += (8 * to_int(buf + 1 + _opbuf_size, 4));
-         _opbuf_size += 4;
+        _opbuf_size += 4;
+        _opbuf_size += (8 * to_int(buf + 1 + _opbuf_size, 4));
+        _opbuf_size += 4;
       }
-      else if (_opCode.get_code() == opcode::tableswitch) {
-         int pad = calc_pad(_address);
+    else if (_opCode.get_code() == opcode::tableswitch)
+      {
+        int pad = calc_pad(_address);
         _opbuf_size = pad + 4 + 4 + 4;
         int low = to_int(buf + 1 + pad + 4,4);
         int high = to_int(buf + 1 + pad + 4 + 4,4);
         int offsets = (high - low) + 1;
         _opbuf_size += 4 * offsets;
       }
-      _opbuf = new BYTE[_opbuf_size];
-      memcpy(_opbuf, buf + 1, _opbuf_size);
-      return 1 + _opbuf_size;
-    }
-    else {
-      memset(_operand,0,2);
-      if (_opCode.get_size() == 0) {
-        loaded=0;
-      }
-      if (_opCode.get_size() == 3) {
-        memcpy(&_operand[0],buf+1,2);
-      }
-      if(_opCode.get_size() == 2) {
-        memcpy(&_operand[1],buf+1,1);
-      }
-      return _opCode.get_size();
-    }
+    _opbuf = new BYTE[_opbuf_size];
+    memcpy(_opbuf, buf + 1, _opbuf_size);
+    return 1 + _opbuf_size;
   }
-
+  
   int Instruction::load_to_buffer(BYTE* buf)
   {
     *buf = _opCode.get_code();
@@ -138,10 +158,13 @@ namespace frenchroast {
       memcpy(buf + 1, _opbuf, _opbuf_size);
     }
     else {
-      if (_opCode.get_size()==3) {
+      if(_opCode.is_raw()) {
+        memcpy(buf + 1, _opbuf, _opbuf_size);
+      }
+      else if (_opCode.get_size()==3) {
         memcpy(buf + 1,&_operand[0], 2);
       }
-      if (_opCode.get_size()==2) {
+      else if (_opCode.get_size()==2) {
          memcpy(buf + 1,&_operand[1], 1);
       }
     }

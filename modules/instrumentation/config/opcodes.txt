@@ -182,8 +182,8 @@ putfield        <181> 3
 invokevirtual   <182> 3
 invokespecial   <183> 3
 invokestatic    <184> 3
-invokeinterface <185> 5
-invokedynamic   <186> 5
+invokeinterface <185> 5 <raw>
+invokedynamic   <186> 5 <raw>
 new             <187> 3
 newarray        <188> 2
 anewarray       <189> 3

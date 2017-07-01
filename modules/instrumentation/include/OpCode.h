@@ -20,24 +20,29 @@
 #ifndef OP_H
 #define OP_H
 #include <unordered_map>
+#include <bitset>
 #include "ClassFileComponent.h"
 
 namespace frenchroast {
   class OpCode {
-    BYTE        _code;
-    int         _size;
-    std::string _name;
-    bool        _isBranch;
-    bool        _isDynamic;
+    BYTE           _code;
+    int            _size;
+    std::string    _name;
+    std::bitset<4> _attributes;
+    bool           _isDynamic;
     static std::unordered_map<BYTE, OpCode> _op_codes;    
   public:
-    OpCode(BYTE code, int size,const std::string& name);
-    OpCode(BYTE code, int size,const std::string& name,bool isbranch);
-    OpCode(BYTE code, int size,const std::string& name,bool isbranch,bool isdynamic);
+    //    OpCode(BYTE code, int size,const std::string& name);
+    const static std::bitset<4> None;
+    const static std::bitset<4> Branch;
+    const static std::bitset<4> Raw;
+    OpCode(BYTE code, int size,const std::string& name, const std::bitset<4> attribute = None);
+    OpCode(BYTE code, int size,const std::string& name, const std::bitset<4> attribute, bool isdynamic);
     OpCode();
     OpCode& operator[](BYTE op);
     operator BYTE() const;
     bool is_branch() const;
+    bool is_raw() const;
     int get_size() const;
     bool is_dynamic() const;
     std::string get_name() const;

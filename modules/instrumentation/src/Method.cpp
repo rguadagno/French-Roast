@@ -41,7 +41,6 @@ namespace frenchroast {
       totalLen += instr.size();
       _instructions.push_back(std::move(instr));
     }
-
     _exceptions.clear();
     Exception excep;
     int excepCount = to_int(excepbuf,2);
@@ -49,8 +48,6 @@ namespace frenchroast {
       excep.load_from_buffer(excepbuf + 2 + 8*idx);
       _exceptions.push_back(std::move(excep));
     }
-
-    
   }
 
   void Method::load_to_buffer(BYTE* buf,BYTE* excepbuf)

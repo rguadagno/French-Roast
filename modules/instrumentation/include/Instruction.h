@@ -30,6 +30,8 @@ namespace frenchroast {
     int    _opbuf_size;
     static const  int PAD_MAX = 3;
 
+    int load_dynamic_from_buffer(const BYTE* buf, int address);
+    int load_fixed_from_buffer(const BYTE* buf, int address, int& loaded);
   public:
     Instruction();
     Instruction(const OpCode& opcode);
