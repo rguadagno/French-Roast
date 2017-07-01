@@ -194,7 +194,7 @@ instanceof      <193> 3
 monitorenter    <194> 1
 monitorexit     <195> 1
 wide            <196> 6
-multianewarray  <197> 4
+multianewarray  <197> 4 <raw>
 ifnull          <198> 3 <branch>
 ifnonnull       <199> 3 <branch>
 goto_w          <200> 5 <branch>
