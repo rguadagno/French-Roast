@@ -45,12 +45,12 @@ void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace>& items)
 
 void FRListener::connected(const std::string& msg)
 {
-  remoteconnected("remote agent connected: " + msg);
+  remoteconnected( msg);
 }
 
 void FRListener::unloaded(const std::string& msg)
 {
-  remoteunloaded("remote agent disconnected: " + msg);
+  remoteunloaded(msg);
 }
 
 void FRListener::init()

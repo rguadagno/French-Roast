@@ -136,19 +136,21 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
   addDockWidget(Qt::BottomDockWidgetArea, build_traffic_viewer(_traffic,_buttonStartTraffic,_buttonStopTraffic,_rate));
   
   _traffic->insertColumn(0);
-  
-  QObject::connect(act,                 &QAction::triggered,              this,     &FRMain::edit_hooks);
-  QObject::connect(_traffic,            &QTableWidget::itemPressed,       this,     &FRMain::show_deco);
-  QObject::connect(_list,               &QListWidget::itemDoubleClicked,  this,     &FRMain::show_detail);
-  QObject::connect(_buttonStartTraffic, &QPushButton::clicked,            this,     &FRMain::update_traffic_rate);
-  QObject::connect(_buttonStopTraffic,  &QPushButton::clicked,            this,     &FRMain::stop_traffic);
-  QObject::connect(listener,            &FRListener::remoteconnected,     this,     &FRMain::update_status);
-  QObject::connect(listener,            &FRListener::remoteunloaded,      this,     &FRMain::update_unloaded_status);
+
+  _statusMsg = new FRStatus{statusBar()};
 
   
-  statusBar()->showMessage("waiting for connection...");
+  QObject::connect(act,                 &QAction::triggered,              this,       &FRMain::edit_hooks);
+  QObject::connect(_list,               &QListWidget::itemDoubleClicked,  this,       &FRMain::show_detail);
+  QObject::connect(_buttonStartTraffic, &QPushButton::clicked,            this,       &FRMain::update_traffic_rate);
+  QObject::connect(_buttonStopTraffic,  &QPushButton::clicked,            this,       &FRMain::stop_traffic);
+  QObject::connect(listener,            &FRListener::remoteconnected,     _statusMsg, &FRStatus::remote_connected);
+  QObject::connect(listener,            &FRListener::remoteunloaded,      _statusMsg, &FRStatus::remote_disconnected);
+
+  statusBar()->addPermanentWidget(_statusMsg,10);
+  _statusMsg->waiting_for_connection();
+
 }
-
 
 
 
@@ -165,12 +167,7 @@ QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, 
   layout->addWidget(sigLabel,1,1);
   layout->setColumnStretch(1,10);
   layout->setContentsMargins(1,1,1,1);
-    //if((features & QDockWidget::DockWidgetClosable) == QDockWidget::DockWidgetClosable) {
-    // QPushButton* btn = new QPushButton("X");
-    //btn->setStyleSheet(_settings.value("close_style").toString());
-    //QObject::connect(btn, &QPushButton::clicked, holder, &QDockWidget::close);
-    layout->addWidget(actionptr,1, 5);
-    //}
+  layout->addWidget(actionptr,1, 5);
   titlebar->setLayout(layout);
   titlebar->setStyleSheet(_settings.value("dock_win_header_style").toString());
   sigLabel->setStyleSheet(_settings.value("dock_title_style").toString());
@@ -375,20 +372,6 @@ void FRMain::stop_traffic()
 {
   _listener->stop_traffic();
 }
-
-
-
-void FRMain::update_status(std::string msg)
-{
-  statusBar()->showMessage(QString::fromStdString(msg));
-}
-
-void FRMain::update_unloaded_status(std::string msg)
-{
-  statusBar()->setStyleSheet(_settings.value("disconnected_style").toString());
-  statusBar()->showMessage(QString::fromStdString(msg));
-}
-
 
 void FRMain::update_list(std::string ltype, std::string  descriptor, std::string tname, int count, const std::vector<frenchroast::monitor::MarkerField>& markers)
 {
