@@ -89,7 +89,9 @@ namespace frenchroast { namespace monitor {
         //      for(auto& y : split(split(x,"^")[1],"#")) {
         std::vector<std::string> fitems = split(split(x,"^")[1],"#");
         for(int idx = fitems.size()-1;idx >= 0; idx--) {
-          st.addFrame(StackFrame{translate_descriptor(fitems[idx]),fitems[idx]});
+          if(fitems[idx].find("thook") == std::string::npos) {
+            st.addFrame(StackFrame{translate_descriptor(fitems[idx]),fitems[idx]});
+          }
         }
         rv.push_back(st);
       }
