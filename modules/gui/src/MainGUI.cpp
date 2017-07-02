@@ -108,7 +108,6 @@ public:
   }
 };
 
-
 QFont SignalItem::_font = CodeFont();
 QFont StackRow::_font = CodeFont();
 
@@ -129,7 +128,10 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
   _buttonStartTraffic = new QPushButton{"Start"};
   _buttonStopTraffic  = new QPushButton{"Stop"};
   _rate               = new QLineEdit;
+  _trafficEnterKeyListener = new EnterKeyListener;
 
+  _traffic->installEventFilter(_trafficEnterKeyListener);
+  
   addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Signals", _list, new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
   addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Timers", _timedlist, new ActionBar(),  "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
 
@@ -140,12 +142,13 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
   _statusMsg = new FRStatus{statusBar()};
 
   
-  QObject::connect(act,                 &QAction::triggered,              this,       &FRMain::edit_hooks);
-  QObject::connect(_list,               &QListWidget::itemDoubleClicked,  this,       &FRMain::show_detail);
-  QObject::connect(_buttonStartTraffic, &QPushButton::clicked,            this,       &FRMain::update_traffic_rate);
-  QObject::connect(_buttonStopTraffic,  &QPushButton::clicked,            this,       &FRMain::stop_traffic);
-  QObject::connect(listener,            &FRListener::remoteconnected,     _statusMsg, &FRStatus::remote_connected);
-  QObject::connect(listener,            &FRListener::remoteunloaded,      _statusMsg, &FRStatus::remote_disconnected);
+  QObject::connect(act,                      &QAction::triggered,              this,       &FRMain::edit_hooks);
+  QObject::connect(_list,                    &QListWidget::itemDoubleClicked,  this,       &FRMain::show_detail);
+  QObject::connect(_buttonStartTraffic,      &QPushButton::clicked,            this,       &FRMain::update_traffic_rate);
+  QObject::connect(_buttonStopTraffic,       &QPushButton::clicked,            this,       &FRMain::stop_traffic);
+  QObject::connect(_trafficEnterKeyListener, &EnterKeyListener::enterkey,      this,       &FRMain::add_hook);
+  QObject::connect(listener,                 &FRListener::remoteconnected,     _statusMsg, &FRStatus::remote_connected);
+  QObject::connect(listener,                 &FRListener::remoteunloaded,      _statusMsg, &FRStatus::remote_disconnected);
 
   statusBar()->addPermanentWidget(_statusMsg,10);
   _statusMsg->waiting_for_connection();
@@ -317,12 +320,11 @@ void FRMain::save_hooks()
 }
 
 
-void FRMain::show_deco(QTableWidgetItem* item)
+void FRMain::add_hook()
 {
-  QMessageBox box;
-  FunctionPoint* ptr = dynamic_cast<FunctionPoint*>(item);
-  box.setText(ptr->get_name());
-  box.exec();
+  if(_hooksEditor == nullptr) return;
+  QString str = _hooksEditor->document()->toPlainText() + "\n" + _traffic->currentItem()->text() +    "<ENTER>";
+  _hooksEditor->document()->setPlainText(str);
 }
 
 void FRMain::show_detail(QListWidgetItem* item)

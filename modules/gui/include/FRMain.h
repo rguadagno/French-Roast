@@ -35,8 +35,7 @@
 #include "StackRow.h"
 #include "ActionBar.h"
 #include "FRStatus.h"
-
-
+#include "EnterKeyListener.h"
 
 
 class SignalItem;
@@ -59,6 +58,7 @@ class FRMain : public QMainWindow {
   QLineEdit*    _rate;
   FRListener*   _listener;
   FRStatus*      _statusMsg;
+  EnterKeyListener* _trafficEnterKeyListener;
   std::unordered_map<std::string,SignalItem*>        _descriptors;
   std::unordered_map<std::string,SignalItem*>         _detailItems;
   std::unordered_map<std::string,QListWidget*>        _detailLists;
@@ -79,7 +79,7 @@ class FRMain : public QMainWindow {
  public slots:
    void edit_hooks();
    void save_hooks();
-   void show_deco(QTableWidgetItem* item);
+   void add_hook();
    void show_detail(QListWidgetItem* item);
    void destroy_list(QObject* obj);
    void reset_editor(QObject* obj);

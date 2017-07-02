@@ -76,7 +76,7 @@ namespace frenchroast { namespace monitor {
               rvstr.erase(rvstr.length());
             }
               
-            return classname + "::" + methodname + "(" + parms + "):" + rvstr;
+            return classname + "::" + methodname + ":(" + parms + "):" + rvstr;
           }
 
 
