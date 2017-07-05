@@ -47,6 +47,11 @@ namespace frenchroast { namespace agent {
       _ptr->out("unloaded~"+msg);
     }
 
+    void Reporter::ready()
+    {
+      _ptr->out("ready");
+    }
+
     
     //    void Reporter::close()
     //{

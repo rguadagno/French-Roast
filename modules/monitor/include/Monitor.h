@@ -95,6 +95,10 @@ namespace frenchroast { namespace monitor {
 	  if (items[MSG_TYPE] == "traffic") {
 	    _handler.traffic( construct_traffic(items[MSG]));
 	  }
+
+	  if (items[MSG_TYPE] == "ready") {
+	    _handler.ready();
+	  }
           
           if (items[MSG_TYPE] == "connected") {
             _handler.connected(items[MSG]);

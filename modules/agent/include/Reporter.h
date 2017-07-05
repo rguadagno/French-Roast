@@ -29,6 +29,7 @@ namespace frenchroast { namespace agent {
       Transport* _ptr;
     public:
       void traffic(const std::string& tag);
+      void ready();
       void setTransport(Transport* ptr);
       void signal(const std::string& tag);
       void signal_timer(long long time, const std::string& direction, const std::string& tag, const std::string threadname);

@@ -53,7 +53,6 @@ class FRMain : public QMainWindow {
   QListWidget*  _timedlist;
   QTableWidget* _traffic;
   QPushButton*  _buttonStartTraffic;
-  QPushButton*  _buttonStopTraffic;
   QLineEdit*    _rate;
   FRListener*   _listener;
   FRStatus*      _statusMsg;
@@ -66,16 +65,17 @@ class FRMain : public QMainWindow {
   std::unordered_map<std::string,StackRow*> _traffic_rows;
   std::unordered_map<std::string, int> _traffic_keys;
   std::string                          _hooksfile;
+  
   std::string format_markers(const std::string markers);
-    
   void update_detail_list(QListWidget*, const std::vector<frenchroast::monitor::MarkerField>& markers);
-  QDockWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QPushButton* bstop, QLineEdit* rate);
+  QDockWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate);
 
   QDockWidget* setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* aptr, const std::string& wstyle,QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 
   
  signals:
   void hooks_saved();
+  
  public slots:
    void edit_hooks();
    void save_hooks();
@@ -89,6 +89,7 @@ class FRMain : public QMainWindow {
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void update_traffic_rate();
    void stop_traffic();
+   void handshake();
 };
 
 

@@ -126,7 +126,6 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
   _timedlist          = new QListWidget;
   _traffic            = new QTableWidget;
   _buttonStartTraffic = new QPushButton{"Start"};
-  _buttonStopTraffic  = new QPushButton{"Stop"};
   _rate               = new QLineEdit;
   _trafficEnterKeyListener = new EnterKeyListener;
 
@@ -135,7 +134,7 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
   addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Signals", _list, new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
   addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Timers", _timedlist, new ActionBar(),  "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
 
-  addDockWidget(Qt::BottomDockWidgetArea, build_traffic_viewer(_traffic,_buttonStartTraffic,_buttonStopTraffic,_rate));
+  addDockWidget(Qt::BottomDockWidgetArea, build_traffic_viewer(_traffic, _buttonStartTraffic, _rate));
   
   _traffic->insertColumn(0);
 
@@ -145,10 +144,10 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
   QObject::connect(act,                      &QAction::triggered,              this,       &FRMain::edit_hooks);
   QObject::connect(_list,                    &QListWidget::itemDoubleClicked,  this,       &FRMain::show_detail);
   QObject::connect(_buttonStartTraffic,      &QPushButton::clicked,            this,       &FRMain::update_traffic_rate);
-  QObject::connect(_buttonStopTraffic,       &QPushButton::clicked,            this,       &FRMain::stop_traffic);
   QObject::connect(_trafficEnterKeyListener, &EnterKeyListener::enterkey,      this,       &FRMain::add_hook);
   QObject::connect(listener,                 &FRListener::remoteconnected,     _statusMsg, &FRStatus::remote_connected);
   QObject::connect(listener,                 &FRListener::remoteunloaded,      _statusMsg, &FRStatus::remote_disconnected);
+  QObject::connect(listener,                 &FRListener::remote_ready,        this,       &FRMain::handshake);
 
   statusBar()->addPermanentWidget(_statusMsg,10);
   _statusMsg->waiting_for_connection();
@@ -156,6 +155,12 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
 }
 
 
+void FRMain::handshake()
+{
+  if(_buttonStartTraffic->text() == "Stop") {
+    _listener->start_traffic(atoi(_rate->text().toStdString().c_str()));
+  }
+}
 
 QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* actionptr, const std::string& wstyle, QDockWidget::DockWidgetFeatures features)
 {
@@ -185,7 +190,7 @@ QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, 
 
 
 
-QDockWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QPushButton* bstop, QLineEdit* rate)
+QDockWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate)
 {
   QWidget* buttonHolder = new QWidget;
   QHBoxLayout* hlayout = new QHBoxLayout();
@@ -196,7 +201,6 @@ QDockWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstar
   buttonHolder->setLayout(hlayout);
   rate->setText("100");
   bstart->setSizePolicy({QSizePolicy::Fixed,QSizePolicy::Fixed});
-  bstop->setSizePolicy({QSizePolicy::Fixed,QSizePolicy::Fixed});
   rate->setSizePolicy({QSizePolicy::Fixed,QSizePolicy::Fixed});
 
   hlayout->addWidget(desc,0,Qt::AlignLeft);
@@ -213,9 +217,6 @@ QDockWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstar
   bstart->setStyleSheet(_settings.value("traffic_start_style").toString());
   bstart->setFixedWidth(70);
 
-  hlayout->addWidget(bstop,1,Qt::AlignLeft);
-  bstop->setStyleSheet(_settings.value("traffic_stop_style").toString());
-  bstop->setFixedWidth(70);
 
   QDockWidget* docwin = new QDockWidget(QString::fromStdString("Traffic"), this);
   QWidget* holder = new QWidget();
@@ -370,7 +371,14 @@ void FRMain::destroy_list(QObject* obj)
 
 void FRMain::update_traffic_rate()
 {
-  _listener->start_traffic(atoi(_rate->text().toStdString().c_str()));
+  if(_buttonStartTraffic->text() == "Start") {
+    _listener->start_traffic(atoi(_rate->text().toStdString().c_str()));
+    _buttonStartTraffic->setText("Stop");
+  }
+  else {
+    _listener->stop_traffic();
+    _buttonStartTraffic->setText("Start");
+  }
 }
 
 

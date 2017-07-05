@@ -67,3 +67,8 @@ void FRListener::stop_traffic()
 {
   _mon.stop_watch_traffic();
 }
+
+void FRListener::ready()
+{
+  remote_ready();
+}

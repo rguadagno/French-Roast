@@ -53,6 +53,7 @@ class FRListener : public QObject
     void signal_timed(const std::string& tag, const std::string& tname, long elapsed, int last);
     void connected(const std::string& addr);
     void unloaded(const std::string& addr);
+    void ready();
 
   public slots:
     void init();
@@ -65,7 +66,7 @@ class FRListener : public QObject
     void remoteconnected(const std::string& addr);
     void remoteunloaded(const std::string& msg);
     void traffic_signal(const std::vector<frenchroast::monitor::StackTrace>&);
-
+    void remote_ready();
 
 };
 
