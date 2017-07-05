@@ -32,7 +32,6 @@ namespace frenchroast {
     bool           _isDynamic;
     static std::unordered_map<BYTE, OpCode> _op_codes;    
   public:
-    //    OpCode(BYTE code, int size,const std::string& name);
     const static std::bitset<4> None;
     const static std::bitset<4> Branch;
     const static std::bitset<4> Raw;
