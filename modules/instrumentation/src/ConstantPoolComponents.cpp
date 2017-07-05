@@ -547,10 +547,6 @@ namespace frenchroast {
 
   int ConstantPoolComponent::add_class(const std::string& tname)
   {
-    // for now restrict that class name must be unique to class, cannot be shared
-    if(get_name_index(tname) > 0) {
-      return next_index();
-    }
     return add_class(add_name(tname));
   }
 
