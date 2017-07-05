@@ -37,7 +37,6 @@
 #include "FRStatus.h"
 #include "EnterKeyListener.h"
 
-
 class SignalItem;
 
 class FRMain : public QMainWindow {
@@ -75,7 +74,8 @@ class FRMain : public QMainWindow {
   QDockWidget* setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* aptr, const std::string& wstyle,QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 
   
-  
+ signals:
+  void hooks_saved();
  public slots:
    void edit_hooks();
    void save_hooks();

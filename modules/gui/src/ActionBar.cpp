@@ -21,6 +21,7 @@
 #include <QApplication>
 #include <QPushButton>
 #include <QStyle>
+#include <QLabel>
 
 const std::bitset<4> ActionBar::None{"0000"};
 const std::bitset<4> ActionBar::Close{"0001"};
@@ -29,30 +30,53 @@ const std::bitset<4> ActionBar::Save{"0010"};
 ActionBar::ActionBar(const std::bitset<4>& actions)
   {
     _layout = new QGridLayout();
-    QPushButton* exitbtn = nullptr;
-    QPushButton* btn = nullptr;
     
     if((actions & Close) == Close) {
       QIcon closeicon = QApplication::style()->standardIcon(QStyle::SP_TitleBarCloseButton);
-      exitbtn = new QPushButton(closeicon,"");
-      _layout->addWidget(exitbtn, 0, 2);
-      QObject::connect(exitbtn, &QPushButton::clicked, this, &ActionBar::close_clicked);
+      _closeButton = new QPushButton("X");
+      _closeButton->setFixedSize(20,20);
+      _closeButton->setStyleSheet("QPushButton {color:black;border: 1px solid #c41729;border-top-left-radius:2px;border-top-right-radius:2px;border-bottom-right-radius:2px; border-bottom-left-radius:2px;font-size: 16px;background-color: #c41729;font-family:\"Arial\";} QPushButton::hover{color:white;}");
+
+      _layout->addWidget(_closeButton, 0, 5);
+      QLabel* spacer = new QLabel("");
+      spacer->setMinimumWidth(20);
+      spacer->setStyleSheet("QLabel{border:none;}");
+      _layout->addWidget(spacer, 0, 4);
+      QObject::connect(_closeButton, &QPushButton::clicked, this, &ActionBar::close_clicked);
     }
 
     if((actions & Save) == Save) {
-      btn = new QPushButton("save");
-      btn->setStyleSheet("QPushButton {border: none; padding: 1px;font-size: 16px;background-color: #e2e9ff;}");
-      _layout->addWidget(btn, 0, 0);
-      QObject::connect(btn,     &QPushButton::clicked, this, &ActionBar::save_clicked);
+      _saveButton = new QPushButton(" save ");
+        _saveButton->setEnabled(false);
+      _saveButton->setStyleSheet("QPushButton {border: 1px solid #3d415c;border-top-left-radius:2px;border-top-right-radius:2px;border-bottom-right-radius:2px; border-bottom-left-radius:2px;font-size: 16px;color:black;background-color: #3d415c;font-family:\"Arial\";}");
+      _layout->addWidget(_saveButton, 0, 0);
+      QObject::connect(_saveButton,     &QPushButton::clicked, this, &ActionBar::save_clicked);
     }
 
     setStyleSheet("QWidget {padding: 0px;}");
     _layout->setSpacing(0);
-    _layout->setContentsMargins(0,0,10,0);
+    _layout->setContentsMargins(2,2,10,2);
     setLayout(_layout);
   }
+
+
+void ActionBar::enable_save()
+{
+  _saveButton->setEnabled(true);
+  _saveButton->setStyleSheet("QPushButton {border: 1px solid #08b432;border-top-left-radius:2px;border-top-right-radius:2px;border-bottom-right-radius:2px; border-bottom-left-radius:2px;font-size: 16px;color:black;background-color: #08b432;font-family:\"Arial\";} QPushButton::hover{color:white;}");
+
+}
+
+void ActionBar::disable_save()
+{
+  _saveButton->setEnabled(false);
+  _saveButton->setStyleSheet("QPushButton {border: 1px solid #3d415c;border-top-left-radius:2px;border-top-right-radius:2px;border-bottom-right-radius:2px; border-bottom-left-radius:2px;font-size: 16px;color:black;background-color: #3d415c;font-family:\"Arial\";}");
+
+}
 
 ActionBar::~ActionBar()
   {
     delete _layout;
   }
+
+

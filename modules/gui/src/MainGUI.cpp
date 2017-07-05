@@ -290,17 +290,20 @@ void FRMain::edit_hooks()
     in.close();
   
     _hooksEditor->document()->setPlainText(QString::fromStdString(text));
+    
     _hooksEditor->setFont(CodeFont());
     HooksSyntax* syntax = new HooksSyntax(_hooksEditor->document());
-
+    _hooksEditor->document()->setModified(false);
     
     QObject::connect(_hooksEditor, &QTextEdit::destroyed, this, &FRMain::reset_editor);
     ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::Save);
 
     QDockWidget* editdoc = setup_dock_window("hooks", _hooksEditor, abar, "edit_style");
 
-    QObject::connect(abar, &ActionBar::close_clicked, editdoc, &QDockWidget::close);
-    QObject::connect(abar, &ActionBar::save_clicked,  this, &FRMain::save_hooks);
+    QObject::connect(abar,                      &ActionBar::close_clicked,     editdoc, &QDockWidget::close);
+    QObject::connect(abar,                     &ActionBar::save_clicked,       this,    &FRMain::save_hooks);
+    QObject::connect(this,                     &FRMain::hooks_saved ,          abar,    &ActionBar::disable_save);
+    QObject::connect(_hooksEditor->document(), &QTextDocument::contentsChange, abar,    &ActionBar::enable_save);
     
     editdoc->setFloating(true);
     editdoc->resize(width(),200);
@@ -317,6 +320,7 @@ void FRMain::save_hooks()
   QString outstr = _hooksEditor->document()->toPlainText();
   out << outstr.toStdString();
   out.close();
+  hooks_saved();
 }
 
 

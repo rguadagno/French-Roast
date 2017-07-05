@@ -18,18 +18,24 @@
 //
 
 #include <QWidget>
+#include <QPushButton>
 #include <QGridLayout>
 #include <bitset>
 
 class ActionBar : public QWidget {
   QGridLayout* _layout{nullptr};
-
+  QPushButton* _closeButton{nullptr};
+  QPushButton* _saveButton{nullptr};
+  
    Q_OBJECT
   
   signals:
   void save_clicked();
   void close_clicked();
-  
+
+  public slots:
+    void enable_save();
+    void disable_save();
 public:
   ActionBar(const ActionBar&) = delete;
   ActionBar(const std::bitset<4>& actions = None);
