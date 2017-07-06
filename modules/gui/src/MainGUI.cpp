@@ -138,7 +138,6 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
 
 
   _list               = new QListWidget;
-  _timedlist          = new QListWidget;
   _traffic            = new QTableWidget;
   _buttonStartTraffic = new QPushButton{"Start"};
   _rate               = new QLineEdit;
@@ -336,15 +335,24 @@ void FRMain::view_signals()
 
 }
 
+
 void FRMain::view_timers()
 {
   if(_docks.count(TimerWindow) == 1) return;
-  _docks[TimerWindow] = setup_dock_window("Timers", _timedlist, new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+
+  ActionBar* abar = new ActionBar(ActionBar::Close);
+  _timedlist          = new QListWidget;
+  _docks[TimerWindow] = setup_dock_window("Timers", _timedlist, abar, "list_style");
+  QObject::connect(abar, &ActionBar::close_clicked, _docks[TimerWindow], &QDockWidget::close);
+  QObject::connect(abar, &ActionBar::close_clicked, this,                &FRMain::close_timers);
 
    restore_dock_win(TimerWindow);
 }
 
-
+void FRMain::close_timers()
+{
+  _docks.erase(TimerWindow);
+}
 
 void FRMain::view_hooks_editor()
 {
@@ -523,7 +531,8 @@ void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>&
 
 void FRMain::update_timed_list(std::string  descriptor, std::string tname, long elapsed)
 {
-
+  if(_docks.count(TimerWindow) != 1) return;
+  
   std::string desc{descriptor};
   tname = "[ " + tname + " ]";
   frenchroast::monitor::pad(desc, 50);
@@ -545,6 +554,11 @@ void FRMain::edit_hooks_closed()
 void FRMain::handle_exit()
 {
   _exit = true;
+  _settings.setValue("main:width",  width());
+  _settings.setValue("main:height",  height());
+  _settings.setValue("main:xpos",   pos().x());
+  _settings.setValue("main:ypos",   pos().y());
+
   for(auto& x : _dockbuilders) {
     capture_dock(x.first);
   }
@@ -552,11 +566,6 @@ void FRMain::handle_exit()
 
 void FRMain::capture_dock( const std::string& dockname)
 {
-  _settings.setValue("main:width",  width());
-  _settings.setValue("main:height",  height());
-  _settings.setValue("main:xpos",   pos().x());
-  _settings.setValue("main:ypos",   pos().y());
-  
   if(_docks.count(dockname) == 1 && _docks[dockname] != nullptr) {
     _settings.setValue(QString::fromStdString(dockname + ":up"),    true);
     _settings.setValue(QString::fromStdString(dockname + ":width"),  _docks[dockname]->width());

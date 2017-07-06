@@ -108,6 +108,7 @@ class FRMain : public QMainWindow {
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void update_traffic_rate();
    void handshake();
+   void close_timers();
 };
 
 
