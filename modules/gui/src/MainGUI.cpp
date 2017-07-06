@@ -99,6 +99,18 @@ public:
 };
 
 
+const std::string  FRMain::SignalWindow    = "signals";
+const std::string  FRMain::EditHooksWindow = "edit-hooks";
+const std::string  FRMain::TimerWindow     = "timers";
+const std::string  FRMain::RankingWindow   = "rankings";
+const std::string  FRMain::TrafficWindow   = "traffic";
+
+std::unordered_map< std::string,  void (FRMain::*)()  > FRMain::_dockbuilders {{FRMain::SignalWindow,    &FRMain::view_signals},
+                                                                               {FRMain::EditHooksWindow, &FRMain::view_hooks_editor},
+                                                                               {FRMain::TimerWindow,     &FRMain::view_timers},
+                                                                               {FRMain::RankingWindow,   &FRMain::view_ranking},
+                                                                               {FRMain::TrafficWindow,   &FRMain::view_traffic}
+      };
 
 QFont SignalItem::_font = CodeFont();
 QFont StackRow::_font = CodeFont();
@@ -106,14 +118,25 @@ QFont StackRow::_font = CodeFont();
 FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& path_to_hooks) : _settings(settings), _listener(listener), _hooksfile(path_to_hooks)
 {
   QDesktopWidget* dw = QApplication::desktop();
-  int height = dw->availableGeometry(dw->primaryScreen()).height() * 0.6;
+  int height = dw->availableGeometry(dw->primaryScreen()).height() * 0.2;
   int width  = dw->availableGeometry(dw->primaryScreen()).width() * 0.7;
 
-  QMenu* mptr = menuBar()->addMenu("&Edit");
-  QAction* act = mptr->addAction("Hooks");
-
-    
+  QMenu* mptr = menuBar()->addMenu("&View");
+  connect_dock_win(mptr, "Signals",         SignalWindow);
+  connect_dock_win(mptr, "Timers",          TimerWindow);
+  connect_dock_win(mptr, "Hooks Editor",    EditHooksWindow);
+  connect_dock_win(mptr, "Method Rankings", RankingWindow);
+  connect_dock_win(mptr, "Traffic",         TrafficWindow);
+  
   resize(width,height);
+
+  resize(_settings.value("main:width", width).toInt(),
+         _settings.value("main:height", height).toInt());
+
+  move(_settings.value("main:xpos", 0).toInt(),
+       _settings.value("main:ypos", 0).toInt());
+
+
   _list               = new QListWidget;
   _timedlist          = new QListWidget;
   _traffic            = new QTableWidget;
@@ -122,23 +145,13 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
   _trafficEnterKeyListener = new EnterKeyListener;
   _rankings = new MethodRanking;
   _traffic->installEventFilter(_trafficEnterKeyListener);
+
   
-  addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Signals", _list,     new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
-  addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Timers", _timedlist, new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
-
-  addDockWidget(Qt::BottomDockWidgetArea, build_traffic_viewer(_traffic, _buttonStartTraffic, _rate));
-
-  QDockWidget* ranking = setup_dock_window("Ranking", _rankings,     new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
-
-  ranking->setFloating(true);
-  ranking->resize(500,400);
-  
-  _traffic->insertColumn(0);
-
+  for(auto& x : _dockbuilders) {
+    bring_up_dock_if_required(x.first);    
+  }
   _statusMsg = new FRStatus{statusBar()};
-
   
-  QObject::connect(act,                      &QAction::triggered,              this,       &FRMain::edit_hooks);
   QObject::connect(_list,                    &QListWidget::itemDoubleClicked,  this,       &FRMain::show_detail);
   QObject::connect(_buttonStartTraffic,      &QPushButton::clicked,            this,       &FRMain::update_traffic_rate);
   QObject::connect(_trafficEnterKeyListener, &EnterKeyListener::enterkey,      this,       &FRMain::add_hook);
@@ -149,7 +162,6 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
 
   statusBar()->addPermanentWidget(_statusMsg,10);
   _statusMsg->waiting_for_connection();
-
 }
 
 
@@ -159,9 +171,6 @@ void FRMain::handshake()
     _listener->start_traffic(atoi(_rate->text().toStdString().c_str()));
   }
 }
-
-
-
 
 QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* actionptr, const std::string& wstyle, QDockWidget::DockWidgetFeatures features)
 {
@@ -189,6 +198,24 @@ QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, 
   return holder;
 }
 
+void FRMain::connect_dock_win(QMenu* mptr, const std::string& actionname, const std::string& docname)
+{
+  QAction* act = mptr->addAction(QString::fromStdString(actionname));
+  QObject::connect(act, &QAction::triggered, this, _dockbuilders[docname]);
+}
+
+void FRMain::restore_dock_win(const std::string& dockname)
+{
+  _docks[dockname]->setFloating(true);
+  _settings.setValue(QString::fromStdString(dockname + ":up"), true);
+  _docks[dockname]->resize(_settings.value(QString::fromStdString(dockname + ":width"), width()).toInt(),
+                           _settings.value(QString::fromStdString(dockname + ":height"), 200).toInt()
+                           );
+
+  _docks[dockname]->move(_settings.value(QString::fromStdString(dockname + ":xpos"), width() /2).toInt(),
+                         _settings.value(QString::fromStdString(dockname + ":ypos"), height() /2).toInt());
+  addDockWidget(Qt::TopDockWidgetArea,    _docks[dockname]);
+}
 
 
 QDockWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate)
@@ -277,9 +304,51 @@ QString FunctionPoint::get_name() const
 
 
 
-void FRMain::edit_hooks()
+void FRMain::bring_up_dock_if_required(const std::string dockname)
 {
-  if(_hooksEditor == nullptr) {
+  if(_settings.value(QString::fromStdString(dockname + ":up")).toBool() == true) {
+    (this->*_dockbuilders[dockname])();
+  }
+}
+
+void FRMain::view_traffic()
+{
+  if(_docks.count(TrafficWindow) == 1) return;
+  _docks[TrafficWindow] = build_traffic_viewer(_traffic, _buttonStartTraffic, _rate);
+  _traffic->insertColumn(0);
+  restore_dock_win(TrafficWindow);
+}
+
+void FRMain::view_ranking()
+{
+
+  if(_docks.count(RankingWindow) == 1) return;
+  _docks[RankingWindow] = setup_dock_window("Ranking", _rankings,     new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+  restore_dock_win(RankingWindow);
+}
+
+void FRMain::view_signals()
+{
+  if(_docks.count(SignalWindow) == 1) return;
+  
+  _docks[SignalWindow] = setup_dock_window("Signals", _list,     new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+  restore_dock_win(SignalWindow);
+
+}
+
+void FRMain::view_timers()
+{
+  if(_docks.count(TimerWindow) == 1) return;
+  _docks[TimerWindow] = setup_dock_window("Timers", _timedlist, new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+
+   restore_dock_win(TimerWindow);
+}
+
+
+
+void FRMain::view_hooks_editor()
+{
+   if(_docks.count(EditHooksWindow) == 1) return;
     _hooksEditor = new QTextEdit();
 
     std::string text = "";
@@ -301,17 +370,16 @@ void FRMain::edit_hooks()
     ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::Save);
 
     QDockWidget* editdoc = setup_dock_window("hooks", _hooksEditor, abar, "edit_style");
+    _docks[EditHooksWindow] = editdoc;
 
-    QObject::connect(abar,                      &ActionBar::close_clicked,     editdoc, &QDockWidget::close);
+    restore_dock_win(EditHooksWindow);
+    
+    QObject::connect(abar,                     &ActionBar::close_clicked,      editdoc, &QDockWidget::close);
+    QObject::connect(abar,                     &ActionBar::close_clicked,      this,    &FRMain::edit_hooks_closed);
     QObject::connect(abar,                     &ActionBar::save_clicked,       this,    &FRMain::save_hooks);
     QObject::connect(this,                     &FRMain::hooks_saved ,          abar,    &ActionBar::disable_save);
     QObject::connect(_hooksEditor->document(), &QTextDocument::contentsChange, abar,    &ActionBar::enable_save);
-    
-    editdoc->setFloating(true);
-    editdoc->resize(width(),200);
-    addDockWidget(Qt::TopDockWidgetArea, editdoc);
-  }
-}
+ }
 
 void FRMain::save_hooks()
 {
@@ -469,12 +537,34 @@ void FRMain::update_timed_list(std::string  descriptor, std::string tname, long 
     _descriptors[descriptor]->setText(QString::fromStdString(desc) + "  " + QString::fromStdString(frenchroast::monitor::format_millis(elapsed)));
 }
 
+void FRMain::edit_hooks_closed()
+{
+  _docks[EditHooksWindow] = nullptr;
+}
+
 void FRMain::handle_exit()
 {
   _exit = true;
+  for(auto& x : _dockbuilders) {
+    capture_dock(x.first);
+  }
 }
 
-
-
-
-
+void FRMain::capture_dock( const std::string& dockname)
+{
+  _settings.setValue("main:width",  width());
+  _settings.setValue("main:height",  height());
+  _settings.setValue("main:xpos",   pos().x());
+  _settings.setValue("main:ypos",   pos().y());
+  
+  if(_docks.count(dockname) == 1 && _docks[dockname] != nullptr) {
+    _settings.setValue(QString::fromStdString(dockname + ":up"),    true);
+    _settings.setValue(QString::fromStdString(dockname + ":width"),  _docks[dockname]->width());
+    _settings.setValue(QString::fromStdString(dockname + ":height"), _docks[dockname]->height());
+    _settings.setValue(QString::fromStdString(dockname + ":xpos"),   _docks[dockname]->pos().x());
+    _settings.setValue(QString::fromStdString(dockname + ":ypos"),   _docks[dockname]->pos().y());
+  }
+  else {
+    _settings.setValue(QString::fromStdString(dockname + ":up"),    false);
+  }
+}

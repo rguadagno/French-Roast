@@ -48,6 +48,13 @@ class FRMain : public QMainWindow {
   FRMain(FRListener*, QSettings&, const std::string&);
 
  private:
+  std::unordered_map<std::string, QDockWidget*> _docks;
+   static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
+  const static std::string  EditHooksWindow;
+  const static std::string  SignalWindow;
+  const static std::string  TimerWindow;
+  const static std::string  RankingWindow;
+  const static std::string  TrafficWindow;
   QSettings&    _settings;
   bool          _exit{false};
   QTextEdit*    _hooksEditor{nullptr};
@@ -75,13 +82,21 @@ class FRMain : public QMainWindow {
 
   QDockWidget* setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* aptr, const std::string& wstyle,QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 
-  
+  void capture_dock(const std::string& dockname);
+  void restore_dock_win(const std::string& docname);
+  void bring_up_dock_if_required(const std::string dockname);
+  void connect_dock_win(QMenu* mptr, const std::string& actionname, const std::string& docname);
  signals:
   void hooks_saved();
   void update_method_ranking( std::vector<frenchroast::monitor::MethodStats>& ranks);
   
  public slots:
-   void edit_hooks();
+   void view_hooks_editor();
+   void edit_hooks_closed();
+   void view_signals();
+   void view_timers();
+   void view_ranking();
+   void view_traffic();
    void save_hooks();
    void add_hook();
    void show_detail(QListWidgetItem* item);
