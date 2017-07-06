@@ -25,13 +25,14 @@
 #include "Util.h"
 #include "StackTrace.h"
 #include "MarkerField.h"
+#include "MethodStats.h"
 
 
 namespace frenchroast { namespace monitor {
 
     
     std::string translate_descriptor(const std::string& name);
-    std::vector<StackTrace> construct_traffic(const std::string& msg);
+    std::vector<StackTrace> construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters);
     void transmit_lines(const std::string& fileName, frenchroast::network::Connector&);
 
 	struct time_holder {
@@ -47,6 +48,7 @@ namespace frenchroast { namespace monitor {
 	network::Connector                                                     _conn;
 	std::unordered_map<std::string, time_holder>                           _timed_signals;
 	std::unordered_map<std::string, int>                                   _signals;
+        std::unordered_map<std::string, MethodStats>                           _method_counters;
         std::unordered_map<std::string, std::unordered_map<std::string, int>>  _markers;
         std::string                                                            _opcodeFile;
         std::string                                                            _hooksFile;
@@ -93,7 +95,7 @@ namespace frenchroast { namespace monitor {
 
 	   }
 	  if (items[MSG_TYPE] == "traffic") {
-	    _handler.traffic( construct_traffic(items[MSG]));
+	    _handler.traffic( construct_traffic(items[MSG], _method_counters));
 	  }
 
 	  if (items[MSG_TYPE] == "ready") {
@@ -126,9 +128,16 @@ namespace frenchroast { namespace monitor {
 	_conn.send_message("watch_traffic~" + std::to_string(interval_millis));
       }
 
-      void stop_watch_traffic()
+      std::vector<MethodStats> stop_watch_traffic()
       {
 	_conn.send_message("stop_watch_traffic~" );
+        std::vector<MethodStats> rv;
+        for(auto& x : _method_counters) {
+          rv.push_back(x.second);
+        }
+        std::sort(rv.begin(), rv.end());
+        return rv;
+        
       }
 
 

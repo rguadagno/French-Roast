@@ -36,6 +36,8 @@
 #include "ActionBar.h"
 #include "FRStatus.h"
 #include "EnterKeyListener.h"
+#include "MethodStats.h"
+#include "MethodRanking.h"
 
 class SignalItem;
 
@@ -64,6 +66,7 @@ class FRMain : public QMainWindow {
   std::unordered_map<std::string, std::vector<frenchroast::monitor::MarkerField>> _detailDescriptors;
   std::unordered_map<std::string,StackRow*> _traffic_rows;
   std::unordered_map<std::string, int> _traffic_keys;
+  MethodRanking*  _rankings;
   std::string                          _hooksfile;
   
   std::string format_markers(const std::string markers);
@@ -75,6 +78,7 @@ class FRMain : public QMainWindow {
   
  signals:
   void hooks_saved();
+  void update_method_ranking( std::vector<frenchroast::monitor::MethodStats>& ranks);
   
  public slots:
    void edit_hooks();
@@ -88,7 +92,6 @@ class FRMain : public QMainWindow {
    void update_timed_list(std::string  descriptor, std::string, long elapsed);
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void update_traffic_rate();
-   void stop_traffic();
    void handshake();
 };
 

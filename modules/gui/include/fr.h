@@ -28,6 +28,7 @@
 #include <QMetaType>
 #include "Monitor.h"
 #include "StackTrace.h"
+#include "MethodStats.h"
 
 Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::StackTrace>);
@@ -58,7 +59,7 @@ class FRListener : public QObject
   public slots:
     void init();
     void start_traffic(int);
-    void stop_traffic();
+    std::vector<frenchroast::monitor::MethodStats> stop_traffic();
 
   signals:
     void thooked(const std::string& ltype, const std::string& info,const std::string& tname, int count, const std::vector<frenchroast::monitor::MarkerField>&);

@@ -26,6 +26,7 @@
 #include <unordered_map>
 #include <string>
 #include "Connector.h"
+#include "MethodStats.h"
 
 namespace frenchroast { namespace monitor {
             std::unordered_map<char, std::string> _type_map { {'I',"int"},
@@ -80,7 +81,7 @@ namespace frenchroast { namespace monitor {
           }
 
 
-    std::vector<StackTrace> construct_traffic(const std::string& msg)
+    std::vector<StackTrace> construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters)
     {
       std::vector<StackTrace> rv;
       std::vector<std::string> items = split(msg, "%");
@@ -88,14 +89,26 @@ namespace frenchroast { namespace monitor {
         StackTrace st{split(x,"^")[0]};
         //      for(auto& y : split(split(x,"^")[1],"#")) {
         std::vector<std::string> fitems = split(split(x,"^")[1],"#");
+
+        bool first=true;
         for(int idx = fitems.size()-1;idx >= 0; idx--) {
-          if(fitems[idx].find("thook") == std::string::npos) {
-            st.addFrame(StackFrame{translate_descriptor(fitems[idx]),fitems[idx]});
+          if(fitems[idx].find("thook") == std::string::npos ) {
+            std::string descriptor = translate_descriptor(fitems[idx]);
+            if(fitems[idx].find("java") == std::string::npos && fitems[idx].find("sun") == std::string::npos)  {
+              if(counters.count(descriptor) == 0 ) {
+                counters[descriptor] = MethodStats(descriptor);
+              }
+              ++counters[descriptor];
+              if(first) {
+                ++counters[descriptor];
+                first = false;
+              }
+            }
+            st.addFrame(StackFrame{descriptor,fitems[idx]});
           }
         }
         rv.push_back(st);
       }
-
       return rv;
     }
 

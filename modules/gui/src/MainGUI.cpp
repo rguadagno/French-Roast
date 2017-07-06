@@ -120,13 +120,18 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
   _buttonStartTraffic = new QPushButton{"Start"};
   _rate               = new QLineEdit;
   _trafficEnterKeyListener = new EnterKeyListener;
-
+  _rankings = new MethodRanking;
   _traffic->installEventFilter(_trafficEnterKeyListener);
   
-  addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Signals", _list, new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
-  addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Timers", _timedlist, new ActionBar(),  "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
+  addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Signals", _list,     new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
+  addDockWidget(Qt::TopDockWidgetArea,    setup_dock_window("Timers", _timedlist, new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable));
 
   addDockWidget(Qt::BottomDockWidgetArea, build_traffic_viewer(_traffic, _buttonStartTraffic, _rate));
+
+  QDockWidget* ranking = setup_dock_window("Ranking", _rankings,     new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+
+  ranking->setFloating(true);
+  ranking->resize(500,400);
   
   _traffic->insertColumn(0);
 
@@ -140,6 +145,7 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
   QObject::connect(listener,                 &FRListener::remoteconnected,     _statusMsg, &FRStatus::remote_connected);
   QObject::connect(listener,                 &FRListener::remoteunloaded,      _statusMsg, &FRStatus::remote_disconnected);
   QObject::connect(listener,                 &FRListener::remote_ready,        this,       &FRMain::handshake);
+  QObject::connect(this    ,                 &FRMain::update_method_ranking,   _rankings,  &MethodRanking::update);
 
   statusBar()->addPermanentWidget(_statusMsg,10);
   _statusMsg->waiting_for_connection();
@@ -153,6 +159,9 @@ void FRMain::handshake()
     _listener->start_traffic(atoi(_rate->text().toStdString().c_str()));
   }
 }
+
+
+
 
 QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* actionptr, const std::string& wstyle, QDockWidget::DockWidgetFeatures features)
 {
@@ -368,16 +377,13 @@ void FRMain::update_traffic_rate()
     _buttonStartTraffic->setText("Stop");
   }
   else {
-    _listener->stop_traffic();
+    //    _listener->stop_traffic();
     _buttonStartTraffic->setText("Start");
+    update_method_ranking(_listener->stop_traffic());
   }
 }
 
 
-void FRMain::stop_traffic()
-{
-  _listener->stop_traffic();
-}
 
 void FRMain::update_list(std::string ltype, std::string  descriptor, std::string tname, int count, const std::vector<frenchroast::monitor::MarkerField>& markers)
 {

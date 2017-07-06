@@ -63,9 +63,9 @@ void FRListener::start_traffic(int rate)
   _mon.watch_traffic(rate);
 }
 
-void FRListener::stop_traffic()
+std::vector<frenchroast::monitor::MethodStats> FRListener::stop_traffic()
 {
-  _mon.stop_watch_traffic();
+  return _mon.stop_watch_traffic();
 }
 
 void FRListener::ready()
