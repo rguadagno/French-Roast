@@ -44,7 +44,7 @@
 #include <QMenuBar>
 #include <QToolBar>
 #include <algorithm>
-
+#include "CodeFont.h"
 
 int main(int argc, char* argv[]) {
 
@@ -99,14 +99,6 @@ public:
 };
 
 
-class CodeFont : public QFont {
-public:
-  CodeFont() : QFont(QString::fromStdString("Inconsolata"), 12, QFont::Normal)
-  {
-    setStyleHint(QFont::TypeWriter);
-    setStyleStrategy(QFont::PreferAntialias);
-  }
-};
 
 QFont SignalItem::_font = CodeFont();
 QFont StackRow::_font = CodeFont();
