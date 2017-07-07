@@ -78,7 +78,7 @@ class FRMain : public QMainWindow {
   
   std::string format_markers(const std::string markers);
   void update_detail_list(QListWidget*, const std::vector<frenchroast::monitor::MarkerField>& markers);
-  QDockWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate);
+  QWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate);
 
   QDockWidget* setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* aptr, const std::string& wstyle,QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 
@@ -86,6 +86,7 @@ class FRMain : public QMainWindow {
   void restore_dock_win(const std::string& docname);
   void bring_up_dock_if_required(const std::string dockname);
   void connect_dock_win(QMenu* mptr, const std::string& actionname, const std::string& docname);
+  void view_dockwin(const std::string& title, const std::string& dockname, QWidget* wptr);
  signals:
   void hooks_saved();
   void update_method_ranking( std::vector<frenchroast::monitor::MethodStats>& ranks);
@@ -108,7 +109,6 @@ class FRMain : public QMainWindow {
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void update_traffic_rate();
    void handshake();
-   void close_timers();
 };
 
 

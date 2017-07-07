@@ -128,36 +128,21 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
   connect_dock_win(mptr, "Method Rankings", RankingWindow);
   connect_dock_win(mptr, "Traffic",         TrafficWindow);
   
-  resize(width,height);
-
   resize(_settings.value("main:width", width).toInt(),
          _settings.value("main:height", height).toInt());
 
   move(_settings.value("main:xpos", 0).toInt(),
        _settings.value("main:ypos", 0).toInt());
 
-
-  _list               = new QListWidget;
-  _traffic            = new QTableWidget;
-  _buttonStartTraffic = new QPushButton{"Start"};
-  _rate               = new QLineEdit;
-  _trafficEnterKeyListener = new EnterKeyListener;
-  _rankings = new MethodRanking;
-  _traffic->installEventFilter(_trafficEnterKeyListener);
-
-  
   for(auto& x : _dockbuilders) {
     bring_up_dock_if_required(x.first);    
   }
+  
   _statusMsg = new FRStatus{statusBar()};
   
-  QObject::connect(_list,                    &QListWidget::itemDoubleClicked,  this,       &FRMain::show_detail);
-  QObject::connect(_buttonStartTraffic,      &QPushButton::clicked,            this,       &FRMain::update_traffic_rate);
-  QObject::connect(_trafficEnterKeyListener, &EnterKeyListener::enterkey,      this,       &FRMain::add_hook);
   QObject::connect(listener,                 &FRListener::remoteconnected,     _statusMsg, &FRStatus::remote_connected);
   QObject::connect(listener,                 &FRListener::remoteunloaded,      _statusMsg, &FRStatus::remote_disconnected);
   QObject::connect(listener,                 &FRListener::remote_ready,        this,       &FRMain::handshake);
-  QObject::connect(this    ,                 &FRMain::update_method_ranking,   _rankings,  &MethodRanking::update);
 
   statusBar()->addPermanentWidget(_statusMsg,10);
   _statusMsg->waiting_for_connection();
@@ -166,7 +151,7 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
 
 void FRMain::handshake()
 {
-  if(_buttonStartTraffic->text() == "Stop") {
+  if(_docks.count(TrafficWindow) == 1 && _buttonStartTraffic->text() == "Stop") {
     _listener->start_traffic(atoi(_rate->text().toStdString().c_str()));
   }
 }
@@ -217,66 +202,43 @@ void FRMain::restore_dock_win(const std::string& dockname)
 }
 
 
-QDockWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate)
+
+QWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate)
 {
   QWidget* buttonHolder = new QWidget;
   QHBoxLayout* hlayout = new QHBoxLayout();
   QLabel* desc = new QLabel{QString::fromStdString("rate (millisec):")};
   desc->setAlignment(Qt::AlignRight);
   desc->setStyleSheet(_settings.value("descriptive_text_style").toString());
-  
   buttonHolder->setLayout(hlayout);
   rate->setText("100");
   bstart->setSizePolicy({QSizePolicy::Fixed,QSizePolicy::Fixed});
   rate->setSizePolicy({QSizePolicy::Fixed,QSizePolicy::Fixed});
-
   hlayout->addWidget(desc,0,Qt::AlignLeft);
   hlayout->addWidget(rate,0,Qt::AlignLeft);
   hlayout->addWidget(bstart,0,Qt::AlignLeft);
-  
   buttonHolder->setStyleSheet(_settings.value("button_holder_style").toString());
   rate->setStyleSheet(_settings.value("data_entry_style").toString());
-
   rate->setFixedWidth(50);
   rate->setInputMask("0000");
   rate->setAlignment(Qt::AlignRight);
-
   bstart->setStyleSheet(_settings.value("traffic_start_style").toString());
   bstart->setFixedWidth(70);
-
-
-  QDockWidget* docwin = new QDockWidget(QString::fromStdString("Traffic"), this);
   QWidget* holder = new QWidget();
-
-  docwin->setWidget(holder);
-  
   QVBoxLayout* vlayout = new QVBoxLayout();
   vlayout->setSpacing(0);
   holder->setLayout(vlayout);
-   
   grid->setStyleSheet(_settings.value("traffic_grid_style").toString());
   grid->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
   grid->horizontalHeader()->hide();
   grid->verticalHeader()->hide();
   grid->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   vlayout->addWidget(grid);
-
-  QLabel* sigLabel = new QLabel(QString::fromStdString("Traffic"));
-  QWidget* titlebar = new QWidget();
-  QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight);
-  layout->setSpacing(0);
-  layout->addWidget(buttonHolder,1,Qt::AlignLeft);
-  layout->addWidget(sigLabel,1, Qt::AlignLeft);
-  
-  titlebar->setLayout(layout);
-  titlebar->setStyleSheet(_settings.value("dock_win_header_style").toString());
-  sigLabel->setStyleSheet(_settings.value("dock_title_style").toString());
-  docwin->setTitleBarWidget(titlebar);
-
+  vlayout->addWidget(buttonHolder);
   holder->setStyleSheet(_settings.value("zero_border_style").toString());
-  docwin->setStyleSheet(_settings.value("button_holder_style").toString());
-  return docwin;
+  return holder;
 }
+
 
 
 QWidget* setup_central(QWidget* lists)
@@ -301,8 +263,6 @@ QString FunctionPoint::get_name() const
   return _name;
 }
 
-
-
 void FRMain::bring_up_dock_if_required(const std::string dockname)
 {
   if(_settings.value(QString::fromStdString(dockname + ":up")).toBool() == true) {
@@ -312,47 +272,55 @@ void FRMain::bring_up_dock_if_required(const std::string dockname)
 
 void FRMain::view_traffic()
 {
+
   if(_docks.count(TrafficWindow) == 1) return;
-  _docks[TrafficWindow] = build_traffic_viewer(_traffic, _buttonStartTraffic, _rate);
+
+  _traffic            = new QTableWidget;
+  _buttonStartTraffic = new QPushButton{"Start"};
+  _rate               = new QLineEdit;
+  _trafficEnterKeyListener = new EnterKeyListener;
+  _traffic->installEventFilter(_trafficEnterKeyListener);
+
+  view_dockwin("Traffic", TrafficWindow, build_traffic_viewer(_traffic, _buttonStartTraffic, _rate));
+  
   _traffic->insertColumn(0);
-  restore_dock_win(TrafficWindow);
+
+  QObject::connect(_buttonStartTraffic,      &QPushButton::clicked,         this, &FRMain::update_traffic_rate);
+  QObject::connect(_trafficEnterKeyListener, &EnterKeyListener::enterkey,   this, &FRMain::add_hook);
+  QObject::connect(_traffic,                 &QTableWidget::destroyed,      this, [&](){if(_exit) return;_traffic_rows.clear(); _traffic_keys.clear();});
 }
 
 void FRMain::view_ranking()
 {
-
   if(_docks.count(RankingWindow) == 1) return;
-  _docks[RankingWindow] = setup_dock_window("Ranking", _rankings,     new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
-  restore_dock_win(RankingWindow);
+  view_dockwin("Ranking", RankingWindow, (_rankings = new MethodRanking()));
+  QObject::connect(this, &FRMain::update_method_ranking,   _rankings,  &MethodRanking::update);  
 }
 
 void FRMain::view_signals()
 {
   if(_docks.count(SignalWindow) == 1) return;
-  
-  _docks[SignalWindow] = setup_dock_window("Signals", _list,     new ActionBar(), "list_style", QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
-  restore_dock_win(SignalWindow);
-
+  view_dockwin("Signals", SignalWindow, (_list = new QListWidget()));
+  QObject::connect(_list,  &QListWidget::itemDoubleClicked, this, &FRMain::show_detail);
 }
 
 
 void FRMain::view_timers()
 {
   if(_docks.count(TimerWindow) == 1) return;
-
-  ActionBar* abar = new ActionBar(ActionBar::Close);
-  _timedlist          = new QListWidget;
-  _docks[TimerWindow] = setup_dock_window("Timers", _timedlist, abar, "list_style");
-  QObject::connect(abar, &ActionBar::close_clicked, _docks[TimerWindow], &QDockWidget::close);
-  QObject::connect(abar, &ActionBar::close_clicked, this,                &FRMain::close_timers);
-
-   restore_dock_win(TimerWindow);
+  view_dockwin("Timers", TimerWindow, (_timedlist = new QListWidget()));
 }
 
-void FRMain::close_timers()
+
+void FRMain::view_dockwin(const std::string& title, const std::string& dockname, QWidget* wptr)
 {
-  _docks.erase(TimerWindow);
+  ActionBar* abar = new ActionBar(ActionBar::Close);
+  _docks[dockname] = setup_dock_window(title, wptr, abar, "list_style");
+  QObject::connect(abar, &ActionBar::close_clicked, _docks[dockname   ], &QDockWidget::close);
+  QObject::connect(abar, &ActionBar::close_clicked, this,                [&](){_docks.erase(dockname);});
+  restore_dock_win(dockname);
 }
+
 
 void FRMain::view_hooks_editor()
 {
