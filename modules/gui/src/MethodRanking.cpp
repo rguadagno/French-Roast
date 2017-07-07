@@ -38,3 +38,9 @@ MethodRanking::MethodRanking()
   setFont(CodeFont());
 }
 
+
+QString MethodRanking::getEnterMethod()
+{
+  std::string line = currentItem()->text().toStdString();
+  return QString::fromStdString(line.substr(line.find_last_of(" ") + 1));
+}

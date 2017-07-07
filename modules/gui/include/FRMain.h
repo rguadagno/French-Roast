@@ -99,7 +99,7 @@ class FRMain : public QMainWindow {
    void view_ranking();
    void view_traffic();
    void save_hooks();
-   void add_hook();
+   void add_hook(QString);
    void show_detail(QListWidgetItem* item);
    void destroy_list(QObject* obj);
    void reset_editor(QObject* obj);

@@ -35,5 +35,6 @@ class MethodRanking : public QListWidget {
 
 public:
   MethodRanking();
+  QString getEnterMethod();
 
 };

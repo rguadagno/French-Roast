@@ -295,7 +295,7 @@ void FRMain::view_traffic()
   _traffic->insertColumn(0);
 
   QObject::connect(_buttonStartTraffic,      &QPushButton::clicked,         this, &FRMain::update_traffic_rate);
-  QObject::connect(_trafficEnterKeyListener, &EnterKeyListener::enterkey,   this, &FRMain::add_hook);
+  QObject::connect(_trafficEnterKeyListener, &EnterKeyListener::enterkey,   this, [&](){ add_hook(_traffic->currentItem()->text());});
   QObject::connect(_traffic,                 &QTableWidget::destroyed,      this, [&](){if(_exit) return;_traffic_rows.clear(); _traffic_keys.clear();});
 }
 
@@ -303,7 +303,13 @@ void FRMain::view_ranking()
 {
   if(_docks.count(RankingWindow) == 1) return;
   view_dockwin("Ranking", RankingWindow, (_rankings = new MethodRanking()));
-  QObject::connect(this, &FRMain::update_method_ranking,   _rankings,  &MethodRanking::update);  
+
+  EnterKeyListener* rankListener = new EnterKeyListener;
+  _rankings->installEventFilter(rankListener);
+  
+  QObject::connect(rankListener, &EnterKeyListener::enterkey,      this, [&](){ add_hook(_rankings->getEnterMethod());});
+  QObject::connect(_rankings,    &QListWidget::itemDoubleClicked,  this, [&](){ add_hook(_rankings->getEnterMethod());});
+  QObject::connect(this,         &FRMain::update_method_ranking,   _rankings,  &MethodRanking::update);  
 }
 
 void FRMain::view_signals()
@@ -379,10 +385,11 @@ void FRMain::save_hooks()
 }
 
 
-void FRMain::add_hook()
+void FRMain::add_hook(QString txt)
 {
   if(_hooksEditor == nullptr) return;
-  QString str = _hooksEditor->document()->toPlainText() + "\n" + _traffic->currentItem()->text() +    "<ENTER>";
+  //  QString str = _hooksEditor->document()->toPlainText() + "\n" + _traffic->currentItem()->text() +    "<ENTER>";
+    QString str = _hooksEditor->document()->toPlainText() + "\n" + txt +    "<ENTER>";
   _hooksEditor->document()->setPlainText(str);
 }
 
