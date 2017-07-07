@@ -93,7 +93,6 @@ class FRMain : public QMainWindow {
   
  public slots:
    void view_hooks_editor();
-   void edit_hooks_closed();
    void view_signals();
    void view_timers();
    void view_ranking();

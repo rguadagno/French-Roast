@@ -366,7 +366,7 @@ void FRMain::view_hooks_editor()
     restore_dock_win(EditHooksWindow);
     
     QObject::connect(abar,                     &ActionBar::close_clicked,      editdoc, &QDockWidget::close);
-    QObject::connect(abar,                     &ActionBar::close_clicked,      this,    &FRMain::edit_hooks_closed);
+    QObject::connect(abar,                     &ActionBar::close_clicked,      this,    [&](){_docks.erase(EditHooksWindow);});
     QObject::connect(abar,                     &ActionBar::save_clicked,       this,    &FRMain::save_hooks);
     QObject::connect(this,                     &FRMain::hooks_saved ,          abar,    &ActionBar::disable_save);
     QObject::connect(_hooksEditor->document(), &QTextDocument::contentsChange, abar,    &ActionBar::enable_save);
@@ -531,10 +531,6 @@ void FRMain::update_timed_list(std::string  descriptor, std::string tname, long 
     _descriptors[descriptor]->setText(QString::fromStdString(desc) + "  " + QString::fromStdString(frenchroast::monitor::format_millis(elapsed)));
 }
 
-void FRMain::edit_hooks_closed()
-{
-  _docks[EditHooksWindow] = nullptr;
-}
 
 void FRMain::handle_exit()
 {
