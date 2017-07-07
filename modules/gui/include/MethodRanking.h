@@ -22,14 +22,9 @@
 #include <QVBoxLayout>
 #include "MethodStats.h"
 
-class MethodRanking : public QWidget {
-  //  QGridLayout* _layout{nullptr};
-  //QPushButton* _closeButton{nullptr};
-  //QPushButton* _saveButton{nullptr};
+class MethodRanking : public QListWidget {
 
-  QListWidget* _methods;
-  
-   Q_OBJECT
+  Q_OBJECT
   
    //signals:
    //void save_clicked();
@@ -40,5 +35,5 @@ class MethodRanking : public QWidget {
 
 public:
   MethodRanking();
-  ~MethodRanking();
+
 };

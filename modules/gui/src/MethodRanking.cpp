@@ -24,26 +24,17 @@
 
 void MethodRanking::update(std::vector<frenchroast::monitor::MethodStats> ranks)
 {
-  _methods->clear();
+  clear();
   for(auto& x : ranks) {
     std::string desc = std::to_string(x.invoked_count());
     frenchroast::monitor::pad(desc, 10);
     desc.append(x.descriptor());
-    _methods->addItem(new QListWidgetItem(QString::fromStdString(desc)));
+    addItem(new QListWidgetItem(QString::fromStdString(desc)));
   }
 }
 
 MethodRanking::MethodRanking()
 {
-  _methods = new QListWidget();
-  _methods->setFont(CodeFont());
-  QVBoxLayout* vlayout = new QVBoxLayout();
-  vlayout->addWidget(_methods);
-  setLayout(vlayout);
-  
+  setFont(CodeFont());
 }
 
-MethodRanking::~MethodRanking()
-{
-  delete _methods;
-}
