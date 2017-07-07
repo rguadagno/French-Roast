@@ -206,23 +206,31 @@ void FRMain::restore_dock_win(const std::string& dockname)
 QWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate)
 {
   QWidget* buttonHolder = new QWidget;
-  QHBoxLayout* hlayout = new QHBoxLayout();
-  QLabel* desc = new QLabel{QString::fromStdString("rate (millisec):")};
-  desc->setAlignment(Qt::AlignRight);
+    QGridLayout* hlayout = new QGridLayout();
+
+  QLabel* desc = new QLabel{QString::fromStdString("sampling rate (millisec):")};
+  desc->setAlignment(Qt::AlignRight | Qt::AlignCenter);
   desc->setStyleSheet(_settings.value("descriptive_text_style").toString());
   buttonHolder->setLayout(hlayout);
   rate->setText("100");
-  bstart->setSizePolicy({QSizePolicy::Fixed,QSizePolicy::Fixed});
-  rate->setSizePolicy({QSizePolicy::Fixed,QSizePolicy::Fixed});
-  hlayout->addWidget(desc,0,Qt::AlignLeft);
-  hlayout->addWidget(rate,0,Qt::AlignLeft);
-  hlayout->addWidget(bstart,0,Qt::AlignLeft);
+  
+  hlayout->addWidget(desc,0,0, Qt::AlignRight);
+  hlayout->addWidget(rate,0,1, Qt::AlignLeft);
+  hlayout->addWidget(bstart,0,2);
+  hlayout->setColumnStretch(3,10);
+  
+
   buttonHolder->setStyleSheet(_settings.value("button_holder_style").toString());
+
   rate->setStyleSheet(_settings.value("data_entry_style").toString());
   rate->setFixedWidth(50);
   rate->setInputMask("0000");
   rate->setAlignment(Qt::AlignRight);
-  bstart->setStyleSheet(_settings.value("traffic_start_style").toString());
+
+  //  bstart->setStyleSheet(_settings.value("traffic_start_style").toString());
+
+  bstart->setStyleSheet("QPushButton {padding:1px;border: 1px solid #404040;border-top-left-radius:2px;border-top-right-radius:2px;border-bottom-right-radius:2px; border-bottom-left-radius:2px;font-size: 16px;color:black;background-color: #08b432;font-family:\"Arial\";} QPushButton::hover{color:white;border-color:white;}");
+  
   bstart->setFixedWidth(70);
   QWidget* holder = new QWidget();
   QVBoxLayout* vlayout = new QVBoxLayout();
@@ -235,6 +243,7 @@ QWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, Q
   grid->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   vlayout->addWidget(grid);
   vlayout->addWidget(buttonHolder);
+  vlayout->setContentsMargins(1,0,1,0);
   holder->setStyleSheet(_settings.value("zero_border_style").toString());
   return holder;
 }
@@ -419,10 +428,11 @@ void FRMain::update_traffic_rate()
   if(_buttonStartTraffic->text() == "Start") {
     _listener->start_traffic(atoi(_rate->text().toStdString().c_str()));
     _buttonStartTraffic->setText("Stop");
+    _buttonStartTraffic->setStyleSheet(  _settings.value("traffic_stop_style").toString());
   }
   else {
-    //    _listener->stop_traffic();
     _buttonStartTraffic->setText("Start");
+    _buttonStartTraffic->setStyleSheet(  _settings.value("traffic_start_style").toString());
     update_method_ranking(_listener->stop_traffic());
   }
 }
