@@ -487,6 +487,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   err =   env->SetEventCallbacks(xx, sizeof(jvmtiEventCallbacks));
 
   jvmtiCapabilities capa;
+  memset(&capa, 0, sizeof(capa));
   capa.can_generate_monitor_events = 1;
   capa.can_generate_all_class_hook_events = 1;
   jvmtiError errcapa  = env->AddCapabilities(&capa);
