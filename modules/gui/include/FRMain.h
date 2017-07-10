@@ -46,15 +46,15 @@ class FRMain : public QMainWindow {
 
  public:
   FRMain(FRListener*, QSettings&, const std::string&);
-
- private:
-  std::unordered_map<std::string, QDockWidget*> _docks;
-   static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
   const static std::string  EditHooksWindow;
   const static std::string  SignalWindow;
   const static std::string  TimerWindow;
   const static std::string  RankingWindow;
   const static std::string  TrafficWindow;
+
+ private:
+  std::unordered_map<std::string, QDockWidget*> _docks;
+   static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
   QSettings&    _settings;
   bool          _exit{false};
   QTextEdit*    _hooksEditor{nullptr};
@@ -66,9 +66,10 @@ class FRMain : public QMainWindow {
   FRListener*   _listener;
   FRStatus*      _statusMsg;
   EnterKeyListener* _trafficEnterKeyListener;
-  std::unordered_map<std::string,SignalItem*>        _descriptors;
-  std::unordered_map<std::string,SignalItem*>         _detailItems;
-  std::unordered_map<std::string,QListWidget*>        _detailLists;
+
+  std::unordered_map<std::string,  std::unordered_map<std::string,SignalItem*> >        _descriptorsPerDock;
+    std::unordered_map<std::string,  std::unordered_map<std::string, int>>                _detailItems;
+  std::unordered_map<std::string,QTableWidget*>      _detailLists;
   std::unordered_map<std::string, std::vector<std::string>> _detailItemsPerList;
   std::unordered_map<std::string, std::vector<frenchroast::monitor::MarkerField>> _detailDescriptors;
   std::unordered_map<std::string,StackRow*> _traffic_rows;
@@ -77,7 +78,7 @@ class FRMain : public QMainWindow {
   std::string                          _hooksfile;
   
   std::string format_markers(const std::string markers);
-  void update_detail_list(QListWidget*, const std::vector<frenchroast::monitor::MarkerField>& markers);
+  void update_detail_list(std::string,QTableWidget*, const std::vector<frenchroast::monitor::MarkerField>& markers);
   QWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate);
 
   QDockWidget* setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* aptr, const std::string& wstyle,QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);

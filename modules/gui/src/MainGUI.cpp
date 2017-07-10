@@ -226,9 +226,6 @@ QWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, Q
   rate->setFixedWidth(50);
   rate->setInputMask("0000");
   rate->setAlignment(Qt::AlignRight);
-
-  //  bstart->setStyleSheet(_settings.value("traffic_start_style").toString());
-
   bstart->setStyleSheet("QPushButton {padding:1px;border: 1px solid #404040;border-top-left-radius:2px;border-top-right-radius:2px;border-bottom-right-radius:2px; border-bottom-left-radius:2px;font-size: 16px;color:black;background-color: #08b432;font-family:\"Arial\";} QPushButton::hover{color:white;border-color:white;}");
   
   bstart->setFixedWidth(70);
@@ -315,6 +312,8 @@ void FRMain::view_ranking()
 void FRMain::view_signals()
 {
   if(_docks.count(SignalWindow) == 1) return;
+  _descriptorsPerDock.erase(SignalWindow);
+  _detailItems.erase(SignalWindow);
   view_dockwin("Signals", SignalWindow, (_list = new QListWidget()));
   QObject::connect(_list,  &QListWidget::itemDoubleClicked, this, &FRMain::show_detail);
 }
@@ -323,6 +322,7 @@ void FRMain::view_signals()
 void FRMain::view_timers()
 {
   if(_docks.count(TimerWindow) == 1) return;
+  _descriptorsPerDock.erase(TimerWindow);
   view_dockwin("Timers", TimerWindow, (_timedlist = new QListWidget()));
 }
 
@@ -366,7 +366,7 @@ void FRMain::view_hooks_editor()
     restore_dock_win(EditHooksWindow);
     
     QObject::connect(abar,                     &ActionBar::close_clicked,      editdoc, &QDockWidget::close);
-    QObject::connect(abar,                     &ActionBar::close_clicked,      this,    [&](){_docks.erase(EditHooksWindow);});
+    QObject::connect(abar,                     &ActionBar::close_clicked,      this,    [&](){if(_exit) return;_docks.erase(EditHooksWindow);});
     QObject::connect(abar,                     &ActionBar::save_clicked,       this,    &FRMain::save_hooks);
     QObject::connect(this,                     &FRMain::hooks_saved ,          abar,    &ActionBar::disable_save);
     QObject::connect(_hooksEditor->document(), &QTextDocument::contentsChange, abar,    &ActionBar::enable_save);
@@ -388,27 +388,45 @@ void FRMain::save_hooks()
 void FRMain::add_hook(QString txt)
 {
   if(_hooksEditor == nullptr) return;
-  //  QString str = _hooksEditor->document()->toPlainText() + "\n" + _traffic->currentItem()->text() +    "<ENTER>";
     QString str = _hooksEditor->document()->toPlainText() + "\n" + txt +    "<ENTER>";
   _hooksEditor->document()->setPlainText(str);
 }
+
 
 void FRMain::show_detail(QListWidgetItem* item)
 {
   SignalItem* ptr = dynamic_cast<SignalItem*>(item);
   std::string sname = ptr->gettext();
-  if(_detailLists.count(sname) > 0 || sname.find("[M]") == std::string::npos) {
-    return;
+
+  if(sname.find("[M]") == std::string::npos) {
+      return;
   }
-  _detailLists[sname] = new QListWidget();
-  _detailLists[sname]->setObjectName(QString::fromStdString(sname));
-  QObject::connect(_detailLists[sname], &QListWidget::destroyed, this, &FRMain::destroy_list);
-  ActionBar* abar = new ActionBar(ActionBar::Close);
+
+  _detailLists.erase(sname);
+  _detailItems.erase(sname);
+  _detailLists[sname] = new QTableWidget();
+  _detailLists[sname]->setStyleSheet(_settings.value("traffic_grid_style").toString());
+  _detailLists[sname]->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+  _detailLists[sname]->horizontalHeader()->hide();
+  _detailLists[sname]->verticalHeader()->hide();
+  _detailLists[sname]->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   
-  QDockWidget* dockwin = setup_dock_window(sname, _detailLists[sname], abar ,"list_style");
+  ActionBar* abar = new ActionBar(ActionBar::Close);
+
+  QWidget* holder = new QWidget();
+  QVBoxLayout* vlayout = new QVBoxLayout();
+  vlayout->setSpacing(0);
+  vlayout->addWidget(_detailLists[sname] );
+  holder->setLayout(vlayout);
+  holder->setStyleSheet(_settings.value("zero_border_style").toString());
+  
+  QDockWidget* dockwin = setup_dock_window(sname, holder, abar ,"list_style");
   QObject::connect(abar, &ActionBar::close_clicked, dockwin, &QDockWidget::close);
+  QObject::connect(abar, &ActionBar::close_clicked, this, [=](){_detailLists.erase(sname);});
+  
+  dockwin->setFloating(true);
   addDockWidget(Qt::TopDockWidgetArea, dockwin);
-  update_detail_list(_detailLists[ sname ], _detailDescriptors[sname]);
+  update_detail_list(sname, _detailLists[ sname ], _detailDescriptors[sname]);
 }
 
 void FRMain::reset_editor(QObject* obj)
@@ -448,6 +466,8 @@ void FRMain::update_traffic_rate()
 
 void FRMain::update_list(std::string ltype, std::string  descriptor, std::string tname, int count, const std::vector<frenchroast::monitor::MarkerField>& markers)
 {
+  if(_docks.count(ltype) == 0) return;
+  
   if(markers.size() > 0) {
     descriptor = "[M] " + descriptor;
   }
@@ -459,30 +479,36 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
   frenchroast::monitor::pad(tname, 10);
   
   descriptor.append(tname);
-  _detailDescriptors[descriptor] = markers;
-  if (_descriptors.count(descriptor) == 0 ) {
-    _descriptors[descriptor] = new SignalItem(descriptor, frenchroast::monitor::ntoa(count,5,' '));
-    _list->addItem(_descriptors[descriptor]);
+  if (_descriptorsPerDock[ltype].count(descriptor) == 0 ) {
+    _descriptorsPerDock[ltype][descriptor] = new SignalItem(descriptor, frenchroast::monitor::ntoa(count,5,' '));
+    _list->addItem(_descriptorsPerDock[ltype][descriptor]);
   }
   else {
-    _descriptors[descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(frenchroast::monitor::ntoa(count,5, ' ')));
-      if(_detailLists.count(descriptor) == 1) { 
-        update_detail_list(_detailLists[descriptor], markers);
-      }
+    _descriptorsPerDock[ltype][descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(frenchroast::monitor::ntoa(count,5, ' ')));
+    if(_detailLists.count(descriptor) == 1) {
+      update_detail_list(descriptor, _detailLists[descriptor], markers);
+    }
   }
 }
 
-void FRMain::update_detail_list(QListWidget* list, const std::vector<frenchroast::monitor::MarkerField>& markers)
+
+void FRMain::update_detail_list(std::string  descriptor, QTableWidget* list, const std::vector<frenchroast::monitor::MarkerField>& markers)
 {
   for(auto& item : markers) {
-    if(_detailItems.count(item._descriptor) == 0) {
-      _detailItems[item._descriptor] = new SignalItem(frenchroast::monitor::pad(format_markers(item._descriptor),50), frenchroast::monitor::ntoa(item._count,5,' '));
-      list->addItem(_detailItems[item._descriptor]);
-      _detailItemsPerList[ list->objectName().toStdString() ].push_back(item._descriptor);
+    if(_detailItems[descriptor].count(item._descriptor) == 0) {
+      if(list->columnCount() == 0) {
+        list->insertColumn(0);
+        list->insertColumn(0);
+      }
+      int currRow = list->rowCount();
+      list->insertRow(currRow);
+      _detailItems[descriptor][item._descriptor] = currRow;
+      list->setItem(currRow, 0, new QTableWidgetItem(QString::fromStdString(std::to_string(item._count))));
+      list->setItem(currRow, 1, new QTableWidgetItem(QString::fromStdString(item._descriptor)));
     }
     else {
-      //@@ called over even if values same....
-      _detailItems[item._descriptor]->setText(QString::fromStdString(frenchroast::monitor::pad(format_markers(item._descriptor),50)) + QString::fromStdString(frenchroast::monitor::ntoa(item._count,5,' ')));      
+      list->item(_detailItems[descriptor][item._descriptor],0)->setText(  QString::fromStdString(std::to_string(item._count)) );
+      list->item(_detailItems[descriptor][item._descriptor],1)->setText(  QString::fromStdString(item._descriptor) );
     }
   }
 }
@@ -512,8 +538,6 @@ void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>&
   }
 }
 
-
-
 void FRMain::update_timed_list(std::string  descriptor, std::string tname, long elapsed)
 {
   if(_docks.count(TimerWindow) != 1) return;
@@ -523,12 +547,13 @@ void FRMain::update_timed_list(std::string  descriptor, std::string tname, long 
   frenchroast::monitor::pad(desc, 50);
   frenchroast::monitor::pad(tname, 10);
   desc.append(tname);
-  if (_descriptors.count(descriptor) == 0 ) {
-    _descriptors[descriptor] = new SignalItem(desc, frenchroast::monitor::format_millis(elapsed));
-    _timedlist->addItem(_descriptors[descriptor]);
+  if (_descriptorsPerDock[TimerWindow].count(descriptor) == 0 ) {
+    _descriptorsPerDock[TimerWindow][descriptor] = new SignalItem(desc, frenchroast::monitor::format_millis(elapsed));
+    _timedlist->addItem(_descriptorsPerDock[TimerWindow][descriptor]);
   }
-  else
-    _descriptors[descriptor]->setText(QString::fromStdString(desc) + "  " + QString::fromStdString(frenchroast::monitor::format_millis(elapsed)));
+  else {
+    _descriptorsPerDock[TimerWindow][descriptor]->setText(QString::fromStdString(desc) + "  " + QString::fromStdString(frenchroast::monitor::format_millis(elapsed)));
+  }
 }
 
 

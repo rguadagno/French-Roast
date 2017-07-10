@@ -56,6 +56,7 @@ namespace frenchroast { namespace monitor {
 	const int MSG_TYPE    = 0;
 	const int MSG         = 1;
         const int MARKER      = 3;
+        const int PARAMS      = 4;
 
 	const int TIME        = 1;
 	const int DIRECTION   = 2;
@@ -85,13 +86,13 @@ namespace frenchroast { namespace monitor {
 	  }
 	  if (items[MSG_TYPE] == "signal") {
             std::vector<MarkerField> mfields;
-            if(items[MARKER] != "") {
-              ++((_markers[items[MSG]])[items[MARKER]]);
+            //if(items[MARKER] != "") {
+              ++((_markers[items[MSG]])[ items[PARAMS] + items[MARKER]]);
               for(auto& item : _markers[items[MSG]]) {
                 mfields.emplace_back(item.first, item.second);
               }
-            }
-            _handler.signal(translate_descriptor(items[MSG]) , items[2] , ++_signals[items[MSG]], mfields );
+              //}
+            _handler.signal(translate_descriptor(items[MSG]) , items[2] , ++_signals[items[MSG]], mfields);
 
 	   }
 	  if (items[MSG_TYPE] == "traffic") {

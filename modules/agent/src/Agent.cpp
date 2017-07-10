@@ -224,11 +224,22 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
     err = genv->GetMethodName(frames[1].method, &methodName,&sig,&generic);
     if (err == JVMTI_ERROR_NONE) {
 
-      
-      
+      std::string params = "(";
       std::string methodNameStr{methodName};
       std::string sigStr{sig};
 
+      int endidx = sigStr.find(")");
+      for(int idx = 1; idx < endidx; idx++) {
+        if(sigStr[idx] == 'I') {
+          jint value;
+          genv->GetLocalInt(aThread, 1,idx, &value);
+          params.append(std::to_string(value) + ",");
+        }
+      }
+      if(params.length() > 1) {
+        params.erase(params.length() -1 ,1);
+      }
+      params.append(")");
       jclass theclass;
       genv->GetMethodDeclaringClass(frames[1].method, &theclass);
       err = genv->GetClassSignature(theclass, &sig,&generic);
@@ -243,7 +254,7 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
         fieldValues += get_value(ptr, obj, _reportingFields[classinfo + ">" + fieldname]);       
       }
       _sig_mutex.lock();
-      _rptr.signal(classinfo + "::" + methodNameStr + ":" + sigStr + "~" + std::string{info.name} + "~" + fieldValues);
+      _rptr.signal(classinfo + "::" + methodNameStr + ":" + sigStr + "~" + std::string{info.name} + "~" + fieldValues + "~" + params);
       _sig_mutex.unlock();
     }
   }
@@ -490,6 +501,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   memset(&capa, 0, sizeof(capa));
   capa.can_generate_monitor_events = 1;
   capa.can_generate_all_class_hook_events = 1;
+  capa.can_access_local_variables = 1;
   jvmtiError errcapa  = env->AddCapabilities(&capa);
   std::cout << "err capa: " << errcapa << std::endl;
   env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_CLASS_FILE_LOAD_HOOK,NULL);

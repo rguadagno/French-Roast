@@ -18,6 +18,7 @@
 //
 
 #include "fr.h"
+#include "FRMain.h"
 
 FRListener::FRListener(const std::string ip, int port, const std::string& opcodeFile, const std::string& hooksFile ) : _ip(ip), _port(port), _mon(*this, opcodeFile, hooksFile)
 {
@@ -35,7 +36,7 @@ void FRListener::signal_timed(const std::string& tag, const std::string& tname, 
 
 void FRListener::signal(const std::string& tag, const std::string& tname, int count, std::vector<frenchroast::monitor::MarkerField>& markers)
 {
-  thooked("signal",tag, tname, count, markers);
+  thooked(FRMain::SignalWindow,tag, tname, count, markers);
 }
 
 void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace>& items)
