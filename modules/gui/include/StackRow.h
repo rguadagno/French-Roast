@@ -48,7 +48,7 @@ class StackRow {
   void add_column(const frenchroast::monitor::StackTrace& st, int col);
   void append_to_column(int col, const frenchroast::monitor::StackTrace& st);
  public:
-  StackRow::StackRow(const std::string tname, int row, QTableWidget* tptr, std::unordered_map<std::string,int>& keys);
+  StackRow(const std::string tname, int row, QTableWidget* tptr, std::unordered_map<std::string,int>& keys);
   FunctionPoint* thread_name();
   void add(const frenchroast::monitor::StackTrace& st);
 
