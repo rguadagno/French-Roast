@@ -53,6 +53,7 @@ int main(int argc, char* argv[]) {
   qRegisterMetaType<std::string>();
   qRegisterMetaType<std::vector<frenchroast::monitor::StackTrace>>();
   qRegisterMetaType<std::vector<frenchroast::monitor::MarkerField>>();
+  qRegisterMetaType<std::vector<std::string>>();
   
   QApplication app(argc,argv);
 
@@ -406,8 +407,9 @@ void FRMain::show_detail(QListWidgetItem* item)
   _detailItems.erase(sname);
   _detailLists[sname] = new QTableWidget();
   _detailLists[sname]->setStyleSheet(_settings.value("traffic_grid_style").toString());
+
   _detailLists[sname]->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-  _detailLists[sname]->horizontalHeader()->hide();
+
   _detailLists[sname]->verticalHeader()->hide();
   _detailLists[sname]->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   
@@ -417,10 +419,11 @@ void FRMain::show_detail(QListWidgetItem* item)
   QVBoxLayout* vlayout = new QVBoxLayout();
   vlayout->setSpacing(0);
   vlayout->addWidget(_detailLists[sname] );
+  vlayout->setContentsMargins(0,0,0,0);
   holder->setLayout(vlayout);
   holder->setStyleSheet(_settings.value("zero_border_style").toString());
   
-  QDockWidget* dockwin = setup_dock_window(sname, holder, abar ,"list_style");
+  QDockWidget* dockwin = setup_dock_window(sname, holder, abar ,"table_style");
   QObject::connect(abar, &ActionBar::close_clicked, dockwin, &QDockWidget::close);
   QObject::connect(abar, &ActionBar::close_clicked, this, [=](){_detailLists.erase(sname);});
   
@@ -464,7 +467,9 @@ void FRMain::update_traffic_rate()
 
 
 
-void FRMain::update_list(std::string ltype, std::string  descriptor, std::string tname, int count, const std::vector<frenchroast::monitor::MarkerField>& markers)
+void FRMain::update_list(std::string ltype, std::string  descriptor, std::string tname, int count,
+                         const std::vector<std::string> argHeaders,  const std::vector<std::string> instanceHeaders, 
+                         const std::vector<frenchroast::monitor::MarkerField> markers)
 {
   if(_docks.count(ltype) == 0) return;
   
@@ -477,8 +482,10 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
   tname = "[ " + tname + " ]";
   frenchroast::monitor::pad(descriptor, 50);
   frenchroast::monitor::pad(tname, 10);
-  
+
   descriptor.append(tname);
+
+  _detailDescriptors[descriptor] = DetailHolder{argHeaders, instanceHeaders, markers};
   if (_descriptorsPerDock[ltype].count(descriptor) == 0 ) {
     _descriptorsPerDock[ltype][descriptor] = new SignalItem(descriptor, frenchroast::monitor::ntoa(count,5,' '));
     _list->addItem(_descriptorsPerDock[ltype][descriptor]);
@@ -486,30 +493,75 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
   else {
     _descriptorsPerDock[ltype][descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(frenchroast::monitor::ntoa(count,5, ' ')));
     if(_detailLists.count(descriptor) == 1) {
-      update_detail_list(descriptor, _detailLists[descriptor], markers);
+      update_detail_list(descriptor, _detailLists[descriptor], _detailDescriptors[descriptor]);
     }
   }
 }
 
 
-void FRMain::update_detail_list(std::string  descriptor, QTableWidget* list, const std::vector<frenchroast::monitor::MarkerField>& markers)
+void FRMain::update_detail_list(std::string  descriptor, QTableWidget* list, const DetailHolder& detailHolder)
 {
-  for(auto& item : markers) {
-    if(_detailItems[descriptor].count(item._descriptor) == 0) {
-      if(list->columnCount() == 0) {
-        list->insertColumn(0);
-        list->insertColumn(0);
-      }
+  if(list->rowCount() == 0) {
+
+    list->insertColumn(0);
+    list->insertColumn(0);
+    QTableWidgetItem* hitem = new QTableWidgetItem("invoked");
+    hitem->setFont(CodeFont());
+    list->setHorizontalHeaderItem(0,hitem);
+    hitem = new QTableWidgetItem("(");
+    hitem->setFont(CodeFont());
+    list->setHorizontalHeaderItem(1,hitem);
+    
+    int colidx = 2;
+    for(auto& x : detailHolder._argHeaders) {
+      list->insertColumn(colidx);
+      hitem = new QTableWidgetItem(QString::fromStdString(x));
+      hitem->setFont(CodeFont());
+      list->setHorizontalHeaderItem(colidx++,hitem);
+    }
+
+    list->insertColumn(colidx);
+    hitem = new QTableWidgetItem(")");
+    hitem->setFont(CodeFont());
+    list->setHorizontalHeaderItem(colidx++,hitem);
+
+    for(auto& x : detailHolder._instanceHeaders) {
+      list->insertColumn(colidx);
+      hitem = new QTableWidgetItem(QString::fromStdString(x));
+      hitem->setFont(CodeFont());
+      list->setHorizontalHeaderItem(colidx++,hitem);
+    }
+  }
+
+
+  for(auto& item : detailHolder._markers) {
+
+  if(_detailItems[descriptor].count(item._descriptor) == 0) {
       int currRow = list->rowCount();
       list->insertRow(currRow);
+  
       _detailItems[descriptor][item._descriptor] = currRow;
-      list->setItem(currRow, 0, new QTableWidgetItem(QString::fromStdString(std::to_string(item._count))));
-      list->setItem(currRow, 1, new QTableWidgetItem(QString::fromStdString(item._descriptor)));
+      QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(std::to_string(item._count)));
+      ditem->setFont(CodeFont());
+      list->setItem(currRow, 0, ditem);
+      
+      int colidx = 2;
+      for(auto& x : item._arg_items) {
+        QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(x));
+        ditem->setFont(CodeFont());
+        list->setItem(currRow, colidx++,ditem);
+      }
+      ++colidx;
+      for(auto& x : item._instance_items) {
+        QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(x));
+        ditem->setFont(CodeFont());
+        list->setItem(currRow, colidx++,ditem);
+      }
     }
     else {
       list->item(_detailItems[descriptor][item._descriptor],0)->setText(  QString::fromStdString(std::to_string(item._count)) );
-      list->item(_detailItems[descriptor][item._descriptor],1)->setText(  QString::fromStdString(item._descriptor) );
     }
+
   }
 }
 

@@ -40,6 +40,20 @@
 #include "MethodRanking.h"
 
 class SignalItem;
+using VecStr = std::vector<std::string>; 
+class DetailHolder {
+ public:
+ DetailHolder( VecStr ah, VecStr ih, std::vector<frenchroast::monitor::MarkerField> fields) : _argHeaders(ah), _instanceHeaders(ih), _markers(fields)
+    {
+    }
+  DetailHolder()
+    {
+    }
+  
+  std::vector<std::string> _argHeaders;
+  std::vector<std::string> _instanceHeaders;
+  std::vector<frenchroast::monitor::MarkerField> _markers;
+};
 
 class FRMain : public QMainWindow {
   Q_OBJECT
@@ -67,18 +81,18 @@ class FRMain : public QMainWindow {
   FRStatus*      _statusMsg;
   EnterKeyListener* _trafficEnterKeyListener;
 
-  std::unordered_map<std::string,  std::unordered_map<std::string,SignalItem*> >        _descriptorsPerDock;
-    std::unordered_map<std::string,  std::unordered_map<std::string, int>>                _detailItems;
-  std::unordered_map<std::string,QTableWidget*>      _detailLists;
+  std::unordered_map<std::string, std::unordered_map<std::string,SignalItem*>> _descriptorsPerDock;
+  std::unordered_map<std::string,  std::unordered_map<std::string, int>>  _detailItems;
+  std::unordered_map<std::string,QTableWidget*>             _detailLists;
   std::unordered_map<std::string, std::vector<std::string>> _detailItemsPerList;
-  std::unordered_map<std::string, std::vector<frenchroast::monitor::MarkerField>> _detailDescriptors;
+  std::unordered_map<std::string, DetailHolder>             _detailDescriptors;
   std::unordered_map<std::string,StackRow*> _traffic_rows;
   std::unordered_map<std::string, int> _traffic_keys;
   MethodRanking*  _rankings;
   std::string                          _hooksfile;
   
   std::string format_markers(const std::string markers);
-  void update_detail_list(std::string,QTableWidget*, const std::vector<frenchroast::monitor::MarkerField>& markers);
+  void update_detail_list(std::string,QTableWidget*, const DetailHolder& detailholder);
   QWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate);
 
   QDockWidget* setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* aptr, const std::string& wstyle,QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
@@ -104,7 +118,7 @@ class FRMain : public QMainWindow {
    void destroy_list(QObject* obj);
    void reset_editor(QObject* obj);
    void handle_exit();
-   void update_list(std::string, std::string, std::string,int, const std::vector<frenchroast::monitor::MarkerField>&);
+   void update_list(std::string, std::string, std::string, int, const std::vector<std::string> ,  const std::vector<std::string>, const std::vector<frenchroast::monitor::MarkerField>);
    void update_timed_list(std::string  descriptor, std::string, long elapsed);
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void update_traffic_rate();

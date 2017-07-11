@@ -26,6 +26,8 @@ namespace frenchroast { namespace monitor {
       MarkerField(std::string desc, int count) : _descriptor(desc), _count(count) {}
       std::string _descriptor;
       int         _count;
+      std::vector<std::string> _arg_items;
+      std::vector<std::string> _instance_items;
     };
   }
 }

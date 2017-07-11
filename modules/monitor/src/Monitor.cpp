@@ -46,39 +46,38 @@ namespace frenchroast { namespace monitor {
     {
       std::string rv = name.substr(1);
       replace(rv,'/','.');
-      //            
-            std::string classname = split(rv,"::")[0];
-            replace(classname,';');
-            std::string methodname = split(split(rv,"::")[1],":")[0];
-            std::string pstr = split(split(rv,"(")[1],")")[0];
-            std::string rvstr = split(split(rv,")")[1],":")[0];
-
-            std::string parms = "";
-            int pos = 0;
-            while(pos < pstr.length() ) {
-              if (pstr[pos] == 'L') {
-                int nextsemi = pstr.find(";",pos);
-                parms += pstr.substr(pos+1,nextsemi-(pos+1)) + std::string(",");
-                pos = nextsemi +2;
-              }
-              else {
-                parms += _type_map[pstr[pos]] + std::string(",");
-                ++pos;
-              }
-            }
-            if(parms.length() > 1)
-              parms.erase(parms.length()-1);
-            
-            if ( rvstr.length() == 1) {
-              rvstr = _type_map[rvstr[0]];
-            }
-            else {
-              rvstr = rvstr.substr(1);
-              rvstr.erase(rvstr.length());
-            }
-              
-            return classname + "::" + methodname + ":(" + parms + "):" + rvstr;
-          }
+      std::string classname = split(rv,"::")[0];
+      replace(classname,';');
+      std::string methodname = split(split(rv,"::")[1],":")[0];
+      std::string pstr = split(split(rv,"(")[1],")")[0];
+      std::string rvstr = split(split(rv,")")[1],":")[0];
+      
+      std::string parms = "";
+      int pos = 0;
+      while(pos < pstr.length() ) {
+        if (pstr[pos] == 'L') {
+          int nextsemi = pstr.find(";",pos);
+          parms +=  pstr.substr(pos+1,nextsemi-(pos+1)) + std::string(",");
+          pos = nextsemi +2;
+        }
+        else {
+          parms +=  _type_map[pstr[pos]] + std::string(",");
+          ++pos;
+        }
+      }
+      if(parms.length() > 1)
+        parms.erase(parms.length()-1);
+      
+      if ( rvstr.length() == 1) {
+        rvstr = _type_map[rvstr[0]];
+      }
+      else {
+        rvstr = rvstr.substr(1);
+        rvstr.erase(rvstr.length());
+      }
+      
+      return classname + "::" + methodname + ":(" + parms + "):" + rvstr;
+    }
 
 
     std::vector<StackTrace> construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters)

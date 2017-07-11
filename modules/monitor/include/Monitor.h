@@ -31,15 +31,14 @@
 namespace frenchroast { namespace monitor {
 
     
-    std::string translate_descriptor(const std::string& name);
+    std::string             translate_descriptor(const std::string& name);
     std::vector<StackTrace> construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters);
-    void transmit_lines(const std::string& fileName, frenchroast::network::Connector&);
+    void                    transmit_lines(const std::string& fileName, frenchroast::network::Connector&);
 
-	struct time_holder {
-	  long      _elapsed;
-	  long long _last;
-
-	};
+    struct time_holder {
+      long      _elapsed;
+      long long _last;
+    };
 	
     template
     <typename T>
@@ -67,7 +66,6 @@ namespace frenchroast { namespace monitor {
     Monitor(T& handler, const std::string& opcodeFile, const std::string& hooksFile) : _handler(handler), _opcodeFile(opcodeFile), _hooksFile(hooksFile)
         { 
         }
-      
 
         void message(const std::string& msg)
         {
@@ -86,15 +84,30 @@ namespace frenchroast { namespace monitor {
 	  }
 	  if (items[MSG_TYPE] == "signal") {
             std::vector<MarkerField> mfields;
-            //if(items[MARKER] != "") {
-              ++((_markers[items[MSG]])[ items[PARAMS] + items[MARKER]]);
-              for(auto& item : _markers[items[MSG]]) {
-                mfields.emplace_back(item.first, item.second);
+            ++((_markers[items[MSG]])[ items[PARAMS] + items[MARKER]]);
+            std::vector<std::string> instanceHeaders;
+            for(auto& item : _markers[items[MSG]]) {
+              MarkerField mf{item.first, item.second};
+              for(auto& x: frenchroast::split(frenchroast::split(item.first, ")")[0].substr(1),",")) {
+                mf._arg_items.push_back(x);
               }
-              //}
-            _handler.signal(translate_descriptor(items[MSG]) , items[2] , ++_signals[items[MSG]], mfields);
 
+              for(auto& x: frenchroast::split(frenchroast::split(item.first, ")")[1],";")) {
+                if(x.find(":") != std::string::npos) {
+                  mf._instance_items.push_back(frenchroast::split(x,":")[1]);
+                  instanceHeaders.push_back(frenchroast::split(x,":")[0]);
+                }
+              }
+              mfields.push_back(mf);
+            }
+            std::vector<std::string> argHeaders;
+            std::string desc = translate_descriptor(items[MSG]);
+            for(auto& x : frenchroast::split(frenchroast::split(frenchroast::split(desc,")")[0], "(")[1], ",")) {
+              argHeaders.push_back(x);
+            }
+            _handler.signal(desc , items[2] , ++_signals[items[MSG]], argHeaders, instanceHeaders, mfields);
 	   }
+
 	  if (items[MSG_TYPE] == "traffic") {
 	    _handler.traffic( construct_traffic(items[MSG], _method_counters));
 	  }
