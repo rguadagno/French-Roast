@@ -58,7 +58,7 @@ namespace frenchroast { namespace monitor {
         if (pstr[pos] == 'L') {
           int nextsemi = pstr.find(";",pos);
           parms +=  pstr.substr(pos+1,nextsemi-(pos+1)) + std::string(",");
-          pos = nextsemi +2;
+          pos = nextsemi +1;
         }
         else {
           parms +=  _type_map[pstr[pos]] + std::string(",");
