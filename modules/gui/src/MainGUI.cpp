@@ -499,37 +499,44 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
 }
 
 
+
+QTableWidgetItem* createItem(int value)
+{
+  QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(std::to_string(value)));
+  ditem->setFont(CodeFont());
+  ditem->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
+  return ditem;
+}
+
+QTableWidgetItem* createItem(const std::string& value)
+{
+  QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(value));
+  ditem->setFont(CodeFont());
+  ditem->setTextAlignment(Qt::AlignCenter);
+  return ditem;
+}
+
 void FRMain::update_detail_list(std::string  descriptor, QTableWidget* list, const DetailHolder& detailHolder)
 {
   if(list->rowCount() == 0) {
 
     list->insertColumn(0);
     list->insertColumn(0);
-    QTableWidgetItem* hitem = new QTableWidgetItem("invoked");
-    hitem->setFont(CodeFont());
-    list->setHorizontalHeaderItem(0,hitem);
-    hitem = new QTableWidgetItem("(");
-    hitem->setFont(CodeFont());
-    list->setHorizontalHeaderItem(1,hitem);
+    list->setHorizontalHeaderItem(0, createItem("invoked"));
+    list->setHorizontalHeaderItem(1,createItem("("));
     
     int colidx = 2;
     for(auto& x : detailHolder._argHeaders) {
       list->insertColumn(colidx);
-      hitem = new QTableWidgetItem(QString::fromStdString(x));
-      hitem->setFont(CodeFont());
-      list->setHorizontalHeaderItem(colidx++,hitem);
+      list->setHorizontalHeaderItem(colidx++,createItem(x));
     }
 
     list->insertColumn(colidx);
-    hitem = new QTableWidgetItem(")");
-    hitem->setFont(CodeFont());
-    list->setHorizontalHeaderItem(colidx++,hitem);
+    list->setHorizontalHeaderItem(colidx++,createItem(")"));
 
     for(auto& x : detailHolder._instanceHeaders) {
       list->insertColumn(colidx);
-      hitem = new QTableWidgetItem(QString::fromStdString(x));
-      hitem->setFont(CodeFont());
-      list->setHorizontalHeaderItem(colidx++,hitem);
+      list->setHorizontalHeaderItem(colidx++,createItem(x));
     }
   }
 
@@ -541,21 +548,18 @@ void FRMain::update_detail_list(std::string  descriptor, QTableWidget* list, con
       list->insertRow(currRow);
   
       _detailItems[descriptor][item._descriptor] = currRow;
-      QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(std::to_string(item._count)));
-      ditem->setFont(CodeFont());
-      list->setItem(currRow, 0, ditem);
+      list->setItem(currRow, 0, createItem(item._count));
+      list->setItem(currRow, 1, createItem("("));
       
       int colidx = 2;
       for(auto& x : item._arg_items) {
-        QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(x));
-        ditem->setFont(CodeFont());
-        list->setItem(currRow, colidx++,ditem);
+        list->setItem(currRow, colidx++, createItem(x));
       }
+
+      list->setItem(currRow, colidx, createItem(")"));
       ++colidx;
       for(auto& x : item._instance_items) {
-        QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(x));
-        ditem->setFont(CodeFont());
-        list->setItem(currRow, colidx++,ditem);
+        list->setItem(currRow, colidx++,createItem(x));
       }
     }
     else {
