@@ -29,7 +29,6 @@
 #include "Hooks.h"
 #include "FrenchRoast.h"
 #include "OpCode.h"
-#include "Util.h"
 #include "Reporter.h"
 #include "Config.h"
 #include "CommandListener.h"
@@ -37,6 +36,7 @@
 #include "FileTransport.h"
 #include "ServerTransport.h"
 #include "Listener.h"
+#include "AgentUtil.h"
 
 /*
 struct GlobalAgentData {
@@ -228,14 +228,41 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
       std::string methodNameStr{methodName};
       std::string sigStr{sig};
 
+      int slot = 0;
+      for(auto& argtype : typeTokenizer(sigStr)) {
+        ++slot;
+        switch(argtype) {
+        case INT_TYPE:
+          jint ivalue;
+          genv->GetLocalInt(aThread, 1,slot, &ivalue);
+          params.append(std::to_string(ivalue) + ",");
+          break;
+        case STRING_TYPE:
+          jobject ovalue;
+          genv->GetLocalObject(aThread, 1,slot, &ovalue);
+          jstring jsvalue = jstring(ovalue);
+          params.append(  std::string(ptr->GetStringUTFChars(jsvalue,0)) + ",");
+          break;
+
+        }
+
+      }
+      
+
+      /*
       int endidx = sigStr.find(")");
+      int slot = 1;
       for(int idx = 1; idx < endidx; idx++) {
         if(sigStr[idx] == 'I') {
           jint value;
-          genv->GetLocalInt(aThread, 1,idx, &value);
+          genv->GetLocalInt(aThread, 1,slot++, &value);
           params.append(std::to_string(value) + ",");
         }
-      }
+        //        if(sigStr[idx] == 'L') {
+        //std::string atype = sigStr.substr(
+        //}
+        */
+      // }
       if(params.length() > 1) {
         params.erase(params.length() -1 ,1);
       }

@@ -103,6 +103,7 @@ namespace frenchroast { namespace monitor {
             std::vector<std::string> argHeaders;
             std::string desc = translate_descriptor(items[MSG]);
             for(auto& x : frenchroast::split(frenchroast::split(frenchroast::split(desc,")")[0], "(")[1], ",")) {
+              std::cout << "pusing: " << x << std::endl;
               argHeaders.push_back(x);
             }
             _handler.signal(desc , items[2] , ++_signals[items[MSG]], argHeaders, instanceHeaders, mfields);
