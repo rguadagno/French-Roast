@@ -53,7 +53,7 @@ void HooksSyntax::highlightBlock(const QString& text)
     QRegularExpressionMatch match = itr.next();
     setFormat(match.capturedStart(), match.capturedLength(), markerFormat);
   }
-  QRegularExpression commentReg("^#[A-Za-z\\.:() <>\\[\\]\\_]*");
+  QRegularExpression commentReg("^#[A-Za-z,\\.:() <>\\[\\]\\_]*");
   itr = commentReg.globalMatch(text);
   while(itr.hasNext()) {
     QRegularExpressionMatch match = itr.next();
