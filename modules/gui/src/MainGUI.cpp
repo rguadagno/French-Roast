@@ -159,7 +159,6 @@ void FRMain::handshake()
 
 QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* actionptr, const std::string& wstyle, QDockWidget::DockWidgetFeatures features)
 {
-
   wptr->setStyleSheet(_settings.value(QString::fromStdString(wstyle)).toString());
   QDockWidget* holder = new QDockWidget(QString::fromStdString(title), this);
   holder->setStyleSheet(_settings.value("dock_widget_style").toString());
@@ -542,11 +541,10 @@ void FRMain::update_detail_list(std::string  descriptor, QTableWidget* list, con
 
 
   for(auto& item : detailHolder._markers) {
-
-  if(_detailItems[descriptor].count(item._descriptor) == 0) {
+  if(_detailItems[descriptor].count(item._descriptor) == 0 ) {
+    if(item._count > 1) {
       int currRow = list->rowCount();
       list->insertRow(currRow);
-  
       _detailItems[descriptor][item._descriptor] = currRow;
       list->setItem(currRow, 0, createItem(item._count));
       list->setItem(currRow, 1, createItem("("));
@@ -555,7 +553,43 @@ void FRMain::update_detail_list(std::string  descriptor, QTableWidget* list, con
       for(auto& x : item._arg_items) {
         list->setItem(currRow, colidx++, createItem(x));
       }
-
+      
+      list->setItem(currRow, colidx, createItem(")"));
+      ++colidx;
+      for(auto& x : item._instance_items) {
+        list->setItem(currRow, colidx++,createItem(x));
+      }
+    }
+    else {
+      _detailItems[descriptor][item._descriptor] = -1;
+      int currRow = list->rowCount();
+      if( _detailItems[descriptor].count("*") == 0) {
+        list->insertRow(currRow);
+        _detailItems[descriptor]["*"] = currRow;
+        list->setItem(currRow, 0, createItem(1));
+        list->setItem(currRow, 1, createItem("*"));
+      }
+      else {
+        list->setItem(_detailItems[descriptor]["*"], 0, createItem(  list->item(_detailItems[descriptor]["*"],0)->text().toInt() + 1   ));
+      }
+    }
+  }
+  else {
+    if(_detailItems[descriptor][item._descriptor] == -1  ) {
+      if(item._count == 1) continue;
+      QTableWidgetItem* titem = list->item(_detailItems[descriptor]["*"], 0);
+      int total = titem->text().toInt() - 1;
+      titem->setText( QString::number(total));
+      int currRow = list->rowCount();
+      list->insertRow(currRow);
+      _detailItems[descriptor][item._descriptor] = currRow;
+      list->setItem(currRow, 0, createItem(item._count));
+      list->setItem(currRow, 1, createItem("("));
+      int colidx = 2;
+      for(auto& x : item._arg_items) {
+        list->setItem(currRow, colidx++, createItem(x));
+      }
+      
       list->setItem(currRow, colidx, createItem(")"));
       ++colidx;
       for(auto& x : item._instance_items) {
@@ -565,7 +599,7 @@ void FRMain::update_detail_list(std::string  descriptor, QTableWidget* list, con
     else {
       list->item(_detailItems[descriptor][item._descriptor],0)->setText(  QString::fromStdString(std::to_string(item._count)) );
     }
-
+  }
   }
 }
 

@@ -105,6 +105,7 @@ namespace frenchroast { namespace monitor {
             for(auto& x : frenchroast::split(frenchroast::split(frenchroast::split(desc,")")[0], "(")[1], ",")) {
               argHeaders.push_back(x);
             }
+
             _handler.signal(desc , items[2] , ++_signals[items[MSG]], argHeaders, instanceHeaders, mfields);
 	   }
 
