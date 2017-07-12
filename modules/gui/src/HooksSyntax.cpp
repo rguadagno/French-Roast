@@ -27,8 +27,13 @@ void HooksSyntax::highlightBlock(const QString& text)
 
   QTextCharFormat pointFormat;
   pointFormat.setFontWeight(QFont::Normal);
-  pointFormat.setForeground(Qt::yellow);
+  pointFormat.setForeground(QBrush(QColor(255,255,0)));
 
+  QTextCharFormat tpointFormat;
+  tpointFormat.setFontWeight(QFont::Normal);
+  tpointFormat.setForeground(QBrush(QColor(242,162,0)));
+
+  
   QTextCharFormat commentFormat;
   commentFormat.setFontWeight(QFont::Normal);
   commentFormat.setForeground(Qt::darkGray);
@@ -39,11 +44,18 @@ void HooksSyntax::highlightBlock(const QString& text)
 
 
   
-  QRegularExpression pointReg("<ENTER>|<EXIT>|<TIMER>");
+  QRegularExpression pointReg("<ENTER>|<EXIT>");
   QRegularExpressionMatchIterator itr = pointReg.globalMatch(text);
   while(itr.hasNext()) {
     QRegularExpressionMatch match = itr.next();
     setFormat(match.capturedStart(), match.capturedLength(), pointFormat);
+  }
+
+  QRegularExpression tpointReg("<TIMER>");
+   itr = tpointReg.globalMatch(text);
+  while(itr.hasNext()) {
+    QRegularExpressionMatch match = itr.next();
+    setFormat(match.capturedStart(), match.capturedLength(), tpointFormat);
   }
 
   
