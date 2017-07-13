@@ -29,11 +29,12 @@
 #include "Monitor.h"
 #include "StackTrace.h"
 #include "MethodStats.h"
+//#include "FRMain.h"
 
 Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::StackTrace>);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::MarkerField>);
-
+Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::MethodStats>);
 
 class FRListener : public QObject
 {
@@ -48,6 +49,7 @@ class FRListener : public QObject
 
   public:
     FRListener(const std::string ip, int port, const std::string& opcodFile, const std::string& hooksFile);
+    frenchroast::monitor::Monitor<FRListener>& getMonitor();
     int getCount(const std::string& item);
     void signal(const std::string& tag, const std::string& tname, int count,  std::vector<std::string>,std::vector<std::string>, std::vector<frenchroast::monitor::MarkerField>);
     void traffic(std::vector<frenchroast::monitor::StackTrace>&);
@@ -55,13 +57,16 @@ class FRListener : public QObject
     void connected(const std::string& addr);
     void unloaded(const std::string& addr);
     void ready();
+    //    bool validate_hooks();
 
   public slots:
     void init();
+    void init2();
     void start_traffic(int);
-    std::vector<frenchroast::monitor::MethodStats> stop_traffic();
-
+    void stop_traffic();
+    
   signals:
+    void method_ranking(std::vector<frenchroast::monitor::MethodStats>);
     void thooked(const std::string& ltype, const std::string& info,const std::string& tname, int count, const std::vector<std::string>&, const std::vector<std::string>&, const std::vector<frenchroast::monitor::MarkerField>&);
     void timersignal(const std::string& info, const std::string& tname, long elapsed);
     void remoteconnected(const std::string& addr);

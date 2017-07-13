@@ -33,6 +33,7 @@
 #include <QHeaderView>
 #include <QAction>
 #include <QFont>
+#include <QSizeGrip>
 #include <string>
 #include "fr.h"
 #include "FRMain.h"
@@ -53,6 +54,7 @@ int main(int argc, char* argv[]) {
   qRegisterMetaType<std::string>();
   qRegisterMetaType<std::vector<frenchroast::monitor::StackTrace>>();
   qRegisterMetaType<std::vector<frenchroast::monitor::MarkerField>>();
+  qRegisterMetaType<std::vector<frenchroast::monitor::MethodStats>>();
   qRegisterMetaType<std::vector<std::string>>();
   
   QApplication app(argc,argv);
@@ -66,17 +68,24 @@ int main(int argc, char* argv[]) {
 
   FRListener roaster{std::string{argv[1]}, atoi(argv[2]), path_to_opcodes, argv[3]};
   QThread* tt = new QThread(&roaster);
-
   roaster.moveToThread(tt);
-  FRMain main(&roaster, config, argv[3]);
-  
-  QObject::connect(&roaster, &FRListener::thooked,        &main,    &FRMain::update_list);
-  QObject::connect(&roaster, &FRListener::timersignal,    &main,    &FRMain::update_timed_list);
-  QObject::connect(&roaster, &FRListener::traffic_signal, &main,    &FRMain::update_traffic);
-  QObject::connect(tt,       &QThread::started,           &roaster, &FRListener::init);
-  QObject::connect(&app,     &QApplication::aboutToQuit,  &main,    &FRMain::handle_exit);
 
+  FRMain main(config, argv[3]);  
+
+  QObject::connect(&roaster, &FRListener::thooked,         &main,    &FRMain::update_list);
+  QObject::connect(&roaster, &FRListener::timersignal,     &main,    &FRMain::update_timed_list);
+  QObject::connect(&roaster, &FRListener::traffic_signal,  &main,    &FRMain::update_traffic);
+  QObject::connect(tt,       &QThread::started,            &roaster, &FRListener::init);
+  QObject::connect(&app,     &QApplication::aboutToQuit,   &main,    &FRMain::handle_exit);
+  QObject::connect(&roaster, &FRListener::remoteconnected, &main,    &FRMain::remote_connected);
+  QObject::connect(&roaster, &FRListener::remoteunloaded,  &main,    &FRMain::remote_disconnected);
+  QObject::connect(&roaster, &FRListener::remote_ready,    &main,    &FRMain::handshake);
+  QObject::connect(&main,    &FRMain::start_traffic,       &roaster, &FRListener::start_traffic);
+  QObject::connect(&main,    &FRMain::stop_traffic,        &roaster, &FRListener::stop_traffic);
+  QObject::connect(&roaster, &FRListener::method_ranking,  &main,    &FRMain::method_ranking);
+  
   tt->start();
+
   main.setWindowTitle("French Roast");
   main.show();
 
@@ -116,7 +125,7 @@ std::unordered_map< std::string,  void (FRMain::*)()  > FRMain::_dockbuilders {{
 QFont SignalItem::_font = CodeFont();
 QFont StackRow::_font = CodeFont();
 
-FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& path_to_hooks) : _settings(settings), _listener(listener), _hooksfile(path_to_hooks)
+FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settings(settings), _hooksfile(path_to_hooks)
 {
   QDesktopWidget* dw = QApplication::desktop();
   int height = dw->availableGeometry(dw->primaryScreen()).height() * 0.2;
@@ -139,12 +148,7 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
     bring_up_dock_if_required(x.first);    
   }
   
-  _statusMsg = new FRStatus{statusBar()};
-  
-  QObject::connect(listener,                 &FRListener::remoteconnected,     _statusMsg, &FRStatus::remote_connected);
-  QObject::connect(listener,                 &FRListener::remoteunloaded,      _statusMsg, &FRStatus::remote_disconnected);
-  QObject::connect(listener,                 &FRListener::remote_ready,        this,       &FRMain::handshake);
-
+  _statusMsg = new FRStatus{statusBar()};  
   statusBar()->addPermanentWidget(_statusMsg,10);
   _statusMsg->waiting_for_connection();
 }
@@ -153,8 +157,18 @@ FRMain::FRMain(FRListener* listener, QSettings& settings, const std::string& pat
 void FRMain::handshake()
 {
   if(_docks.count(TrafficWindow) == 1 && _buttonStartTraffic->text() == "Stop") {
-    _listener->start_traffic(atoi(_rate->text().toStdString().c_str()));
+    start_traffic(atoi(_rate->text().toStdString().c_str()));
   }
+}
+
+void FRMain::remote_connected(const std::string& msg)
+{
+  _statusMsg->remote_connected(msg);
+}
+
+void FRMain::remote_disconnected(const std::string& msg)
+{
+  _statusMsg->remote_disconnected(msg);
 }
 
 QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* actionptr, const std::string& wstyle, QDockWidget::DockWidgetFeatures features)
@@ -176,8 +190,6 @@ QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, 
   holder->setTitleBarWidget(titlebar);
   holder->setAttribute(Qt::WA_DeleteOnClose);
   holder->setFeatures(features);
-  QVBoxLayout* vlayout = new QVBoxLayout();
-  holder->setLayout(vlayout);
   holder->setWidget(wptr);
   return holder;
 }
@@ -290,7 +302,6 @@ void FRMain::view_traffic()
   view_dockwin("Traffic", TrafficWindow, build_traffic_viewer(_traffic, _buttonStartTraffic, _rate));
   
   _traffic->insertColumn(0);
-
   QObject::connect(_buttonStartTraffic,      &QPushButton::clicked,         this, &FRMain::update_traffic_rate);
   QObject::connect(_trafficEnterKeyListener, &EnterKeyListener::enterkey,   this, [&](){ add_hook(_traffic->currentItem()->text());});
   QObject::connect(_traffic,                 &QTableWidget::destroyed,      this, [&](){if(_exit) return;_traffic_rows.clear(); _traffic_keys.clear();});
@@ -306,7 +317,6 @@ void FRMain::view_ranking()
   
   QObject::connect(rankListener, &EnterKeyListener::enterkey,      this, [&](){ add_hook(_rankings->getEnterMethod());});
   QObject::connect(_rankings,    &QListWidget::itemDoubleClicked,  this, [&](){ add_hook(_rankings->getEnterMethod());});
-  QObject::connect(this,         &FRMain::update_method_ranking,   _rankings,  &MethodRanking::update);  
 }
 
 void FRMain::view_signals()
@@ -453,18 +463,22 @@ void FRMain::destroy_list(QObject* obj)
 void FRMain::update_traffic_rate()
 {
   if(_buttonStartTraffic->text() == "Start") {
-    _listener->start_traffic(atoi(_rate->text().toStdString().c_str()));
+     start_traffic(atoi(_rate->text().toStdString().c_str()));
     _buttonStartTraffic->setText("Stop");
     _buttonStartTraffic->setStyleSheet(  _settings.value("traffic_stop_style").toString());
   }
   else {
     _buttonStartTraffic->setText("Start");
     _buttonStartTraffic->setStyleSheet(  _settings.value("traffic_start_style").toString());
-    update_method_ranking(_listener->stop_traffic());
+    stop_traffic();
+ 
   }
 }
 
-
+void FRMain::method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks)
+{
+  _rankings->update(ranks);
+}
 
 void FRMain::update_list(std::string ltype, std::string  descriptor, std::string tname, int count,
                          const std::vector<std::string> argHeaders,  const std::vector<std::string> instanceHeaders, 

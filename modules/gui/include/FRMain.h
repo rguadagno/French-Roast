@@ -59,7 +59,7 @@ class FRMain : public QMainWindow {
   Q_OBJECT
 
  public:
-  FRMain(FRListener*, QSettings&, const std::string&);
+  FRMain(QSettings&, const std::string&);
   const static std::string  EditHooksWindow;
   const static std::string  SignalWindow;
   const static std::string  TimerWindow;
@@ -67,8 +67,8 @@ class FRMain : public QMainWindow {
   const static std::string  TrafficWindow;
 
  private:
-  std::unordered_map<std::string, QDockWidget*> _docks;
-   static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
+  std::unordered_map<std::string, QDockWidget*>                 _docks;
+  static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
   QSettings&    _settings;
   bool          _exit{false};
   QTextEdit*    _hooksEditor{nullptr};
@@ -77,19 +77,18 @@ class FRMain : public QMainWindow {
   QTableWidget* _traffic;
   QPushButton*  _buttonStartTraffic;
   QLineEdit*    _rate;
-  FRListener*   _listener;
   FRStatus*      _statusMsg;
   EnterKeyListener* _trafficEnterKeyListener;
 
   std::unordered_map<std::string, std::unordered_map<std::string,SignalItem*>> _descriptorsPerDock;
-  std::unordered_map<std::string,  std::unordered_map<std::string, int>>  _detailItems;
+  std::unordered_map<std::string,  std::unordered_map<std::string, int>>      _detailItems;
   std::unordered_map<std::string,QTableWidget*>             _detailLists;
   std::unordered_map<std::string, std::vector<std::string>> _detailItemsPerList;
   std::unordered_map<std::string, DetailHolder>             _detailDescriptors;
-  std::unordered_map<std::string,StackRow*> _traffic_rows;
-  std::unordered_map<std::string, int> _traffic_keys;
-  MethodRanking*  _rankings;
-  std::string                          _hooksfile;
+  std::unordered_map<std::string,StackRow*>                 _traffic_rows;
+  std::unordered_map<std::string, int>                      _traffic_keys;
+  MethodRanking*                                            _rankings;
+  std::string                                               _hooksfile;
   
   std::string format_markers(const std::string markers);
   void update_detail_list(std::string,QTableWidget*, const DetailHolder& detailholder);
@@ -102,11 +101,18 @@ class FRMain : public QMainWindow {
   void bring_up_dock_if_required(const std::string dockname);
   void connect_dock_win(QMenu* mptr, const std::string& actionname, const std::string& docname);
   void view_dockwin(const std::string& title, const std::string& dockname, QWidget* wptr);
+  
  signals:
+  
   void hooks_saved();
-  void update_method_ranking( std::vector<frenchroast::monitor::MethodStats>& ranks);
+  void start_traffic(int);
+  void stop_traffic();
+
   
  public slots:
+   void method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks);
+   void remote_connected(const std::string& msg);
+   void remote_disconnected(const std::string& msg);
    void view_hooks_editor();
    void view_signals();
    void view_timers();
