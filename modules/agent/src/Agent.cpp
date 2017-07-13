@@ -243,26 +243,9 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
           jstring jsvalue = jstring(ovalue);
           params.append(  std::string(ptr->GetStringUTFChars(jsvalue,0)) + ",");
           break;
-
         }
-
       }
-      
 
-      /*
-      int endidx = sigStr.find(")");
-      int slot = 1;
-      for(int idx = 1; idx < endidx; idx++) {
-        if(sigStr[idx] == 'I') {
-          jint value;
-          genv->GetLocalInt(aThread, 1,slot++, &value);
-          params.append(std::to_string(value) + ",");
-        }
-        //        if(sigStr[idx] == 'L') {
-        //std::string atype = sigStr.substr(
-        //}
-        */
-      // }
       if(params.length() > 1) {
         params.erase(params.length() -1 ,1);
       }
