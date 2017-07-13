@@ -5,7 +5,9 @@
 TEMPLATE = app
 TARGET = roaster
 INCLUDEPATH += \
-../include ../../network/include \
+../include \
+../../network/include \
+../../agent/include \
 ../../instrumentation/include \
 ../../monitor/include
 
@@ -13,6 +15,7 @@ QT += core gui widgets
 # Input
 SOURCES += \
 ../src/*.cpp \
+../../agent/src/HookValidator.cpp  \
 ../../network/src/ConnectorWindows.cpp  \
 ../../network/src/Connector.cpp \
 ../../instrumentation/src/Util.cpp \

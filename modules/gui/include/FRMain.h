@@ -71,7 +71,9 @@ class FRMain : public QMainWindow {
   static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
   QSettings&    _settings;
   bool          _exit{false};
+  bool          _ok_to_send_hooks{false};
   QTextEdit*    _hooksEditor{nullptr};
+  QListWidget*  _messageList{nullptr};
   QListWidget*  _list;
   QListWidget*  _timedlist;
   QTableWidget* _traffic;
@@ -111,6 +113,7 @@ class FRMain : public QMainWindow {
   
  public slots:
    void validate_and_send_hooks();
+   bool validate_hooks();
    void method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks);
    void remote_connected(const std::string& msg);
    void remote_disconnected(const std::string& msg);

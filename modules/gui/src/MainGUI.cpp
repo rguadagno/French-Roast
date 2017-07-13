@@ -46,6 +46,7 @@
 #include <QToolBar>
 #include <algorithm>
 #include "CodeFont.h"
+#include "HookValidator.h"
 
 int main(int argc, char* argv[]) {
 
@@ -158,10 +159,34 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
 
 void FRMain::validate_and_send_hooks()
 {
+  if(_hooksEditor == nullptr) return;
+  _ok_to_send_hooks = true;
+  validate_hooks();
+}
+
+bool FRMain::validate_hooks()
+{
+  _messageList->clear();
+  bool validated = true;
   std::string outstr = _hooksEditor->document()->toPlainText().toStdString();
-  
   std::vector<std::string> hooks{frenchroast::split(outstr, "\n")};
-  validated_hooks(hooks);
+  for(auto& line : hooks) {
+    frenchroast::agent::HookValidatorStatus status = frenchroast::agent::validate_hook(line);
+    if(!status) {
+      validated = false;
+      QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(status.msg()));
+      item->setFont(CodeFont());
+      _messageList->addItem(item);
+    }
+  }
+
+  
+  if(validated && _ok_to_send_hooks) {
+    validated_hooks(hooks);
+    _ok_to_send_hooks = false;
+  }
+
+  return validated;
 }
 
 void FRMain::handshake()
@@ -361,7 +386,10 @@ void FRMain::view_hooks_editor()
 {
    if(_docks.count(EditHooksWindow) == 1) return;
     _hooksEditor = new QTextEdit();
+    _messageList = new QListWidget{};
+    _messageList->setStyleSheet("QListWidget {border-top:none;border-bottom: 1px solid #808080;border-left: 1px solid #808080;border-right: 1px solid #808080;background-color: #d0e4ed;} QListWidget::item {color: #ba0303;}");
 
+    
     std::string text = "";
     std::ifstream in;
     in.open(_hooksfile);
@@ -378,9 +406,20 @@ void FRMain::view_hooks_editor()
     _hooksEditor->document()->setModified(false);
     
     QObject::connect(_hooksEditor, &QTextEdit::destroyed, this, &FRMain::reset_editor);
-    ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::Save);
+    ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::Save | ActionBar::Validate);
 
-    QDockWidget* editdoc = setup_dock_window("hooks", _hooksEditor, abar, "edit_style");
+    QWidget* ide = new QWidget{};
+
+    QVBoxLayout* vlayout = new QVBoxLayout();
+    vlayout->setContentsMargins(0,0,0,0);
+
+    ide->setLayout(vlayout);
+    vlayout->addWidget(_hooksEditor);
+
+
+    vlayout->addWidget(_messageList);
+    
+    QDockWidget* editdoc = setup_dock_window("hooks", ide, abar, "edit_style");
     _docks[EditHooksWindow] = editdoc;
 
     restore_dock_win(EditHooksWindow);
@@ -388,6 +427,7 @@ void FRMain::view_hooks_editor()
     QObject::connect(abar,                     &ActionBar::close_clicked,      editdoc, &QDockWidget::close);
     QObject::connect(abar,                     &ActionBar::close_clicked,      this,    [&](){if(_exit) return;_docks.erase(EditHooksWindow);});
     QObject::connect(abar,                     &ActionBar::save_clicked,       this,    &FRMain::save_hooks);
+    QObject::connect(abar,                     &ActionBar::validate_clicked,   this,    &FRMain::validate_hooks);
     QObject::connect(this,                     &FRMain::hooks_saved ,          abar,    &ActionBar::disable_save);
     QObject::connect(_hooksEditor->document(), &QTextDocument::contentsChange, abar,    &ActionBar::enable_save);
  }
@@ -395,7 +435,7 @@ void FRMain::view_hooks_editor()
 void FRMain::save_hooks()
 {
   if(_hooksEditor == nullptr) return;
-
+  
   std::ofstream out;
   out.open(_hooksfile);
   QString outstr = _hooksEditor->document()->toPlainText();

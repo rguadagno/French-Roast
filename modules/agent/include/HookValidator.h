@@ -17,35 +17,27 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <QWidget>
-#include <QPushButton>
-#include <QGridLayout>
-#include <bitset>
+#ifndef HOOKVALID_H
+#define HOOKVALID_H
 
-class ActionBar : public QWidget {
-  QGridLayout* _layout{nullptr};
-  QPushButton* _closeButton{nullptr};
-  QPushButton* _saveButton{nullptr};
-  QPushButton* _validateButton{nullptr};
-  
-   Q_OBJECT
-  
-  signals:
-  void save_clicked();
-  void close_clicked();
-  void validate_clicked();
+#include <string>
 
-  public slots:
-    void enable_save();
-    void disable_save();
-public:
-  ActionBar(const ActionBar&) = delete;
-  ActionBar(const std::bitset<4>& actions = None);
-  ~ActionBar();
+namespace frenchroast { namespace agent {
 
-  const static std::bitset<4> Save;
-  const static std::bitset<4> Close;
-  const static std::bitset<4> None;
-  const static std::bitset<4> Validate;
-  
-};
+  class HookValidatorStatus {
+    std::string _msg;
+    bool _valid{true};
+  public:
+    HookValidatorStatus();
+    HookValidatorStatus(const std::string errorMsg);
+    bool valid();
+    const std::string& msg();
+    operator bool();
+  };
+
+  HookValidatorStatus validate_hook(const std::string& line);
+
+}
+}
+
+#endif
