@@ -48,8 +48,7 @@ class FRListener : public QObject
     int         _trafficRate{-1};
 
   public:
-    FRListener(const std::string ip, int port, const std::string& opcodFile, const std::string& hooksFile);
-    frenchroast::monitor::Monitor<FRListener>& getMonitor();
+    FRListener(const std::string ip, int port, const std::string& opcodFile);
     int getCount(const std::string& item);
     void signal(const std::string& tag, const std::string& tname, int count,  std::vector<std::string>,std::vector<std::string>, std::vector<frenchroast::monitor::MarkerField>);
     void traffic(std::vector<frenchroast::monitor::StackTrace>&);
@@ -57,15 +56,16 @@ class FRListener : public QObject
     void connected(const std::string& addr);
     void unloaded(const std::string& addr);
     void ready();
-    //    bool validate_hooks();
+    void request_hooks();
 
   public slots:
     void init();
-    void init2();
     void start_traffic(int);
     void stop_traffic();
+    void validated_hooks(std::vector<std::string>);
     
   signals:
+    void send_hooks();
     void method_ranking(std::vector<frenchroast::monitor::MethodStats>);
     void thooked(const std::string& ltype, const std::string& info,const std::string& tname, int count, const std::vector<std::string>&, const std::vector<std::string>&, const std::vector<frenchroast::monitor::MarkerField>&);
     void timersignal(const std::string& info, const std::string& tname, long elapsed);

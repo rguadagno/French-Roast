@@ -130,5 +130,13 @@ namespace frenchroast { namespace monitor {
       
     }
 
+    void transmit_lines(const std::vector<std::string>& lines, frenchroast::network::Connector& conn)
+    {
+      for(auto& line : lines) {
+        conn.send_message(line);
+      }
+      conn.send_message("<end>");
+    }
+    
     
   }}

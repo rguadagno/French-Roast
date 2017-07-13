@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     exit(0);
   }
 
-  FRListener roaster{std::string{argv[1]}, atoi(argv[2]), path_to_opcodes, argv[3]};
+  FRListener roaster{std::string{argv[1]}, atoi(argv[2]), path_to_opcodes};
   QThread* tt = new QThread(&roaster);
   roaster.moveToThread(tt);
 
@@ -83,6 +83,8 @@ int main(int argc, char* argv[]) {
   QObject::connect(&main,    &FRMain::start_traffic,       &roaster, &FRListener::start_traffic);
   QObject::connect(&main,    &FRMain::stop_traffic,        &roaster, &FRListener::stop_traffic);
   QObject::connect(&roaster, &FRListener::method_ranking,  &main,    &FRMain::method_ranking);
+  QObject::connect(&roaster, &FRListener::send_hooks,      &main,    &FRMain::validate_and_send_hooks);
+  QObject::connect(&main,    &FRMain::validated_hooks,     &roaster, &FRListener::validated_hooks);
   
   tt->start();
 
@@ -153,6 +155,14 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
   _statusMsg->waiting_for_connection();
 }
 
+
+void FRMain::validate_and_send_hooks()
+{
+  std::string outstr = _hooksEditor->document()->toPlainText().toStdString();
+  
+  std::vector<std::string> hooks{frenchroast::split(outstr, "\n")};
+  validated_hooks(hooks);
+}
 
 void FRMain::handshake()
 {

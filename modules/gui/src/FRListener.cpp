@@ -21,9 +21,8 @@
 #include "FRMain.h"
 #include <thread>
 
-FRListener::FRListener(const std::string ip, int port, const std::string& opcodeFile, const std::string& hooksFile ) : _ip(ip), _port(port), _mon(*this, opcodeFile, hooksFile)
+FRListener::FRListener(const std::string ip, int port, const std::string& opcodeFile) : _ip(ip), _port(port), _mon(*this, opcodeFile)
 {
- 
 }
 
 int FRListener::getCount(const std::string& item)
@@ -62,12 +61,6 @@ void FRListener::init()
   t1.detach();
 }
 
-void FRListener::init2()
-{
-
-  QApplication::exec();
-
-}
 
 void FRListener::start_traffic(int rate)
 {
@@ -85,7 +78,13 @@ void FRListener::ready()
   remote_ready();
 }
 
-frenchroast::monitor::Monitor<FRListener>& FRListener::getMonitor()
+void FRListener::request_hooks()
 {
-  return _mon;
+  send_hooks();
 }
+
+void FRListener::validated_hooks(std::vector<std::string> hooks)
+{
+  _mon.send_hooks(hooks);
+}
+

@@ -107,9 +107,10 @@ class FRMain : public QMainWindow {
   void hooks_saved();
   void start_traffic(int);
   void stop_traffic();
-
+  void validated_hooks(std::vector<std::string>);
   
  public slots:
+   void validate_and_send_hooks();
    void method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks);
    void remote_connected(const std::string& msg);
    void remote_disconnected(const std::string& msg);

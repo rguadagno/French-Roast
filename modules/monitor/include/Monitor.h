@@ -33,7 +33,8 @@ namespace frenchroast { namespace monitor {
     
     std::string             translate_descriptor(const std::string& name);
     std::vector<StackTrace> construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters);
-    void                    transmit_lines(const std::string& fileName, frenchroast::network::Connector&);
+    void transmit_lines(const std::string& fileName, frenchroast::network::Connector&);
+    void transmit_lines(const std::vector<std::string>&, frenchroast::network::Connector&);
 
     struct time_holder {
       long      _elapsed;
@@ -50,7 +51,6 @@ namespace frenchroast { namespace monitor {
         std::unordered_map<std::string, MethodStats>                           _method_counters;
         std::unordered_map<std::string, std::unordered_map<std::string, int>>  _markers;
         std::string                                                            _opcodeFile;
-        std::string                                                            _hooksFile;
         
 	const int MSG_TYPE    = 0;
 	const int MSG         = 1;
@@ -63,7 +63,7 @@ namespace frenchroast { namespace monitor {
 	const int THREAD_NAME = 4;
         
     public:
-    Monitor(T& handler, const std::string& opcodeFile, const std::string& hooksFile) : _handler(handler), _opcodeFile(opcodeFile), _hooksFile(hooksFile)
+    Monitor(T& handler, const std::string& opcodeFile) : _handler(handler), _opcodeFile(opcodeFile)
         { 
         }
 
@@ -128,15 +128,20 @@ namespace frenchroast { namespace monitor {
             transmit_lines(_opcodeFile, _conn);
           }
           if(items[MSG_TYPE] == "transmit-hooks") {
-            transmit_lines(_hooksFile, _conn);           
+            _handler.request_hooks();
           }
          
       }
 
-      void init_receiver(const std::string& ipAddr, int port)
-      {
-        _conn.wait_for_client_connection(ipAddr, port, this);
-      }
+        void send_hooks(const std::vector<std::string>& hooks)
+        {
+          transmit_lines(hooks, _conn);
+        }
+
+        void init_receiver(const std::string& ipAddr, int port)
+        {
+          _conn.wait_for_client_connection(ipAddr, port, this);
+        }
 
       void watch_traffic(const int interval_millis)
       {
