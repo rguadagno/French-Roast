@@ -33,7 +33,8 @@ namespace frenchroast {
     _edit->setCursorWidth(8);
     
     _message = new QListWidget{};
-    _message->setStyleSheet("QListWidget {border-top:none;border-bottom: 1px solid #808080;border-left: 1px solid #808080;border-right: 1px solid #808080;background-color: #d0e4ed;} QListWidget::item {color: #ba0303;}");
+//    _message->setStyleSheet("QListWidget {border-top:none;border-bottom: 1px solid #808080;border-left: 1px solid #808080;border-right: 1px solid #808080;background-color: #d0e4ed;} QListWidget::item {color: #ba0303;}");
+    _message->setStyleSheet("QListWidget {border-top:none;border-bottom: 1px solid #808080;border-left: 1px solid #808080;border-right: 1px solid #808080;background-color: #9e9e9e;} ");
     
     _edit->setFont(CodeFont());
     new HooksSyntax(_edit->document());
@@ -65,12 +66,17 @@ namespace frenchroast {
       if(!status) {
         validated = false;
         QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(status.msg()));
+        item->setForeground(QColor("#990000"));
         item->setFont(CodeFont());
         _message->addItem(item);
       }
     }
     if(validated) {
-      validated_hooks(hooks);
+       QListWidgetItem* item = new QListWidgetItem("validation PASSED.");
+       item->setForeground(QColor("#443355"));
+       item->setFont(CodeFont());
+       _message->addItem(item);
+       validated_hooks(hooks);
     }
   }
 
