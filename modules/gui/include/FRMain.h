@@ -38,6 +38,7 @@
 #include "EnterKeyListener.h"
 #include "MethodStats.h"
 #include "MethodRanking.h"
+#include "Editor.h"
 
 class SignalItem;
 using VecStr = std::vector<std::string>; 
@@ -72,8 +73,7 @@ class FRMain : public QMainWindow {
   QSettings&    _settings;
   bool          _exit{false};
   bool          _ok_to_send_hooks{false};
-  QTextEdit*    _hooksEditor{nullptr};
-  QListWidget*  _messageList{nullptr};
+  frenchroast::Editor*    _editor{nullptr};
   QListWidget*  _list;
   QListWidget*  _timedlist;
   QTableWidget* _traffic;
@@ -112,8 +112,7 @@ class FRMain : public QMainWindow {
   void validated_hooks(std::vector<std::string>);
   
  public slots:
-   void validate_and_send_hooks();
-   bool validate_hooks();
+   void validate_hooks();
    void method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks);
    void remote_connected(const std::string& msg);
    void remote_disconnected(const std::string& msg);
@@ -122,7 +121,6 @@ class FRMain : public QMainWindow {
    void view_timers();
    void view_ranking();
    void view_traffic();
-   void save_hooks();
    void add_hook(QString);
    void show_detail(QListWidgetItem* item);
    void destroy_list(QObject* obj);

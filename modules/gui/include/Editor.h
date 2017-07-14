@@ -1,0 +1,55 @@
+// copyright (c) 2017 Richard Guadagno
+// contact: rrguadagno@gmail.com
+//
+// This file is part of French-Roast
+//
+//    French-Roast is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    French-Roast is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
+//
+
+#ifndef EDITOR_H
+#define EDITOR_H
+
+#include <QTextEdit>
+#include <QListWidget>
+
+namespace frenchroast {
+
+  class Editor : public QWidget {
+
+    Q_OBJECT
+
+  private:
+    QTextEdit*    _edit{nullptr};
+    QListWidget*  _message{nullptr};
+    std::string   _filename;
+  public:
+    Editor();
+    
+  signals:
+    void validated_hooks(std::vector<std::string>);
+    void saved();
+    void changed();
+
+    private slots:
+      void contents_changed();
+  public slots:
+      void validate_hooks();
+      void load_from_file(const std::string&);
+      void save();
+      void save_as(const std::string&);
+      void add(QString);
+  };
+}
+
+#endif

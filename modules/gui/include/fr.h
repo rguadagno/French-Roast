@@ -46,6 +46,7 @@ class FRListener : public QObject
     std::string _ip;
     int         _port;
     int         _trafficRate{-1};
+    bool        _hooks_request{false};
 
   public:
     FRListener(const std::string ip, int port, const std::string& opcodFile);

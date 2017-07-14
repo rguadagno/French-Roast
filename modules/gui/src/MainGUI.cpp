@@ -39,14 +39,13 @@
 #include "FRMain.h"
 #include "MonitorUtil.h"
 #include "StackRow.h"
-#include "HooksSyntax.h"
 #include <QSettings>
 #include <QDesktopWidget>
 #include <QMenuBar>
 #include <QToolBar>
 #include <algorithm>
 #include "CodeFont.h"
-#include "HookValidator.h"
+
 
 int main(int argc, char* argv[]) {
 
@@ -84,7 +83,7 @@ int main(int argc, char* argv[]) {
   QObject::connect(&main,    &FRMain::start_traffic,       &roaster, &FRListener::start_traffic);
   QObject::connect(&main,    &FRMain::stop_traffic,        &roaster, &FRListener::stop_traffic);
   QObject::connect(&roaster, &FRListener::method_ranking,  &main,    &FRMain::method_ranking);
-  QObject::connect(&roaster, &FRListener::send_hooks,      &main,    &FRMain::validate_and_send_hooks);
+  QObject::connect(&roaster, &FRListener::send_hooks,      &main,    &FRMain::validate_hooks);
   QObject::connect(&main,    &FRMain::validated_hooks,     &roaster, &FRListener::validated_hooks);
   
   tt->start();
@@ -157,37 +156,12 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
 }
 
 
-void FRMain::validate_and_send_hooks()
+void FRMain::validate_hooks()
 {
-  if(_hooksEditor == nullptr) return;
-  _ok_to_send_hooks = true;
-  validate_hooks();
+  if(_editor == nullptr) return;
+  _editor->validate_hooks();
 }
 
-bool FRMain::validate_hooks()
-{
-  _messageList->clear();
-  bool validated = true;
-  std::string outstr = _hooksEditor->document()->toPlainText().toStdString();
-  std::vector<std::string> hooks{frenchroast::split(outstr, "\n")};
-  for(auto& line : hooks) {
-    frenchroast::agent::HookValidatorStatus status = frenchroast::agent::validate_hook(line);
-    if(!status) {
-      validated = false;
-      QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(status.msg()));
-      item->setFont(CodeFont());
-      _messageList->addItem(item);
-    }
-  }
-
-  
-  if(validated && _ok_to_send_hooks) {
-    validated_hooks(hooks);
-    _ok_to_send_hooks = false;
-  }
-
-  return validated;
-}
 
 void FRMain::handshake()
 {
@@ -384,72 +358,29 @@ void FRMain::view_dockwin(const std::string& title, const std::string& dockname,
 
 void FRMain::view_hooks_editor()
 {
-   if(_docks.count(EditHooksWindow) == 1) return;
-    _hooksEditor = new QTextEdit();
-    _messageList = new QListWidget{};
-    _messageList->setStyleSheet("QListWidget {border-top:none;border-bottom: 1px solid #808080;border-left: 1px solid #808080;border-right: 1px solid #808080;background-color: #d0e4ed;} QListWidget::item {color: #ba0303;}");
+  if(_docks.count(EditHooksWindow) == 1) return;
 
-    
-    std::string text = "";
-    std::ifstream in;
-    in.open(_hooksfile);
-    std::string line;
-    while (getline(in,line)) {
-      text.append(line + "\n");
-    }
-    in.close();
+  _editor = new frenchroast::Editor();
+  ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::Save | ActionBar::Validate);
+  QDockWidget* editdoc = setup_dock_window("hooks", _editor, abar, "edit_style");
+  _docks[EditHooksWindow] = editdoc;
+  restore_dock_win(EditHooksWindow);
+  _editor->load_from_file(_hooksfile);
   
-    _hooksEditor->document()->setPlainText(QString::fromStdString(text));
-    
-    _hooksEditor->setFont(CodeFont());
-    HooksSyntax* syntax = new HooksSyntax(_hooksEditor->document());
-    _hooksEditor->document()->setModified(false);
-    
-    QObject::connect(_hooksEditor, &QTextEdit::destroyed, this, &FRMain::reset_editor);
-    ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::Save | ActionBar::Validate);
-
-    QWidget* ide = new QWidget{};
-
-    QVBoxLayout* vlayout = new QVBoxLayout();
-    vlayout->setContentsMargins(0,0,0,0);
-
-    ide->setLayout(vlayout);
-    vlayout->addWidget(_hooksEditor);
-
-
-    vlayout->addWidget(_messageList);
-    
-    QDockWidget* editdoc = setup_dock_window("hooks", ide, abar, "edit_style");
-    _docks[EditHooksWindow] = editdoc;
-
-    restore_dock_win(EditHooksWindow);
-    
-    QObject::connect(abar,                     &ActionBar::close_clicked,      editdoc, &QDockWidget::close);
-    QObject::connect(abar,                     &ActionBar::close_clicked,      this,    [&](){if(_exit) return;_docks.erase(EditHooksWindow);});
-    QObject::connect(abar,                     &ActionBar::save_clicked,       this,    &FRMain::save_hooks);
-    QObject::connect(abar,                     &ActionBar::validate_clicked,   this,    &FRMain::validate_hooks);
-    QObject::connect(this,                     &FRMain::hooks_saved ,          abar,    &ActionBar::disable_save);
-    QObject::connect(_hooksEditor->document(), &QTextDocument::contentsChange, abar,    &ActionBar::enable_save);
- }
-
-void FRMain::save_hooks()
-{
-  if(_hooksEditor == nullptr) return;
-  
-  std::ofstream out;
-  out.open(_hooksfile);
-  QString outstr = _hooksEditor->document()->toPlainText();
-  out << outstr.toStdString();
-  out.close();
-  hooks_saved();
+  QObject::connect(_editor,  &QTextEdit::destroyed,         this,    &FRMain::reset_editor);
+  QObject::connect(abar,    &ActionBar::close_clicked,      editdoc, &QDockWidget::close);
+  QObject::connect(abar,    &ActionBar::close_clicked,      this,    [&](){if(_exit) return;_docks.erase(EditHooksWindow);});
+  QObject::connect(abar,    &ActionBar::save_clicked,       _editor, &frenchroast::Editor::save);
+  QObject::connect(abar,    &ActionBar::validate_clicked,   _editor, &frenchroast::Editor::validate_hooks);
+  QObject::connect(_editor, &frenchroast::Editor::saved ,   abar,    &ActionBar::disable_save);
+  QObject::connect(_editor, &frenchroast::Editor::changed,  abar,    &ActionBar::enable_save);
+  QObject::connect(_editor, &frenchroast::Editor::validated_hooks,  this,    &FRMain::validated_hooks);
 }
-
 
 void FRMain::add_hook(QString txt)
 {
-  if(_hooksEditor == nullptr) return;
-    QString str = _hooksEditor->document()->toPlainText() + "\n" + txt +    "<ENTER>";
-  _hooksEditor->document()->setPlainText(str);
+  if(_editor == nullptr) return;
+  _editor->add(txt);
 }
 
 
@@ -493,7 +424,7 @@ void FRMain::show_detail(QListWidgetItem* item)
 
 void FRMain::reset_editor(QObject* obj)
 {
-  _hooksEditor = nullptr;
+  _editor = nullptr;
 }
 
 void FRMain::destroy_list(QObject* obj)

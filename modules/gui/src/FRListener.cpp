@@ -80,11 +80,15 @@ void FRListener::ready()
 
 void FRListener::request_hooks()
 {
+  _hooks_request = true;
   send_hooks();
 }
 
 void FRListener::validated_hooks(std::vector<std::string> hooks)
 {
-  _mon.send_hooks(hooks);
+  if(_hooks_request) {
+    _hooks_request = false;
+    _mon.send_hooks(hooks);
+  }
 }
 
