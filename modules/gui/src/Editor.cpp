@@ -80,7 +80,7 @@ namespace frenchroast {
       frenchroast::agent::HookValidatorStatus status = frenchroast::agent::validate_hook(line);
       if(!status) {
         validated = false;
-        MessageItem* item = new MessageItem(QString::fromStdString(status.msg()), xline);
+        MessageItem* item = new MessageItem(status.msg(), xline);
         item->setForeground(QColor("#990000"));
         item->setFont(CodeFont());
         _message->addItem(item);
@@ -88,7 +88,7 @@ namespace frenchroast {
     ++xline;
     }
     if(validated) {
-       QListWidgetItem* item = new QListWidgetItem("validation PASSED.");
+       QListWidgetItem* item = new MessageItem("validation PASSED.");
        item->setForeground(QColor("#443355"));
        item->setFont(CodeFont());
        _message->addItem(item);
@@ -134,7 +134,7 @@ namespace frenchroast {
   }
 
 
-  MessageItem::MessageItem(QString str, int line) : QListWidgetItem(str), _line(line)
+  MessageItem::MessageItem(const std::string& str, int line) : QListWidgetItem(QString::fromStdString(str)), _line(line)
   {
   }
     

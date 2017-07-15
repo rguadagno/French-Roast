@@ -57,7 +57,7 @@ namespace frenchroast {
   class MessageItem : public QListWidgetItem {
     int _line;
   public:
-    MessageItem(QString str, int line);
+    MessageItem(const std::string& str, int line = 0);
     MessageItem()
       {
       }
