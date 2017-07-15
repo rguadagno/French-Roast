@@ -23,6 +23,8 @@
 #include <QTextEdit>
 #include <QListWidget>
 
+
+
 namespace frenchroast {
 
   class Editor : public QWidget {
@@ -43,6 +45,7 @@ namespace frenchroast {
 
     private slots:
       void contents_changed();
+      void goto_error_line(QListWidgetItem*);
   public slots:
       void validate_hooks();
       void load_from_file(const std::string&);
@@ -50,6 +53,17 @@ namespace frenchroast {
       void save_as(const std::string&);
       void add(QString);
   };
-}
 
+  class MessageItem : public QListWidgetItem {
+    int _line;
+  public:
+    MessageItem(QString str, int line);
+    MessageItem()
+      {
+      }
+    int line() const;
+  };
+
+}
+Q_DECLARE_METATYPE(frenchroast::MessageItem);  
 #endif

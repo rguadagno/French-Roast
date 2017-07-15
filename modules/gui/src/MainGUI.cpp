@@ -47,6 +47,7 @@
 #include "CodeFont.h"
 
 
+
 int main(int argc, char* argv[]) {
 
   QSettings config{frenchroast::monitor::get_env_variable("INI_FULL_PATH","example /home/richg/French-Roast/modules/gui/config/fr.ini"), QSettings::IniFormat};
@@ -56,6 +57,7 @@ int main(int argc, char* argv[]) {
   qRegisterMetaType<std::vector<frenchroast::monitor::MarkerField>>();
   qRegisterMetaType<std::vector<frenchroast::monitor::MethodStats>>();
   qRegisterMetaType<std::vector<std::string>>();
+  qRegisterMetaType<frenchroast::MessageItem>();
   
   QApplication app(argc,argv);
 

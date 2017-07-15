@@ -33,7 +33,6 @@ namespace frenchroast {
     _edit->setCursorWidth(8);
     
     _message = new QListWidget{};
-//    _message->setStyleSheet("QListWidget {border-top:none;border-bottom: 1px solid #808080;border-left: 1px solid #808080;border-right: 1px solid #808080;background-color: #d0e4ed;} QListWidget::item {color: #ba0303;}");
     _message->setStyleSheet("QListWidget {border-top:none;border-bottom: 1px solid #808080;border-left: 1px solid #808080;border-right: 1px solid #808080;background-color: #9e9e9e;} ");
     
     _edit->setFont(CodeFont());
@@ -46,8 +45,19 @@ namespace frenchroast {
     vlayout->addWidget(_edit);
     vlayout->addWidget(_message);
 
-    QObject::connect(_edit->document(), &QTextDocument::contentsChange, this,    &Editor::contents_changed);
-    
+    QObject::connect(_edit->document(), &QTextDocument::contentsChange,  this,    &Editor::contents_changed);
+    QObject::connect(_message,          &QListWidget::itemDoubleClicked, this,    &Editor::goto_error_line);
+  }
+
+
+  void Editor::goto_error_line(QListWidgetItem* qitem)
+  {
+     MessageItem* item = dynamic_cast<MessageItem*>(qitem);
+     _edit->setFocus();
+    _edit->moveCursor(QTextCursor::Start);
+    for(int idx = 0; idx < item->line(); idx++) {
+      _edit->moveCursor(QTextCursor::Down);
+    }
   }
 
   void Editor::contents_changed()
@@ -61,15 +71,17 @@ namespace frenchroast {
     bool validated = true;
     std::string outstr = _edit->document()->toPlainText().toStdString();
     std::vector<std::string> hooks{frenchroast::split(outstr, "\n")};
+    int xline = 0;
     for(auto& line : hooks) {
       frenchroast::agent::HookValidatorStatus status = frenchroast::agent::validate_hook(line);
       if(!status) {
         validated = false;
-        QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(status.msg()));
+        MessageItem* item = new MessageItem(QString::fromStdString(status.msg()), xline);
         item->setForeground(QColor("#990000"));
         item->setFont(CodeFont());
         _message->addItem(item);
       }
+    ++xline;
     }
     if(validated) {
        QListWidgetItem* item = new QListWidgetItem("validation PASSED.");
@@ -116,5 +128,16 @@ namespace frenchroast {
     QString str = _edit->document()->toPlainText() + "\n" + text +    "<ENTER>";
     _edit->document()->setPlainText(str);
   }
+
+
+  MessageItem::MessageItem(QString str, int line) : QListWidgetItem(str), _line(line)
+  {
+  }
+    
+  int MessageItem::line() const
+  {
+    return _line;
+  }
+
 
 }

@@ -29,12 +29,12 @@
 #include "Monitor.h"
 #include "StackTrace.h"
 #include "MethodStats.h"
-//#include "FRMain.h"
 
 Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::StackTrace>);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::MarkerField>);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::MethodStats>);
+
 
 class FRListener : public QObject
 {
