@@ -22,6 +22,7 @@
 #include "HooksSyntax.h"
 #include "HookValidator.h"
 #include <QBoxLayout>
+#include <QSplitter>
 #include <iostream>
 #include <fstream>
 #include "Util.h"
@@ -38,12 +39,15 @@ namespace frenchroast {
     _edit->setFont(CodeFont());
     new HooksSyntax(_edit->document());
     _edit->document()->setModified(false);
-    
     QVBoxLayout* vlayout = new QVBoxLayout();
+    QSplitter* splitter = new QSplitter();
+    splitter->setOrientation(Qt::Vertical);
     vlayout->setContentsMargins(0,0,0,0);
+    splitter->setContentsMargins(0,0,0,0);
     setLayout(vlayout);
-    vlayout->addWidget(_edit);
-    vlayout->addWidget(_message);
+    splitter->addWidget(_edit);
+    splitter->addWidget(_message);
+    vlayout->addWidget(splitter);
 
     QObject::connect(_edit->document(), &QTextDocument::contentsChange,  this,    &Editor::contents_changed);
     QObject::connect(_message,          &QListWidget::itemDoubleClicked, this,    &Editor::goto_error_line);
