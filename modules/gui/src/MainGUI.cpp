@@ -318,6 +318,18 @@ void FRMain::view_hooks_editor()
   if(_hooksfile != "") {
     _editor->load_from_file(_hooksfile);
   }
+  else {
+    _settings.beginGroup("hooks");
+    int total = _settings.beginReadArray("unlinked");
+    for(int idx = 0; idx < total; idx++) {
+      _settings.setArrayIndex(idx);
+      _editor->add(_settings.value("item").toString());
+    }
+    _settings.endArray();
+    _settings.endGroup();
+  }
+
+
   
   QObject::connect(_editor,  &QTextEdit::destroyed,         this,    &FRMain::reset_editor);
   QObject::connect(abar,    &ActionBar::close_clicked,      editdoc, &QDockWidget::close);
@@ -332,7 +344,7 @@ void FRMain::view_hooks_editor()
 void FRMain::add_hook(QString txt)
 {
   if(_editor == nullptr) return;
-  _editor->add(txt);
+  _editor->add_hook(txt);
 }
 
 
@@ -604,6 +616,19 @@ void FRMain::handle_exit()
 
   for(auto& x : _dockbuilders) {
     capture_dock(x.first);
+  }
+
+  if(_hooksfile == "") {
+    _settings.beginGroup("hooks");
+    _settings.remove("");
+    _settings.beginWriteArray("unlinked");
+    int idx = 0;
+    for(auto& line : _editor->lines()) {
+      _settings.setArrayIndex(idx++);
+      _settings.setValue("item", QString::fromStdString(line));
+    }
+    _settings.endArray();
+    _settings.endGroup();
   }
 }
 

@@ -139,10 +139,26 @@ namespace frenchroast {
     
   }
 
+  void Editor::add_hook(QString text)
+  {
+    add(text +    "<ENTER>");
+  }
+
   void Editor::add(QString text)
   {
-    QString str = _edit->document()->toPlainText() + "\n" + text +    "<ENTER>";
+    QString str = _edit->document()->toPlainText();
+    if(str.size() > 0 && str[str.size() -1] != '\n') {
+      str.append('\n');
+    }
+    str.append(text);
     _edit->document()->setPlainText(str);
+  }
+
+
+  std::vector<std::string> Editor::lines() const
+  {
+    std::string outstr = _edit->document()->toPlainText().toStdString();
+    return {frenchroast::split(outstr, "\n")};
   }
 
 

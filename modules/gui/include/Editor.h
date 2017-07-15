@@ -37,6 +37,7 @@ namespace frenchroast {
     std::string   _filename;
   public:
     Editor();
+    std::vector<std::string> lines() const;
     
   signals:
     void validated_hooks(std::vector<std::string>);
@@ -52,6 +53,7 @@ namespace frenchroast {
       void save();
       void save_as(const std::string&);
       void add(QString);
+      void add_hook(QString);
   };
 
   class MessageItem : public QListWidgetItem {
