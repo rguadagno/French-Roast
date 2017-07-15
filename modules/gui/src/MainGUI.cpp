@@ -1,4 +1,4 @@
-// copyright (c) 2016 Richard Guadagno
+// copyright (c) 2016-2017 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -17,7 +17,6 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <QTWidgets/QApplication>
 #include <QTWidgets/QLabel>
 #include <QTWidgets/QHBoxLayout>
 #include <QTWidgets/QListWidget>
@@ -29,88 +28,20 @@
 #include <QTWidgets/QDockWidget>
 #include <QTCore/QObject>
 #include <QtGlobal>
-#include <QThread>
 #include <QHeaderView>
 #include <QAction>
 #include <QFont>
-#include <QSizeGrip>
 #include <string>
 #include "fr.h"
 #include "FRMain.h"
 #include "MonitorUtil.h"
 #include "StackRow.h"
-#include <QSettings>
 #include <QDesktopWidget>
 #include <QMenuBar>
 #include <QToolBar>
 #include <algorithm>
 #include "CodeFont.h"
 
-
-
-int main(int argc, char* argv[]) {
-
-  QSettings config{frenchroast::monitor::get_env_variable("INI_FULL_PATH","example /home/richg/French-Roast/modules/gui/config/fr.ini"), QSettings::IniFormat};
-  std::string path_to_opcodes = frenchroast::monitor::get_env_variable("OPCODES_FULL_PATH","example /home/richg/French-Roast/modules/instrumentation/opcodes.txt");
-  qRegisterMetaType<std::string>();
-  qRegisterMetaType<std::vector<frenchroast::monitor::StackTrace>>();
-  qRegisterMetaType<std::vector<frenchroast::monitor::MarkerField>>();
-  qRegisterMetaType<std::vector<frenchroast::monitor::MethodStats>>();
-  qRegisterMetaType<std::vector<std::string>>();
-  qRegisterMetaType<frenchroast::MessageItem>();
-  
-  QApplication app(argc,argv);
-
-  if (argc != 4) {
-    QMessageBox box;
-    box.setText("usage: roaster <ip> <port> <path to hooks file>\nexample: roaster 127.0.0.1 6060 /home/richg/code/hooks.txt");
-    box.exec();
-    exit(0);
-  }
-
-  FRListener roaster{std::string{argv[1]}, atoi(argv[2]), path_to_opcodes};
-  QThread* tt = new QThread(&roaster);
-  roaster.moveToThread(tt);
-
-  FRMain main(config, argv[3]);  
-
-  QObject::connect(&roaster, &FRListener::thooked,         &main,    &FRMain::update_list);
-  QObject::connect(&roaster, &FRListener::timersignal,     &main,    &FRMain::update_timed_list);
-  QObject::connect(&roaster, &FRListener::traffic_signal,  &main,    &FRMain::update_traffic);
-  QObject::connect(tt,       &QThread::started,            &roaster, &FRListener::init);
-  QObject::connect(&app,     &QApplication::aboutToQuit,   &main,    &FRMain::handle_exit);
-  QObject::connect(&roaster, &FRListener::remoteconnected, &main,    &FRMain::remote_connected);
-  QObject::connect(&roaster, &FRListener::remoteunloaded,  &main,    &FRMain::remote_disconnected);
-  QObject::connect(&roaster, &FRListener::remote_ready,    &main,    &FRMain::handshake);
-  QObject::connect(&main,    &FRMain::start_traffic,       &roaster, &FRListener::start_traffic);
-  QObject::connect(&main,    &FRMain::stop_traffic,        &roaster, &FRListener::stop_traffic);
-  QObject::connect(&roaster, &FRListener::method_ranking,  &main,    &FRMain::method_ranking);
-  QObject::connect(&roaster, &FRListener::send_hooks,      &main,    &FRMain::validate_hooks);
-  QObject::connect(&main,    &FRMain::validated_hooks,     &roaster, &FRListener::validated_hooks);
-  
-  tt->start();
-
-  main.setWindowTitle("French Roast");
-  main.show();
-
- return app.exec();
-}
-
-class SignalItem : public QListWidgetItem {
-  std::string  _text;
-  static QFont _font;
-public:
-  SignalItem(const std::string& text, const std::string& total) : _text(text), QListWidgetItem( QString::fromStdString(text) + "  " + QString::fromStdString(total))
-  {
-    setFont(_font);
-  }
-
-  const std::string& gettext() const
-  {
-    return _text;
-  }
-
-};
 
 
 const std::string  FRMain::SignalWindow    = "signals";
@@ -126,8 +57,6 @@ std::unordered_map< std::string,  void (FRMain::*)()  > FRMain::_dockbuilders {{
                                                                                {FRMain::TrafficWindow,   &FRMain::view_traffic}
       };
 
-QFont SignalItem::_font = CodeFont();
-QFont StackRow::_font = CodeFont();
 
 FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settings(settings), _hooksfile(path_to_hooks)
 {
@@ -157,6 +86,25 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
   _statusMsg->waiting_for_connection();
 }
 
+class SignalItem : public QListWidgetItem {
+  std::string  _text;
+  static QFont _font;
+public:
+  SignalItem(const std::string& text, const std::string& total) : _text(text), QListWidgetItem( QString::fromStdString(text) + "  " + QString::fromStdString(total))
+  {
+    setFont(_font);
+  }
+
+  const std::string& gettext() const
+  {
+    return _text;
+  }
+
+};
+
+
+QFont SignalItem::_font = CodeFont();
+QFont StackRow::_font = CodeFont();
 
 void FRMain::validate_hooks()
 {
@@ -367,7 +315,9 @@ void FRMain::view_hooks_editor()
   QDockWidget* editdoc = setup_dock_window("hooks", _editor, abar, "edit_style");
   _docks[EditHooksWindow] = editdoc;
   restore_dock_win(EditHooksWindow);
-  _editor->load_from_file(_hooksfile);
+  if(_hooksfile != "") {
+    _editor->load_from_file(_hooksfile);
+  }
   
   QObject::connect(_editor,  &QTextEdit::destroyed,         this,    &FRMain::reset_editor);
   QObject::connect(abar,    &ActionBar::close_clicked,      editdoc, &QDockWidget::close);
