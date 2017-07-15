@@ -22,11 +22,11 @@
 
 namespace frenchroast { namespace agent {
     
-    HookValidatorStatus::HookValidatorStatus()
+    HookValidatorStatus::HookValidatorStatus(bool comment) : _isComment(comment)
     {
     }
     
-    HookValidatorStatus::HookValidatorStatus(const std::string errorMsg) : _valid(false), _msg(errorMsg)
+    HookValidatorStatus::HookValidatorStatus(const char* errorMsg) : _valid(false), _msg(errorMsg)
     {
     }
 
@@ -44,12 +44,17 @@ namespace frenchroast { namespace agent {
     {
       return _valid;
     }
-    
+
+    bool HookValidatorStatus::is_comment()
+    {
+      return _isComment;
+    }
+
     HookValidatorStatus validate_hook(const std::string& line)
     {
       std::string scopy = line;
       frenchroast::remove_blanks(scopy);
-      if(scopy == "" || scopy.find("#") == 0) return HookValidatorStatus{};
+      if(scopy == "" || scopy[0] == '#') { return HookValidatorStatus{true}; }
 
       if(scopy.find("<ENTER>") == std::string::npos &&
          scopy.find("<EXIT>") == std::string::npos  &&
@@ -61,7 +66,7 @@ namespace frenchroast { namespace agent {
         return HookValidatorStatus{"Missing class specifier (e.g. SomeClass::methodA..."};
       }
 
-      return HookValidatorStatus{};
+      return HookValidatorStatus{false};
       
     }
 

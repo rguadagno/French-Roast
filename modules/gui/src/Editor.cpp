@@ -76,6 +76,7 @@ namespace frenchroast {
     std::string outstr = _edit->document()->toPlainText().toStdString();
     std::vector<std::string> hooks{frenchroast::split(outstr, "\n")};
     int xline = 0;
+    int total = 0;
     for(auto& line : hooks) {
       frenchroast::agent::HookValidatorStatus status = frenchroast::agent::validate_hook(line);
       if(!status) {
@@ -85,10 +86,21 @@ namespace frenchroast {
         item->setFont(CodeFont());
         _message->addItem(item);
       }
+      else {
+        if(!status.is_comment()) {
+          ++total;
+        }
+      }
     ++xline;
     }
     if(validated) {
-       QListWidgetItem* item = new MessageItem("validation PASSED.");
+       QListWidgetItem* item;
+       if(total > 0) {
+         item = new MessageItem("validation PASSED.");
+       }
+       else {
+         item = new MessageItem("WARNING: Since no hooks given no signals will be generated.");
+       }
        item->setForeground(QColor("#443355"));
        item->setFont(CodeFont());
        _message->addItem(item);

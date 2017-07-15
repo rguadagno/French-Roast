@@ -27,10 +27,12 @@ namespace frenchroast { namespace agent {
   class HookValidatorStatus {
     std::string _msg;
     bool _valid{true};
+    bool _isComment{false};
   public:
-    HookValidatorStatus();
-    HookValidatorStatus(const std::string errorMsg);
+    explicit HookValidatorStatus(bool comment);
+    explicit HookValidatorStatus(const char*  errorMsg);
     bool valid();
+    bool is_comment();
     const std::string& msg();
     operator bool();
   };
