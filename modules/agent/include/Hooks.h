@@ -30,12 +30,14 @@ namespace frenchroast { namespace agent {
       int            _line;
       std::string    _name;
       std::bitset<4> _flags;
+      bool           _all{false};
     public:
       Hook(const std::string& name, int lineno);
       Hook(const std::string& name, std::bitset<4>);
       int            line_number() const;
       std::string    method_name() const;
       std::bitset<4> flags() const;
+      bool all() const;
     };
     
     class Hooks {

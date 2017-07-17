@@ -28,6 +28,9 @@ namespace frenchroast { namespace agent {
 
     Hook::Hook(const std::string& name, std::bitset<4> flags) : _name(name), _flags(flags), _line(0)
     {
+      if(_name == "*") {
+        _all = true;
+      }
     }
     
     int Hook::line_number() const
@@ -45,6 +48,10 @@ namespace frenchroast { namespace agent {
       return _flags;
     }
 
+    bool Hook::all() const
+    {
+      return _all;
+    }
     // -------------------------
 
 
@@ -71,6 +78,10 @@ namespace frenchroast { namespace agent {
     
     void Hooks::convert_name(std::string& name)
     {
+      if(name.find("*") != std::string::npos) {
+        name = "*";
+        return;
+      }
       if (name.find("(") != std::string::npos) { // is method
         std::string n1 = split(name, ':')[0];
         std::string n2 = split(name, ':')[2];
@@ -185,7 +196,7 @@ namespace frenchroast { namespace agent {
         throw std::invalid_argument{"bad method name: " + method};
       }
       
-      if (method.find(":(") == std::string::npos) {
+      if (method.find(":(") == std::string::npos && method.find("::*") == std::string::npos) {
         throw std::invalid_argument{"bad method name: " + method};
       }
       

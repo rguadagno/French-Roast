@@ -304,7 +304,6 @@ void JNICALL
   }
 
   if (_hooks.is_hook_class(sname)) {
-
     _fr.load_from_buffer(class_data);
     for (auto& x : _hooks.get(sname)) {
       if (x.line_number() > 0) {
@@ -315,7 +314,17 @@ void JNICALL
           _fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
         }
         else {
+          std::cout <<  x.method_name() << std::endl;
+          if(x.all()) {
+            for(auto methdesc : _fr.get_method_descriptors()) {
+              if(methdesc.find("main") == std::string::npos   &&    methdesc.find("init") == std::string::npos       ) {
+               _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
+              }
+            }
+          }
+          else {
           _fr.add_method_call(x.method_name(), "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
+          }
         }
       }
     jint size = _fr.size_in_bytes();

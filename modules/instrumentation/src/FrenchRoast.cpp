@@ -154,8 +154,21 @@ namespace frenchroast {
   {
     memset(_count, 0, sizeof(_count));
     _items.clear();
+    _name_index_map.clear();
+
   }
-    
+
+  template
+  <typename T,typename H>
+  std::vector<std::string> InfoComponent<T,H>::get_items_names()
+  {
+    std::vector<std::string> rv;
+    for(auto& x : _name_index_map) {
+      rv.push_back(x.first);
+    }
+    return rv;
+  }
+  
   template
   <typename T,typename H>
   void InfoComponent<T,H>::load_from_buffer(const BYTE* buf)
@@ -242,6 +255,13 @@ namespace frenchroast {
   {
   }
 
+
+
+  std::vector<std::string> FrenchRoast::get_method_descriptors()
+  {
+    return _methodsComponent.get_items_names();
+  }
+  
   std::string FrenchRoast::resolve_const(int idx)
   {
     return _constPool.resolve_name(idx);

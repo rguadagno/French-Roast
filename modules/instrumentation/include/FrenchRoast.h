@@ -86,6 +86,7 @@ namespace frenchroast {
     void display(std::ostream& out);
     InfoComponent( T& resolver,const std::string& desc);
     H& get_item(const std::string&);
+    std::vector<std::string> get_items_names();
     bool has_item(const std::string&);
     void add_item(H& item);
     int get_count() const;
@@ -134,7 +135,7 @@ namespace frenchroast {
     short add_constant_integer_value(int value);
     void modify_constant(const std::string& fieldname, short descriptorIndex);
     FrenchRoast(OpCode opcodes);
-    
+    std::vector<std::string> get_method_descriptors();
     static const std::bitset<4> METHOD_ENTER;
     static const std::bitset<4> METHOD_EXIT;
     static const std::bitset<4> METHOD_TIMER;
