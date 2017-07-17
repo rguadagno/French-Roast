@@ -77,6 +77,7 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
   move(_settings.value("main:xpos", 0).toInt(),
        _settings.value("main:ypos", 0).toInt());
 
+  
   for(auto& x : _dockbuilders) {
     bring_up_dock_if_required(x.first);    
   }
@@ -84,6 +85,9 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
   _statusMsg = new FRStatus{statusBar()};  
   statusBar()->addPermanentWidget(_statusMsg,10);
   _statusMsg->waiting_for_connection();
+
+
+  
 }
 
 class SignalItem : public QListWidgetItem {
@@ -132,8 +136,8 @@ void FRMain::remote_disconnected(const std::string& msg)
 
 QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* actionptr, const std::string& wstyle, QDockWidget::DockWidgetFeatures features)
 {
-  wptr->setStyleSheet(_settings.value(QString::fromStdString(wstyle)).toString());
   QDockWidget* holder = new QDockWidget(QString::fromStdString(title), this);
+  wptr->setStyleSheet(_settings.value(QString::fromStdString(wstyle)).toString());
   holder->setStyleSheet(_settings.value("dock_widget_style").toString());
   QLabel* sigLabel = new QLabel(QString::fromStdString(title));
   QWidget* titlebar = new QWidget();
@@ -150,6 +154,7 @@ QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, 
   holder->setAttribute(Qt::WA_DeleteOnClose);
   holder->setFeatures(features);
   holder->setWidget(wptr);
+  
   return holder;
 }
 
@@ -333,7 +338,7 @@ void FRMain::view_hooks_editor()
   
   QObject::connect(_editor,  &QTextEdit::destroyed,         this,    &FRMain::reset_editor);
   QObject::connect(abar,    &ActionBar::close_clicked,      editdoc, &QDockWidget::close);
-  QObject::connect(abar,    &ActionBar::close_clicked,      this,    [&](){if(_exit) return;_docks.erase(EditHooksWindow);});
+  QObject::connect(abar,    &ActionBar::close_clicked,      this,    [&](){_docks.erase(EditHooksWindow);});
   QObject::connect(abar,    &ActionBar::save_clicked,       _editor, &frenchroast::Editor::save);
   QObject::connect(abar,    &ActionBar::validate_clicked,   _editor, &frenchroast::Editor::validate_hooks);
   QObject::connect(_editor, &frenchroast::Editor::saved ,   abar,    &ActionBar::disable_save);
@@ -388,7 +393,7 @@ void FRMain::show_detail(QListWidgetItem* item)
 
 void FRMain::reset_editor(QObject* obj)
 {
-  _editor = nullptr;
+   _editor = nullptr;
 }
 
 void FRMain::destroy_list(QObject* obj)
@@ -615,10 +620,10 @@ void FRMain::handle_exit()
   _settings.setValue("main:ypos",   pos().y());
 
   for(auto& x : _dockbuilders) {
-    capture_dock(x.first);
+     capture_dock(x.first);
   }
 
-  if(_hooksfile == "") {
+  if(_editor != nullptr && _hooksfile == "") {
     _settings.beginGroup("hooks");
     _settings.remove("");
     _settings.beginWriteArray("unlinked");
