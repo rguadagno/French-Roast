@@ -317,8 +317,13 @@ void JNICALL
           std::cout <<  x.method_name() << std::endl;
           if(x.all()) {
             for(auto methdesc : _fr.get_method_descriptors()) {
-              if(methdesc.find("main") == std::string::npos   &&    methdesc.find("init") == std::string::npos       ) {
-               _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
+              if(methdesc.find("main") == std::string::npos         ) {
+                if( methdesc.find("<init") == std::string::npos ) {
+                  _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
+                }
+                else {
+                  _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", frenchroast::FrenchRoast::METHOD_EXIT);
+                }
               }
             }
           }
