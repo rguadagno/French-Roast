@@ -30,6 +30,7 @@ class FRStatus : public QWidget {
 
  private:
   QStatusBar* _Qstatusbar;
+  QLabel*     _connectionText;
   QLabel*     _statusText;
   QLabel*     _timeText;
   QTimer*     _timer;
