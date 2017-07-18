@@ -122,6 +122,7 @@ void FRMain::handshake()
   if(_docks.count(TrafficWindow) == 1 && _buttonStartTraffic->text() == "Stop") {
     start_traffic(atoi(_rate->text().toStdString().c_str()));
   }
+  _statusMsg->remote_ready();
 }
 
 void FRMain::remote_connected(const std::string& msg)
