@@ -40,23 +40,10 @@
 #include "MethodRanking.h"
 #include "Editor.h"
 #include "StackReport.h"
+#include "DetailViewer.h"
+#include "DetailHolder.h"
 
 class SignalItem;
-using VecStr = std::vector<std::string>; 
-class DetailHolder {
- public:
- DetailHolder( VecStr ah, VecStr ih, std::vector<frenchroast::monitor::MarkerField> fields, std::unordered_map<std::string, frenchroast::monitor::StackReport> stacks) : _argHeaders(ah), _instanceHeaders(ih), _markers(fields), _stacks(stacks)
-    {
-    }
-  DetailHolder()
-    {
-    }
-  
-  std::vector<std::string> _argHeaders;
-  std::vector<std::string> _instanceHeaders;
-  std::vector<frenchroast::monitor::MarkerField> _markers;
-  std::unordered_map<std::string, frenchroast::monitor::StackReport> _stacks;
-};
 
 class FRMain : public QMainWindow {
   Q_OBJECT
@@ -85,21 +72,14 @@ class FRMain : public QMainWindow {
   EnterKeyListener* _trafficEnterKeyListener;
 
   std::unordered_map<std::string, std::unordered_map<std::string,SignalItem*>> _descriptorsPerDock;
-  std::unordered_map<std::string,  std::unordered_map<std::string, int>>      _detailItems;
-  std::unordered_map<std::string,QTableWidget*>             _detailLists;
-  std::unordered_map<std::string,QTableWidget*>             _detailStackLists;
-  std::unordered_map<std::string, std::unordered_map<std::string, QTableWidgetItem*>>  _detailStackItems;
-  std::unordered_map<std::string, std::vector<std::string>> _detailItemsPerList;
   std::unordered_map<std::string, DetailHolder>             _detailDescriptors;
+  std::unordered_map<std::string, DetailViewer*>             _viewingDetail;
   std::unordered_map<std::string,StackRow*>                 _traffic_rows;
   std::unordered_map<std::string, int>                      _traffic_keys;
-  //@@  std::unordered_map<std::string, std::unordered_map<std::string, frenchroast::monitor::StackReport>>  _stacks;
-  std::unordered_map<std::string,QTableWidgetItem*>             _detailStacks;
   MethodRanking*                                            _rankings;
   std::string                                               _hooksfile;
   
   std::string format_markers(const std::string markers);
-  void update_detail_list(std::string,QTableWidget*, QTableWidget*, const DetailHolder& detailholder);
   QWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate);
 
   QDockWidget* setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* aptr, const std::string& wstyle,QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
@@ -116,6 +96,7 @@ class FRMain : public QMainWindow {
   void start_traffic(int);
   void stop_traffic();
   void validated_hooks(std::vector<std::string>);
+  void update_detail_list(std::string, const DetailHolder& detailholder);
   
  public slots:
    void validate_hooks();
@@ -129,7 +110,6 @@ class FRMain : public QMainWindow {
    void view_traffic();
    void add_hook(QString);
    void show_detail(QListWidgetItem* item);
-   void destroy_list(QObject* obj);
    void reset_editor(QObject* obj);
    void handle_exit();
    void update_list(std::string, std::string, std::string, int, const std::vector<std::string> ,  const std::vector<std::string>, const std::vector<frenchroast::monitor::MarkerField>, std::unordered_map<std::string, frenchroast::monitor::StackReport>);

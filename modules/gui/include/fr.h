@@ -30,6 +30,7 @@
 #include "StackTrace.h"
 #include "MethodStats.h"
 #include "StackReport.h"
+#include "DetailHolder.h"
 
 Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::StackTrace>);
@@ -37,6 +38,7 @@ Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::MarkerField>);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::MethodStats>);
 using SRType =   std::unordered_map<std::string, frenchroast::monitor::StackReport>;
 Q_DECLARE_METATYPE(SRType);
+Q_DECLARE_METATYPE(DetailHolder);
 
 
 class FRListener : public QObject

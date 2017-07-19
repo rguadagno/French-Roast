@@ -47,6 +47,7 @@ int main(int argc, char* argv[]) {
   qRegisterMetaType<std::vector<frenchroast::monitor::MethodStats>>();
   qRegisterMetaType<std::vector<std::string>>();
   qRegisterMetaType<frenchroast::MessageItem>();
+  qRegisterMetaType<DetailHolder>();
   
   FRListener roaster{std::string{argv[1]}, atoi(argv[2]), path_to_opcodes};
   QThread* tt = new QThread(&roaster);

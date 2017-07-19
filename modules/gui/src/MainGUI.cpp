@@ -40,8 +40,8 @@
 #include <QMenuBar>
 #include <QToolBar>
 #include <algorithm>
-#include <QTabWidget>
 #include "CodeFont.h"
+#include "QUtil.h"
 
 
 
@@ -289,7 +289,6 @@ void FRMain::view_signals()
 {
   if(_docks.count(SignalWindow) == 1) return;
   _descriptorsPerDock.erase(SignalWindow);
-  _detailItems.erase(SignalWindow);
   view_dockwin("Signals", SignalWindow, (_list = new QListWidget()));
   QObject::connect(_list,  &QListWidget::itemDoubleClicked, this, &FRMain::show_detail);
 }
@@ -354,105 +353,27 @@ void FRMain::add_hook(QString txt)
   _editor->add_hook(txt);
 }
 
-QTableWidgetItem* createItem(int value)
-{
-  QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(std::to_string(value)));
-  ditem->setFont(CodeFont());
-  ditem->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
-  return ditem;
-}
-
-QTableWidgetItem* createItem(const std::string& value)
-{
-  QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(value));
-  ditem->setFont(CodeFont());
-  ditem->setTextAlignment(Qt::AlignCenter);
-  return ditem;
-}
-
 void FRMain::show_detail(QListWidgetItem* item)
 {
   SignalItem* ptr = dynamic_cast<SignalItem*>(item);
   std::string sname = ptr->gettext();
+  if(_viewingDetail.count(sname) == 1) return;
 
-  if(sname.find("[M]") == std::string::npos) {
-      return;
-  }
-
-  _detailLists.erase(sname);
-  _detailStackLists.erase(sname);
-  _detailItems.erase(sname);
-  _detailStackItems.erase(sname);
-  
-  _detailLists[sname] = new QTableWidget();
-  _detailLists[sname]->setStyleSheet(_settings.value("traffic_grid_style").toString());
-
-  _detailLists[sname]->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-
-  _detailLists[sname]->verticalHeader()->hide();
-  _detailLists[sname]->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-  
+  _viewingDetail[sname] = new DetailViewer{sname, _settings};
   ActionBar* abar = new ActionBar(ActionBar::Close);
-
-  QWidget* holder = new QWidget();
-  QVBoxLayout* vlayout = new QVBoxLayout();
-  vlayout->setSpacing(0);
-  vlayout->addWidget(_detailLists[sname] );
-  vlayout->setContentsMargins(0,0,0,0);
-  holder->setLayout(vlayout);
-  holder->setStyleSheet(_settings.value("zero_border_style").toString());
-
-  QWidget* holderStacks = new QWidget();
-  vlayout = new QVBoxLayout();
-  vlayout->setSpacing(0);
-  _detailStackLists[sname] = new QTableWidget();
-  _detailStackLists[sname]->setStyleSheet(_settings.value("traffic_grid_style").toString());
-  _detailStackLists[sname]->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-  _detailStackLists[sname]->verticalHeader()->hide();
-  _detailStackLists[sname]->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-  _detailStackLists[sname]->insertColumn(0);
-  _detailStackLists[sname]->insertColumn(0);
-  _detailStackLists[sname]->setHorizontalHeaderItem(0, createItem("count"));
-  _detailStackLists[sname]->setHorizontalHeaderItem(1,createItem("stack"));
-
-  
-  vlayout->addWidget(_detailStackLists[sname] );
-  holderStacks->setLayout(vlayout);
-  holderStacks->setStyleSheet(_settings.value("zero_border_style").toString());
-
-  QTabWidget* tabs = new QTabWidget;
-  tabs->addTab(holder, "Args / Instance data");
-  tabs->addTab(holderStacks, "Call Stacks");
-  
-  QDockWidget* dockwin = setup_dock_window(sname, tabs, abar ,"table_style");
+  QDockWidget* dockwin = setup_dock_window(sname, _viewingDetail[sname], abar ,"table_style");
   QObject::connect(abar, &ActionBar::close_clicked, dockwin, &QDockWidget::close);
-  QObject::connect(abar, &ActionBar::close_clicked, this, [=](){
-                                                                 _detailLists.erase(sname);
-                                                                 _detailStackLists.erase(sname);
-                                                               });
+  QObject::connect(abar, &ActionBar::close_clicked, this, [=](){ _viewingDetail.erase(sname); });
+  QObject::connect(this, &FRMain::update_detail_list, _viewingDetail[sname], &DetailViewer::update);
   dockwin->setFloating(true);
   addDockWidget(Qt::TopDockWidgetArea, dockwin);
-  update_detail_list(sname, _detailLists[ sname ], _detailStackLists[ sname ], _detailDescriptors[sname]);
+  update_detail_list(sname, _detailDescriptors[sname]);
 }
 
 void FRMain::reset_editor(QObject* obj)
 {
    _editor = nullptr;
 }
-
-void FRMain::destroy_list(QObject* obj)
-{
-  if(_exit) return;
-  std::string name = obj->objectName().toStdString();
-  if(_detailItemsPerList.count(name) == 1) {
-    for(auto& x : _detailItemsPerList[name]) {
-      _detailItems.erase(x);
-    }
-    _detailItemsPerList.erase(name);
-  }
-  _detailLists.erase(name);
-}
-
 
 void FRMain::update_traffic_rate()
 {
@@ -499,116 +420,7 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
   }
   else {
     _descriptorsPerDock[ltype][descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(frenchroast::monitor::ntoa(count,5, ' ')));
-    if(_detailLists.count(descriptor) == 1) {
-      update_detail_list(descriptor, _detailLists[descriptor], _detailStackLists[descriptor], _detailDescriptors[descriptor]);
-    }
-  }
-}
-
-
-void FRMain::update_detail_list(std::string  descriptor, QTableWidget* list, QTableWidget* stacklist, const DetailHolder& detailHolder)
-{
-  for(auto& x : detailHolder._stacks) {
-    if(_detailStackItems[descriptor].count(x.second.key()) == 1) {
-      _detailStackItems[descriptor][x.second.key()]->setText(  QString::fromStdString(std::to_string(x.second.count())));
-    }
-    else {
-      int row = stacklist->rowCount();
-      stacklist->insertRow(row);
-      QTableWidgetItem* item = createItem(x.second.count());
-      _detailStackItems[descriptor][x.second.key()] = item;
-      stacklist->setItem(row, 0, item);
-      for(auto& frame : x.second.descriptors()) {
-        stacklist->setItem(row,1, createItem(frame));
-        ++row;
-        stacklist->insertRow(row);
-      }
-    }
-  }
-  
-  if(list->rowCount() == 0) {
-
-    list->insertColumn(0);
-    list->insertColumn(0);
-    list->setHorizontalHeaderItem(0, createItem("invoked"));
-    list->setHorizontalHeaderItem(1,createItem("("));
-    
-    int colidx = 2;
-    for(auto& x : detailHolder._argHeaders) {
-      list->insertColumn(colidx);
-      list->setHorizontalHeaderItem(colidx++,createItem(x));
-    }
-
-    list->insertColumn(colidx);
-    list->setHorizontalHeaderItem(colidx++,createItem(")"));
-
-    for(auto& x : detailHolder._instanceHeaders) {
-      list->insertColumn(colidx);
-      list->setHorizontalHeaderItem(colidx++,createItem(x));
-    }
-  }
-
-
-  for(auto& item : detailHolder._markers) {
-  if(_detailItems[descriptor].count(item._descriptor) == 0 ) {
-    if(item._count > 1) {
-      int currRow = list->rowCount();
-      list->insertRow(currRow);
-      _detailItems[descriptor][item._descriptor] = currRow;
-      list->setItem(currRow, 0, createItem(item._count));
-      list->setItem(currRow, 1, createItem("("));
-      
-      int colidx = 2;
-      for(auto& x : item._arg_items) {
-        list->setItem(currRow, colidx++, createItem(x));
-      }
-      
-      list->setItem(currRow, colidx, createItem(")"));
-      ++colidx;
-      for(auto& x : item._instance_items) {
-        list->setItem(currRow, colidx++,createItem(x));
-      }
-    }
-    else {
-      _detailItems[descriptor][item._descriptor] = -1;
-      int currRow = list->rowCount();
-      if( _detailItems[descriptor].count("*") == 0) {
-        list->insertRow(currRow);
-        _detailItems[descriptor]["*"] = currRow;
-        list->setItem(currRow, 0, createItem(1));
-        list->setItem(currRow, 1, createItem("*"));
-      }
-      else {
-        list->setItem(_detailItems[descriptor]["*"], 0, createItem(  list->item(_detailItems[descriptor]["*"],0)->text().toInt() + 1   ));
-      }
-    }
-  }
-  else {
-    if(_detailItems[descriptor][item._descriptor] == -1  ) {
-      if(item._count == 1) continue;
-      QTableWidgetItem* titem = list->item(_detailItems[descriptor]["*"], 0);
-      int total = titem->text().toInt() - 1;
-      titem->setText( QString::number(total));
-      int currRow = list->rowCount();
-      list->insertRow(currRow);
-      _detailItems[descriptor][item._descriptor] = currRow;
-      list->setItem(currRow, 0, createItem(item._count));
-      list->setItem(currRow, 1, createItem("("));
-      int colidx = 2;
-      for(auto& x : item._arg_items) {
-        list->setItem(currRow, colidx++, createItem(x));
-      }
-      
-      list->setItem(currRow, colidx, createItem(")"));
-      ++colidx;
-      for(auto& x : item._instance_items) {
-        list->setItem(currRow, colidx++,createItem(x));
-      }
-    }
-    else {
-      list->item(_detailItems[descriptor][item._descriptor],0)->setText(  QString::fromStdString(std::to_string(item._count)) );
-    }
-  }
+    update_detail_list(descriptor, _detailDescriptors[descriptor]);
   }
 }
 
