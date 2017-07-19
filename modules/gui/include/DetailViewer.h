@@ -25,6 +25,7 @@
 #include "DetailHolder.h"
 
 
+
 class DetailViewer : public QTabWidget {
 
   Q_OBJECT
@@ -33,7 +34,7 @@ class DetailViewer : public QTabWidget {
   QTableWidget*                                      _argData;
   QTableWidget*                                      _stackData;
   std::unordered_map<std::string, QTableWidgetItem*> _items;
-  std::unordered_map<std::string, int>               _detailItems;  
+  std::unordered_map<std::string, int>               _detailItems;
  public:
   DetailViewer(const std::string& descriptor, QSettings&);
 

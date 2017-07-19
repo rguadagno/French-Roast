@@ -24,7 +24,7 @@
 #include <string>
 
 QTableWidgetItem* createItem(int value);
-QTableWidgetItem* createItem(const std::string& value);
+QTableWidgetItem* createItem(const std::string& value, Qt::Alignment = Qt::AlignCenter);
 
 
 

@@ -28,10 +28,10 @@ QTableWidgetItem* createItem(int value)
   return ditem;
 }
 
-QTableWidgetItem* createItem(const std::string& value)
+QTableWidgetItem* createItem(const std::string& value, Qt::Alignment align)
 {
   QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(value));
   ditem->setFont(CodeFont());
-  ditem->setTextAlignment(Qt::AlignCenter);
+    ditem->setTextAlignment(align);
   return ditem;
 }

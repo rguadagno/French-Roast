@@ -57,6 +57,7 @@ DetailViewer::DetailViewer(const std::string& descriptor, QSettings& settings) :
 
   addTab(holder, "Args / Instance data");
   addTab(holderStacks, "Call Stacks");
+  setMinimumSize(700,350);
 }
 
 void DetailViewer::update(const std::string& descriptor, const DetailHolder& holder)
@@ -74,7 +75,8 @@ void DetailViewer::update(const std::string& descriptor, const DetailHolder& hol
       _items[x.second.key()] = item;
       _stackData->setItem(row, 0, item);
       for(auto& frame : x.second.descriptors()) {
-        _stackData->setItem(row,1, createItem(frame));
+        QTableWidgetItem* item = createItem(frame, Qt::AlignLeft|Qt::AlignVCenter);
+        _stackData->setItem(row,1, item);
         ++row;
         _stackData->insertRow(row);
       }

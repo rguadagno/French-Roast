@@ -41,9 +41,6 @@
 #include <QToolBar>
 #include <algorithm>
 #include "CodeFont.h"
-#include "QUtil.h"
-
-
 
 const std::string  FRMain::SignalWindow    = "signals";
 const std::string  FRMain::EditHooksWindow = "edit-hooks";
@@ -95,7 +92,7 @@ class SignalItem : public QListWidgetItem {
   std::string  _text;
   static QFont _font;
 public:
-  SignalItem(const std::string& text, const std::string& total) : _text(text), QListWidgetItem( QString::fromStdString(text) + "  " + QString::fromStdString(total))
+  SignalItem(const std::string& text, const std::string& total) : _text(text), QListWidgetItem( QString::fromStdString(total) + "   " + QString::fromStdString(text) )
   {
     setFont(_font);
   }
@@ -401,17 +398,11 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
 {
   if(_docks.count(ltype) == 0) return;
   
-  if(markers.size() > 0) {
-    descriptor = "[M] " + descriptor;
-  }
-  else {
-    descriptor = "    " + descriptor;
-  }
   tname = "[ " + tname + " ]";
   frenchroast::monitor::pad(descriptor, 50);
   frenchroast::monitor::pad(tname, 10);
 
-  descriptor.append(tname);
+  descriptor = tname + descriptor;
 
   _detailDescriptors[descriptor] = DetailHolder{argHeaders, instanceHeaders, markers, stacks};
   if (_descriptorsPerDock[ltype].count(descriptor) == 0 ) {
@@ -419,7 +410,7 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
     _list->addItem(_descriptorsPerDock[ltype][descriptor]);
   }
   else {
-    _descriptorsPerDock[ltype][descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(frenchroast::monitor::ntoa(count,5, ' ')));
+    _descriptorsPerDock[ltype][descriptor]->setText(QString::fromStdString(frenchroast::monitor::ntoa(count,5, ' ')) + "   " + QString::fromStdString(descriptor) );
     update_detail_list(descriptor, _detailDescriptors[descriptor]);
   }
 }
