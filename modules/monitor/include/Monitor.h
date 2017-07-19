@@ -26,6 +26,7 @@
 #include "StackTrace.h"
 #include "MarkerField.h"
 #include "MethodStats.h"
+#include "StackReport.h"
 
 
 namespace frenchroast { namespace monitor {
@@ -50,12 +51,14 @@ namespace frenchroast { namespace monitor {
 	std::unordered_map<std::string, int>                                   _signals;
         std::unordered_map<std::string, MethodStats>                           _method_counters;
         std::unordered_map<std::string, std::unordered_map<std::string, int>>  _markers;
+        std::unordered_map<std::string, std::unordered_map<std::string, StackReport>>  _stacks;
         std::string                                                            _opcodeFile;
         
 	const int MSG_TYPE    = 0;
 	const int MSG         = 1;
         const int MARKER      = 3;
         const int PARAMS      = 4;
+        const int STACK       = 5;
 
 	const int TIME        = 1;
 	const int DIRECTION   = 2;
@@ -106,7 +109,22 @@ namespace frenchroast { namespace monitor {
               argHeaders.push_back(x);
             }
 
-            _handler.signal(desc , items[2] , ++_signals[items[MSG]], argHeaders, instanceHeaders, mfields);
+            std::string skey = "";
+            std::vector<std::string> sframes;
+            for(auto& x : frenchroast::split(items[STACK], "%")) {
+              if(x.find("::") != std::string::npos) {
+                skey.append(x);
+                sframes.push_back(translate_descriptor(x));
+              }
+            }
+            if(_stacks[desc].count(skey) == 0) {
+              _stacks[desc][skey] = StackReport(sframes);
+            }
+            else {
+              ++_stacks[desc][skey];
+            }
+            
+            _handler.signal(desc , items[2] , ++_signals[items[MSG]], argHeaders, instanceHeaders, mfields, _stacks[desc]);
 	   }
 
 	  if (items[MSG_TYPE] == "traffic") {

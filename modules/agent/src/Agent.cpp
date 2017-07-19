@@ -205,10 +205,46 @@ void populate_class_fields_info(std::string classDescriptor, jclass theclass, st
 
 
 
+class DescriptorVO {
+public:
+  std::string _classSignature;
+  std::string _methodName;
+  std::string _methodSignature;
+  DescriptorVO(std::string cSig, std::string mname, std::string mSig) : _classSignature(cSig), _methodName(mname), _methodSignature(mSig)
+  {
+  }
+
+  std::string descriptor() const
+  {
+    return _classSignature + "::" + _methodName + ":" + _methodSignature;
+  }
+};
+
+std::vector<DescriptorVO> populate_stack(  jvmtiFrameInfo* frames, int count)
+{
+  std::vector<DescriptorVO> rv;
+  for(int idx = 1; idx < count; idx++) {
+    ++frames;
+    char *methodName;
+    char *methodSig;
+    char *generic;
+    genv->GetMethodName(frames->method, &methodName,&methodSig,&generic);
+    std::string methodNameStr{methodName};
+    std::string sigStr{methodSig};
+    jclass theclass;
+    char *classSig;
+    genv->GetMethodDeclaringClass(frames->method, &theclass);
+    genv->GetClassSignature(theclass, &classSig,&generic);
+    std::string classinfo{classSig};
+     rv.emplace_back(classinfo, methodNameStr, sigStr);
+  }
+  return rv;
+}
+
 
 JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass, jobject obj)
 {
-  jvmtiFrameInfo frames[5];
+  jvmtiFrameInfo frames[10];
   jint count;
   jvmtiError err;
   jthread aThread;
@@ -216,20 +252,16 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
   genv->GetCurrentThread(&aThread);
   jvmtiThreadInfo info;
   genv->GetThreadInfo(aThread, &info);
-  err = genv->GetStackTrace(aThread, 0, 5, frames, &count);
+  
+  err = genv->GetStackTrace(aThread, 0, sizeof(frames), frames, &count);
   if (err == JVMTI_ERROR_NONE && count >= 1) {
+    std::vector<DescriptorVO> stack = populate_stack(frames, count);
     char *methodName;
     char *sig;
     char *generic;
-    err = genv->GetMethodName(frames[1].method, &methodName,&sig,&generic);
-    if (err == JVMTI_ERROR_NONE) {
-
-      std::string params = "(";
-      std::string methodNameStr{methodName};
-      std::string sigStr{sig};
-
-      int slot = 0;
-      for(auto& argtype : typeTokenizer(sigStr)) {
+    std::string params = "(";
+    int slot = 0;
+      for(auto& argtype : typeTokenizer(stack[0]._methodSignature)) {
         ++slot;
         switch(argtype) {
         case INT_TYPE:
@@ -244,7 +276,7 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
           params.append(  std::string(ptr->GetStringUTFChars(jsvalue,0)) + ",");
           break;
         }
-      }
+        }
 
       if(params.length() > 1) {
         params.erase(params.length() -1 ,1);
@@ -252,23 +284,24 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
       params.append(")");
       jclass theclass;
       genv->GetMethodDeclaringClass(frames[1].method, &theclass);
-      err = genv->GetClassSignature(theclass, &sig,&generic);
-      std::string classinfo{sig};
-      
-      std::string key = classinfo + "::" + methodNameStr + ":" + sigStr;
       std::string fieldValues = "";
-      for(auto& fieldname : _hooks.get_marker_fields(classinfo, methodNameStr + ":" + sigStr)) {
-        if(_reportingFields.count(classinfo + ">" + fieldname) == 0) {
-          populate_class_fields_info(classinfo, theclass, _reportingFields);          
+      for(auto& fieldname : _hooks.get_marker_fields(stack[0]._classSignature, stack[0]._methodName + ":" + stack[0]._methodSignature)) {
+        if(_reportingFields.count(stack[0]._classSignature + ">" + fieldname) == 0) {
+          populate_class_fields_info(stack[0]._classSignature, theclass, _reportingFields);          
         }
-        fieldValues += get_value(ptr, obj, _reportingFields[classinfo + ">" + fieldname]);       
+        fieldValues += get_value(ptr, obj, _reportingFields[stack[0]._classSignature + ">" + fieldname]);       
       }
+
+      std::string stackstr = "";
+      for(auto& x : stack) {
+        stackstr.append(x.descriptor());
+        stackstr.append("%");
+        }
       _sig_mutex.lock();
-      _rptr.signal(classinfo + "::" + methodNameStr + ":" + sigStr + "~" + std::string{info.name} + "~" + fieldValues + "~" + params);
+      _rptr.signal(stack[0].descriptor() + "~" + std::string{info.name} + "~" + fieldValues + "~" + params + "~" + stackstr);
       _sig_mutex.unlock();
-    }
   }
-}
+  }
 
 
 

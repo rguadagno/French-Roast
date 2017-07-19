@@ -22,7 +22,8 @@ SOURCES += \
 ../../monitor/src/Monitor.cpp \
 ../../monitor/src/StackTrace.cpp \
 ../../monitor/src/MonitorUtil.cpp \
-../../monitor/src/MethodStats.cpp
+../../monitor/src/MethodStats.cpp \
+../../monitor/src/StackReport.cpp 
 
 HEADERS += ../include/*.h
 LIBS +=  ws2_32.lib

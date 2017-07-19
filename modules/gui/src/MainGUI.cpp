@@ -40,6 +40,7 @@
 #include <QMenuBar>
 #include <QToolBar>
 #include <algorithm>
+#include <QTabWidget>
 #include "CodeFont.h"
 
 
@@ -353,6 +354,21 @@ void FRMain::add_hook(QString txt)
   _editor->add_hook(txt);
 }
 
+QTableWidgetItem* createItem(int value)
+{
+  QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(std::to_string(value)));
+  ditem->setFont(CodeFont());
+  ditem->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
+  return ditem;
+}
+
+QTableWidgetItem* createItem(const std::string& value)
+{
+  QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(value));
+  ditem->setFont(CodeFont());
+  ditem->setTextAlignment(Qt::AlignCenter);
+  return ditem;
+}
 
 void FRMain::show_detail(QListWidgetItem* item)
 {
@@ -364,7 +380,10 @@ void FRMain::show_detail(QListWidgetItem* item)
   }
 
   _detailLists.erase(sname);
+  _detailStackLists.erase(sname);
   _detailItems.erase(sname);
+  _detailStackItems.erase(sname);
+  
   _detailLists[sname] = new QTableWidget();
   _detailLists[sname]->setStyleSheet(_settings.value("traffic_grid_style").toString());
 
@@ -382,14 +401,38 @@ void FRMain::show_detail(QListWidgetItem* item)
   vlayout->setContentsMargins(0,0,0,0);
   holder->setLayout(vlayout);
   holder->setStyleSheet(_settings.value("zero_border_style").toString());
+
+  QWidget* holderStacks = new QWidget();
+  vlayout = new QVBoxLayout();
+  vlayout->setSpacing(0);
+  _detailStackLists[sname] = new QTableWidget();
+  _detailStackLists[sname]->setStyleSheet(_settings.value("traffic_grid_style").toString());
+  _detailStackLists[sname]->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+  _detailStackLists[sname]->verticalHeader()->hide();
+  _detailStackLists[sname]->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+  _detailStackLists[sname]->insertColumn(0);
+  _detailStackLists[sname]->insertColumn(0);
+  _detailStackLists[sname]->setHorizontalHeaderItem(0, createItem("count"));
+  _detailStackLists[sname]->setHorizontalHeaderItem(1,createItem("stack"));
+
   
-  QDockWidget* dockwin = setup_dock_window(sname, holder, abar ,"table_style");
+  vlayout->addWidget(_detailStackLists[sname] );
+  holderStacks->setLayout(vlayout);
+  holderStacks->setStyleSheet(_settings.value("zero_border_style").toString());
+
+  QTabWidget* tabs = new QTabWidget;
+  tabs->addTab(holder, "Args / Instance data");
+  tabs->addTab(holderStacks, "Call Stacks");
+  
+  QDockWidget* dockwin = setup_dock_window(sname, tabs, abar ,"table_style");
   QObject::connect(abar, &ActionBar::close_clicked, dockwin, &QDockWidget::close);
-  QObject::connect(abar, &ActionBar::close_clicked, this, [=](){_detailLists.erase(sname);});
-  
+  QObject::connect(abar, &ActionBar::close_clicked, this, [=](){
+                                                                 _detailLists.erase(sname);
+                                                                 _detailStackLists.erase(sname);
+                                                               });
   dockwin->setFloating(true);
   addDockWidget(Qt::TopDockWidgetArea, dockwin);
-  update_detail_list(sname, _detailLists[ sname ], _detailDescriptors[sname]);
+  update_detail_list(sname, _detailLists[ sname ], _detailStackLists[ sname ], _detailDescriptors[sname]);
 }
 
 void FRMain::reset_editor(QObject* obj)
@@ -433,7 +476,7 @@ void FRMain::method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks
 
 void FRMain::update_list(std::string ltype, std::string  descriptor, std::string tname, int count,
                          const std::vector<std::string> argHeaders,  const std::vector<std::string> instanceHeaders, 
-                         const std::vector<frenchroast::monitor::MarkerField> markers)
+                         const std::vector<frenchroast::monitor::MarkerField> markers, std::unordered_map<std::string, frenchroast::monitor::StackReport> stacks)
 {
   if(_docks.count(ltype) == 0) return;
   
@@ -449,7 +492,7 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
 
   descriptor.append(tname);
 
-  _detailDescriptors[descriptor] = DetailHolder{argHeaders, instanceHeaders, markers};
+  _detailDescriptors[descriptor] = DetailHolder{argHeaders, instanceHeaders, markers, stacks};
   if (_descriptorsPerDock[ltype].count(descriptor) == 0 ) {
     _descriptorsPerDock[ltype][descriptor] = new SignalItem(descriptor, frenchroast::monitor::ntoa(count,5,' '));
     _list->addItem(_descriptorsPerDock[ltype][descriptor]);
@@ -457,31 +500,32 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
   else {
     _descriptorsPerDock[ltype][descriptor]->setText(QString::fromStdString(descriptor) + "  " + QString::fromStdString(frenchroast::monitor::ntoa(count,5, ' ')));
     if(_detailLists.count(descriptor) == 1) {
-      update_detail_list(descriptor, _detailLists[descriptor], _detailDescriptors[descriptor]);
+      update_detail_list(descriptor, _detailLists[descriptor], _detailStackLists[descriptor], _detailDescriptors[descriptor]);
     }
   }
 }
 
 
-
-QTableWidgetItem* createItem(int value)
+void FRMain::update_detail_list(std::string  descriptor, QTableWidget* list, QTableWidget* stacklist, const DetailHolder& detailHolder)
 {
-  QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(std::to_string(value)));
-  ditem->setFont(CodeFont());
-  ditem->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
-  return ditem;
-}
-
-QTableWidgetItem* createItem(const std::string& value)
-{
-  QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(value));
-  ditem->setFont(CodeFont());
-  ditem->setTextAlignment(Qt::AlignCenter);
-  return ditem;
-}
-
-void FRMain::update_detail_list(std::string  descriptor, QTableWidget* list, const DetailHolder& detailHolder)
-{
+  for(auto& x : detailHolder._stacks) {
+    if(_detailStackItems[descriptor].count(x.second.key()) == 1) {
+      _detailStackItems[descriptor][x.second.key()]->setText(  QString::fromStdString(std::to_string(x.second.count())));
+    }
+    else {
+      int row = stacklist->rowCount();
+      stacklist->insertRow(row);
+      QTableWidgetItem* item = createItem(x.second.count());
+      _detailStackItems[descriptor][x.second.key()] = item;
+      stacklist->setItem(row, 0, item);
+      for(auto& frame : x.second.descriptors()) {
+        stacklist->setItem(row,1, createItem(frame));
+        ++row;
+        stacklist->insertRow(row);
+      }
+    }
+  }
+  
   if(list->rowCount() == 0) {
 
     list->insertColumn(0);

@@ -42,6 +42,7 @@ int main(int argc, char* argv[]) {
   
   qRegisterMetaType<std::string>();
   qRegisterMetaType<std::vector<frenchroast::monitor::StackTrace>>();
+  qRegisterMetaType<SRType>("std::unordered_map<std::string, frenchroast::monitor::StackReport>");
   qRegisterMetaType<std::vector<frenchroast::monitor::MarkerField>>();
   qRegisterMetaType<std::vector<frenchroast::monitor::MethodStats>>();
   qRegisterMetaType<std::vector<std::string>>();

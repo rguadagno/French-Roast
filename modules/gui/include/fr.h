@@ -29,11 +29,14 @@
 #include "Monitor.h"
 #include "StackTrace.h"
 #include "MethodStats.h"
+#include "StackReport.h"
 
 Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::StackTrace>);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::MarkerField>);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::MethodStats>);
+using SRType =   std::unordered_map<std::string, frenchroast::monitor::StackReport>;
+Q_DECLARE_METATYPE(SRType);
 
 
 class FRListener : public QObject
@@ -51,7 +54,7 @@ class FRListener : public QObject
   public:
     FRListener(const std::string ip, int port, const std::string& opcodFile);
     int getCount(const std::string& item);
-    void signal(const std::string& tag, const std::string& tname, int count,  std::vector<std::string>,std::vector<std::string>, std::vector<frenchroast::monitor::MarkerField>);
+    void signal(const std::string& tag, const std::string& tname, int count,  std::vector<std::string>,std::vector<std::string>, std::vector<frenchroast::monitor::MarkerField>, std::unordered_map<std::string, frenchroast::monitor::StackReport>);
     void traffic(std::vector<frenchroast::monitor::StackTrace>&);
     void signal_timed(const std::string& tag, const std::string& tname, long elapsed, int last);
     void connected(const std::string& addr);
@@ -68,7 +71,7 @@ class FRListener : public QObject
   signals:
     void send_hooks();
     void method_ranking(std::vector<frenchroast::monitor::MethodStats>);
-    void thooked(const std::string& ltype, const std::string& info,const std::string& tname, int count, const std::vector<std::string>&, const std::vector<std::string>&, const std::vector<frenchroast::monitor::MarkerField>&);
+    void thooked(const std::string& ltype, const std::string& info,const std::string& tname, int count, const std::vector<std::string>&, const std::vector<std::string>&, const std::vector<frenchroast::monitor::MarkerField>&,  std::unordered_map<std::string, frenchroast::monitor::StackReport>);
     void timersignal(const std::string& info, const std::string& tname, long elapsed);
     void remoteconnected(const std::string& addr);
     void remoteunloaded(const std::string& msg);
