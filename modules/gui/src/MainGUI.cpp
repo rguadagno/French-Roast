@@ -448,13 +448,13 @@ void FRMain::update_timed_list(std::string  descriptor, std::string tname, long 
   tname = "[ " + tname + " ]";
   frenchroast::monitor::pad(desc, 50);
   frenchroast::monitor::pad(tname, 10);
-  desc.append(tname);
+  desc = tname + desc;
   if (_descriptorsPerDock[TimerWindow].count(descriptor) == 0 ) {
     _descriptorsPerDock[TimerWindow][descriptor] = new SignalItem(desc, frenchroast::monitor::format_millis(elapsed));
     _timedlist->addItem(_descriptorsPerDock[TimerWindow][descriptor]);
   }
   else {
-    _descriptorsPerDock[TimerWindow][descriptor]->setText(QString::fromStdString(desc) + "  " + QString::fromStdString(frenchroast::monitor::format_millis(elapsed)));
+    _descriptorsPerDock[TimerWindow][descriptor]->setText(QString::fromStdString(frenchroast::monitor::format_millis(elapsed)) + "   "  + QString::fromStdString(desc) );
   }
 }
 
