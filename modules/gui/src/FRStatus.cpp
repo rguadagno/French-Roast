@@ -29,7 +29,11 @@ FRStatus::FRStatus(QStatusBar* ptr) : _Qstatusbar(ptr)
   _connectionText = new QLabel;
   _timeText = new QLabel;
   _timer   = new QTimer{this};
-  QObject::connect(_timer, &QTimer::timeout, _timeText, [&]() { _elapsed+= 1000; _timeText->setText(QString::fromStdString(frenchroast::monitor::format_millis(_elapsed))); });
+  using namespace frenchroast::monitor;
+  QObject::connect(_timer,
+                   &QTimer::timeout,
+                   _timeText,
+                   [&]() { _elapsed+= 1000; _timeText->setText(QString::fromStdString(format_millis(_elapsed, FORMAT_HOURS|FORMAT_MINUTES|FORMAT_SECONDS))); });
   QGridLayout* layout = new QGridLayout;
   layout->addWidget(_connectionText, 0,0, Qt::AlignLeft);
   layout->addWidget(_statusText,0,7, Qt::AlignCenter);

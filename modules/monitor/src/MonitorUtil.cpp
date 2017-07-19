@@ -20,7 +20,10 @@ std::string  frenchroast::monitor::pad(const std::string& str, int amount, char 
   return rv;
 }
 
-std::string frenchroast::monitor::format_millis(long millis)
+//const std::bitset<4> frenchroast::monitor::FORMAT_HOURS{"0001"};
+
+
+std::string frenchroast::monitor::format_millis(long millis, std::bitset<4> format)
 {
   int hours = millis / (3600000);
   millis -= hours * 3600000;
@@ -29,7 +32,27 @@ std::string frenchroast::monitor::format_millis(long millis)
   int sec   = millis / 1000;
   millis -=  sec * 1000;
 
-  return ntoa(hours,0) + ":" + ntoa(min,2) + ":" + ntoa(sec,2) + ":" + ntoa(millis,3);
+  std::string rv = "";
+  if((format & FORMAT_HOURS) == FORMAT_HOURS) {
+    rv.append(ntoa(hours,0));
+  }
+
+  if((format & FORMAT_MINUTES) == FORMAT_MINUTES) {
+    if(rv != "") rv.append(":");
+    rv.append(ntoa(min,2));
+  }
+
+  if((format & FORMAT_SECONDS) == FORMAT_SECONDS) {
+    if(rv != "") rv.append(":");
+    rv.append(ntoa(sec,2));
+  }
+
+  if((format & FORMAT_MILLISECONDS) == FORMAT_MILLISECONDS) {
+    if(rv != "") rv.append(":");
+    rv.append(ntoa(millis,3));
+  }
+
+  return rv;
 }
 
 const char* frenchroast::monitor::get_env_variable(const std::string& var, const std::string& msg) 
