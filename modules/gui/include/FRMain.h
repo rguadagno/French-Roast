@@ -57,19 +57,20 @@ class FRMain : public QMainWindow {
   const static std::string  TrafficWindow;
 
  private:
+
   std::unordered_map<std::string, QDockWidget*>                 _docks;
   static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
-  QSettings&    _settings;
-  bool          _exit{false};
-  bool          _ok_to_send_hooks{false};
+  QSettings&              _settings;
+  bool                    _exit{false};
+  bool                    _ok_to_send_hooks{false};
   frenchroast::Editor*    _editor{nullptr};
-  QListWidget*  _list;
-  QListWidget*  _timedlist;
-  QTableWidget* _traffic;
-  QPushButton*  _buttonStartTraffic;
-  QLineEdit*    _rate;
-  FRStatus*      _statusMsg;
-  EnterKeyListener* _trafficEnterKeyListener;
+  QListWidget*            _list;
+  QListWidget*            _timedlist;
+  QTableWidget*           _traffic;
+  QPushButton*            _buttonStartTraffic;
+  QLineEdit*              _rate;
+  FRStatus*               _statusMsg;
+  EnterKeyListener*       _trafficEnterKeyListener;
 
   std::unordered_map<std::string, std::unordered_map<std::string,SignalItem*>> _descriptorsPerDock;
   std::unordered_map<std::string, DetailHolder>             _detailDescriptors;
