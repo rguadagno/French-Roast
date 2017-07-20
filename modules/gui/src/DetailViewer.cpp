@@ -22,6 +22,7 @@
 #include <QHeaderView>
 #include <QVBoxLayout>
 #include "QUtil.h"
+#include "SignalDelegate.h"
 
 DetailViewer::DetailViewer(const std::string& descriptor, QSettings& settings) : _descriptor(descriptor)
 {
@@ -42,7 +43,6 @@ DetailViewer::DetailViewer(const std::string& descriptor, QSettings& settings) :
   vlayout = new QVBoxLayout();
   vlayout->setSpacing(0);
   _stackData = new QTableWidget();
-  _stackData->setStyleSheet(settings.value("traffic_grid_style").toString());
   _stackData->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
   _stackData->verticalHeader()->hide();
   _stackData->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -50,6 +50,7 @@ DetailViewer::DetailViewer(const std::string& descriptor, QSettings& settings) :
   _stackData->insertColumn(0);
   _stackData->setHorizontalHeaderItem(0, createItem("count"));
   _stackData->setHorizontalHeaderItem(1,createItem("stack"));
+  _stackData->setItemDelegateForColumn(1, new SignalDelegate(_stackData)); 
   
   vlayout->addWidget(_stackData);
   holderStacks->setLayout(vlayout);
