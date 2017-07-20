@@ -59,8 +59,9 @@ std::unordered_map< std::string,  void (FRMain::*)()  > FRMain::_dockbuilders {{
 FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settings(settings), _hooksfile(path_to_hooks)
 {
   QDesktopWidget* dw = QApplication::desktop();
+
   int height = dw->availableGeometry(dw->primaryScreen()).height() * 0.2;
-  int width  = dw->availableGeometry(dw->primaryScreen()).width() * 0.7;
+  int width  =  dw->availableGeometry(dw->primaryScreen()).width() * 0.7;
 
   QMenu* mptr = menuBar()->addMenu("&View");
   connect_dock_win(mptr, "Signals",         SignalWindow);
@@ -83,9 +84,6 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
   _statusMsg = new FRStatus{statusBar()};  
   statusBar()->addPermanentWidget(_statusMsg,10);
   _statusMsg->waiting_for_connection();
-
-
-  
 }
 
 class SignalItem : public QListWidgetItem {
@@ -363,6 +361,7 @@ void FRMain::show_detail(QListWidgetItem* item)
   QObject::connect(abar, &ActionBar::close_clicked, this, [=](){ _viewingDetail.erase(sname); });
   QObject::connect(this, &FRMain::update_detail_list, _viewingDetail[sname], &DetailViewer::update);
   dockwin->setFloating(true);
+  dockwin->move(_docks[SignalWindow]->x() + 50, _docks[SignalWindow]->y() + 50 ); 
   addDockWidget(Qt::TopDockWidgetArea, dockwin);
   update_detail_list(sname, _detailDescriptors[sname]);
 }

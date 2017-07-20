@@ -117,8 +117,15 @@ void DetailViewer::update(const std::string& descriptor, const DetailHolder& hol
       _argData->setItem(currRow, 1, createItem("("));
       
       int colidx = 2;
+      int idx=1;
+      int totalargs = item._arg_items.size();
       for(auto& x : item._arg_items) {
-        _argData->setItem(currRow, colidx++, createItem(x));
+        std::string xx = x;
+        if(idx < totalargs) {
+          xx.append(",");
+          ++idx;
+        }
+        _argData->setItem(currRow, colidx++, createItem(xx));
       }
       
       _argData->setItem(currRow, colidx, createItem(")"));
@@ -153,8 +160,15 @@ void DetailViewer::update(const std::string& descriptor, const DetailHolder& hol
       _argData->setItem(currRow, 0, createItem(item._count));
       _argData->setItem(currRow, 1, createItem("("));
       int colidx = 2;
+      int idx=1;
+      int totalargs = item._arg_items.size();
       for(auto& x : item._arg_items) {
-        _argData->setItem(currRow, colidx++, createItem(x));
+        std::string xx = x;
+        if(idx < totalargs) {
+          xx.append(",");
+          ++idx;
+        }
+        _argData->setItem(currRow, colidx++, createItem(xx));
       }
       
       _argData->setItem(currRow, colidx, createItem(")"));
