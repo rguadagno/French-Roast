@@ -21,6 +21,6 @@
 
 class CodeFont : public QFont {
 public:
-  CodeFont();
+  CodeFont(int size = 12);
 
 };

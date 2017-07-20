@@ -41,7 +41,7 @@
 #include <QToolBar>
 #include <algorithm>
 #include "CodeFont.h"
-
+#include "SignalDelegate.h"
 const std::string  FRMain::SignalWindow    = "signals";
 const std::string  FRMain::EditHooksWindow = "edit-hooks";
 const std::string  FRMain::TimerWindow     = "timers";
@@ -131,25 +131,33 @@ void FRMain::remote_disconnected(const std::string& msg)
   _statusMsg->remote_disconnected(msg);
 }
 
-QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* actionptr, const std::string& wstyle, QDockWidget::DockWidgetFeatures features)
+QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* actionptr, bool codeMode )
 {
   QDockWidget* holder = new QDockWidget(QString::fromStdString(title), this);
-  wptr->setStyleSheet(_settings.value(QString::fromStdString(wstyle)).toString());
   holder->setStyleSheet(_settings.value("dock_widget_style").toString());
-  QLabel* sigLabel = new QLabel(QString::fromStdString(title));
-  QWidget* titlebar = new QWidget();
+  QListWidget* sigLabel = new QListWidget{};
+  QWidget*     titlebar = new QWidget();
   QGridLayout* layout = new QGridLayout();
-  
+
+  QListWidgetItem* item = new QListWidgetItem{QString::fromStdString(title)};
+  item->setSizeHint(QSize(30,24));
+  sigLabel->setEnabled(false);
+  sigLabel->setFixedHeight(22);
+  sigLabel->addItem(item);
+  sigLabel->setStyleSheet(_settings.value("dock_title_style2").toString());
+  if(codeMode) {
+    sigLabel->setItemDelegate(new SignalDelegate(sigLabel));
+  }
+
   layout->addWidget(sigLabel,1,1);
-  layout->setColumnStretch(1,10);
   layout->setContentsMargins(1,1,1,1);
   layout->addWidget(actionptr,1, 5);
   titlebar->setLayout(layout);
   titlebar->setStyleSheet(_settings.value("dock_win_header_style").toString());
-  sigLabel->setStyleSheet(_settings.value("dock_title_style").toString());
+
   holder->setTitleBarWidget(titlebar);
   holder->setAttribute(Qt::WA_DeleteOnClose);
-  holder->setFeatures(features);
+  holder->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
   holder->setWidget(wptr);
   
   return holder;
@@ -300,7 +308,8 @@ void FRMain::view_timers()
 void FRMain::view_dockwin(const std::string& title, const std::string& dockname, QWidget* wptr)
 {
   ActionBar* abar = new ActionBar(ActionBar::Close);
-  _docks[dockname] = setup_dock_window(title, wptr, abar, "list_style");
+  wptr->setStyleSheet(_settings.value("list_style").toString());
+  _docks[dockname] = setup_dock_window(title, wptr, abar);
   QObject::connect(abar, &ActionBar::close_clicked, _docks[dockname   ], &QDockWidget::close);
   QObject::connect(abar, &ActionBar::close_clicked, this,                [&](){_docks.erase(dockname);});
   restore_dock_win(dockname);
@@ -313,7 +322,8 @@ void FRMain::view_hooks_editor()
 
   _editor = new frenchroast::Editor();
   ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::Save | ActionBar::Validate);
-  QDockWidget* editdoc = setup_dock_window("hooks", _editor, abar, "edit_style");
+  _editor->setStyleSheet(_settings.value("edit_style").toString());
+  QDockWidget* editdoc = setup_dock_window("hooks", _editor, abar);
   _docks[EditHooksWindow] = editdoc;
   restore_dock_win(EditHooksWindow);
   if(_hooksfile != "") {
@@ -356,7 +366,8 @@ void FRMain::show_detail(QListWidgetItem* item)
 
   _viewingDetail[sname] = new DetailViewer{sname, _settings};
   ActionBar* abar = new ActionBar(ActionBar::Close);
-  QDockWidget* dockwin = setup_dock_window(sname, _viewingDetail[sname], abar ,"table_style");
+  _viewingDetail[sname]->setStyleSheet(_settings.value("tab_style").toString());
+  QDockWidget* dockwin = setup_dock_window(sname, _viewingDetail[sname], abar, true);
   QObject::connect(abar, &ActionBar::close_clicked, dockwin, &QDockWidget::close);
   QObject::connect(abar, &ActionBar::close_clicked, this, [=](){ _viewingDetail.erase(sname); });
   QObject::connect(this, &FRMain::update_detail_list, _viewingDetail[sname], &DetailViewer::update);

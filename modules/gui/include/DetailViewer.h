@@ -26,7 +26,7 @@
 
 
 
-class DetailViewer : public QTabWidget {
+class DetailViewer : public QWidget {
 
   Q_OBJECT
   

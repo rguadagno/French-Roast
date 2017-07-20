@@ -19,7 +19,7 @@
 
 #include "CodeFont.h"
 
-  CodeFont::CodeFont() : QFont(QString::fromStdString("Inconsolata"), 12, QFont::Normal)
+  CodeFont::CodeFont(int size) : QFont(QString::fromStdString("Inconsolata"), size, QFont::Normal)
   {
     setStyleHint(QFont::TypeWriter);
     setStyleStrategy(QFont::PreferAntialias);
