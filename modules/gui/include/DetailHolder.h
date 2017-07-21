@@ -27,16 +27,17 @@
 using VecStr = std::vector<std::string>; 
 class DetailHolder {
  public:
- DetailHolder( VecStr ah, VecStr ih, std::vector<frenchroast::monitor::MarkerField> fields, std::unordered_map<std::string, frenchroast::monitor::StackReport> stacks) : _argHeaders(ah), _instanceHeaders(ih), _markers(fields), _stacks(stacks)
+ DetailHolder( int count, VecStr ah, VecStr ih, std::vector<frenchroast::monitor::MarkerField> fields, std::unordered_map<std::string, frenchroast::monitor::StackReport> stacks) : _count(count), _argHeaders(ah), _instanceHeaders(ih), _markers(fields), _stacks(stacks)
     {
     }
   DetailHolder()
     {
     }
   
-  std::vector<std::string> _argHeaders;
-  std::vector<std::string> _instanceHeaders;
-  std::vector<frenchroast::monitor::MarkerField> _markers;
+  int                                                                _count;
+  std::vector<std::string>                                           _argHeaders;
+  std::vector<std::string>                                           _instanceHeaders;
+  std::vector<frenchroast::monitor::MarkerField>                     _markers;
   std::unordered_map<std::string, frenchroast::monitor::StackReport> _stacks;
 };
 

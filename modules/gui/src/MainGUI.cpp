@@ -131,7 +131,7 @@ void FRMain::remote_disconnected(const std::string& msg)
   _statusMsg->remote_disconnected(msg);
 }
 
-QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* actionptr, bool codeMode )
+QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* actionptr, bool codeMode,  QListWidgetItem** titleItem)
 {
   QDockWidget* holder = new QDockWidget(QString::fromStdString(title), this);
   holder->setStyleSheet(_settings.value("dock_widget_style").toString());
@@ -139,6 +139,7 @@ QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, 
   QWidget*     titlebar = new QWidget();
   QGridLayout* layout = new QGridLayout();
 
+  
   QListWidgetItem* item = new QListWidgetItem{QString::fromStdString(title)};
   item->setSizeHint(QSize(30,24));
   sigLabel->setEnabled(false);
@@ -147,6 +148,7 @@ QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, 
   sigLabel->setStyleSheet(_settings.value("dock_title_style2").toString());
   if(codeMode) {
     sigLabel->setItemDelegate(new SignalDelegate(sigLabel));
+    *titleItem = item;
   }
 
   layout->addWidget(sigLabel,1,1);
@@ -367,7 +369,9 @@ void FRMain::show_detail(QListWidgetItem* item)
   _viewingDetail[sname] = new DetailViewer{sname, _settings};
   ActionBar* abar = new ActionBar(ActionBar::Close);
   _viewingDetail[sname]->setStyleSheet(_settings.value("tab_style").toString());
-  QDockWidget* dockwin = setup_dock_window(sname, _viewingDetail[sname], abar, true);
+  QListWidgetItem* titleWidget;
+  QDockWidget* dockwin = setup_dock_window(sname, _viewingDetail[sname], abar, true, &titleWidget);
+  _viewingDetail[sname]->setTitleWidget(titleWidget);
   QObject::connect(abar, &ActionBar::close_clicked, dockwin, &QDockWidget::close);
   QObject::connect(abar, &ActionBar::close_clicked, this, [=](){ _viewingDetail.erase(sname); });
   QObject::connect(this, &FRMain::update_detail_list, _viewingDetail[sname], &DetailViewer::update);
@@ -414,7 +418,7 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
 
   descriptor = tname + descriptor;
 
-  _detailDescriptors[descriptor] = DetailHolder{argHeaders, instanceHeaders, markers, stacks};
+  _detailDescriptors[descriptor] = DetailHolder{count, argHeaders, instanceHeaders, markers, stacks};
   if (_descriptorsPerDock[ltype].count(descriptor) == 0 ) {
     _descriptorsPerDock[ltype][descriptor] = new SignalItem(descriptor, frenchroast::monitor::ntoa(count,5,' '));
     _list->addItem(_descriptorsPerDock[ltype][descriptor]);

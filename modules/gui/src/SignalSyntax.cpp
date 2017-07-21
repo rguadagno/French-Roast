@@ -36,8 +36,15 @@ void SignalSyntax::highlightBlock(const QString& text)
   ppointFormat.setFont(CodeFont{});
 
   
+  QRegularExpression countReg("^[0-9]*");
+  QRegularExpressionMatchIterator itr = countReg.globalMatch(text);
+  while(itr.hasNext()) {
+    QRegularExpressionMatch match = itr.next();
+    setFormat(match.capturedStart(), match.capturedLength(), ppointFormat);
+  }
+
   QRegularExpression pointReg("[A-Za-z,\\.:() <>\\[\\]\\_]*");
-  QRegularExpressionMatchIterator itr = pointReg.globalMatch(text);
+  itr = pointReg.globalMatch(text);
   while(itr.hasNext()) {
     QRegularExpressionMatch match = itr.next();
     setFormat(match.capturedStart(), match.capturedLength(), pointFormat);

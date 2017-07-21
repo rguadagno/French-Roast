@@ -21,6 +21,7 @@
 #define DETAILVIEWER_H
 #include <QTableWidget>
 #include <QTabWidget>
+#include <QListWidget>
 #include <QSettings>
 #include "DetailHolder.h"
 
@@ -35,9 +36,11 @@ class DetailViewer : public QWidget {
   QTableWidget*                                      _stackData;
   std::unordered_map<std::string, QTableWidgetItem*> _items;
   std::unordered_map<std::string, int>               _detailItems;
+  QListWidgetItem*                                   _titleWidget;
+  QString                                            _title;
  public:
   DetailViewer(const std::string& descriptor, QSettings&);
-
+  void setTitleWidget(QListWidgetItem*);
   public slots:
     
    void update(const std::string& descriptor, const DetailHolder& holder);

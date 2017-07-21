@@ -24,6 +24,12 @@
 #include "QUtil.h"
 #include "SignalDelegate.h"
 
+void DetailViewer::setTitleWidget(QListWidgetItem* wptr)
+{
+  _titleWidget = wptr;
+  _title = wptr->text();
+}
+
 DetailViewer::DetailViewer(const std::string& descriptor, QSettings& settings) : _descriptor(descriptor)
 {
   _argData = new QTableWidget;
@@ -77,6 +83,7 @@ void DetailViewer::update(const std::string& descriptor, const DetailHolder& hol
 {
   if(_descriptor != descriptor) return;
 
+  _titleWidget->setText(QString::number(holder._count) + "  " + _title);
   for(auto& x : holder._stacks) {
     if(_items.count(x.second.key()) == 1) {
       _items[x.second.key()]->setText(  QString::fromStdString(std::to_string(x.second.count())));
