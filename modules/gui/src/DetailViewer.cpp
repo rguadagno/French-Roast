@@ -44,6 +44,7 @@ DetailViewer::DetailViewer(const std::string& descriptor, QSettings& settings) :
   _stackData = new QTableWidget();
   _stackData->setStyleSheet(settings.value("traffic_grid_style").toString());
   _stackData->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+  _stackData->horizontalHeader()->setStyleSheet("QTableWidget::item {background: #202020;}");
   _stackData->verticalHeader()->hide();
   _stackData->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   _stackData->insertColumn(0);
@@ -54,20 +55,16 @@ DetailViewer::DetailViewer(const std::string& descriptor, QSettings& settings) :
   
   vlayout->addWidget(_stackData);
   holderStacks->setLayout(vlayout);
-   //  holderStacks->setStyleSheet(settings.value("zero_border_style").toString());
   holderStacks->setStyleSheet("QWidget { background-color: black;border: 0px;}");
-  //  setStyleSheet("QTabWidget { background-color: black;border: none;} QTabBar::tab {background:green;}");
-  //  
-  //  QTabWidget::setStyleSheet("QTabBar::tab {color: blue;}");
   QTabWidget* tab = new QTabWidget();
   tab->addTab(holder, "Args / Instance data");
   tab->addTab(holderStacks, "Call Stacks");
 
-    tab->setStyleSheet("QTabWidget {border: none; background:black;} " \
-                     "QTabBar::tab {background-color:#606060;color:#B4B6B6;font-size: 12px;border-top-left-radius:6px;min-width: 40ex; padding:3px;margin-left:2px;} " \
+  tab->setStyleSheet("QWidget {border: none; background:black;} "       \
+                     "QTabBar::tab {height: 18px; background-color:#606060;color:#B4B6B6;font-size: 12px;border-top-left-radius:8px;min-width: 40ex; padding:3px;margin-left:2px;} " \
                        "QTabBar::tab:hover {color: white;border: 1px solid #B4B6B6;}"             \
                        "QTabBar::tab:selected {background: #173496;}" );
-
+  tab->setDocumentMode(true);
   QVBoxLayout* vlayout2 = new QVBoxLayout;
   vlayout2->setContentsMargins(0,0,0,0);
   vlayout2->addWidget(tab);
