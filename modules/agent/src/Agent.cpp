@@ -256,9 +256,6 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
   err = genv->GetStackTrace(aThread, 0, sizeof(frames), frames, &count);
   if (err == JVMTI_ERROR_NONE && count >= 1) {
     std::vector<DescriptorVO> stack = populate_stack(frames, count);
-    char *methodName;
-    char *sig;
-    char *generic;
     std::string params = "(";
     int slot = 0;
       for(auto& argtype : typeTokenizer(stack[0]._methodSignature)) {
