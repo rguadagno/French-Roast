@@ -27,17 +27,22 @@ class ActionBar : public QWidget {
   QPushButton* _closeButton{nullptr};
   QPushButton* _saveButton{nullptr};
   QPushButton* _validateButton{nullptr};
-  
+  QPushButton* _startStopButton{nullptr};
+ 
    Q_OBJECT
   
   signals:
   void save_clicked();
   void close_clicked();
   void validate_clicked();
+  void start_clicked();
+  void stop_clicked();
+    
 
   public slots:
     void enable_save();
     void disable_save();
+    void startstop_clicked();
 public:
   ActionBar(const ActionBar&) = delete;
   ActionBar(const std::bitset<4>& actions = None);
@@ -47,5 +52,9 @@ public:
   const static std::bitset<4> Close;
   const static std::bitset<4> None;
   const static std::bitset<4> Validate;
+  const static std::bitset<4> StartStop;
+
+  const static QString START_TEXT;
+  const static QString STOP_TEXT;
   
 };

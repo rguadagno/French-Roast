@@ -1,4 +1,4 @@
-// copyright (c) 2016 Richard Guadagno
+// copyright (c) 2017 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -17,31 +17,34 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef RRPT_H
-#define RRPT_H
-#include <string>
-#include <vector>
-#include "Transport.h"
+#ifndef CLASSVIEWER_H
+#define CLASSVIEWER_H
+#include <QTableWidget>
 #include "ClassDetail.h"
+#include <QSettings>
 
-namespace frenchroast { namespace agent {
 
-        
-    class Reporter {
-      Transport* _ptr;
-    public:
-      void traffic(const std::string& tag);
-      void Reporter::loaded_classes(std::vector<frenchroast::monitor::ClassDetail> details);
-      void ready();
-      void setTransport(Transport* ptr);
-      void signal(const std::string& tag);
-      void signal_timer(long long time, const std::string& direction, const std::string& tag, const std::string threadname);
-      void close();
-      void unloaded(const std::string& msg);
+class ClassViewer : public QWidget {
 
-    };
+  Q_OBJECT
+  
+  //  std::string                                        _descriptor;
+  QTableWidget*                                      _data;
 
-  }
-}
+  //  std::unordered_map<std::string, QTableWidgetItem*> _items;
+  // std::unordered_map<std::string, int>               _detailItems;
+  //QListWidgetItem*                                   _titleWidget;
+  //QString                                            _title;
+ public:
+  ClassViewer(QSettings&);
+
+  public slots:
+    
+    void update(const std::vector<frenchroast::monitor::ClassDetail>&);
+
+
+
+
+};
 
 #endif

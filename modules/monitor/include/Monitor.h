@@ -27,13 +27,14 @@
 #include "MarkerField.h"
 #include "MethodStats.h"
 #include "StackReport.h"
-
+#include "ClassDetail.h"
 
 namespace frenchroast { namespace monitor {
 
     
-    std::string             translate_descriptor(const std::string& name);
-    std::vector<StackTrace> construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters);
+    std::string              translate_descriptor(const std::string& name);
+    std::vector<StackTrace>  construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters);
+    std::vector<ClassDetail> construct_class_details(const std::string& msg);
     void transmit_lines(const std::string& fileName, frenchroast::network::Connector&);
     void transmit_lines(const std::vector<std::string>&, frenchroast::network::Connector&);
 
@@ -131,6 +132,10 @@ namespace frenchroast { namespace monitor {
 	    _handler.traffic( construct_traffic(items[MSG], _method_counters));
 	  }
 
+          if (items[MSG_TYPE] == "loaded") {
+	    _handler.class_watch( construct_class_details(items[MSG]));
+	  }
+
 	  if (items[MSG_TYPE] == "ready") {
 	    _handler.ready();
 	  }
@@ -161,6 +166,19 @@ namespace frenchroast { namespace monitor {
           _conn.wait_for_client_connection(ipAddr, port, this);
         }
 
+
+
+      void start_watch_loading()
+      {
+	_conn.send_message("watch_loading");
+      }
+
+      void stop_watch_loading()
+      {
+	_conn.send_message("stop_watch_loading");
+      }
+
+            
       void watch_traffic(const int interval_millis)
       {
 	_conn.send_message("watch_traffic~" + std::to_string(interval_millis));

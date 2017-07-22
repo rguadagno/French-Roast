@@ -37,6 +37,7 @@
 #include "ServerTransport.h"
 #include "Listener.h"
 #include "AgentUtil.h"
+#include "ClassDetail.h"
 
 /*
 struct GlobalAgentData {
@@ -48,13 +49,17 @@ struct GlobalAgentData {
 */
 
 std::mutex _traffic_mutex;
+std::mutex _loading_mutex;
+std::mutex _loading_data_mutex;
 frenchroast::network::Connector  _conn;
 
 class CommandBridge : public frenchroast::agent::CommandListener, public frenchroast::network::Listener {
   
 public:
-  std::atomic<int> _millis{};
+  std::atomic<int>        _millis{};
   std::condition_variable _traffic_cond;
+  std::atomic<int>        _load_watch_interval{};
+  std::condition_variable _load_watch_cond;
 
     void message(const std::string& msg)
     {
@@ -66,6 +71,13 @@ public:
       if (items.size() == 2 && items[0] == "watch_traffic") {
         watch_traffic(atoi(items[1].c_str()));
       }
+      if (items[0] == "watch_loading") { 
+        watch_loading();
+      }
+      if (items[0] == "stop_watch_loading") { 
+        stop_watch_loading();
+      }
+      
     }
 
   
@@ -83,6 +95,23 @@ public:
     _traffic_cond.notify_one();
   }
 
+  void stop_watch_loading()
+  {
+    std::lock_guard<std::mutex> lck{_loading_mutex};
+    _load_watch_interval.store(-1);
+    _load_watch_cond.notify_one();
+
+    std::cout << "** STOP WATCH LOADING **" << std::endl;
+  }
+
+  void watch_loading()
+  {
+    std::lock_guard<std::mutex> lck{_loading_mutex};
+    _load_watch_interval.store(5000);
+    _load_watch_cond.notify_one();
+
+    std::cout << "** START WATCH LOADING **" << std::endl;
+  }
 
 };
 
@@ -106,7 +135,7 @@ public:
 };
 
 static int counter = 0;
-
+std::vector<frenchroast::monitor::ClassDetail>                  _loadedClasses;
 std::unordered_map<std::string, FieldInfo> _reportingFields;
 frenchroast::OpCode                        _opcodes;
 frenchroast::FrenchRoast                   _fr{_opcodes};
@@ -333,39 +362,53 @@ void JNICALL
     _fr.load_to_buffer(*new_class_data); 
   }
 
-  if (_hooks.is_hook_class(sname)) {
+
+  if(sname.find("java/") == std::string::npos && sname.find("sun/") == std::string::npos) {
+    std::cout << "loading: " << sname << std::endl;
     _fr.load_from_buffer(class_data);
-    for (auto& x : _hooks.get(sname)) {
-      if (x.line_number() > 0) {
-         _fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
+    std::vector<std::string> descriptors;
+    for(auto methdesc : _fr.get_method_descriptors()) {
+      if(methdesc.find("main") == std::string::npos ) {
+        descriptors.push_back(methdesc);
       }
-      else {
-        if ((x.flags() & frenchroast::FrenchRoast::METHOD_TIMER) == frenchroast::FrenchRoast::METHOD_TIMER) {
-          _fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
+    }
+    _loading_data_mutex.lock();
+    _loadedClasses.emplace_back(sname, descriptors);
+    _loading_data_mutex.unlock();
+    
+    
+    if (_hooks.is_hook_class(sname)) {
+      for (auto& x : _hooks.get(sname)) {
+        if (x.line_number() > 0) {
+          _fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
         }
         else {
-          std::cout <<  x.method_name() << std::endl;
-          if(x.all()) {
-            for(auto methdesc : _fr.get_method_descriptors()) {
-              if(methdesc.find("main") == std::string::npos         ) {
-                if( methdesc.find("<init") == std::string::npos ) {
-                  _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
-                }
+          if ((x.flags() & frenchroast::FrenchRoast::METHOD_TIMER) == frenchroast::FrenchRoast::METHOD_TIMER) {
+            _fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
+          }
+          else {
+            if(x.all()) {
+              for(auto methdesc : _fr.get_method_descriptors()) {
+                if(methdesc.find("main") == std::string::npos         ) {
+                  if( methdesc.find("<init") == std::string::npos ) {
+                    _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
+                  }
                 else {
                   _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", frenchroast::FrenchRoast::METHOD_EXIT);
                 }
+                }
               }
             }
-          }
-          else {
-          _fr.add_method_call(x.method_name(), "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
+            else {
+              _fr.add_method_call(x.method_name(), "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
+            }
           }
         }
+        jint size = _fr.size_in_bytes();
+        jvmtiError  err =    env->Allocate(size,new_class_data);
+        *new_class_data_len = size;
+        _fr.load_to_buffer(*new_class_data);
       }
-    jint size = _fr.size_in_bytes();
-    jvmtiError  err =    env->Allocate(size,new_class_data);
-    *new_class_data_len = size;
-    _fr.load_to_buffer(*new_class_data);
     }
   }
 }
@@ -468,6 +511,48 @@ void traffic_monitor()
   }
   }
 
+
+
+bool loading_watch_predicate() 
+{
+  return _commandListener._load_watch_interval.load() > 0;
+}
+
+void class_loading_monitor() 
+{
+  jvmtiEnv* xenv;
+  g_java_vm->AttachCurrentThread((void**)&xenv,(void*)NULL);
+
+  int delay = _commandListener._load_watch_interval.load();
+
+  if (!loading_watch_predicate()) {
+    std::unique_lock<std::mutex> lck{_loading_mutex};
+    _commandListener._load_watch_cond.wait(lck,&loading_watch_predicate);
+    delay = _commandListener._load_watch_interval.load();
+  }
+
+  while(1) {
+    _sig_mutex.lock();
+    _rptr.loaded_classes(_loadedClasses);
+    _loadedClasses.clear();
+    _sig_mutex.unlock();
+    
+    if (!loading_watch_predicate()) {
+      std::unique_lock<std::mutex> lck{_loading_mutex};
+      _commandListener._load_watch_cond.wait(lck,&loading_watch_predicate);
+      delay = _commandListener._load_watch_interval.load();
+    }
+    else {
+      std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+    }
+    if (!loading_watch_predicate()) {
+      std::unique_lock<std::mutex> lck{_loading_mutex};
+      _commandListener._load_watch_cond.wait(lck,&loading_watch_predicate);
+      delay = _commandListener._load_watch_interval.load();
+    }
+  }
+  }
+
 void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
 {
   std::cout << "*** INIT() " << std::endl;
@@ -496,6 +581,9 @@ void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
 
   std::thread t1{traffic_monitor};
   t1.detach();
+  std::thread t2{class_loading_monitor};
+  t2.detach();
+
 }
 
 

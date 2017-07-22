@@ -73,6 +73,16 @@ void FRListener::stop_traffic()
 }
 
 
+void FRListener::start_watch_loading()
+{
+  _mon.start_watch_loading();
+}
+
+void FRListener::stop_watch_loading()
+{
+  _mon.stop_watch_loading();
+}
+
 void FRListener::ready()
 {
   remote_ready();
@@ -82,6 +92,11 @@ void FRListener::request_hooks()
 {
   _hooks_request = true;
   send_hooks();
+}
+
+void FRListener::class_watch( const std::vector<frenchroast::monitor::ClassDetail>& details)
+{
+  class_loaded(details);
 }
 
 void FRListener::validated_hooks(std::vector<std::string> hooks)

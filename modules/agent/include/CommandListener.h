@@ -27,6 +27,9 @@ namespace frenchroast { namespace agent {
     public:
       virtual void watch_traffic(const int interval_millis) = 0;
       virtual void stop_watch_traffic() = 0;
+      virtual void watch_loading() = 0;
+      virtual void stop_watch_loading() = 0;
+
     };
   }
 }

@@ -31,6 +31,7 @@
 #include "MethodStats.h"
 #include "StackReport.h"
 #include "DetailHolder.h"
+#include "ClassDetail.h"
 
 Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::StackTrace>);
@@ -39,6 +40,7 @@ Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::MethodStats>);
 using SRType =   std::unordered_map<std::string, frenchroast::monitor::StackReport>;
 Q_DECLARE_METATYPE(SRType);
 Q_DECLARE_METATYPE(DetailHolder);
+Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::ClassDetail>);
 
 
 class FRListener : public QObject
@@ -69,6 +71,9 @@ class FRListener : public QObject
     void start_traffic(int);
     void stop_traffic();
     void validated_hooks(std::vector<std::string>);
+    void start_watch_loading();
+    void stop_watch_loading();
+    void class_watch(const std::vector<frenchroast::monitor::ClassDetail>& details);
     
   signals:
     void send_hooks();
@@ -78,6 +83,7 @@ class FRListener : public QObject
     void remoteconnected(const std::string& addr);
     void remoteunloaded(const std::string& msg);
     void traffic_signal(const std::vector<frenchroast::monitor::StackTrace>&);
+    void class_loaded(const std::vector<frenchroast::monitor::ClassDetail>&);
     void remote_ready();
 
 };

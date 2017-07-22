@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
   qRegisterMetaType<std::vector<std::string>>();
   qRegisterMetaType<frenchroast::MessageItem>();
   qRegisterMetaType<DetailHolder>();
+  qRegisterMetaType<std::vector<frenchroast::monitor::ClassDetail>>();
   
   FRListener roaster{std::string{argv[1]}, atoi(argv[2]), path_to_opcodes};
   QThread* tt = new QThread(&roaster);
@@ -58,6 +59,7 @@ int main(int argc, char* argv[]) {
   QObject::connect(&roaster, &FRListener::thooked,         &main,    &FRMain::update_list);
   QObject::connect(&roaster, &FRListener::timersignal,     &main,    &FRMain::update_timed_list);
   QObject::connect(&roaster, &FRListener::traffic_signal,  &main,    &FRMain::update_traffic);
+  QObject::connect(&roaster, &FRListener::class_loaded,    &main,    &FRMain::update_class_viewer);
   QObject::connect(tt,       &QThread::started,            &roaster, &FRListener::init);
   QObject::connect(&app,     &QApplication::aboutToQuit,   &main,    &FRMain::handle_exit);
   QObject::connect(&roaster, &FRListener::remoteconnected, &main,    &FRMain::remote_connected);
@@ -65,6 +67,8 @@ int main(int argc, char* argv[]) {
   QObject::connect(&roaster, &FRListener::remote_ready,    &main,    &FRMain::handshake);
   QObject::connect(&main,    &FRMain::start_traffic,       &roaster, &FRListener::start_traffic);
   QObject::connect(&main,    &FRMain::stop_traffic,        &roaster, &FRListener::stop_traffic);
+  QObject::connect(&main,    &FRMain::start_loading,       &roaster, &FRListener::start_watch_loading);
+  QObject::connect(&main,    &FRMain::stop_loading,        &roaster, &FRListener::stop_watch_loading);
   QObject::connect(&roaster, &FRListener::method_ranking,  &main,    &FRMain::method_ranking);
   QObject::connect(&roaster, &FRListener::send_hooks,      &main,    &FRMain::validate_hooks);
   QObject::connect(&main,    &FRMain::validated_hooks,     &roaster, &FRListener::validated_hooks);

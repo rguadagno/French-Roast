@@ -18,6 +18,7 @@
 //
 #include "Reporter.h"
 #include "Util.h"
+#include "ClassDetail.h"
 
 namespace frenchroast { namespace agent {
 
@@ -25,6 +26,23 @@ namespace frenchroast { namespace agent {
     {
       if(ptr == nullptr) throw std::invalid_argument("Transport is nullptr");
       _ptr = ptr;
+    }
+
+
+    void Reporter::loaded_classes(std::vector<frenchroast::monitor::ClassDetail> details)
+    {
+      if(details.size() == 0) return;
+
+      std::string outstr = "";
+      for(auto& citem : details) {
+        outstr.append(citem.name() + "[");
+        for(auto& meth : citem.methods()) {
+          outstr.append(meth + "%");
+        }
+        outstr.append("]");
+      }
+      
+      _ptr->out("loaded~" + outstr);
     }
     
     void Reporter::signal(const std::string& tag)

@@ -42,17 +42,21 @@
 #include <algorithm>
 #include "CodeFont.h"
 #include "SignalDelegate.h"
+
+
 const std::string  FRMain::SignalWindow    = "signals";
 const std::string  FRMain::EditHooksWindow = "edit-hooks";
 const std::string  FRMain::TimerWindow     = "timers";
 const std::string  FRMain::RankingWindow   = "rankings";
 const std::string  FRMain::TrafficWindow   = "traffic";
+const std::string  FRMain::ClassViewerWindow  = "classviewer";
 
-std::unordered_map< std::string,  void (FRMain::*)()  > FRMain::_dockbuilders {{FRMain::SignalWindow,    &FRMain::view_signals},
-                                                                               {FRMain::EditHooksWindow, &FRMain::view_hooks_editor},
-                                                                               {FRMain::TimerWindow,     &FRMain::view_timers},
-                                                                               {FRMain::RankingWindow,   &FRMain::view_ranking},
-                                                                               {FRMain::TrafficWindow,   &FRMain::view_traffic}
+std::unordered_map< std::string,  void (FRMain::*)()  > FRMain::_dockbuilders {{FRMain::SignalWindow,      &FRMain::view_signals},
+                                                                               {FRMain::EditHooksWindow,   &FRMain::view_hooks_editor},
+                                                                               {FRMain::TimerWindow,       &FRMain::view_timers},
+                                                                               {FRMain::RankingWindow,     &FRMain::view_ranking},
+                                                                               {FRMain::TrafficWindow,     &FRMain::view_traffic},
+                                                                               {FRMain::ClassViewerWindow, &FRMain::view_classviewer}
       };
 
 
@@ -69,6 +73,7 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
   connect_dock_win(mptr, "Hooks Editor",    EditHooksWindow);
   connect_dock_win(mptr, "Method Rankings", RankingWindow);
   connect_dock_win(mptr, "Traffic",         TrafficWindow);
+  connect_dock_win(mptr, "Class Viewer",    ClassViewerWindow);
   
   resize(_settings.value("main:width", width).toInt(),
          _settings.value("main:height", height).toInt());
@@ -278,6 +283,33 @@ void FRMain::view_traffic()
   QObject::connect(_traffic,                 &QTableWidget::destroyed,      this, [&](){if(_exit) return;_traffic_rows.clear(); _traffic_keys.clear();});
 }
 
+void FRMain::view_classviewer()
+{
+ if(_docks.count(ClassViewerWindow) == 1) return;
+
+  ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::StartStop);
+
+  _classViewer = new ClassViewer(_settings);
+
+  _classViewer->setStyleSheet(_settings.value("list_style").toString());
+  _docks[ClassViewerWindow] = setup_dock_window("Class Viewer", _classViewer, abar);
+  QObject::connect(abar, &ActionBar::close_clicked, _docks[ClassViewerWindow], &QDockWidget::close);
+  QObject::connect(abar, &ActionBar::close_clicked, this,                [&](){_docks.erase(ClassViewerWindow);});
+  QObject::connect(abar, &ActionBar::start_clicked, this,                &FRMain::start_watch_loading);
+  QObject::connect(abar, &ActionBar::stop_clicked, this,                 &FRMain::stop_watch_loading);
+  restore_dock_win(ClassViewerWindow);
+}
+
+void FRMain::start_watch_loading()
+{
+   start_loading();
+}
+
+void FRMain::stop_watch_loading()
+{
+   stop_loading();
+}
+
 void FRMain::view_ranking()
 {
   if(_docks.count(RankingWindow) == 1) return;
@@ -325,7 +357,7 @@ void FRMain::view_hooks_editor()
   _editor = new frenchroast::Editor();
   ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::Save | ActionBar::Validate);
   _editor->setStyleSheet(_settings.value("edit_style").toString());
-  QDockWidget* editdoc = setup_dock_window("hooks", _editor, abar);
+  QDockWidget* editdoc = setup_dock_window("Signal Editor", _editor, abar);
   _docks[EditHooksWindow] = editdoc;
   restore_dock_win(EditHooksWindow);
   if(_hooksfile != "") {
@@ -384,6 +416,13 @@ void FRMain::show_detail(QListWidgetItem* item)
 void FRMain::reset_editor(QObject* obj)
 {
    _editor = nullptr;
+}
+
+
+void FRMain::update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>& details)
+{
+  if(_docks.count(ClassViewerWindow) == 0) return;
+  _classViewer->update(details);
 }
 
 void FRMain::update_traffic_rate()

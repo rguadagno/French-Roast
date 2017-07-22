@@ -27,6 +27,11 @@ const std::bitset<4> ActionBar::None{"0000"};
 const std::bitset<4> ActionBar::Close{"0001"};
 const std::bitset<4> ActionBar::Save{"0010"};
 const std::bitset<4> ActionBar::Validate{"0100"};
+const std::bitset<4> ActionBar::StartStop{"1000"};
+
+const QString ActionBar::START_TEXT{" start "};
+const QString ActionBar::STOP_TEXT{" stop "};
+
 
 ActionBar::ActionBar(const std::bitset<4>& actions)
   {
@@ -95,6 +100,27 @@ ActionBar::ActionBar(const std::bitset<4>& actions)
       _layout->addWidget(_validateButton, 0, 2);
       QObject::connect(_validateButton,     &QPushButton::clicked, this, &ActionBar::validate_clicked);
     }
+
+    if((actions & StartStop) == StartStop) {
+      _startStopButton = new QPushButton(START_TEXT);
+      _startStopButton->setFixedHeight(20);
+      _startStopButton->setEnabled(true);
+      _startStopButton->setStyleSheet(
+                                     "QPushButton {border: 1px solid black;" \
+                                     "border-top-left-radius:3px;" \
+                                     "border-top-right-radius:3px;" \
+                                     "border-bottom-right-radius:3px;" \
+                                     "border-bottom-left-radius:3px;" \
+                                     "font-size: 16px;" \
+                                     "color:black;" \
+                                     "background-color: #6274C4;" \
+                                     "font-family:\"Arial\";} " \
+                                     "QPushButton::hover{color:white;}"
+                                     );
+      _layout->addWidget(_startStopButton, 0, 2);
+      QObject::connect(_startStopButton,     &QPushButton::clicked, this, &ActionBar::startstop_clicked);
+    }
+
     
     setStyleSheet("QWidget {padding: 0px;}");
     _layout->setSpacing(0);
@@ -102,6 +128,18 @@ ActionBar::ActionBar(const std::bitset<4>& actions)
     setLayout(_layout);
   }
 
+void ActionBar::startstop_clicked()
+{
+  if(_startStopButton->text() == START_TEXT) {
+    _startStopButton->setText(STOP_TEXT);
+    start_clicked();
+  }
+  else {
+    _startStopButton->setText(START_TEXT);
+    stop_clicked();
+  }
+  
+}
 
 void ActionBar::enable_save()
 {

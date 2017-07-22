@@ -9,12 +9,14 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
   ../include
   ../../instrumentation/include
   ../../network/include
+  ../../monitor/include
   ${JAVA_INCLUDE_DIR}
   ${JAVA_INCLUDE_DIR2})
   if (UNIX)
     FILE(GLOB huh
     ../src/*.cpp
     ../../instrumentation/src/*.cpp
+    ../../monitor/src/ClassDetail.cpp
     ../../network/src/ConnectorUnix.cpp
     ../../network/src/Connector.cpp)	
     find_package(Threads)
@@ -28,6 +30,7 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     FILE(GLOB huh
     ../src/*.cpp
     ../../instrumentation/src/*.cpp
+    ../../monitor/src/ClassDetail.cpp
     ../../network/src/ConnectorWindows.cpp
     ../../network/src/Connector.cpp)	
   endif ()

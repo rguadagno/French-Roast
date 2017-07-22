@@ -27,6 +27,7 @@
 #include <string>
 #include "Connector.h"
 #include "MethodStats.h"
+#include "ClassDetail.h"
 
 namespace frenchroast { namespace monitor {
             std::unordered_map<char, std::string> _type_map { {'I',"int"},
@@ -111,6 +112,25 @@ namespace frenchroast { namespace monitor {
       return rv;
     }
 
+
+    std::vector<ClassDetail> construct_class_details(const std::string& msg)
+    {
+      std::cout << "LINE: " << msg << std::endl;
+      std::vector<ClassDetail> rv;
+      for(auto& citem : split(msg, "]")) {
+        if(citem == "") break;
+        std::string name = split(citem, "[")[0];
+        std::vector<std::string> methods;
+        for(auto& mitem : split(split(citem,"[")[1],"%")) {
+          if(mitem == "") break;
+          methods.push_back(mitem);
+        }
+        rv.emplace_back(name, methods);
+      }
+      
+      return rv;
+    }
+    
 
     void transmit_lines(const std::string& fileName, frenchroast::network::Connector& conn)
     {

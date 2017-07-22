@@ -42,6 +42,7 @@
 #include "StackReport.h"
 #include "DetailViewer.h"
 #include "DetailHolder.h"
+#include "ClassViewer.h"
 
 class SignalItem;
 
@@ -55,6 +56,7 @@ class FRMain : public QMainWindow {
   const static std::string  TimerWindow;
   const static std::string  RankingWindow;
   const static std::string  TrafficWindow;
+  const static std::string  ClassViewerWindow;
 
  private:
 
@@ -78,6 +80,7 @@ class FRMain : public QMainWindow {
   std::unordered_map<std::string,StackRow*>                 _traffic_rows;
   std::unordered_map<std::string, int>                      _traffic_keys;
   MethodRanking*                                            _rankings;
+  ClassViewer*                                              _classViewer;
   std::string                                               _hooksfile;
   
   std::string format_markers(const std::string markers);
@@ -92,7 +95,9 @@ class FRMain : public QMainWindow {
   void view_dockwin(const std::string& title, const std::string& dockname, QWidget* wptr);
   
  signals:
-  
+
+  void start_loading();
+  void stop_loading();
   void hooks_saved();
   void start_traffic(int);
   void stop_traffic();
@@ -100,6 +105,9 @@ class FRMain : public QMainWindow {
   void update_detail_list(std::string, const DetailHolder& detailholder);
   
  public slots:
+   void update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>&);
+   void start_watch_loading();
+   void stop_watch_loading();
    void validate_hooks();
    void method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks);
    void remote_connected(const std::string& msg);
@@ -109,6 +117,7 @@ class FRMain : public QMainWindow {
    void view_timers();
    void view_ranking();
    void view_traffic();
+   void view_classviewer();
    void add_hook(QString);
    void show_detail(QListWidgetItem* item);
    void reset_editor(QObject* obj);
