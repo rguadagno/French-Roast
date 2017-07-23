@@ -364,7 +364,6 @@ void JNICALL
 
 
   if(sname.find("java/") == std::string::npos && sname.find("sun/") == std::string::npos) {
-    std::cout << "loading: " << sname << std::endl;
     _fr.load_from_buffer(class_data);
     std::vector<std::string> descriptors;
     for(auto methdesc : _fr.get_method_descriptors()) {
