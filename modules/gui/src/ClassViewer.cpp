@@ -23,6 +23,7 @@
 #include <QVBoxLayout>
 #include "QUtil.h"
 #include "SignalDelegate.h"
+#include "EnterKeyListener.h"
 
 ClassViewer::ClassViewer(QSettings& settings)
 {
@@ -44,7 +45,10 @@ ClassViewer::ClassViewer(QSettings& settings)
   _data->setItemDelegateForColumn(0, new SignalDelegate(_data)); 
 
   setMinimumSize(700,350);
-  QObject::connect(_data, &QTableWidget::itemDoubleClicked, this, &ClassViewer::methods_for_class);
+  EnterKeyListener* enterListener = new EnterKeyListener;
+  _data->installEventFilter(enterListener);
+  QObject::connect(enterListener, &EnterKeyListener::enterkey,      this, [&](){ methods_for_class(_data->currentItem());});
+  QObject::connect(_data,         &QTableWidget::itemDoubleClicked, this, &ClassViewer::methods_for_class);
 }
 
 void ClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& details)
