@@ -35,6 +35,11 @@ void SignalSyntax::highlightBlock(const QString& text)
   ppointFormat.setForeground(QBrush(QColor(232,117,15)));
   ppointFormat.setFont(CodeFont{});
 
+  QTextCharFormat commaFormat;
+  commaFormat.setFontWeight(QFont::Normal);
+  commaFormat.setForeground(QBrush(QColor(239,93,61)));
+  commaFormat.setFont(CodeFont{});
+
   
   QRegularExpression countReg("^[0-9]*");
   QRegularExpressionMatchIterator itr = countReg.globalMatch(text);
@@ -57,6 +62,21 @@ void SignalSyntax::highlightBlock(const QString& text)
     setFormat(match.capturedStart(), match.capturedLength(), ppointFormat);
   }
 
+  QRegularExpression ppointReg4("[ ]+[A-Za-z0-9_]*:");
+  itr = ppointReg4.globalMatch(text);
+  while(itr.hasNext()) {
+    QRegularExpressionMatch match = itr.next();
+    setFormat(match.capturedStart(), match.capturedLength(), ppointFormat);
+  }
+
+  QRegularExpression commaReg("[\\,]*");
+  itr = commaReg.globalMatch(text);
+  while(itr.hasNext()) {
+    QRegularExpressionMatch match = itr.next();
+    setFormat(match.capturedStart(), match.capturedLength(), commaFormat);
+  }
+
+  
   QRegularExpression pointReg2("[:]*");
    itr = pointReg2.globalMatch(text);
   while(itr.hasNext()) {

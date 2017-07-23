@@ -40,13 +40,11 @@ ClassViewer::ClassViewer(QSettings& settings)
   setStyleSheet(settings.value("zero_border_style").toString());
 
   _data->insertColumn(0);
-  _data->insertColumn(0);
   _data->setHorizontalHeaderItem(0, createItem("Class"));
-  _data->setHorizontalHeaderItem(1,createItem("Load source"));
-  _data->setItemDelegateForColumn(1, new SignalDelegate(_data)); 
+  _data->setItemDelegateForColumn(0, new SignalDelegate(_data)); 
 
   setMinimumSize(700,350);
-  //setStyleSheet("QWidget {border: 1px solid #404040;background:black;}");
+  QObject::connect(_data, &QTableWidget::itemDoubleClicked, this, &ClassViewer::methods_for_class);
 }
 
 void ClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& details)
@@ -55,11 +53,40 @@ void ClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& d
     int row = _data->rowCount();
     _data->insertRow(row);
     _data->setItem(row, 0, createItem(citem.name(), Qt::AlignLeft|Qt::AlignVCenter));
-    for(auto& mitem : citem.methods()) {
-      _data->setItem(row, 1, createItem(mitem, Qt::AlignLeft|Qt::AlignVCenter));
-      row = _data->rowCount();
-      _data->insertRow(row);
-    }
+    _methods[citem.name()] = citem.methods();
   }
+}
 
+
+
+void ClassViewer::expand_methods(const std::string& name, int row)
+{
+  _ind[name] = 1;
+  for(auto& mitem : _methods[name]) {
+    _data->insertRow(++row);
+    _data->setItem(row, 0, createItem("    " + mitem, Qt::AlignLeft|Qt::AlignVCenter));
+  }
+}
+
+void ClassViewer::collapse_methods(const std::string& name, int row)
+{
+  _ind[name] = 0;
+  ++row;
+  for(auto& mitem : _methods[name]) {
+    _data->removeRow(row);
+  }
+}
+
+void ClassViewer::methods_for_class(QTableWidgetItem* item)
+{
+  std::string name = item->text().toStdString();
+  if(_methods.count(name) == 0) return;
+
+  if(_ind[name] == 0) {
+    expand_methods(name, item->row());
+  }
+  else {
+    collapse_methods(name, item->row());
+  }
+  
 }

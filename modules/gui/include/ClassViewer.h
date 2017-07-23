@@ -22,29 +22,24 @@
 #include <QTableWidget>
 #include "ClassDetail.h"
 #include <QSettings>
-
+#include <unordered_map>
 
 class ClassViewer : public QWidget {
 
   Q_OBJECT
   
-  //  std::string                                        _descriptor;
-  QTableWidget*                                      _data;
-
-  //  std::unordered_map<std::string, QTableWidgetItem*> _items;
-  // std::unordered_map<std::string, int>               _detailItems;
-  //QListWidgetItem*                                   _titleWidget;
-  //QString                                            _title;
+  QTableWidget*                                             _data;
+  std::unordered_map<std::string, std::vector<std::string>> _methods;
+  std::unordered_map<std::string, int>                      _ind;
+  void expand_methods(const std::string&, int);
+  void collapse_methods(const std::string&, int);
  public:
   ClassViewer(QSettings&);
 
   public slots:
     
     void update(const std::vector<frenchroast::monitor::ClassDetail>&);
-
-
-
-
+    void methods_for_class(QTableWidgetItem*);
 };
 
 #endif
