@@ -55,6 +55,11 @@ void ClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& d
     int row = _data->rowCount();
     _data->insertRow(row);
     _data->setItem(row, 0, createItem(citem.name(), Qt::AlignLeft|Qt::AlignVCenter));
+    for(auto& mitem : citem.methods()) {
+      _data->setItem(row, 1, createItem(mitem, Qt::AlignLeft|Qt::AlignVCenter));
+      row = _data->rowCount();
+      _data->insertRow(row);
+    }
   }
 
 }

@@ -43,16 +43,9 @@ namespace frenchroast { namespace monitor {
                                                            };
     
 
-    std::string translate_descriptor(const std::string& name)
+
+    std::string translate_param_types(const std::string& pstr)
     {
-      std::string rv = name.substr(1);
-      replace(rv,'/','.');
-      std::string classname = split(rv,"::")[0];
-      replace(classname,';');
-      std::string methodname = split(split(rv,"::")[1],":")[0];
-      std::string pstr = split(split(rv,"(")[1],")")[0];
-      std::string rvstr = split(split(rv,")")[1],":")[0];
-      
       std::string parms = "";
       int pos = 0;
       while(pos < pstr.length() ) {
@@ -66,17 +59,36 @@ namespace frenchroast { namespace monitor {
           ++pos;
         }
       }
-      if(parms.length() > 1)
+      if(parms.length() > 1) {
         parms.erase(parms.length()-1);
+      }
+      return parms;
+    }
+
+    std::string translate_return_type(const std::string& name)
+    {
+      std::string rv;
       
-      if ( rvstr.length() == 1) {
-        rvstr = _type_map[rvstr[0]];
+      if ( name.length() == 1) {
+        rv = _type_map[name[0]];
       }
       else {
-        rvstr = rvstr.substr(1);
-        rvstr.erase(rvstr.length());
+        rv = name.substr(1);
+        rv.erase(rv.length());
       }
-      
+      return rv;
+    }
+    
+    std::string translate_descriptor(const std::string& name)
+    {
+      std::string rv = name.substr(1);
+      replace(rv,'/','.');
+      std::string classname = split(rv,"::")[0];
+      replace(classname,';');
+      std::string methodname = split(split(rv,"::")[1],":")[0];
+      std::string pstr = split(split(rv,"(")[1],")")[0];
+      std::string rvstr = translate_return_type(split(split(rv,")")[1],":")[0]);
+      std::string parms = translate_param_types(pstr);
       return classname + "::" + methodname + ":(" + parms + "):" + rvstr;
     }
 
@@ -113,17 +125,28 @@ namespace frenchroast { namespace monitor {
     }
 
 
+
+    std::string translate_method(const std::string& pname)
+    {
+      std::string name = pname;
+      replace(name,'/','.');
+      std::string methodname = split(name, ":")[0];
+      std::string rvstr = translate_return_type(split(split(name,")")[1],":")[0]);
+      std::string parms = translate_param_types(split(split(name,"(")[1],")")[0]);
+      return methodname + ":(" + parms + "):" + rvstr;
+    }
+    
     std::vector<ClassDetail> construct_class_details(const std::string& msg)
     {
-      std::cout << "LINE: " << msg << std::endl;
       std::vector<ClassDetail> rv;
       for(auto& citem : split(msg, "]")) {
         if(citem == "") break;
         std::string name = split(citem, "[")[0];
+        replace(name, "/", ".");
         std::vector<std::string> methods;
         for(auto& mitem : split(split(citem,"[")[1],"%")) {
           if(mitem == "") break;
-          methods.push_back(mitem);
+          methods.push_back(translate_method(mitem));
         }
         rv.emplace_back(name, methods);
       }
