@@ -272,14 +272,14 @@ void FRMain::view_traffic()
   _traffic            = new QTableWidget;
   _buttonStartTraffic = new QPushButton{"Start"};
   _rate               = new QLineEdit;
-  _trafficEnterKeyListener = new EnterKeyListener;
+  _trafficEnterKeyListener = new KeyListener;
   _traffic->installEventFilter(_trafficEnterKeyListener);
 
   view_dockwin("Traffic", TrafficWindow, build_traffic_viewer(_traffic, _buttonStartTraffic, _rate));
   
   _traffic->insertColumn(0);
   QObject::connect(_buttonStartTraffic,      &QPushButton::clicked,         this, &FRMain::update_traffic_rate);
-  QObject::connect(_trafficEnterKeyListener, &EnterKeyListener::enterkey,   this, [&](){ add_hook(_traffic->currentItem()->text());});
+  QObject::connect(_trafficEnterKeyListener, &KeyListener::enterkey,   this, [&](){ add_hook(_traffic->currentItem()->text());});
   QObject::connect(_traffic,                 &QTableWidget::destroyed,      this, [&](){if(_exit) return;_traffic_rows.clear(); _traffic_keys.clear();});
 }
 
@@ -297,6 +297,7 @@ void FRMain::view_classviewer()
   QObject::connect(abar, &ActionBar::close_clicked, this,                [&](){_docks.erase(ClassViewerWindow);});
   QObject::connect(abar, &ActionBar::start_clicked, this,                &FRMain::start_watch_loading);
   QObject::connect(abar, &ActionBar::stop_clicked, this,                 &FRMain::stop_watch_loading);
+  QObject::connect(_classViewer, &ClassViewer::add_signal, this,         &FRMain::add_hook);
   restore_dock_win(ClassViewerWindow);
 }
 
@@ -315,10 +316,10 @@ void FRMain::view_ranking()
   if(_docks.count(RankingWindow) == 1) return;
   view_dockwin("Ranking", RankingWindow, (_rankings = new MethodRanking()));
 
-  EnterKeyListener* rankListener = new EnterKeyListener;
+  KeyListener* rankListener = new KeyListener;
   _rankings->installEventFilter(rankListener);
   
-  QObject::connect(rankListener, &EnterKeyListener::enterkey,      this, [&](){ add_hook(_rankings->getEnterMethod());});
+  QObject::connect(rankListener, &KeyListener::enterkey,           this, [&](){ add_hook(_rankings->getEnterMethod());});
   QObject::connect(_rankings,    &QListWidget::itemDoubleClicked,  this, [&](){ add_hook(_rankings->getEnterMethod());});
 }
 

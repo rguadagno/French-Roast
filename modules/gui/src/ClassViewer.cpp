@@ -23,7 +23,9 @@
 #include <QVBoxLayout>
 #include "QUtil.h"
 #include "SignalDelegate.h"
-#include "EnterKeyListener.h"
+#include "KeyListener.h"
+#include "Util.h"
+#include <iostream>
 
 ClassViewer::ClassViewer(QSettings& settings)
 {
@@ -45,9 +47,10 @@ ClassViewer::ClassViewer(QSettings& settings)
   _data->setItemDelegateForColumn(0, new SignalDelegate(_data)); 
 
   setMinimumSize(700,350);
-  EnterKeyListener* enterListener = new EnterKeyListener;
-  _data->installEventFilter(enterListener);
-  QObject::connect(enterListener, &EnterKeyListener::enterkey,      this, [&](){ methods_for_class(_data->currentItem());});
+  KeyListener* keyListener = new KeyListener;
+  _data->installEventFilter(keyListener);
+  QObject::connect(keyListener,   &KeyListener::enterkey,           this, [&](){ methods_for_class(_data->currentItem());});
+  QObject::connect(keyListener  , &KeyListener::signalkey,          this, [&](){handle_add_signal(_data->currentRow(), _data->currentItem()->text());});
   QObject::connect(_data,         &QTableWidget::itemDoubleClicked, this, &ClassViewer::methods_for_class);
 }
 
@@ -92,5 +95,22 @@ void ClassViewer::methods_for_class(QTableWidgetItem* item)
   else {
     collapse_methods(name, item->row());
   }
-  
 }
+
+void ClassViewer::handle_add_signal(int row, QString text)
+{
+  std::string name = text.toStdString();
+  frenchroast::remove_blanks(name);
+  if(_methods.count(name) == 0) {
+    while(--row >= 0) {
+      if(_methods.count(_data->itemAt(0,row)->text().toStdString()) == 1) {
+        add_signal(QString::fromStdString(_data->itemAt(0,row)->text().toStdString() + "::" + name + " "));
+      }
+    }
+
+  }
+  else {
+    add_signal(QString::fromStdString(name + "::* "));
+  }
+}
+  

@@ -17,35 +17,29 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef CLASSVIEWER_H
-#define CLASSVIEWER_H
-#include <QTableWidget>
 #include "ClassDetail.h"
-#include <QSettings>
-#include <unordered_map>
 
-class ClassViewer : public QWidget {
+namespace frenchroast { namespace monitor {
 
-  Q_OBJECT
-  
-  QTableWidget*                                             _data;
-  std::unordered_map<std::string, std::vector<std::string>> _methods;
-  std::unordered_map<std::string, int>                      _ind;
-  void expand_methods(const std::string&, int);
-  void collapse_methods(const std::string&, int);
-  
- private slots:
-   void handle_add_signal(int, QString);
-  
- public:
-  ClassViewer(QSettings&);
 
- signals:
-  void add_signal(QString);
-  public slots:
-    
-    void update(const std::vector<frenchroast::monitor::ClassDetail>&);
-    void methods_for_class(QTableWidgetItem*);
-};
+      ClassDetail::ClassDetail(const std::string& name, std::vector<std::string>& methods) : _name(name), _methods(methods)
+      {
+      }
+      
+      ClassDetail::ClassDetail()
+      {
+      }
+      
+      const std::string& ClassDetail::name() const
+      {
+        return _name;
+      }
+      
+      const std::vector<std::string>& ClassDetail::methods() const
+      {
+        return _methods;
+      }
+  }
+}
 
-#endif
+

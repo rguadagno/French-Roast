@@ -1,4 +1,4 @@
-// copyright (c) 2017 Richard Guadagno
+// copyright (c) 2016 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -17,22 +17,24 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef EKEY_H
-#define EKEY_H
+#include "KeyListener.h"
+#include <QKeyEvent>
 
-#include <QObject>
-#include <QEvent>
+bool KeyListener::eventFilter(QObject* obj, QEvent* event)
+{
+  if(event->type() == QEvent::KeyPress) {
+    QKeyEvent* key = static_cast<QKeyEvent*>(event);
+    if( (key->key() == Qt::Key_Enter) || (key->key() == Qt::Key_Return) ) {
+      enterkey();
+      return true;
+    }
+    if( key->key() == Qt::Key_S) {
+      signalkey();
+      return true;
+    }
 
-class EnterKeyListener : public QObject {
+  }
 
-Q_OBJECT
+  return QObject::eventFilter(obj,event);
+}
 
-  signals:
-   void enterkey();
- protected:
-   bool eventFilter(QObject* obj, QEvent* event);
-
-
-};
-
-#endif

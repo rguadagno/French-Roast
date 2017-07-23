@@ -1,4 +1,4 @@
-// copyright (c) 2016 Richard Guadagno
+// copyright (c) 2017 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -17,19 +17,24 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "EnterKeyListener.h"
-#include <QKeyEvent>
+#ifndef CLASSDETAIL_H
+#define CLASSDETAIL_H
+#include <string>
+#include <vector>
 
-bool EnterKeyListener::eventFilter(QObject* obj, QEvent* event)
-{
-  if(event->type() == QEvent::KeyPress) {
-    QKeyEvent* key = static_cast<QKeyEvent*>(event);
-    if( (key->key() == Qt::Key_Enter) || (key->key() == Qt::Key_Return) ) {
-      enterkey();
-      return true;
-    }
+namespace frenchroast { namespace monitor {
+    class ClassDetail {
+      std::string              _name;
+      std::vector<std::string> _methods;
+
+    public:
+      ClassDetail(const std::string& name, std::vector<std::string>& descriptors);
+      ClassDetail();
+      const std::string& name() const;
+      const std::vector<std::string>& methods() const;
+    };
   }
-
-  return QObject::eventFilter(obj,event);
 }
 
+
+#endif

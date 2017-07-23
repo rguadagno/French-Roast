@@ -35,7 +35,7 @@
 #include "StackRow.h"
 #include "ActionBar.h"
 #include "FRStatus.h"
-#include "EnterKeyListener.h"
+#include "KeyListener.h"
 #include "MethodStats.h"
 #include "MethodRanking.h"
 #include "Editor.h"
@@ -72,7 +72,7 @@ class FRMain : public QMainWindow {
   QPushButton*            _buttonStartTraffic;
   QLineEdit*              _rate;
   FRStatus*               _statusMsg;
-  EnterKeyListener*       _trafficEnterKeyListener;
+  KeyListener*            _trafficEnterKeyListener;
 
   std::unordered_map<std::string, std::unordered_map<std::string,SignalItem*>> _descriptorsPerDock;
   std::unordered_map<std::string, DetailHolder>             _detailDescriptors;
