@@ -66,17 +66,7 @@ ActionBar::ActionBar(const std::bitset<4>& actions)
       _saveButton = new QPushButton(" save ");
       _saveButton->setFixedHeight(20);
       _saveButton->setEnabled(false);
-      _saveButton->setStyleSheet(
-                                 "QPushButton {border: 1px solid black;" \
-                                 "border-top-left-radius:3px;" \
-                                 "border-top-right-radius:3px;" \
-                                 "border-bottom-right-radius:3px;" \
-                                 "border-bottom-left-radius:3px;" \
-                                 "font-size: 16px;" \
-                                 "color:black;" \
-                                 "background-color: #3e4b83;" \
-                                 "font-family:\"Arial\";}"
-                                 );
+      _saveButton->setStyleSheet(_DisabledButtonStyle);
       _layout->addWidget(_saveButton, 0, 3);
       QObject::connect(_saveButton,     &QPushButton::clicked, this, &ActionBar::save_clicked);
     }
@@ -85,18 +75,7 @@ ActionBar::ActionBar(const std::bitset<4>& actions)
       _validateButton = new QPushButton(" validate ");
       _validateButton->setFixedHeight(20);
       _validateButton->setEnabled(true);
-      _validateButton->setStyleSheet(
-                                     "QPushButton {border: 1px solid black;" \
-                                     "border-top-left-radius:3px;" \
-                                     "border-top-right-radius:3px;" \
-                                     "border-bottom-right-radius:3px;" \
-                                     "border-bottom-left-radius:3px;" \
-                                     "font-size: 16px;" \
-                                     "color:black;" \
-                                     "background-color: #6274C4;" \
-                                     "font-family:\"Arial\";} " \
-                                     "QPushButton::hover{color:white;}"
-                                     );
+      _validateButton->setStyleSheet(_EnabledButtonStyle);
       _layout->addWidget(_validateButton, 0, 2);
       QObject::connect(_validateButton,     &QPushButton::clicked, this, &ActionBar::validate_clicked);
     }
@@ -105,23 +84,11 @@ ActionBar::ActionBar(const std::bitset<4>& actions)
       _startStopButton = new QPushButton(START_TEXT);
       _startStopButton->setFixedHeight(20);
       _startStopButton->setEnabled(true);
-      _startStopButton->setStyleSheet(
-                                     "QPushButton {border: 1px solid black;" \
-                                     "border-top-left-radius:3px;" \
-                                     "border-top-right-radius:3px;" \
-                                     "border-bottom-right-radius:3px;" \
-                                     "border-bottom-left-radius:3px;" \
-                                     "font-size: 16px;" \
-                                     "color:black;" \
-                                     "background-color: #6274C4;" \
-                                     "font-family:\"Arial\";} " \
-                                     "QPushButton::hover{color:white;}"
-                                     );
+      _startStopButton->setStyleSheet(_EnabledButtonStyle);
       _layout->addWidget(_startStopButton, 0, 2);
       QObject::connect(_startStopButton,     &QPushButton::clicked, this, &ActionBar::startstop_clicked);
     }
 
-    
     setStyleSheet("QWidget {padding: 0px;}");
     _layout->setSpacing(0);
     _layout->setContentsMargins(2,2,10,2);
@@ -144,31 +111,33 @@ void ActionBar::startstop_clicked()
 void ActionBar::enable_save()
 {
   _saveButton->setEnabled(true);
-  _saveButton->setStyleSheet(
-                             "QPushButton {border: 1px solid black;" \
-                             "border-top-left-radius:3px;" \
-                             "border-top-right-radius:3px;" \
-                             "border-bottom-right-radius:3px;" \
-                             "border-bottom-left-radius:3px;" \
-                             "font-size: 16px;" \
-                             "color:black;" \
-                             "background-color: #6274C4;" \
-                             "font-family:\"Arial\";}" \
-                             "QPushButton::hover{color:white;}"
-                             );
-
+  _saveButton->setStyleSheet(_EnabledButtonStyle);
 }
 
 void ActionBar::disable_save()
 {
   _saveButton->setEnabled(false);
-  _saveButton->setStyleSheet("QPushButton {border: 1px solid #3d415c;border-top-left-radius:2px;border-top-right-radius:2px;border-bottom-right-radius:2px; border-bottom-left-radius:2px;font-size: 16px;color:black;background-color: #3d415c;font-family:\"Arial\";}");
-
+  _saveButton->setStyleSheet(_DisabledButtonStyle);
 }
 
 ActionBar::~ActionBar()
-  {
-    delete _layout;
-  }
+{
+  delete _layout;
+}
 
 
+const QString ActionBar::_DisabledButtonStyle{"QPushButton {border: 1px solid #3d415c;border-top-left-radius:2px;border-top-right-radius:2px;border-bottom-right-radius:2px; border-bottom-left-radius:2px;font-size: 16px;color:black;background-color: #3d415c;font-family:\"Arial\";}"};
+
+
+const QString ActionBar::_EnabledButtonStyle{
+                                     "QPushButton {border: 1px solid black;" \
+                                     "border-top-left-radius:3px;" \
+                                     "border-top-right-radius:3px;" \
+                                     "border-bottom-right-radius:3px;" \
+                                     "border-bottom-left-radius:3px;" \
+                                     "font-size: 16px;" \
+                                     "color:black;" \
+                                     "background-color: #6274C4;" \
+                                     "font-family:\"Arial\";} " \
+                                     "QPushButton::hover{color:white;}"
+                                       };

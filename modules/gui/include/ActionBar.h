@@ -28,7 +28,12 @@ class ActionBar : public QWidget {
   QPushButton* _saveButton{nullptr};
   QPushButton* _validateButton{nullptr};
   QPushButton* _startStopButton{nullptr};
- 
+  
+  const static QString _DisabledButtonStyle;
+  const static QString _EnabledButtonStyle;
+
+
+  
    Q_OBJECT
   
   signals:
