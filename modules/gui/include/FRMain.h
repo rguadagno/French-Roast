@@ -83,7 +83,6 @@ class FRMain : public QMainWindow {
   ClassViewer*                                              _classViewer;
   std::string                                               _hooksfile;
   
-  std::string format_markers(const std::string markers);
   QWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate);
 
   QDockWidget* setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* aptr, bool codeMode = false, QListWidgetItem** = nullptr);
