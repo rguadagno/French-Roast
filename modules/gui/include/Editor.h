@@ -22,6 +22,7 @@
 
 #include <QTextEdit>
 #include <QListWidget>
+#include <QSettings>
 
 
 
@@ -35,8 +36,13 @@ namespace frenchroast {
     QTextEdit*    _edit{nullptr};
     QListWidget*  _message{nullptr};
     std::string   _filename;
+    QSettings&    _settings;
+    bool          _changesToSave{false};
+
+    void add(QString);
+    
   public:
-    Editor();
+    Editor(QSettings&);
     std::vector<std::string> lines() const;
     
   signals:
@@ -52,8 +58,8 @@ namespace frenchroast {
       void load_from_file(const std::string&);
       void save();
       void save_as(const std::string&);
-      void add(QString);
       void add_hook(QString);
+      void shutdown();
   };
 
   class MessageItem : public QListWidgetItem {

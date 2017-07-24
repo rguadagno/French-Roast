@@ -355,26 +355,12 @@ void FRMain::view_hooks_editor()
 {
   if(_docks.count(EditHooksWindow) == 1) return;
 
-  _editor = new frenchroast::Editor();
+  _editor = new frenchroast::Editor(_settings);
   ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::Save | ActionBar::Validate);
   _editor->setStyleSheet(_settings.value("edit_style").toString());
   QDockWidget* editdoc = setup_dock_window("Signal Editor", _editor, abar);
   _docks[EditHooksWindow] = editdoc;
   restore_dock_win(EditHooksWindow);
-  if(_hooksfile != "") {
-    _editor->load_from_file(_hooksfile);
-  }
-  else {
-    _settings.beginGroup("hooks");
-    int total = _settings.beginReadArray("unlinked");
-    for(int idx = 0; idx < total; idx++) {
-      _settings.setArrayIndex(idx);
-      _editor->add(_settings.value("item").toString());
-    }
-    _settings.endArray();
-    _settings.endGroup();
-  }
-
 
   
   QObject::connect(_editor,  &QTextEdit::destroyed,         this,    &FRMain::reset_editor);
@@ -525,17 +511,8 @@ void FRMain::handle_exit()
      capture_dock(x.first);
   }
 
-  if(_editor != nullptr && _hooksfile == "") {
-    _settings.beginGroup("hooks");
-    _settings.remove("");
-    _settings.beginWriteArray("unlinked");
-    int idx = 0;
-    for(auto& line : _editor->lines()) {
-      _settings.setArrayIndex(idx++);
-      _settings.setValue("item", QString::fromStdString(line));
-    }
-    _settings.endArray();
-    _settings.endGroup();
+  if(_editor != nullptr ) {
+     _editor->shutdown();
   }
 }
 

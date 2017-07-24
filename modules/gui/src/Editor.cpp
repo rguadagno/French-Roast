@@ -28,7 +28,8 @@
 #include "Util.h"
 
 namespace frenchroast {
-  Editor::Editor() : QWidget()
+  
+  Editor::Editor(QSettings& settings) : QWidget(), _settings(settings)
   {
     _edit = new QTextEdit();
     _edit->setCursorWidth(8);
@@ -49,11 +50,28 @@ namespace frenchroast {
     splitter->addWidget(_message);
     vlayout->addWidget(splitter);
 
+    _filename = _settings.value("editor:signal-file", "").toString().toStdString();
+
+    if(_filename != "") {
+      load_from_file(_filename);
+    }
+    else {
+      _settings.beginGroup("hooks");
+      int total = _settings.beginReadArray("unlinked");
+      for(int idx = 0; idx < total; idx++) {
+        _settings.setArrayIndex(idx);
+        add(_settings.value("item").toString());
+      }
+      _settings.endArray();
+      _settings.endGroup();
+    }
+
+
     QObject::connect(_edit->document(), &QTextDocument::contentsChange,  this,    &Editor::contents_changed);
     QObject::connect(_message,          &QListWidget::itemDoubleClicked, this,    &Editor::goto_error_line);
   }
 
-
+  
   void Editor::goto_error_line(QListWidgetItem* qitem)
   {
      MessageItem* item = dynamic_cast<MessageItem*>(qitem);
@@ -66,6 +84,7 @@ namespace frenchroast {
 
   void Editor::contents_changed()
   {
+    _changesToSave = true;
     changed();
   }
   
@@ -124,12 +143,27 @@ namespace frenchroast {
 
   void Editor::save()
   {
-    if(_filename != "") {
+    if(_filename == "") {
+      _settings.beginGroup("hooks");
+      _settings.remove("");
+      _settings.beginWriteArray("unlinked");
+      int idx = 0;
+      for(auto& line : lines()) {
+        _settings.setArrayIndex(idx++);
+        _settings.setValue("item", QString::fromStdString(line));
+      }
+      _settings.endArray();
+      _settings.endGroup();
+      _changesToSave = false;
+      saved();
+    }
+    else {
       std::ofstream out;
       out.open(_filename);
       QString outstr = _edit->document()->toPlainText();
       out << outstr.toStdString();
       out.close();
+      _changesToSave = false;
       saved();
     }
   }
@@ -143,7 +177,7 @@ namespace frenchroast {
   {
     add(text +    "<ENTER>");
   }
-
+    
   void Editor::add(QString text)
   {
     QString str = _edit->document()->toPlainText();
@@ -153,7 +187,7 @@ namespace frenchroast {
     str.append(text);
     _edit->document()->setPlainText(str);
   }
-
+    
 
   std::vector<std::string> Editor::lines() const
   {
@@ -161,6 +195,10 @@ namespace frenchroast {
     return {frenchroast::split(outstr, "\n")};
   }
 
+  void Editor::shutdown() {
+    // no warnings for unsaved changes yet
+    
+  }
 
   MessageItem::MessageItem(const std::string& str, int line) : QListWidgetItem(QString::fromStdString(str)), _line(line)
   {
@@ -170,6 +208,7 @@ namespace frenchroast {
   {
     return _line;
   }
+  
 
 
 }
