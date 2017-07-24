@@ -23,6 +23,7 @@
 #include <QTextEdit>
 #include <QListWidget>
 #include <QSettings>
+#include <unordered_map>
 
 
 
@@ -38,6 +39,7 @@ namespace frenchroast {
     std::string   _filename;
     QSettings&    _settings;
     bool          _changesToSave{false};
+    std::unordered_map<std::string, std::string> _signals;
 
     void add(QString);
     

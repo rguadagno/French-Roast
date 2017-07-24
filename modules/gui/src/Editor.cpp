@@ -129,16 +129,18 @@ namespace frenchroast {
 
   void Editor::load_from_file(const std::string& filename)
   {
+    /*
     _filename = filename;
     std::string text = "";
     std::ifstream in;
     in.open(filename);
     std::string line;
     while (getline(in,line)) {
-      text.append(line + "\n");
+      text.append(line + "\n");  // <--------- call add_hook instead
     }
     in.close();
     _edit->document()->setPlainText(QString::fromStdString(text));
+    */
   }
 
   void Editor::save()
@@ -180,6 +182,17 @@ namespace frenchroast {
     
   void Editor::add(QString text)
   {
+    std::string className = split(text.toStdString(),"::")[0];
+    std::string methodName = split(text.toStdString(),"::")[1];
+    size_t pos = methodName.find_first_of("<");
+    if(pos != std::string::npos) {
+      methodName = methodName.substr(0, pos);
+      std::cout << "methodName: " << methodName << std::endl;
+    }
+    std::string descriptor = className + "::" + methodName;
+    if(_signals.count(descriptor) == 1) return;
+
+    _signals[descriptor] = className;
     QString str = _edit->document()->toPlainText();
     if(str.size() > 0 && str[str.size() -1] != '\n') {
       str.append('\n');
