@@ -43,6 +43,7 @@
 #include "DetailViewer.h"
 #include "DetailHolder.h"
 #include "ClassViewer.h"
+#include "FSignalViewer.h"
 
 class SignalItem;
 
@@ -66,7 +67,7 @@ class FRMain : public QMainWindow {
   bool                    _exit{false};
   bool                    _ok_to_send_hooks{false};
   frenchroast::Editor*    _editor{nullptr};
-  QListWidget*            _list;
+  frenchroast::FSignalViewer*          _signalViewer;
   QListWidget*            _timedlist;
   QTableWidget*           _traffic;
   QPushButton*            _buttonStartTraffic;
@@ -118,7 +119,7 @@ class FRMain : public QMainWindow {
    void view_traffic();
    void view_classviewer();
    void add_hook(QString);
-   void show_detail(QListWidgetItem* item);
+   void show_detail(const std::string& descriptor);
    void reset_editor(QObject* obj);
    void handle_exit();
    void update_list(std::string, std::string, std::string, int, const std::vector<std::string> ,  const std::vector<std::string>, const std::vector<frenchroast::monitor::MarkerField>, std::unordered_map<std::string, frenchroast::monitor::StackReport>);

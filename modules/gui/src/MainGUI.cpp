@@ -42,6 +42,7 @@
 #include <algorithm>
 #include "CodeFont.h"
 #include "SignalDelegate.h"
+#include "FSignalViewer.h"
 
 
 const std::string  FRMain::SignalWindow    = "signals";
@@ -327,8 +328,10 @@ void FRMain::view_signals()
 {
   if(_docks.count(SignalWindow) == 1) return;
   _descriptorsPerDock.erase(SignalWindow);
-  view_dockwin("Signals", SignalWindow, (_list = new QListWidget()));
-  QObject::connect(_list,  &QListWidget::itemDoubleClicked, this, &FRMain::show_detail);
+  _signalViewer = new frenchroast::FSignalViewer{_settings,this};
+  _docks[SignalWindow] = *_signalViewer;
+  restore_dock_win(SignalWindow);
+  QObject::connect(_signalViewer,  &frenchroast::FSignalViewer::view_detail_request, this, &FRMain::show_detail);
 }
 
 
@@ -379,25 +382,23 @@ void FRMain::add_hook(QString txt)
   _editor->add_hook(txt);
 }
 
-void FRMain::show_detail(QListWidgetItem* item)
+void FRMain::show_detail(const std::string& descriptor)
 {
-  SignalItem* ptr = dynamic_cast<SignalItem*>(item);
-  std::string sname = ptr->gettext();
-  if(_viewingDetail.count(sname) == 1) return;
+  if(_viewingDetail.count(descriptor) == 1) return;
 
-  _viewingDetail[sname] = new DetailViewer{sname, _settings};
+  _viewingDetail[descriptor] = new DetailViewer{descriptor, _settings};
   ActionBar* abar = new ActionBar(ActionBar::Close);
-  _viewingDetail[sname]->setStyleSheet(_settings.value("tab_style").toString());
+  _viewingDetail[descriptor]->setStyleSheet(_settings.value("tab_style").toString());
   QListWidgetItem* titleWidget;
-  QDockWidget* dockwin = setup_dock_window(sname, _viewingDetail[sname], abar, true, &titleWidget);
-  _viewingDetail[sname]->setTitleWidget(titleWidget);
+  QDockWidget* dockwin = setup_dock_window(descriptor, _viewingDetail[descriptor], abar, true, &titleWidget);
+  _viewingDetail[descriptor]->setTitleWidget(titleWidget);
   QObject::connect(abar, &ActionBar::close_clicked, dockwin, &QDockWidget::close);
-  QObject::connect(abar, &ActionBar::close_clicked, this, [=](){ _viewingDetail.erase(sname); });
-  QObject::connect(this, &FRMain::update_detail_list, _viewingDetail[sname], &DetailViewer::update);
+  QObject::connect(abar, &ActionBar::close_clicked, this, [=](){ _viewingDetail.erase(descriptor); });
+  QObject::connect(this, &FRMain::update_detail_list, _viewingDetail[descriptor], &DetailViewer::update);
   dockwin->setFloating(true);
   dockwin->move(_docks[SignalWindow]->x() + 50, _docks[SignalWindow]->y() + 50 ); 
   addDockWidget(Qt::TopDockWidgetArea, dockwin);
-  update_detail_list(sname, _detailDescriptors[sname]);
+  update_detail_list(descriptor, _detailDescriptors[descriptor]);
 }
 
 void FRMain::reset_editor(QObject* obj)
@@ -443,16 +444,9 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
   frenchroast::monitor::pad(tname, 10);
 
   descriptor = tname + descriptor;
-
   _detailDescriptors[descriptor] = DetailHolder{count, argHeaders, instanceHeaders, markers, stacks};
-  if (_descriptorsPerDock[ltype].count(descriptor) == 0 ) {
-    _descriptorsPerDock[ltype][descriptor] = new SignalItem(descriptor, frenchroast::monitor::ntoa(count,5,' '));
-    _list->addItem(_descriptorsPerDock[ltype][descriptor]);
-  }
-  else {
-    _descriptorsPerDock[ltype][descriptor]->setText(QString::fromStdString(frenchroast::monitor::ntoa(count,5, ' ')) + "   " + QString::fromStdString(descriptor) );
-    update_detail_list(descriptor, _detailDescriptors[descriptor]);
-  }
+  _signalViewer->update_count(descriptor, count);
+  update_detail_list(descriptor, _detailDescriptors[descriptor]);
 }
 
 void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks)
