@@ -92,24 +92,6 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
   _statusMsg->waiting_for_connection();
 }
 
-class SignalItem : public QListWidgetItem {
-  std::string  _text;
-  static QFont _font;
-public:
-  SignalItem(const std::string& text, const std::string& total) : _text(text), QListWidgetItem( QString::fromStdString(total) + "   " + QString::fromStdString(text) )
-  {
-    setFont(_font);
-  }
-
-  const std::string& gettext() const
-  {
-    return _text;
-  }
-
-};
-
-
-QFont SignalItem::_font = CodeFont();
 QFont StackRow::_font = CodeFont();
 
 void FRMain::validate_hooks()
@@ -476,15 +458,6 @@ void FRMain::update_timed_list(std::string  descriptor, std::string tname, long 
   frenchroast::monitor::pad(tname, 10);
   desc = tname + desc;
   _timerViewer->update_time(desc, elapsed);
-/*
-  if (_descriptorsPerDock[TimerWindow].count(descriptor) == 0 ) {
-    _descriptorsPerDock[TimerWindow][descriptor] = new SignalItem(desc, frenchroast::monitor::format_millis(elapsed));
-    _timedlist->addItem(_descriptorsPerDock[TimerWindow][descriptor]);
-  }
-  else {
-    _descriptorsPerDock[TimerWindow][descriptor]->setText(QString::fromStdString(frenchroast::monitor::format_millis(elapsed)) + "   "  + QString::fromStdString(desc) );
-  }
-*/
 }
 
 
