@@ -332,6 +332,7 @@ void FRMain::view_signals()
   _docks[SignalWindow] = *_signalViewer;
   restore_dock_win(SignalWindow);
   QObject::connect(_signalViewer,  &frenchroast::FSignalViewer::view_detail_request, this, &FRMain::show_detail);
+  QObject::connect(_signalViewer,  &frenchroast::FSignalViewer::closed, this,    [&](){_docks.erase(SignalWindow);});
 }
 
 
@@ -339,7 +340,10 @@ void FRMain::view_timers()
 {
   if(_docks.count(TimerWindow) == 1) return;
   _descriptorsPerDock.erase(TimerWindow);
-  view_dockwin("Timers", TimerWindow, (_timedlist = new QListWidget()));
+  _timerViewer = new frenchroast::FTimerViewer{_settings,this};
+  _docks[TimerWindow] = *_timerViewer;
+  restore_dock_win(TimerWindow);
+  QObject::connect(_timerViewer,  &frenchroast::FTimerViewer::closed, this,    [&](){_docks.erase(TimerWindow);});
 }
 
 
@@ -465,12 +469,14 @@ void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>&
 void FRMain::update_timed_list(std::string  descriptor, std::string tname, long elapsed)
 {
   if(_docks.count(TimerWindow) != 1) return;
-  
+
   std::string desc{descriptor};
   tname = "[ " + tname + " ]";
   frenchroast::monitor::pad(desc, 50);
   frenchroast::monitor::pad(tname, 10);
   desc = tname + desc;
+  _timerViewer->update_time(desc, elapsed);
+/*
   if (_descriptorsPerDock[TimerWindow].count(descriptor) == 0 ) {
     _descriptorsPerDock[TimerWindow][descriptor] = new SignalItem(desc, frenchroast::monitor::format_millis(elapsed));
     _timedlist->addItem(_descriptorsPerDock[TimerWindow][descriptor]);
@@ -478,6 +484,7 @@ void FRMain::update_timed_list(std::string  descriptor, std::string tname, long 
   else {
     _descriptorsPerDock[TimerWindow][descriptor]->setText(QString::fromStdString(frenchroast::monitor::format_millis(elapsed)) + "   "  + QString::fromStdString(desc) );
   }
+*/
 }
 
 

@@ -44,6 +44,7 @@
 #include "DetailHolder.h"
 #include "ClassViewer.h"
 #include "FSignalViewer.h"
+#include "FTimerViewer.h"
 
 class SignalItem;
 
@@ -68,7 +69,7 @@ class FRMain : public QMainWindow {
   bool                    _ok_to_send_hooks{false};
   frenchroast::Editor*    _editor{nullptr};
   frenchroast::FSignalViewer*          _signalViewer;
-  QListWidget*            _timedlist;
+  frenchroast::FTimerViewer*           _timerViewer;
   QTableWidget*           _traffic;
   QPushButton*            _buttonStartTraffic;
   QLineEdit*              _rate;
