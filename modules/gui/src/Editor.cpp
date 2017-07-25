@@ -187,7 +187,6 @@ namespace frenchroast {
     size_t pos = methodName.find_first_of("<");
     if(pos != std::string::npos) {
       methodName = methodName.substr(0, pos);
-      std::cout << "methodName: " << methodName << std::endl;
     }
     std::string descriptor = className + "::" + methodName;
     if(_signals.count(descriptor) == 1) return;
