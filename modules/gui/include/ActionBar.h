@@ -17,6 +17,9 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#ifndef ACTIONBAR_H
+#define ACTIONBAR_H
+
 #include <QWidget>
 #include <QPushButton>
 #include <QGridLayout>
@@ -63,3 +66,5 @@ public:
   const static QString STOP_TEXT;
   
 };
+
+#endif
