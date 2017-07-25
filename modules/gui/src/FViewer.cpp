@@ -57,6 +57,8 @@ namespace frenchroast {
   _dock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
   _dock->setWidget(wptr);
   _dock->setFloating(true);
+  QObject::connect(_actionBar, &ActionBar::close_clicked, _dock, &QDockWidget::close);
+  QObject::connect(_actionBar, &ActionBar::close_clicked, this, [&](){closed();});
 }
 
   FViewer::operator QDockWidget*()

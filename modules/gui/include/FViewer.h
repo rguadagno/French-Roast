@@ -37,6 +37,10 @@ namespace frenchroast {
     virtual ~FViewer() {}
      operator QDockWidget*();
 
+  signals:
+     void closed();
+
+     
   protected:
     QSettings&   _settings;
     ActionBar*   _actionBar;
