@@ -269,18 +269,12 @@ void FRMain::view_traffic()
 void FRMain::view_classviewer()
 {
  if(_docks.count(ClassViewerWindow) == 1) return;
-
-  ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::StartStop);
-
-  _classViewer = new ClassViewer(_settings);
-
-  _classViewer->setStyleSheet(_settings.value("list_style").toString());
-  _docks[ClassViewerWindow] = setup_dock_window("Class Viewer", _classViewer, abar);
-  QObject::connect(abar, &ActionBar::close_clicked, _docks[ClassViewerWindow], &QDockWidget::close);
-  QObject::connect(abar, &ActionBar::close_clicked, this,                [&](){_docks.erase(ClassViewerWindow);});
-  QObject::connect(abar, &ActionBar::start_clicked, this,                &FRMain::start_watch_loading);
-  QObject::connect(abar, &ActionBar::stop_clicked, this,                 &FRMain::stop_watch_loading);
-  QObject::connect(_classViewer, &ClassViewer::add_signal, this,         &FRMain::add_hook);
+  _classViewer = new frenchroast::FClassViewer(_settings, this);
+  _docks[ClassViewerWindow] = *_classViewer;
+  QObject::connect(_classViewer, &frenchroast::FClassViewer::closed, this, [&](){_docks.erase(ClassViewerWindow);});
+  QObject::connect(_classViewer, &frenchroast::FClassViewer::start_watching, this,                &FRMain::start_watch_loading);
+  QObject::connect(_classViewer, &frenchroast::FClassViewer::stop_watching, this,                 &FRMain::stop_watch_loading);
+  QObject::connect(_classViewer, &frenchroast::FClassViewer::add_signal, this,         &FRMain::add_hook);
   restore_dock_win(ClassViewerWindow);
 }
 
@@ -309,7 +303,6 @@ void FRMain::view_ranking()
 void FRMain::view_signals()
 {
   if(_docks.count(SignalWindow) == 1) return;
-  _descriptorsPerDock.erase(SignalWindow);
   _signalViewer = new frenchroast::FSignalViewer{_settings,this};
   _docks[SignalWindow] = *_signalViewer;
   restore_dock_win(SignalWindow);
@@ -321,7 +314,6 @@ void FRMain::view_signals()
 void FRMain::view_timers()
 {
   if(_docks.count(TimerWindow) == 1) return;
-  _descriptorsPerDock.erase(TimerWindow);
   _timerViewer = new frenchroast::FTimerViewer{_settings,this};
   _docks[TimerWindow] = *_timerViewer;
   restore_dock_win(TimerWindow);

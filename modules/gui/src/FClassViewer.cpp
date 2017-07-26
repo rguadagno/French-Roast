@@ -18,7 +18,7 @@
 //
 
 
-#include "ClassViewer.h"
+#include "FClassViewer.h"
 #include <QHeaderView>
 #include <QVBoxLayout>
 #include "QUtil.h"
@@ -27,34 +27,42 @@
 #include "Util.h"
 #include <iostream>
 
-ClassViewer::ClassViewer(QSettings& settings)
-{
-  _data = new QTableWidget;
-  _data->setStyleSheet(settings.value("traffic_grid_style").toString());
-  _data->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-  _data->verticalHeader()->hide();
-  _data->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
+namespace frenchroast {
   
-  QVBoxLayout* vlayout = new QVBoxLayout();
-  vlayout->setSpacing(0);
-  vlayout->addWidget(_data );
-  vlayout->setContentsMargins(0,0,0,0);
-  setLayout(vlayout);
-  setStyleSheet(settings.value("zero_border_style").toString());
+  FClassViewer::FClassViewer(QSettings& settings, QWidget* parent) : FViewer(settings, parent)
+  {
+    _data = new QTableWidget;
+    _data->setStyleSheet(settings.value("traffic_grid_style").toString());
+    _data->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    _data->verticalHeader()->hide();
+    _data->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 
-  _data->insertColumn(0);
-  _data->setHorizontalHeaderItem(0, createItem("Class"));
-  _data->setItemDelegateForColumn(0, new SignalDelegate(_data)); 
+    _actionBar = new ActionBar(ActionBar::Close | ActionBar::StartStop);
+    QObject::connect(_actionBar, &ActionBar::start_clicked, this, &FClassViewer::start_watching);
+    QObject::connect(_actionBar, &ActionBar::stop_clicked, this,  &FClassViewer::stop_watching);
+   
+    QVBoxLayout* vlayout = new QVBoxLayout();
+    vlayout->setSpacing(0);
+    vlayout->addWidget(_data );
+    vlayout->setContentsMargins(0,0,0,0);
+    setLayout(vlayout);
+    setStyleSheet(settings.value("zero_border_style").toString());
+    
+    _data->insertColumn(0);
+    _data->setHorizontalHeaderItem(0, createItem("Class"));
+    _data->setItemDelegateForColumn(0, new SignalDelegate(_data)); 
 
-  setMinimumSize(700,350);
-  KeyListener* keyListener = new KeyListener;
-  _data->installEventFilter(keyListener);
-  QObject::connect(keyListener,   &KeyListener::enterkey,           this, [&](){ methods_for_class(_data->currentItem());});
-  QObject::connect(keyListener  , &KeyListener::signalkey,          this, [&](){handle_add_signal(_data->currentRow(), _data->currentItem()->text());});
-  QObject::connect(_data,         &QTableWidget::itemDoubleClicked, this, &ClassViewer::methods_for_class);
+    setMinimumSize(700,350);
+    KeyListener* keyListener = new KeyListener;
+    _data->installEventFilter(keyListener);
+    setup_dockwin("Loaded Classes", _data, false);
+    QObject::connect(keyListener,   &KeyListener::enterkey,           this, [&](){ methods_for_class(_data->currentItem());});
+    QObject::connect(keyListener  , &KeyListener::signalkey,          this, [&](){handle_add_signal(_data->currentRow(), _data->currentItem()->text());});
+    QObject::connect(_data,         &QTableWidget::itemDoubleClicked, this, &FClassViewer::methods_for_class);
 }
 
-void ClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& details)
+void FClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& details)
 {
   for(auto& citem : details) {
     int row = _data->rowCount();
@@ -66,7 +74,7 @@ void ClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& d
 
 
 
-void ClassViewer::expand_methods(const std::string& name, int row)
+void FClassViewer::expand_methods(const std::string& name, int row)
 {
   _ind[name] = 1;
   for(auto& mitem : _methods[name]) {
@@ -75,7 +83,7 @@ void ClassViewer::expand_methods(const std::string& name, int row)
   }
 }
 
-void ClassViewer::collapse_methods(const std::string& name, int row)
+void FClassViewer::collapse_methods(const std::string& name, int row)
 {
   _ind[name] = 0;
   ++row;
@@ -84,7 +92,7 @@ void ClassViewer::collapse_methods(const std::string& name, int row)
   }
 }
 
-void ClassViewer::methods_for_class(QTableWidgetItem* item)
+void FClassViewer::methods_for_class(QTableWidgetItem* item)
 {
   std::string name = item->text().toStdString();
   if(_methods.count(name) == 0) return;
@@ -97,7 +105,7 @@ void ClassViewer::methods_for_class(QTableWidgetItem* item)
   }
 }
 
-void ClassViewer::handle_add_signal(int row, QString text)
+void FClassViewer::handle_add_signal(int row, QString text)
 {
   std::string name = text.toStdString();
   frenchroast::remove_blanks(name);
@@ -114,3 +122,4 @@ void ClassViewer::handle_add_signal(int row, QString text)
   }
 }
   
+}

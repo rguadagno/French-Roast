@@ -45,8 +45,7 @@
 #include "ClassViewer.h"
 #include "FSignalViewer.h"
 #include "FTimerViewer.h"
-
-class SignalItem;
+#include "FClassViewer.h"
 
 class FRMain : public QMainWindow {
   Q_OBJECT
@@ -62,27 +61,27 @@ class FRMain : public QMainWindow {
 
  private:
 
+  frenchroast::Editor*                 _editor{nullptr};
+  frenchroast::FSignalViewer*          _signalViewer;
+  frenchroast::FTimerViewer*           _timerViewer;
+  frenchroast::FClassViewer*           _classViewer;
+  
   std::unordered_map<std::string, QDockWidget*>                 _docks;
   static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
   QSettings&              _settings;
   bool                    _exit{false};
   bool                    _ok_to_send_hooks{false};
-  frenchroast::Editor*    _editor{nullptr};
-  frenchroast::FSignalViewer*          _signalViewer;
-  frenchroast::FTimerViewer*           _timerViewer;
   QTableWidget*           _traffic;
   QPushButton*            _buttonStartTraffic;
   QLineEdit*              _rate;
   FRStatus*               _statusMsg;
   KeyListener*            _trafficEnterKeyListener;
 
-  std::unordered_map<std::string, std::unordered_map<std::string,SignalItem*>> _descriptorsPerDock;
   std::unordered_map<std::string, DetailHolder>             _detailDescriptors;
   std::unordered_map<std::string, DetailViewer*>             _viewingDetail;
   std::unordered_map<std::string,StackRow*>                 _traffic_rows;
   std::unordered_map<std::string, int>                      _traffic_keys;
   MethodRanking*                                            _rankings;
-  ClassViewer*                                              _classViewer;
   std::string                                               _hooksfile;
   
   QWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate);
