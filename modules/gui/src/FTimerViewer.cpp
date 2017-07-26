@@ -19,10 +19,11 @@
 
 #include "FTimerViewer.h"
 #include "MonitorUtil.h"
+#include <QMainWindow>
 
 namespace frenchroast {
 
-  FTimerViewer::FTimerViewer(QSettings& settings, QWidget* parent) : FViewer(parent)
+  FTimerViewer::FTimerViewer(QWidget* parent) : FViewer(parent)
   {
     _data = new QListWidget{};
     _data->setStyleSheet(_settings->value("list_style").toString());
@@ -33,13 +34,35 @@ namespace frenchroast {
 
   void FTimerViewer::update_time(const std::string& descriptor, long elapsed)
   {
-  if (_descriptors.count(descriptor) == 0 ) {
-    _descriptors[descriptor] = new FListItem(descriptor, frenchroast::monitor::format_millis(elapsed));
-    _data->addItem(_descriptors[descriptor]);
+    if (_descriptors.count(descriptor) == 0 ) {
+      _descriptors[descriptor] = new FListItem(descriptor, frenchroast::monitor::format_millis(elapsed));
+      _data->addItem(_descriptors[descriptor]);
+    }
+    else {
+      _descriptors[descriptor]->setText(QString::fromStdString(frenchroast::monitor::format_millis(elapsed)) + "   "  + QString::fromStdString(descriptor) );
+    }
   }
-  else {
-    _descriptors[descriptor]->setText(QString::fromStdString(frenchroast::monitor::format_millis(elapsed)) + "   "  + QString::fromStdString(descriptor) );
+  
+  FTimerViewer* FTimerViewer::_instance{nullptr};
+  
+  FTimerViewer::~FTimerViewer()
+  {
+    _instance = nullptr;
   }
 
+
+  FTimerViewer* FTimerViewer::instance(QWidget* parent)
+  {
+    if(_instance != nullptr) return _instance;
+    _instance = new FTimerViewer(parent);
+    restore_win("timers", _settings, _instance->_dock, dynamic_cast<QMainWindow*>(parent));
+    return _instance;
   }
+
+  void FTimerViewer::capture()
+  {
+     capture_win("timers", _settings, _instance != nullptr ? _instance->_dock : nullptr);
+  }
+
+
 }

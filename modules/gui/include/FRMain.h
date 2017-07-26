@@ -61,8 +61,6 @@ class FRMain : public QMainWindow {
  private:
 
   frenchroast::Editor*                 _editor{nullptr};
-  frenchroast::FSignalViewer*          _signalViewer;
-  frenchroast::FTimerViewer*           _timerViewer;
   frenchroast::FClassViewer*           _classViewer;
   
   std::unordered_map<std::string, QDockWidget*>                 _docks;

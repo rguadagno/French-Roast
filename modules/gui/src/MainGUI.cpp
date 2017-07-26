@@ -313,11 +313,7 @@ void FRMain::view_signals()
 
 void FRMain::view_timers()
 {
-  if(_docks.count(TimerWindow) == 1) return;
-  _timerViewer = new frenchroast::FTimerViewer{_settings,this};
-  _docks[TimerWindow] = *_timerViewer;
-  restore_dock_win(TimerWindow);
-  QObject::connect(_timerViewer,  &frenchroast::FTimerViewer::closed, this,    [&](){_docks.erase(TimerWindow);});
+  FTimerViewer::instance(this);
 }
 
 
@@ -447,14 +443,14 @@ void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>&
 
 void FRMain::update_timed_list(std::string  descriptor, std::string tname, long elapsed)
 {
-  if(_docks.count(TimerWindow) != 1) return;
+  //  if(_docks.count(TimerWindow) != 1) return;
 
   std::string desc{descriptor};
   tname = "[ " + tname + " ]";
   frenchroast::monitor::pad(desc, 50);
   frenchroast::monitor::pad(tname, 10);
   desc = tname + desc;
-  _timerViewer->update_time(desc, elapsed);
+  FTimerViewer::instance(this)->update_time(desc, elapsed);
 }
 
 
@@ -472,6 +468,7 @@ void FRMain::handle_exit()
 
   
   FSignalViewer::capture();
+  FTimerViewer::capture();
   
 
   

@@ -33,7 +33,8 @@ namespace frenchroast {
 
     QListWidget*                               _data;
     std::unordered_map<std::string,FListItem*> _descriptors;
-    static FSignalViewer*                             _instance;
+    static FSignalViewer*                      _instance;
+    
   public slots:
       void update_count(const std::string& descriptor, int count);
   signals:
