@@ -30,7 +30,7 @@
 
 namespace frenchroast {
   
-  FClassViewer::FClassViewer(QSettings& settings, QWidget* parent) : FViewer(settings, parent)
+  FClassViewer::FClassViewer(QSettings& settings, QWidget* parent) : FViewer( parent)
   {
     _data = new QTableWidget;
     _data->setStyleSheet(settings.value("traffic_grid_style").toString());

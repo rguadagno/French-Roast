@@ -42,7 +42,6 @@
 #include "StackReport.h"
 #include "DetailViewer.h"
 #include "DetailHolder.h"
-#include "ClassViewer.h"
 #include "FSignalViewer.h"
 #include "FTimerViewer.h"
 #include "FClassViewer.h"
@@ -67,6 +66,7 @@ class FRMain : public QMainWindow {
   frenchroast::FClassViewer*           _classViewer;
   
   std::unordered_map<std::string, QDockWidget*>                 _docks;
+  std::vector<frenchroast::FViewer>                _docks2;
   static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
   QSettings&              _settings;
   bool                    _exit{false};

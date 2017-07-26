@@ -22,10 +22,10 @@
 
 namespace frenchroast {
 
-  FTimerViewer::FTimerViewer(QSettings& settings, QWidget* parent) : FViewer(settings,parent)
+  FTimerViewer::FTimerViewer(QSettings& settings, QWidget* parent) : FViewer(parent)
   {
     _data = new QListWidget{};
-    _data->setStyleSheet(_settings.value("list_style").toString());
+    _data->setStyleSheet(_settings->value("list_style").toString());
     _actionBar = new ActionBar{ActionBar::Close};
     setup_dockwin("Timers", _data, false);
   }

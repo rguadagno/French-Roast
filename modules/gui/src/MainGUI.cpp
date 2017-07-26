@@ -44,6 +44,7 @@
 #include "SignalDelegate.h"
 #include "FSignalViewer.h"
 
+using namespace frenchroast;
 
 const std::string  FRMain::SignalWindow    = "signals";
 const std::string  FRMain::EditHooksWindow = "edit-hooks";
@@ -61,6 +62,8 @@ std::unordered_map< std::string,  void (FRMain::*)()  > FRMain::_dockbuilders {{
       };
 
 
+QSettings* FViewer::_settings = nullptr;
+
 FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settings(settings), _hooksfile(path_to_hooks)
 {
   QDesktopWidget* dw = QApplication::desktop();
@@ -68,6 +71,8 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
   int height = dw->availableGeometry(dw->primaryScreen()).height() * 0.2;
   int width  =  dw->availableGeometry(dw->primaryScreen()).width() * 0.7;
 
+  FViewer::setSettings(&settings);
+  
   QMenu* mptr = menuBar()->addMenu("&View");
   connect_dock_win(mptr, "Signals",         SignalWindow);
   connect_dock_win(mptr, "Timers",          TimerWindow);
@@ -302,12 +307,7 @@ void FRMain::view_ranking()
 
 void FRMain::view_signals()
 {
-  if(_docks.count(SignalWindow) == 1) return;
-  _signalViewer = new frenchroast::FSignalViewer{_settings,this};
-  _docks[SignalWindow] = *_signalViewer;
-  restore_dock_win(SignalWindow);
-  QObject::connect(_signalViewer,  &frenchroast::FSignalViewer::view_detail_request, this, &FRMain::show_detail);
-  QObject::connect(_signalViewer,  &frenchroast::FSignalViewer::closed, this,    [&](){_docks.erase(SignalWindow);});
+  QObject::connect(frenchroast::FSignalViewer::instance(this),  &frenchroast::FSignalViewer::view_detail_request, this, &FRMain::show_detail);
 }
 
 
@@ -334,9 +334,9 @@ void FRMain::view_dockwin(const std::string& title, const std::string& dockname,
 
 void FRMain::view_hooks_editor()
 {
-  if(_docks.count(EditHooksWindow) == 1) return;
+  if(_docks.count(EditHooksWindow) == 1) return;                                                                
 
-  _editor = new frenchroast::Editor(_settings);
+  _editor = new frenchroast::Editor(_settings);                                                      //
   ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::Save | ActionBar::Validate);
   _editor->setStyleSheet(_settings.value("edit_style").toString());
   QDockWidget* editdoc = setup_dock_window("Signal Editor", _editor, abar);
@@ -356,6 +356,10 @@ void FRMain::view_hooks_editor()
 
 void FRMain::add_hook(QString txt)
 {
+
+  //
+  //  _editor::instance(_settings, this)->add_hook(txt);   so if editor is dwm bring it up  and add hook
+  //
   if(_editor == nullptr) return;
   _editor->add_hook(txt);
 }
@@ -363,7 +367,6 @@ void FRMain::add_hook(QString txt)
 void FRMain::show_detail(const std::string& descriptor)
 {
   if(_viewingDetail.count(descriptor) == 1) return;
-
   _viewingDetail[descriptor] = new DetailViewer{descriptor, _settings};
   ActionBar* abar = new ActionBar(ActionBar::Close);
   _viewingDetail[descriptor]->setStyleSheet(_settings.value("tab_style").toString());
@@ -374,7 +377,9 @@ void FRMain::show_detail(const std::string& descriptor)
   QObject::connect(abar, &ActionBar::close_clicked, this, [=](){ _viewingDetail.erase(descriptor); });
   QObject::connect(this, &FRMain::update_detail_list, _viewingDetail[descriptor], &DetailViewer::update);
   dockwin->setFloating(true);
-  dockwin->move(_docks[SignalWindow]->x() + 50, _docks[SignalWindow]->y() + 50 ); 
+  //@@  dockwin->move(_docks[SignalWindow]->x() + 50, _docks[SignalWindow]->y() + 50 );
+  QDockWidget* dock = *frenchroast::FSignalViewer::instance(this);
+  dockwin->move(dock->x() + 50, dock->y() + 50 ); 
   addDockWidget(Qt::TopDockWidgetArea, dockwin);
   update_detail_list(descriptor, _detailDescriptors[descriptor]);
 }
@@ -415,16 +420,16 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
                          const std::vector<std::string> argHeaders,  const std::vector<std::string> instanceHeaders, 
                          const std::vector<frenchroast::monitor::MarkerField> markers, std::unordered_map<std::string, frenchroast::monitor::StackReport> stacks)
 {
-  if(_docks.count(ltype) == 0) return;
-  
   tname = "[ " + tname + " ]";
   frenchroast::monitor::pad(descriptor, 50);
   frenchroast::monitor::pad(tname, 10);
 
   descriptor = tname + descriptor;
   _detailDescriptors[descriptor] = DetailHolder{count, argHeaders, instanceHeaders, markers, stacks};
-  _signalViewer->update_count(descriptor, count);
-  update_detail_list(descriptor, _detailDescriptors[descriptor]);
+  frenchroast::FSignalViewer::instance(this)->update_count(descriptor, count);
+  if(!_exit) {
+    update_detail_list(descriptor, _detailDescriptors[descriptor]);
+  }
 }
 
 void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks)
@@ -465,6 +470,11 @@ void FRMain::handle_exit()
      capture_dock(x.first);
   }
 
+  
+  FSignalViewer::capture();
+  
+
+  
   if(_editor != nullptr ) {
      _editor->shutdown();
   }

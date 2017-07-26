@@ -22,27 +22,35 @@
 #include <QWidget>
 #include <QSettings>
 #include <QDockWidget>
+#include <QMainWindow>
 #include "ActionBar.h"
 
 namespace frenchroast {
+  
+  void capture_win(const std::string& name, QSettings* settings, QDockWidget* win);
+  void restore_win(const std::string& name, QSettings* settings, QDockWidget* win, QMainWindow*);
+  
   class FViewer : public QWidget {
 
     Q_OBJECT
     
-    QDockWidget* _dock;
+    //putback here    QDockWidget* _dock;
     QWidget* _parent;
-    
+     
   public:
-    FViewer(QSettings&, QWidget*);
+    FViewer(QWidget*);
     virtual ~FViewer() {}
-     operator QDockWidget*();
+    operator QDockWidget*();
+    static  void setSettings(QSettings*);
 
   signals:
      void closed();
 
      
   protected:
-    QSettings&   _settings;
+
+        QDockWidget* _dock;
+     static QSettings*   _settings;
     ActionBar*   _actionBar;
     void setup_dockwin(const std::string& title, QWidget* wptr, bool codeMode);
   };
