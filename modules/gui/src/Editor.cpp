@@ -29,45 +29,44 @@
 
 namespace frenchroast {
   
-  Editor::Editor(QSettings& settings) : QWidget(), _settings(settings)
+  Editor::Editor(QWidget* parent) : FViewer(parent)
   {
+    _actionBar = new ActionBar(ActionBar::Close | ActionBar::Save | ActionBar::Validate);
     _edit = new QTextEdit();
     _edit->setCursorWidth(8);
-    
     _message = new QListWidget{};
     _message->setStyleSheet("QListWidget {border-top:none;border-bottom: 1px solid #808080;border-left: 1px solid #808080;border-right: 1px solid #808080;background-color: #9e9e9e;} ");
     
     _edit->setFont(CodeFont());
+    _edit->setStyleSheet(_settings->value("edit_style").toString());
     new HooksSyntax(_edit->document());
     _edit->document()->setModified(false);
     QVBoxLayout* vlayout = new QVBoxLayout();
     QSplitter* splitter = new QSplitter();
     splitter->setOrientation(Qt::Vertical);
-    vlayout->setContentsMargins(0,0,0,0);
     splitter->setContentsMargins(0,0,0,0);
-    setLayout(vlayout);
     splitter->addWidget(_edit);
     splitter->addWidget(_message);
-    vlayout->addWidget(splitter);
-
-    _filename = _settings.value("editor:signal-file", "").toString().toStdString();
-
+    setup_dockwin("Editor", splitter, false);
+    _filename = _settings->value("editor:signal-file", "").toString().toStdString();
+    
     if(_filename != "") {
       load_from_file(_filename);
     }
     else {
-      _settings.beginGroup("hooks");
-      int total = _settings.beginReadArray("unlinked");
+      _settings->beginGroup("hooks");
+      int total = _settings->beginReadArray("unlinked");
       for(int idx = 0; idx < total; idx++) {
-        _settings.setArrayIndex(idx);
-        add(_settings.value("item").toString());
+        _settings->setArrayIndex(idx);
+        add(_settings->value("item").toString());
       }
-      _settings.endArray();
-      _settings.endGroup();
+      _settings->endArray();
+      _settings->endGroup();
     }
-
-
-    QObject::connect(_edit->document(), &QTextDocument::contentsChange,  this,    &Editor::contents_changed);
+    
+    QObject::connect(_actionBar, &ActionBar::save_clicked, this, &frenchroast::Editor::save);
+    QObject::connect(_actionBar, &ActionBar::validate_clicked,   this, &frenchroast::Editor::validate_hooks);
+    QObject::connect(_edit->document(), &QTextDocument::contentsChange,  this,    [&]() {     _changesToSave = true; _actionBar->enable_save(); });
     QObject::connect(_message,          &QListWidget::itemDoubleClicked, this,    &Editor::goto_error_line);
   }
 
@@ -146,16 +145,16 @@ namespace frenchroast {
   void Editor::save()
   {
     if(_filename == "") {
-      _settings.beginGroup("hooks");
-      _settings.remove("");
-      _settings.beginWriteArray("unlinked");
+      _settings->beginGroup("hooks");
+      _settings->remove("");
+      _settings->beginWriteArray("unlinked");
       int idx = 0;
       for(auto& line : lines()) {
-        _settings.setArrayIndex(idx++);
-        _settings.setValue("item", QString::fromStdString(line));
+        _settings->setArrayIndex(idx++);
+        _settings->setValue("item", QString::fromStdString(line));
       }
-      _settings.endArray();
-      _settings.endGroup();
+      _settings->endArray();
+      _settings->endGroup();
       _changesToSave = false;
       saved();
     }
@@ -207,11 +206,34 @@ namespace frenchroast {
     return {frenchroast::split(outstr, "\n")};
   }
 
-  void Editor::shutdown() {
+  void Editor::shutdown()
+  {
     // no warnings for unsaved changes yet
-    
   }
 
+
+  Editor* Editor::_instance{nullptr};
+  Editor::~Editor()
+  {
+        std::cout << "* NULLPTR * " << std::endl;
+    _instance = nullptr;
+  }
+
+  Editor* Editor::instance(QWidget* parent)
+  {
+    if(_instance != nullptr) return _instance;
+    _instance = new Editor(parent);
+    restore_win("editor", _settings, _instance->_dock, dynamic_cast<QMainWindow*>(parent));
+    return _instance;
+  }
+
+  void Editor::capture()
+  {
+     capture_win("editor", _settings, _instance != nullptr ? _instance->_dock : nullptr);
+  }
+
+
+  
   MessageItem::MessageItem(const std::string& str, int line) : QListWidgetItem(QString::fromStdString(str)), _line(line)
   {
   }

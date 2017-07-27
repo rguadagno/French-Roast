@@ -47,7 +47,7 @@
 using namespace frenchroast;
 
 const std::string  FRMain::SignalWindow    = "signals";
-const std::string  FRMain::EditHooksWindow = "edit-hooks";
+const std::string  FRMain::EditHooksWindow = "editor";
 const std::string  FRMain::TimerWindow     = "timers";
 const std::string  FRMain::RankingWindow   = "rankings";
 const std::string  FRMain::TrafficWindow   = "traffic";
@@ -101,8 +101,8 @@ QFont StackRow::_font = CodeFont();
 
 void FRMain::validate_hooks()
 {
-  if(_editor == nullptr) return;
-  _editor->validate_hooks();
+  QObject::connect(Editor::instance(this), &frenchroast::Editor::validated_hooks,  this,    &FRMain::validated_hooks);
+  Editor::instance(this)->validate_hooks();
 }
 
 
@@ -330,34 +330,12 @@ void FRMain::view_dockwin(const std::string& title, const std::string& dockname,
 
 void FRMain::view_hooks_editor()
 {
-  if(_docks.count(EditHooksWindow) == 1) return;                                                                
-
-  _editor = new frenchroast::Editor(_settings);                                                      //
-  ActionBar* abar = new ActionBar(ActionBar::Close | ActionBar::Save | ActionBar::Validate);
-  _editor->setStyleSheet(_settings.value("edit_style").toString());
-  QDockWidget* editdoc = setup_dock_window("Signal Editor", _editor, abar);
-  _docks[EditHooksWindow] = editdoc;
-  restore_dock_win(EditHooksWindow);
-
-  
-  QObject::connect(_editor,  &QTextEdit::destroyed,         this,    &FRMain::reset_editor);
-  QObject::connect(abar,    &ActionBar::close_clicked,      editdoc, &QDockWidget::close);
-  QObject::connect(abar,    &ActionBar::close_clicked,      this,    [&](){_docks.erase(EditHooksWindow);});
-  QObject::connect(abar,    &ActionBar::save_clicked,       _editor, &frenchroast::Editor::save);
-  QObject::connect(abar,    &ActionBar::validate_clicked,   _editor, &frenchroast::Editor::validate_hooks);
-  QObject::connect(_editor, &frenchroast::Editor::saved ,   abar,    &ActionBar::disable_save);
-  QObject::connect(_editor, &frenchroast::Editor::changed,  abar,    &ActionBar::enable_save);
-  QObject::connect(_editor, &frenchroast::Editor::validated_hooks,  this,    &FRMain::validated_hooks);
+  QObject::connect(Editor::instance(this), &frenchroast::Editor::validated_hooks,  this,    &FRMain::validated_hooks);
 }
 
 void FRMain::add_hook(QString txt)
 {
-
-  //
-  //  _editor::instance(_settings, this)->add_hook(txt);   so if editor is dwm bring it up  and add hook
-  //
-  if(_editor == nullptr) return;
-  _editor->add_hook(txt);
+  Editor::instance(this)->add_hook(txt);
 }
 
 void FRMain::show_detail(const std::string& descriptor)
@@ -379,12 +357,6 @@ void FRMain::show_detail(const std::string& descriptor)
   addDockWidget(Qt::TopDockWidgetArea, dockwin);
   update_detail_list(descriptor, _detailDescriptors[descriptor]);
 }
-
-void FRMain::reset_editor(QObject* obj)
-{
-   _editor = nullptr;
-}
-
 
 void FRMain::update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>& details)
 {
@@ -443,8 +415,6 @@ void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>&
 
 void FRMain::update_timed_list(std::string  descriptor, std::string tname, long elapsed)
 {
-  //  if(_docks.count(TimerWindow) != 1) return;
-
   std::string desc{descriptor};
   tname = "[ " + tname + " ]";
   frenchroast::monitor::pad(desc, 50);
@@ -466,15 +436,9 @@ void FRMain::handle_exit()
      capture_dock(x.first);
   }
 
-  
   FSignalViewer::capture();
   FTimerViewer::capture();
-  
-
-  
-  if(_editor != nullptr ) {
-     _editor->shutdown();
-  }
+  Editor::capture();
 }
 
 void FRMain::capture_dock( const std::string& dockname)

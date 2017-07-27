@@ -24,27 +24,32 @@
 #include <QListWidget>
 #include <QSettings>
 #include <unordered_map>
+#include "FViewer.h"
 
 
 
 namespace frenchroast {
 
-  class Editor : public QWidget {
+  class Editor : public FViewer {
 
     Q_OBJECT
 
   private:
+    static Editor*  _instance;
+    Editor(QWidget*);
+    ~Editor();
     QTextEdit*    _edit{nullptr};
     QListWidget*  _message{nullptr};
     std::string   _filename;
-    QSettings&    _settings;
     bool          _changesToSave{false};
     std::unordered_map<std::string, std::string> _signals;
 
     void add(QString);
     
   public:
-    Editor(QSettings&);
+    static Editor* instance(QWidget*);
+    static void capture();
+
     std::vector<std::string> lines() const;
     
   signals:

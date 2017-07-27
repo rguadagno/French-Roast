@@ -60,7 +60,6 @@ class FRMain : public QMainWindow {
 
  private:
 
-  frenchroast::Editor*                 _editor{nullptr};
   frenchroast::FClassViewer*           _classViewer;
   
   std::unordered_map<std::string, QDockWidget*>                 _docks;
@@ -118,7 +117,7 @@ class FRMain : public QMainWindow {
    void view_classviewer();
    void add_hook(QString);
    void show_detail(const std::string& descriptor);
-   void reset_editor(QObject* obj);
+   //   void reset_editor(QObject* obj);
    void handle_exit();
    void update_list(std::string, std::string, std::string, int, const std::vector<std::string> ,  const std::vector<std::string>, const std::vector<frenchroast::monitor::MarkerField>, std::unordered_map<std::string, frenchroast::monitor::StackReport>);
    void update_timed_list(std::string  descriptor, std::string, long elapsed);

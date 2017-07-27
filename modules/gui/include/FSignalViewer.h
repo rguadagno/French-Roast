@@ -34,14 +34,14 @@ namespace frenchroast {
     QListWidget*                               _data;
     std::unordered_map<std::string,FListItem*> _descriptors;
     static FSignalViewer*                      _instance;
+    FSignalViewer(QWidget*);
+    ~FSignalViewer();
     
   public slots:
       void update_count(const std::string& descriptor, int count);
   signals:
       void view_detail_request(const std::string&);
   public:
-      FSignalViewer(QWidget*);
-    ~FSignalViewer();
     static FSignalViewer* instance(QWidget*);
     static void capture();
   };

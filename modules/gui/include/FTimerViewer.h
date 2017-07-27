@@ -34,13 +34,14 @@ namespace frenchroast {
     QListWidget*                               _data;
     std::unordered_map<std::string,FListItem*> _descriptors;
     static FTimerViewer*                       _instance;
+    FTimerViewer(QWidget*);
+    ~FTimerViewer();
     
   public slots:
       void update_time(const std::string& descriptor, long elapsed);
 
   public:
-    FTimerViewer(QWidget*);
-    ~FTimerViewer();
+
     static FTimerViewer* instance(QWidget*);
     static void capture();
   };
