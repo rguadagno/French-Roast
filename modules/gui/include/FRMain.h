@@ -60,8 +60,6 @@ class FRMain : public QMainWindow {
 
  private:
 
-  frenchroast::FClassViewer*           _classViewer;
-  
   std::unordered_map<std::string, QDockWidget*>                 _docks;
   std::vector<frenchroast::FViewer>                _docks2;
   static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;

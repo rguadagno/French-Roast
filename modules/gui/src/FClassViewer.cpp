@@ -30,10 +30,10 @@
 
 namespace frenchroast {
   
-  FClassViewer::FClassViewer(QSettings& settings, QWidget* parent) : FViewer( parent)
+  FClassViewer::FClassViewer(QWidget* parent) : FViewer( parent)
   {
     _data = new QTableWidget;
-    _data->setStyleSheet(settings.value("traffic_grid_style").toString());
+    _data->setStyleSheet(_settings->value("traffic_grid_style").toString());
     _data->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     _data->verticalHeader()->hide();
     _data->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -47,7 +47,7 @@ namespace frenchroast {
     vlayout->addWidget(_data );
     vlayout->setContentsMargins(0,0,0,0);
     setLayout(vlayout);
-    setStyleSheet(settings.value("zero_border_style").toString());
+    setStyleSheet(_settings->value("zero_border_style").toString());
     
     _data->insertColumn(0);
     _data->setHorizontalHeaderItem(0, createItem("Class"));
@@ -121,5 +121,34 @@ void FClassViewer::handle_add_signal(int row, QString text)
     add_signal(QString::fromStdString(name + "::* "));
   }
 }
+
+  FClassViewer* FClassViewer::_instance{nullptr};
+  FClassViewer::~FClassViewer()
+  {
+    _instance = nullptr;
+  }
+
+  FClassViewer* FClassViewer::instance(QWidget* parent)
+  {
+    if(_instance != nullptr) return _instance;
+    _instance = new FClassViewer(parent);
+    restore_win("classviewer", _settings, _instance->_dock, dynamic_cast<QMainWindow*>(parent));
+    return _instance;
+  }
+
+
+
+  void FClassViewer::capture()
+  {
+     capture_win("signals", _settings, _instance != nullptr ? _instance->_dock : nullptr);
+  }
+
+
+
+
+
+
+
+
   
 }

@@ -35,14 +35,19 @@ namespace frenchroast {
   QTableWidget*                                             _data;
   std::unordered_map<std::string, std::vector<std::string>> _methods;
   std::unordered_map<std::string, int>                      _ind;
+  static FClassViewer*                                      _instance;
+  
+  FClassViewer(QWidget*);
+  ~FClassViewer();
   void expand_methods(const std::string&, int);
   void collapse_methods(const std::string&, int);
   
 Q_OBJECT
  
  public:
-   FClassViewer(QSettings&, QWidget*);
-
+ static FClassViewer* instance(QWidget*);
+ void capture();
+ 
  signals:
   void add_signal(QString);
   void start_watching();

@@ -273,14 +273,10 @@ void FRMain::view_traffic()
 
 void FRMain::view_classviewer()
 {
- if(_docks.count(ClassViewerWindow) == 1) return;
-  _classViewer = new frenchroast::FClassViewer(_settings, this);
-  _docks[ClassViewerWindow] = *_classViewer;
-  QObject::connect(_classViewer, &frenchroast::FClassViewer::closed, this, [&](){_docks.erase(ClassViewerWindow);});
-  QObject::connect(_classViewer, &frenchroast::FClassViewer::start_watching, this,                &FRMain::start_watch_loading);
-  QObject::connect(_classViewer, &frenchroast::FClassViewer::stop_watching, this,                 &FRMain::stop_watch_loading);
-  QObject::connect(_classViewer, &frenchroast::FClassViewer::add_signal, this,         &FRMain::add_hook);
-  restore_dock_win(ClassViewerWindow);
+  QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::start_watching, this,  &FRMain::start_watch_loading);
+  QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::stop_watching, this,   &FRMain::stop_watch_loading);
+  QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::add_signal, this,      &FRMain::add_hook);
+  QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::closed, this,          &FRMain::stop_watch_loading);
 }
 
 void FRMain::start_watch_loading()
@@ -360,8 +356,7 @@ void FRMain::show_detail(const std::string& descriptor)
 
 void FRMain::update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>& details)
 {
-  if(_docks.count(ClassViewerWindow) == 0) return;
-  _classViewer->update(details);
+  FClassViewer::instance(this)->update(details);
 }
 
 void FRMain::update_traffic_rate()
@@ -439,6 +434,7 @@ void FRMain::handle_exit()
   FSignalViewer::capture();
   FTimerViewer::capture();
   Editor::capture();
+  FClassViewer::capture();
 }
 
 void FRMain::capture_dock( const std::string& dockname)
