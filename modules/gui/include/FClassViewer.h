@@ -36,6 +36,7 @@ namespace frenchroast {
   std::unordered_map<std::string, std::vector<std::string>> _methods;
   std::unordered_map<std::string, int>                      _ind;
   static FClassViewer*                                      _instance;
+  static const std::string                                  Name;
   
   FClassViewer(QWidget*);
   ~FClassViewer();
@@ -46,7 +47,7 @@ Q_OBJECT
  
  public:
  static FClassViewer* instance(QWidget*);
- void capture();
+ static void capture();
  
  signals:
   void add_signal(QString);

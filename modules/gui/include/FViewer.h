@@ -20,6 +20,7 @@
 #ifndef FVIEWER_H
 #define FVIEWER_H
 #include <QWidget>
+#include <QListWidgetItem>
 #include <QSettings>
 #include <QDockWidget>
 #include <QMainWindow>
@@ -27,21 +28,23 @@
 
 namespace frenchroast {
   
-  void capture_win(const std::string& name, QSettings* settings, QDockWidget* win);
-  void restore_win(const std::string& name, QSettings* settings, QDockWidget* win, QMainWindow*);
   
   class FViewer : public QWidget {
 
     Q_OBJECT
     
-    //putback here    QDockWidget* _dock;
+    QDockWidget* _dock;
     QWidget* _parent;
+    QListWidgetItem* _title;
      
   public:
     FViewer(QWidget*);
     virtual ~FViewer() {}
     operator QDockWidget*();
     static  void setSettings(QSettings*);
+    void resize_win(int width, int height);
+    void move(int x, int y);
+    void update_title(const std::string&);
 
   signals:
      void closed();
@@ -49,10 +52,13 @@ namespace frenchroast {
      
   protected:
 
-        QDockWidget* _dock;
-     static QSettings*   _settings;
+    static QSettings*   _settings;
     ActionBar*   _actionBar;
     void setup_dockwin(const std::string& title, QWidget* wptr, bool codeMode);
   };
+
+  void capture_win(const std::string& name, QSettings* settings, FViewer* win);
+  void restore_win(const std::string& name, QSettings* settings, FViewer* win, QMainWindow*);
+
 }
 #endif

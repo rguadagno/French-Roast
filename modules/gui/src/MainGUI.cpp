@@ -336,21 +336,10 @@ void FRMain::add_hook(QString txt)
 
 void FRMain::show_detail(const std::string& descriptor)
 {
-  if(_viewingDetail.count(descriptor) == 1) return;
-  _viewingDetail[descriptor] = new DetailViewer{descriptor, _settings};
-  ActionBar* abar = new ActionBar(ActionBar::Close);
-  _viewingDetail[descriptor]->setStyleSheet(_settings.value("tab_style").toString());
-  QListWidgetItem* titleWidget;
-  QDockWidget* dockwin = setup_dock_window(descriptor, _viewingDetail[descriptor], abar, true, &titleWidget);
-  _viewingDetail[descriptor]->setTitleWidget(titleWidget);
-  QObject::connect(abar, &ActionBar::close_clicked, dockwin, &QDockWidget::close);
-  QObject::connect(abar, &ActionBar::close_clicked, this, [=](){ _viewingDetail.erase(descriptor); });
-  QObject::connect(this, &FRMain::update_detail_list, _viewingDetail[descriptor], &DetailViewer::update);
-  dockwin->setFloating(true);
-  //@@  dockwin->move(_docks[SignalWindow]->x() + 50, _docks[SignalWindow]->y() + 50 );
+  DetailViewer* dv = DetailViewer::instance(this, descriptor);
+  QObject::connect(this, &FRMain::update_detail_list, dv, &DetailViewer::update);
   QDockWidget* dock = *frenchroast::FSignalViewer::instance(this);
-  dockwin->move(dock->x() + 50, dock->y() + 50 ); 
-  addDockWidget(Qt::TopDockWidgetArea, dockwin);
+  dv->move(dock->x() + 50, dock->y() + 50 ); 
   update_detail_list(descriptor, _detailDescriptors[descriptor]);
 }
 

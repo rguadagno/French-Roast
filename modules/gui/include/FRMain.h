@@ -61,7 +61,6 @@ class FRMain : public QMainWindow {
  private:
 
   std::unordered_map<std::string, QDockWidget*>                 _docks;
-  std::vector<frenchroast::FViewer>                _docks2;
   static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
   QSettings&              _settings;
   bool                    _exit{false};
@@ -73,7 +72,6 @@ class FRMain : public QMainWindow {
   KeyListener*            _trafficEnterKeyListener;
 
   std::unordered_map<std::string, DetailHolder>             _detailDescriptors;
-  std::unordered_map<std::string, DetailViewer*>             _viewingDetail;
   std::unordered_map<std::string,StackRow*>                 _traffic_rows;
   std::unordered_map<std::string, int>                      _traffic_keys;
   MethodRanking*                                            _rankings;
@@ -115,7 +113,6 @@ class FRMain : public QMainWindow {
    void view_classviewer();
    void add_hook(QString);
    void show_detail(const std::string& descriptor);
-   //   void reset_editor(QObject* obj);
    void handle_exit();
    void update_list(std::string, std::string, std::string, int, const std::vector<std::string> ,  const std::vector<std::string>, const std::vector<frenchroast::monitor::MarkerField>, std::unordered_map<std::string, frenchroast::monitor::StackReport>);
    void update_timed_list(std::string  descriptor, std::string, long elapsed);

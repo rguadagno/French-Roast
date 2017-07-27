@@ -23,17 +23,23 @@
 #include <QVBoxLayout>
 #include "QUtil.h"
 #include "SignalDelegate.h"
+#include <iostream>
 
-void DetailViewer::setTitleWidget(QListWidgetItem* wptr)
-{
-  _titleWidget = wptr;
-  _title = wptr->text();
-}
+namespace frenchroast {
 
-DetailViewer::DetailViewer(const std::string& descriptor, QSettings& settings) : _descriptor(descriptor)
+  DetailViewer* DetailViewer::instance(QWidget* parent, const std::string& descriptor)
+  {
+    DetailViewer* rv = new DetailViewer(parent, descriptor);
+    dynamic_cast<QMainWindow*>(parent)->addDockWidget(Qt::TopDockWidgetArea,    *rv);
+    rv->resize_win(700,350);
+    return rv;
+  }
+  
+DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FViewer(parent), _descriptor(descriptor)
 {
+  _actionBar = new ActionBar(ActionBar::Close);
   _argData = new QTableWidget;
-  _argData->setStyleSheet(settings.value("traffic_grid_style").toString());
+  _argData->setStyleSheet(_settings->value("traffic_grid_style").toString());
   _argData->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
   _argData->verticalHeader()->hide();
   _argData->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -43,12 +49,12 @@ DetailViewer::DetailViewer(const std::string& descriptor, QSettings& settings) :
   vlayout->addWidget(_argData );
   vlayout->setContentsMargins(0,0,0,0);
   holder->setLayout(vlayout);
-  holder->setStyleSheet(settings.value("zero_border_style").toString());
+  holder->setStyleSheet(_settings->value("zero_border_style").toString());
    QWidget* holderStacks = new QWidget();
   vlayout = new QVBoxLayout();
   vlayout->setSpacing(0);
   _stackData = new QTableWidget();
-  _stackData->setStyleSheet(settings.value("traffic_grid_style").toString());
+  _stackData->setStyleSheet(_settings->value("traffic_grid_style").toString());
   _stackData->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
   _stackData->horizontalHeader()->setStyleSheet("QTableWidget::item {background: #202020;}");
   _stackData->verticalHeader()->hide();
@@ -71,19 +77,14 @@ DetailViewer::DetailViewer(const std::string& descriptor, QSettings& settings) :
                        "QTabBar::tab:hover {color: white;border: 1px solid #B4B6B6;}"             \
                        "QTabBar::tab:selected {background: #173496;}" );
   tab->setDocumentMode(true);
-  QVBoxLayout* vlayout2 = new QVBoxLayout;
-  vlayout2->setContentsMargins(0,0,0,0);
-  vlayout2->addWidget(tab);
-  setLayout(vlayout2);
-  setMinimumSize(700,350);
-   setStyleSheet("QWidget {border: 1px solid #404040;background:black;}");
+  setup_dockwin(descriptor, tab, true);
 }
 
 void DetailViewer::update(const std::string& descriptor, const DetailHolder& holder)
 {
   if(_descriptor != descriptor) return;
 
-  _titleWidget->setText(QString::number(holder._count) + "  " + _title);
+  update_title(std::to_string(holder._count) + "  " + _descriptor);
   for(auto& x : holder._stacks) {
     if(_items.count(x.second.key()) == 1) {
       _items[x.second.key()]->setText(  QString::fromStdString(std::to_string(x.second.count())));
@@ -201,4 +202,6 @@ void DetailViewer::update(const std::string& descriptor, const DetailHolder& hol
     }
   }
   }
+}
+
 }

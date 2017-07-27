@@ -123,6 +123,9 @@ void FClassViewer::handle_add_signal(int row, QString text)
 }
 
   FClassViewer* FClassViewer::_instance{nullptr};
+  const std::string FClassViewer::Name{"classviewer"};
+
+  
   FClassViewer::~FClassViewer()
   {
     _instance = nullptr;
@@ -132,7 +135,7 @@ void FClassViewer::handle_add_signal(int row, QString text)
   {
     if(_instance != nullptr) return _instance;
     _instance = new FClassViewer(parent);
-    restore_win("classviewer", _settings, _instance->_dock, dynamic_cast<QMainWindow*>(parent));
+    restore_win(Name, _settings, _instance, dynamic_cast<QMainWindow*>(parent));
     return _instance;
   }
 
@@ -140,7 +143,7 @@ void FClassViewer::handle_add_signal(int row, QString text)
 
   void FClassViewer::capture()
   {
-     capture_win("signals", _settings, _instance != nullptr ? _instance->_dock : nullptr);
+     capture_win(Name, _settings, _instance != nullptr ? _instance : nullptr);
   }
 
 

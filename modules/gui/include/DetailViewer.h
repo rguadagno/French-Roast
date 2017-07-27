@@ -24,10 +24,11 @@
 #include <QListWidget>
 #include <QSettings>
 #include "DetailHolder.h"
+#include "FViewer.h"
 
+namespace frenchroast {
 
-
-class DetailViewer : public QWidget {
+class DetailViewer : public FViewer {
 
   Q_OBJECT
   
@@ -36,11 +37,14 @@ class DetailViewer : public QWidget {
   QTableWidget*                                      _stackData;
   std::unordered_map<std::string, QTableWidgetItem*> _items;
   std::unordered_map<std::string, int>               _detailItems;
-  QListWidgetItem*                                   _titleWidget;
-  QString                                            _title;
+  //@@  QListWidgetItem*                                   _titleWidget;
+  //@@QString                                            _title;
+  DetailViewer(QWidget*, const std::string& descriptor);
+  
  public:
-  DetailViewer(const std::string& descriptor, QSettings&);
-  void setTitleWidget(QListWidgetItem*);
+  
+  static DetailViewer* instance(QWidget*, const std::string&);
+  
   public slots:
     
    void update(const std::string& descriptor, const DetailHolder& holder);
@@ -49,5 +53,5 @@ class DetailViewer : public QWidget {
 
 
 };
-
+}
 #endif

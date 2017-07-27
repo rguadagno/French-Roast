@@ -20,7 +20,7 @@
 #include "FViewer.h"
 #include "SignalDelegate.h"
 #include <QListWidget>
-
+#include <iostream>
 
 namespace frenchroast {
   FViewer::FViewer(QWidget* parent) : _parent(parent)
@@ -35,12 +35,11 @@ namespace frenchroast {
   QWidget*     titlebar = new QWidget();
   QGridLayout* layout = new QGridLayout();
 
-  
-  QListWidgetItem* item = new QListWidgetItem{QString::fromStdString(title)};
-  item->setSizeHint(QSize(30,24));
+   _title  = new QListWidgetItem{QString::fromStdString(title)};
+  _title->setSizeHint(QSize(30,24));
   sigLabel->setEnabled(false);
   sigLabel->setFixedHeight(22);
-  sigLabel->addItem(item);
+  sigLabel->addItem(_title);
   sigLabel->setStyleSheet(_settings->value("dock_title_style2").toString());
   if(codeMode) {
     sigLabel->setItemDelegate(new SignalDelegate(sigLabel));
@@ -71,10 +70,24 @@ namespace frenchroast {
   {
     _settings = settings;
   }
+
+
+  void FViewer::update_title(const std::string& title) {
+    _title->setText(QString::fromStdString(title));
+  }
   
-  void capture_win(const std::string& name, QSettings* settings, QDockWidget* win)
+  void FViewer::resize_win(int width, int height) {
+    _dock->resize(width, height);
+  }
+
+  void FViewer::move(int x, int y) {
+    _dock->move(x,y);
+  }
+  
+  void capture_win(const std::string& name, QSettings* settings, FViewer* view)
   {
-    if(win != nullptr) {
+    if(view != nullptr) {
+      QDockWidget* win = *view;
       settings->setValue(QString::fromStdString(name  + ":up"),    true);
       settings->setValue(QString::fromStdString(name  + ":width"),  win->width());
       settings->setValue(QString::fromStdString(name  + ":height"), win->height());
@@ -86,8 +99,9 @@ namespace frenchroast {
     }
   }
 
-  void restore_win(const std::string& name, QSettings* settings, QDockWidget* win, QMainWindow* mainwin)
+  void restore_win(const std::string& name, QSettings* settings, FViewer* view, QMainWindow* mainwin)
   {
+    QDockWidget* win = *view;
     settings->setValue(QString::fromStdString(name + ":up"), true);
     win->resize(settings->value(QString::fromStdString(name + ":width"), mainwin->width()).toInt(),
                            settings->value(QString::fromStdString(name + ":height"), 200).toInt()
@@ -98,4 +112,7 @@ namespace frenchroast {
   mainwin->addDockWidget(Qt::TopDockWidgetArea,    win);
     
   }
+
+
+  
 }

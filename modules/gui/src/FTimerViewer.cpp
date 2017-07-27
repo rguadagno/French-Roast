@@ -55,13 +55,13 @@ namespace frenchroast {
   {
     if(_instance != nullptr) return _instance;
     _instance = new FTimerViewer(parent);
-    restore_win("timers", _settings, _instance->_dock, dynamic_cast<QMainWindow*>(parent));
+    restore_win("timers", _settings, _instance, dynamic_cast<QMainWindow*>(parent));
     return _instance;
   }
 
   void FTimerViewer::capture()
   {
-     capture_win("timers", _settings, _instance != nullptr ? _instance->_dock : nullptr);
+     capture_win("timers", _settings, _instance != nullptr ? _instance : nullptr);
   }
 
 

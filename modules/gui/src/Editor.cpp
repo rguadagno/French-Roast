@@ -223,13 +223,13 @@ namespace frenchroast {
   {
     if(_instance != nullptr) return _instance;
     _instance = new Editor(parent);
-    restore_win("editor", _settings, _instance->_dock, dynamic_cast<QMainWindow*>(parent));
+    restore_win("editor", _settings, _instance, dynamic_cast<QMainWindow*>(parent));
     return _instance;
   }
 
   void Editor::capture()
   {
-     capture_win("editor", _settings, _instance != nullptr ? _instance->_dock : nullptr);
+     capture_win("editor", _settings, _instance != nullptr ? _instance : nullptr);
   }
 
 
