@@ -43,20 +43,22 @@
 #include "CodeFont.h"
 #include "SignalDelegate.h"
 #include "FSignalViewer.h"
+#include "FTimerViewer.h"
+#include "FClassViewer.h"
+#include "Editor.h"
+#include "TrafficViewer.h"
 
 using namespace frenchroast;
 
 const std::string  FRMain::SignalWindow    = "signals";
 const std::string  FRMain::EditHooksWindow = "editor";
 const std::string  FRMain::TimerWindow     = "timers";
-const std::string  FRMain::RankingWindow   = "rankings";
 const std::string  FRMain::TrafficWindow   = "traffic";
 const std::string  FRMain::ClassViewerWindow  = "classviewer";
 
 std::unordered_map< std::string,  void (FRMain::*)()  > FRMain::_dockbuilders {{FRMain::SignalWindow,      &FRMain::view_signals},
                                                                                {FRMain::EditHooksWindow,   &FRMain::view_hooks_editor},
                                                                                {FRMain::TimerWindow,       &FRMain::view_timers},
-                                                                               {FRMain::RankingWindow,     &FRMain::view_ranking},
                                                                                {FRMain::TrafficWindow,     &FRMain::view_traffic},
                                                                                {FRMain::ClassViewerWindow, &FRMain::view_classviewer}
       };
@@ -77,7 +79,6 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
   connect_dock_win(mptr, "Signals",         SignalWindow);
   connect_dock_win(mptr, "Timers",          TimerWindow);
   connect_dock_win(mptr, "Hooks Editor",    EditHooksWindow);
-  connect_dock_win(mptr, "Method Rankings", RankingWindow);
   connect_dock_win(mptr, "Traffic",         TrafficWindow);
   connect_dock_win(mptr, "Class Viewer",    ClassViewerWindow);
   
@@ -108,9 +109,9 @@ void FRMain::validate_hooks()
 
 void FRMain::handshake()
 {
-  if(_docks.count(TrafficWindow) == 1 && _buttonStartTraffic->text() == "Stop") {
-    start_traffic(atoi(_rate->text().toStdString().c_str()));
-  }
+  //@@  if(_docks.count(TrafficWindow) == 1 && _buttonStartTraffic->text() == "Stop") {
+  //@@ start_traffic(atoi(_rate->text().toStdString().c_str()));
+  //@@ }
   _statusMsg->remote_ready();
 }
 
@@ -122,40 +123,6 @@ void FRMain::remote_connected(const std::string& msg)
 void FRMain::remote_disconnected(const std::string& msg)
 {
   _statusMsg->remote_disconnected(msg);
-}
-
-QDockWidget* FRMain::setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* actionptr, bool codeMode,  QListWidgetItem** titleItem)
-{
-  QDockWidget* holder = new QDockWidget(QString::fromStdString(title), this);
-  holder->setStyleSheet(_settings.value("dock_widget_style").toString());
-  QListWidget* sigLabel = new QListWidget{};
-  QWidget*     titlebar = new QWidget();
-  QGridLayout* layout = new QGridLayout();
-
-  
-  QListWidgetItem* item = new QListWidgetItem{QString::fromStdString(title)};
-  item->setSizeHint(QSize(30,24));
-  sigLabel->setEnabled(false);
-  sigLabel->setFixedHeight(22);
-  sigLabel->addItem(item);
-  sigLabel->setStyleSheet(_settings.value("dock_title_style2").toString());
-  if(codeMode) {
-    sigLabel->setItemDelegate(new SignalDelegate(sigLabel));
-    *titleItem = item;
-  }
-
-  layout->addWidget(sigLabel,1,1);
-  layout->setContentsMargins(1,1,1,1);
-  layout->addWidget(actionptr,1, 5);
-  titlebar->setLayout(layout);
-  titlebar->setStyleSheet(_settings.value("dock_win_header_style").toString());
-
-  holder->setTitleBarWidget(titlebar);
-  holder->setAttribute(Qt::WA_DeleteOnClose);
-  holder->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
-  holder->setWidget(wptr);
-  
-  return holder;
 }
 
 void FRMain::connect_dock_win(QMenu* mptr, const std::string& actionname, const std::string& docname)
@@ -254,21 +221,8 @@ void FRMain::bring_up_dock_if_required(const std::string dockname)
 
 void FRMain::view_traffic()
 {
-
-  if(_docks.count(TrafficWindow) == 1) return;
-
-  _traffic            = new QTableWidget;
-  _buttonStartTraffic = new QPushButton{"Start"};
-  _rate               = new QLineEdit;
-  _trafficEnterKeyListener = new KeyListener;
-  _traffic->installEventFilter(_trafficEnterKeyListener);
-
-  view_dockwin("Traffic", TrafficWindow, build_traffic_viewer(_traffic, _buttonStartTraffic, _rate));
-  
-  _traffic->insertColumn(0);
-  QObject::connect(_buttonStartTraffic,      &QPushButton::clicked,         this, &FRMain::update_traffic_rate);
-  QObject::connect(_trafficEnterKeyListener, &KeyListener::enterkey,   this, [&](){ add_hook(_traffic->currentItem()->text());});
-  QObject::connect(_traffic,                 &QTableWidget::destroyed,      this, [&](){if(_exit) return;_traffic_rows.clear(); _traffic_keys.clear();});
+  QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::start_watching,  this, &FRMain::start_watching_traffic);
+  QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::stop_watching,  this,  &FRMain::stop_watching_traffic);
 }
 
 void FRMain::view_classviewer()
@@ -289,17 +243,6 @@ void FRMain::stop_watch_loading()
    stop_loading();
 }
 
-void FRMain::view_ranking()
-{
-  if(_docks.count(RankingWindow) == 1) return;
-  view_dockwin("Ranking", RankingWindow, (_rankings = new MethodRanking()));
-
-  KeyListener* rankListener = new KeyListener;
-  _rankings->installEventFilter(rankListener);
-  
-  QObject::connect(rankListener, &KeyListener::enterkey,           this, [&](){ add_hook(_rankings->getEnterMethod());});
-  QObject::connect(_rankings,    &QListWidget::itemDoubleClicked,  this, [&](){ add_hook(_rankings->getEnterMethod());});
-}
 
 void FRMain::view_signals()
 {
@@ -311,18 +254,6 @@ void FRMain::view_timers()
 {
   FTimerViewer::instance(this);
 }
-
-
-void FRMain::view_dockwin(const std::string& title, const std::string& dockname, QWidget* wptr)
-{
-  ActionBar* abar = new ActionBar(ActionBar::Close);
-  wptr->setStyleSheet(_settings.value("list_style").toString());
-  _docks[dockname] = setup_dock_window(title, wptr, abar);
-  QObject::connect(abar, &ActionBar::close_clicked, _docks[dockname   ], &QDockWidget::close);
-  QObject::connect(abar, &ActionBar::close_clicked, this,                [&](){_docks.erase(dockname);});
-  restore_dock_win(dockname);
-}
-
 
 void FRMain::view_hooks_editor()
 {
@@ -348,24 +279,20 @@ void FRMain::update_class_viewer(const std::vector<frenchroast::monitor::ClassDe
   FClassViewer::instance(this)->update(details);
 }
 
-void FRMain::update_traffic_rate()
+void FRMain::start_watching_traffic(int rate)
 {
-  if(_buttonStartTraffic->text() == "Start") {
-     start_traffic(atoi(_rate->text().toStdString().c_str()));
-    _buttonStartTraffic->setText("Stop");
-    _buttonStartTraffic->setStyleSheet(  _settings.value("traffic_stop_style").toString());
-  }
-  else {
-    _buttonStartTraffic->setText("Start");
-    _buttonStartTraffic->setStyleSheet(  _settings.value("traffic_start_style").toString());
-    stop_traffic();
- 
-  }
+  start_traffic(rate);
 }
+
+void FRMain::stop_watching_traffic()
+{
+  stop_traffic();
+}
+
 
 void FRMain::method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks)
 {
-  _rankings->update(ranks);
+  TrafficViewer::instance(this)->update_ranking(ranks);
 }
 
 void FRMain::update_list(std::string ltype, std::string  descriptor, std::string tname, int count,
@@ -386,14 +313,8 @@ void FRMain::update_list(std::string ltype, std::string  descriptor, std::string
 
 void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks)
 {
-  for(auto& x : stacks) {
-    int currRow = _traffic->rowCount();
-    if(_traffic_rows.count(x.thread_name()) == 0) {
-      _traffic->insertRow(currRow);
-      StackRow* sr = new StackRow{x.thread_name(), currRow, _traffic, _traffic_keys};
-      _traffic_rows[x.thread_name()] = sr;
-    }
-    _traffic_rows[x.thread_name()]->add(x);
+  if(!_exit) {
+    TrafficViewer::instance(this)->update_traffic(stacks);
   }
 }
 
@@ -424,6 +345,7 @@ void FRMain::handle_exit()
   FTimerViewer::capture();
   Editor::capture();
   FClassViewer::capture();
+  TrafficViewer::capture();
 }
 
 void FRMain::capture_dock( const std::string& dockname)

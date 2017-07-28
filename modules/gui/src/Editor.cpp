@@ -215,7 +215,6 @@ namespace frenchroast {
   Editor* Editor::_instance{nullptr};
   Editor::~Editor()
   {
-        std::cout << "* NULLPTR * " << std::endl;
     _instance = nullptr;
   }
 

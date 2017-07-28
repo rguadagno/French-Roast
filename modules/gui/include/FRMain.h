@@ -37,14 +37,10 @@
 #include "FRStatus.h"
 #include "KeyListener.h"
 #include "MethodStats.h"
-#include "MethodRanking.h"
-#include "Editor.h"
 #include "StackReport.h"
 #include "DetailViewer.h"
 #include "DetailHolder.h"
-#include "FSignalViewer.h"
-#include "FTimerViewer.h"
-#include "FClassViewer.h"
+
 
 class FRMain : public QMainWindow {
   Q_OBJECT
@@ -62,30 +58,19 @@ class FRMain : public QMainWindow {
 
   std::unordered_map<std::string, QDockWidget*>                 _docks;
   static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
-  QSettings&              _settings;
-  bool                    _exit{false};
-  bool                    _ok_to_send_hooks{false};
-  QTableWidget*           _traffic;
-  QPushButton*            _buttonStartTraffic;
-  QLineEdit*              _rate;
-  FRStatus*               _statusMsg;
-  KeyListener*            _trafficEnterKeyListener;
-
-  std::unordered_map<std::string, DetailHolder>             _detailDescriptors;
-  std::unordered_map<std::string,StackRow*>                 _traffic_rows;
-  std::unordered_map<std::string, int>                      _traffic_keys;
-  MethodRanking*                                            _rankings;
-  std::string                                               _hooksfile;
+  QSettings&                                                    _settings;
+  bool                                                          _exit{false};
+  bool                                                          _ok_to_send_hooks{false};
+  FRStatus*                                                     _statusMsg;
+  KeyListener*                                                  _trafficEnterKeyListener;
+  std::unordered_map<std::string, DetailHolder>                 _detailDescriptors;
+  std::string                                                   _hooksfile;
   
   QWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate);
-
-  QDockWidget* setup_dock_window(const std::string& title, QWidget* wptr, ActionBar* aptr, bool codeMode = false, QListWidgetItem** = nullptr);
-
   void capture_dock(const std::string& dockname);
   void restore_dock_win(const std::string& docname);
   void bring_up_dock_if_required(const std::string dockname);
   void connect_dock_win(QMenu* mptr, const std::string& actionname, const std::string& docname);
-  void view_dockwin(const std::string& title, const std::string& dockname, QWidget* wptr);
   
  signals:
 
@@ -108,7 +93,6 @@ class FRMain : public QMainWindow {
    void view_hooks_editor();
    void view_signals();
    void view_timers();
-   void view_ranking();
    void view_traffic();
    void view_classviewer();
    void add_hook(QString);
@@ -117,7 +101,8 @@ class FRMain : public QMainWindow {
    void update_list(std::string, std::string, std::string, int, const std::vector<std::string> ,  const std::vector<std::string>, const std::vector<frenchroast::monitor::MarkerField>, std::unordered_map<std::string, frenchroast::monitor::StackReport>);
    void update_timed_list(std::string  descriptor, std::string, long elapsed);
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
-   void update_traffic_rate();
+   void start_watching_traffic(int);
+   void stop_watching_traffic();
    void handshake();
 };
 
