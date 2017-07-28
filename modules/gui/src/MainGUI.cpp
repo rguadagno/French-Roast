@@ -109,9 +109,9 @@ void FRMain::validate_hooks()
 
 void FRMain::handshake()
 {
-  //@@  if(_docks.count(TrafficWindow) == 1 && _buttonStartTraffic->text() == "Stop") {
-  //@@ start_traffic(atoi(_rate->text().toStdString().c_str()));
-  //@@ }
+  if(_watchTraffic) {
+    start_traffic(_trafficRate);
+  }
   _statusMsg->remote_ready();
 }
 
@@ -281,11 +281,14 @@ void FRMain::update_class_viewer(const std::vector<frenchroast::monitor::ClassDe
 
 void FRMain::start_watching_traffic(int rate)
 {
+  _watchTraffic = true;
+  _trafficRate = rate;
   start_traffic(rate);
 }
 
 void FRMain::stop_watching_traffic()
 {
+  _watchTraffic = false;
   stop_traffic();
 }
 

@@ -65,6 +65,8 @@ class FRMain : public QMainWindow {
   KeyListener*                                                  _trafficEnterKeyListener;
   std::unordered_map<std::string, DetailHolder>                 _detailDescriptors;
   std::string                                                   _hooksfile;
+  bool                                                          _watchTraffic{false};
+  int                                                           _trafficRate{100};
   
   QWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate);
   void capture_dock(const std::string& dockname);
