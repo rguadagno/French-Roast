@@ -43,7 +43,7 @@ namespace frenchroast {
     std::string   _filename;
     bool          _changesToSave{false};
     std::unordered_map<std::string, std::string> _signals;
-
+    ActionButton* _bsave;
     void add(QString);
     
   public:
@@ -54,7 +54,6 @@ namespace frenchroast {
     
   signals:
     void validated_hooks(std::vector<std::string>);
-    void saved();
     void changed();
 
     private slots:

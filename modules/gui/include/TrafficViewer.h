@@ -54,8 +54,7 @@ namespace frenchroast {
     static void capture();
     
   private slots:
-    void start_traffic();
-    void stop_traffic();
+    void start_stop(const std::string& );
     
   public slots:
       void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);

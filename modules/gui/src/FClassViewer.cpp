@@ -38,10 +38,7 @@ namespace frenchroast {
     _data->verticalHeader()->hide();
     _data->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 
-    _actionBar = new ActionBar(ActionBar::Close | ActionBar::StartStop);
-    QObject::connect(_actionBar, &ActionBar::start_clicked, this, &FClassViewer::start_watching);
-    QObject::connect(_actionBar, &ActionBar::stop_clicked, this,  &FClassViewer::stop_watching);
-   
+    QObject::connect(_actionBar->add(new ActionButton("Start|Stop")), &ActionButton::request, this, &FClassViewer::start_stop);
     QVBoxLayout* vlayout = new QVBoxLayout();
     vlayout->setSpacing(0);
     vlayout->addWidget(_data );
@@ -72,7 +69,16 @@ void FClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& 
   }
 }
 
-
+  void FClassViewer::start_stop(const std::string& text)
+  {
+    if(text == "Start") {
+      start_watching();
+    }
+    else {
+      stop_watching();
+    }
+  }
+  
 
 void FClassViewer::expand_methods(const std::string& name, int row)
 {
@@ -146,12 +152,4 @@ void FClassViewer::handle_add_signal(int row, QString text)
      capture_win(Name, _settings, _instance != nullptr ? _instance : nullptr);
   }
 
-
-
-
-
-
-
-
-  
 }

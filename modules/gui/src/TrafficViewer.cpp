@@ -30,8 +30,10 @@ namespace frenchroast {
 
   TrafficViewer::TrafficViewer(QWidget* parent) : FViewer(parent)
   {
+    QObject::connect(_actionBar->add(new ActionButton("Start|Stop")), &ActionButton::request, 
+                     this, &TrafficViewer::start_stop);
+    
 
-    _actionBar = new ActionBar(ActionBar::Close | ActionBar::StartStop);
     _traffic = new QTableWidget();
     _traffic->setStyleSheet(_settings->value("traffic_grid_style").toString());
     _traffic->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -76,21 +78,18 @@ namespace frenchroast {
     splitter->setSizes({650,250});
     
     setup_dockwin("Traffic", splitter, false);
-    QObject::connect(_actionBar, &ActionBar::start_clicked, this, &TrafficViewer::start_traffic);
-    QObject::connect(_actionBar, &ActionBar::stop_clicked, this, &TrafficViewer::stop_traffic);
-    
   }
 
-  void TrafficViewer::start_traffic()
+  
+  void TrafficViewer::start_stop(const std::string& text)
   {
-    start_watching(10);
+    if(text == "Start")
+      start_watching(10);
+    else
+      stop_watching();
   }
-
-  void TrafficViewer::stop_traffic()
-  {
-    stop_watching();
-  }
-
+  
+  
   
   void TrafficViewer::update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks)
   {
@@ -110,7 +109,6 @@ namespace frenchroast {
 
     _ranking->clear();
     for(auto& x : ranks) {
-          std::cout << " * UPDATE RANKING *" << std::endl;
       std::string desc = std::to_string(x.invoked_count());
       frenchroast::monitor::pad(desc, 10);
       desc.append(x.descriptor());

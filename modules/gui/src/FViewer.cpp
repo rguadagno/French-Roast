@@ -25,6 +25,7 @@
 namespace frenchroast {
   FViewer::FViewer(QWidget* parent) : _parent(parent)
   {
+    _actionBar = new ActionBar();
   }
   
   void FViewer::setup_dockwin(const std::string& title, QWidget* wptr, bool codeMode)

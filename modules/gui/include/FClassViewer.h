@@ -55,7 +55,7 @@ Q_OBJECT
   void stop_watching();
   
  public slots:
-    
+   void start_stop(const std::string&);
     void update(const std::vector<frenchroast::monitor::ClassDetail>&);
     void methods_for_class(QTableWidgetItem*);
 

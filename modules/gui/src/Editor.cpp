@@ -31,7 +31,7 @@ namespace frenchroast {
   
   Editor::Editor(QWidget* parent) : FViewer(parent)
   {
-    _actionBar = new ActionBar(ActionBar::Close | ActionBar::Save | ActionBar::Validate);
+
     _edit = new QTextEdit();
     _edit->setCursorWidth(8);
     _message = new QListWidget{};
@@ -63,10 +63,10 @@ namespace frenchroast {
       _settings->endArray();
       _settings->endGroup();
     }
-    
-    QObject::connect(_actionBar, &ActionBar::save_clicked, this, &frenchroast::Editor::save);
-    QObject::connect(_actionBar, &ActionBar::validate_clicked,   this, &frenchroast::Editor::validate_hooks);
-    QObject::connect(_edit->document(), &QTextDocument::contentsChange,  this,    [&]() {     _changesToSave = true; _actionBar->enable_save(); });
+    _bsave = new ActionButton("Save", false);
+    QObject::connect(_actionBar->add(_bsave) ,     &ActionButton::request, this, &frenchroast::Editor::save);
+    QObject::connect(_actionBar->add(new ActionButton("Validate")) , &ActionButton::request, this, &frenchroast::Editor::validate_hooks);
+    QObject::connect(_edit->document(), &QTextDocument::contentsChange,  this,    [&]() {     _changesToSave = true; _bsave->enable(); });
     QObject::connect(_message,          &QListWidget::itemDoubleClicked, this,    &Editor::goto_error_line);
   }
 
@@ -156,7 +156,7 @@ namespace frenchroast {
       _settings->endArray();
       _settings->endGroup();
       _changesToSave = false;
-      saved();
+      _bsave->disable();
     }
     else {
       std::ofstream out;
@@ -165,7 +165,7 @@ namespace frenchroast {
       out << outstr.toStdString();
       out.close();
       _changesToSave = false;
-      saved();
+      _bsave->disable();
     }
   }
 

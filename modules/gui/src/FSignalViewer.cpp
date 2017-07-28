@@ -27,7 +27,6 @@ FSignalViewer::FSignalViewer(QWidget* parent) : FViewer(parent)
   {
     _data = new QListWidget{};
     _data->setStyleSheet(_settings->value("list_style").toString());
-    _actionBar = new ActionBar{ActionBar::Close};
     setup_dockwin("Signals", _data, false);
     QObject::connect(_data,  &QListWidget::itemDoubleClicked, this, [&](QListWidgetItem* item){view_detail_request(dynamic_cast<FListItem*>(item)->gettext());});
   }

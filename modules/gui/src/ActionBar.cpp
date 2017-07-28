@@ -22,23 +22,77 @@
 #include <QPushButton>
 #include <QStyle>
 #include <QLabel>
+#include "Util.h"
 
-const std::bitset<4> ActionBar::None{"0000"};
 const std::bitset<4> ActionBar::Close{"0001"};
-const std::bitset<4> ActionBar::Save{"0010"};
-const std::bitset<4> ActionBar::Validate{"0100"};
-const std::bitset<4> ActionBar::StartStop{"1000"};
 
-const QString ActionBar::START_TEXT{" start "};
-const QString ActionBar::STOP_TEXT{" stop "};
+ActionButton::ActionButton(const std::string& text, bool enabled) : QPushButton(QString::fromStdString(frenchroast::split(text,"|")[0]))
+{
+  setFixedHeight(20);
+  setEnabled(true);
+  if(enabled) {
+    setEnabled(true);
+    setStyleSheet(_EnabledButtonStyle);
+  }
+  else {
+    setEnabled(false);
+    setStyleSheet(_DisabledButtonStyle);
+  }
 
+  _onText = QString::fromStdString(frenchroast::split(text,"|")[0]);
+  if(text.find("|") != std::string::npos) {
+    _offText = QString::fromStdString(frenchroast::split(text,"|")[1]);
+    QObject::connect(this,     &QPushButton::clicked, this, &ActionButton::toggled);    
+  }
+  else {
+    QObject::connect(this,     &QPushButton::clicked, this, &ActionButton::actioned);    
+  }
+}
+
+void ActionButton::actioned()
+{
+  request(text().toStdString());
+}
+
+void ActionButton::toggled()
+{
+  if(_toggleState == 0) {
+    _toggleState = 1;
+    request(text().toStdString());
+    setText(_offText);
+  }
+  else {
+    _toggleState = 0;
+    request(text().toStdString());
+    setText(_onText);
+  }
+}
+
+
+void ActionButton::enable()
+{
+  setEnabled(true);
+  setStyleSheet(_EnabledButtonStyle);
+}
+
+void ActionButton::disable()
+{
+  setEnabled(false);
+  setStyleSheet(_DisabledButtonStyle);
+}
+
+ActionButton* ActionBar::add(ActionButton* button)
+{
+  _layout->addWidget(button, 0, _idx--);
+  return button;
+}
 
 ActionBar::ActionBar(const std::bitset<4>& actions)
   {
     _layout = new QGridLayout();
     
     if((actions & Close) == Close) {
-      QIcon closeicon = QApplication::style()->standardIcon(QStyle::SP_TitleBarCloseButton);
+      _idx = 3;
       _closeButton = new QPushButton("X");
       _closeButton->setFixedSize(20,20);
       _closeButton->setStyleSheet(
@@ -62,63 +116,12 @@ ActionBar::ActionBar(const std::bitset<4>& actions)
       QObject::connect(_closeButton, &QPushButton::clicked, this, &ActionBar::close_clicked);
     }
 
-    if((actions & Save) == Save) {
-      _saveButton = new QPushButton(" save ");
-      _saveButton->setFixedHeight(20);
-      _saveButton->setEnabled(false);
-      _saveButton->setStyleSheet(_DisabledButtonStyle);
-      _layout->addWidget(_saveButton, 0, 3);
-      QObject::connect(_saveButton,     &QPushButton::clicked, this, &ActionBar::save_clicked);
-    }
-
-    if((actions & Validate) == Validate) {
-      _validateButton = new QPushButton(" validate ");
-      _validateButton->setFixedHeight(20);
-      _validateButton->setEnabled(true);
-      _validateButton->setStyleSheet(_EnabledButtonStyle);
-      _layout->addWidget(_validateButton, 0, 2);
-      QObject::connect(_validateButton,     &QPushButton::clicked, this, &ActionBar::validate_clicked);
-    }
-
-    if((actions & StartStop) == StartStop) {
-      _startStopButton = new QPushButton(START_TEXT);
-      _startStopButton->setFixedHeight(20);
-      _startStopButton->setEnabled(true);
-      _startStopButton->setStyleSheet(_EnabledButtonStyle);
-      _layout->addWidget(_startStopButton, 0, 2);
-      QObject::connect(_startStopButton,     &QPushButton::clicked, this, &ActionBar::startstop_clicked);
-    }
-
     setStyleSheet("QWidget {padding: 0px;}");
     _layout->setSpacing(0);
     _layout->setContentsMargins(2,2,10,2);
     setLayout(_layout);
   }
 
-void ActionBar::startstop_clicked()
-{
-  if(_startStopButton->text() == START_TEXT) {
-    _startStopButton->setText(STOP_TEXT);
-    start_clicked();
-  }
-  else {
-    _startStopButton->setText(START_TEXT);
-    stop_clicked();
-  }
-  
-}
-
-void ActionBar::enable_save()
-{
-  _saveButton->setEnabled(true);
-  _saveButton->setStyleSheet(_EnabledButtonStyle);
-}
-
-void ActionBar::disable_save()
-{
-  _saveButton->setEnabled(false);
-  _saveButton->setStyleSheet(_DisabledButtonStyle);
-}
 
 ActionBar::~ActionBar()
 {
@@ -126,10 +129,11 @@ ActionBar::~ActionBar()
 }
 
 
-const QString ActionBar::_DisabledButtonStyle{"QPushButton {border: 1px solid #3d415c;border-top-left-radius:2px;border-top-right-radius:2px;border-bottom-right-radius:2px; border-bottom-left-radius:2px;font-size: 16px;color:black;background-color: #3d415c;font-family:\"Arial\";}"};
+const QString ActionButton::_DisabledButtonStyle{"QPushButton {border: 1px solid #3d415c;border-top-left-radius:2px;border-top-right-radius:2px;border-bottom-right-radius:2px; border-bottom-left-radius:2px;font-size: 16px;color:black;background-color: #3d415c;font-family:\"Arial\";}"};
 
 
-const QString ActionBar::_EnabledButtonStyle{
+
+const QString ActionButton::_EnabledButtonStyle{
                                      "QPushButton {border: 1px solid black;" \
                                      "border-top-left-radius:3px;" \
                                      "border-top-right-radius:3px;" \
@@ -141,3 +145,4 @@ const QString ActionBar::_EnabledButtonStyle{
                                      "font-family:\"Arial\";} " \
                                      "QPushButton::hover{color:white;}"
                                        };
+
