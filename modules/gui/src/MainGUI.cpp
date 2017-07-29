@@ -146,8 +146,9 @@ void FRMain::bring_up_dock_if_required(const std::string dockname)
 
 void FRMain::view_traffic()
 {
-  QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::start_watching,  this, &FRMain::start_watching_traffic);
+  QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::start_watching, this,  &FRMain::start_watching_traffic);
   QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::stop_watching,  this,  &FRMain::stop_watching_traffic);
+  QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::add_signal,     this,  &FRMain::add_hook);
 }
 
 void FRMain::view_classviewer()

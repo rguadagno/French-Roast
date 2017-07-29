@@ -166,38 +166,18 @@ const QString ActionButton::_DisabledButtonStyle{"QPushButton {border: 1px solid
 
 const QString ActionButton::_EnabledButtonStyle{
                                      "QPushButton {border: 1px solid #303030;" \
-                                     "border-top-left-radius:3px;" \
-                                     "border-top-right-radius:3px;" \
-                                     "border-bottom-right-radius:3px;" \
-                                     "border-bottom-left-radius:3px;" \
-                                     "font-size: 16px;" \
-                                     "color:black;" \
-                                     "padding-top:1px;" \
-                                     "padding-bottom:1px;" \
+                                     "border-top-left-radius:4px;" \
+                                     "border-top-right-radius:4px;" \
+                                     "border-bottom-right-radius:4px;" \
+                                     "border-bottom-left-radius:4px;" \
+                                     "font-size: 15px;" \
+                                     "color:#C0C0C0;" \
+                                     "padding-top:2px;" \
+                                     "padding-bottom:3px;" \
                                      "padding-left:5px;" \
                                      "padding-right:5px;"        \
                                      "background-color: #404040;" \
                                      "font-family:\"Arial\";} " \
-                                     "QPushButton::hover{background-color:#606060;}"
+                                     "QPushButton::hover{background-color:#202020;}"
                                        };
 
-/*
-
-const QString ActionButton::_EnabledButtonStyle{
-                                     "QPushButton {border: 1px solid black;" \
-                                     "border-top-left-radius:3px;" \
-                                     "border-top-right-radius:3px;" \
-                                     "border-bottom-right-radius:3px;" \
-                                     "border-bottom-left-radius:3px;" \
-                                     "font-size: 16px;" \
-                                     "color:black;" \
-                                     "padding-left:5px;" \
-                                     "padding-right:5px;"        \
-                                     "background-color: #6274C4;" \
-                                     "font-family:\"Arial\";} " \
-                                     "QPushButton::hover{border: 1px solid #909090;}"
-                                       };
-
-
-
- */

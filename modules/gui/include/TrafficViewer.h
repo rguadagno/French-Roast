@@ -43,7 +43,7 @@ namespace frenchroast {
     ~TrafficViewer();
 
     QTableWidget*                             _traffic;
-    QListWidget*                              _ranking;
+    QTableWidget*                             _ranking;
     std::unordered_map<std::string,StackRow*> _traffic_rows;
     std::unordered_map<std::string, int>      _traffic_keys;
     ActionEdit*                               _rate;
@@ -63,6 +63,7 @@ namespace frenchroast {
   signals:
     void start_watching(int rate);
     void stop_watching();
+    void add_signal(QString);
     
   };
 
