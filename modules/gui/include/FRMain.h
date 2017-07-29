@@ -53,10 +53,9 @@ class FRMain : public QMainWindow {
   const static std::string  RankingWindow;
   const static std::string  TrafficWindow;
   const static std::string  ClassViewerWindow;
-
+  
  private:
 
-  std::unordered_map<std::string, QDockWidget*>                 _docks;
   static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
   QSettings&                                                    _settings;
   bool                                                          _exit{false};
@@ -68,9 +67,6 @@ class FRMain : public QMainWindow {
   bool                                                          _watchTraffic{false};
   int                                                           _trafficRate{100};
   
-  QWidget* build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate);
-  void capture_dock(const std::string& dockname);
-  void restore_dock_win(const std::string& docname);
   void bring_up_dock_if_required(const std::string dockname);
   void connect_dock_win(QMenu* mptr, const std::string& actionname, const std::string& docname);
   

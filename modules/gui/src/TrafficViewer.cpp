@@ -32,7 +32,8 @@ namespace frenchroast {
   {
     QObject::connect(_actionBar->add(new ActionButton("Start|Stop")), &ActionButton::request, 
                      this, &TrafficViewer::start_stop);
-    
+    _rate = new ActionEdit("100");
+    _actionBar->add(_rate);    
 
     _traffic = new QTableWidget();
     _traffic->setStyleSheet(_settings->value("traffic_grid_style").toString());
@@ -84,7 +85,7 @@ namespace frenchroast {
   void TrafficViewer::start_stop(const std::string& text)
   {
     if(text == "Start")
-      start_watching(10);
+      start_watching(atoi(_rate->text().toStdString().c_str()));
     else
       stop_watching();
   }

@@ -21,6 +21,7 @@
 #include <QApplication>
 #include <QPushButton>
 #include <QStyle>
+#include <QSizePolicy>
 #include <QLabel>
 #include "Util.h"
 
@@ -30,6 +31,7 @@ ActionButton::ActionButton(const std::string& text, bool enabled) : QPushButton(
 {
   setFixedHeight(20);
   setEnabled(true);
+  setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
   if(enabled) {
     setEnabled(true);
     setStyleSheet(_EnabledButtonStyle);
@@ -81,9 +83,27 @@ void ActionButton::disable()
   setStyleSheet(_DisabledButtonStyle);
 }
 
+ActionEdit::ActionEdit(const char* text) : QLineEdit(text)
+{
+  setStyleSheet("QLineEdit {qproperty-alignment: AlignRight;padding: 0px; border: 1px solid black;background-color: #C9C9C9;font-size: 16px;font-family: \"Arial\"}  ");
+  setFixedWidth(50);
+  setFixedHeight(20);
+  setInputMask("0000");
+  setAlignment(Qt::AlignRight);
+  setTextMargins(0,0,0,0);
+}
+
+
 ActionButton* ActionBar::add(ActionButton* button)
 {
-  _layout->addWidget(button, 0, _idx--);
+  _layout->addWidget(button, 0, _idx--, Qt::AlignRight);
+
+  return button;
+}
+
+ActionEdit* ActionBar::add(ActionEdit* button)
+{
+  _layout->addWidget(button, 0, _idx--, Qt::AlignRight);
   return button;
 }
 
@@ -112,12 +132,12 @@ ActionBar::ActionBar(const std::bitset<4>& actions)
       QLabel* spacer = new QLabel("");
       spacer->setMinimumWidth(20);
       spacer->setStyleSheet("QLabel{border:none;}");
-      _layout->addWidget(spacer, 0, 4);
+      //      _layout->addWidget(spacer, 0, 4);
       QObject::connect(_closeButton, &QPushButton::clicked, this, &ActionBar::close_clicked);
     }
 
     setStyleSheet("QWidget {padding: 0px;}");
-    _layout->setSpacing(0);
+    _layout->setSpacing(2);
     _layout->setContentsMargins(2,2,10,2);
     setLayout(_layout);
   }
@@ -141,6 +161,8 @@ const QString ActionButton::_EnabledButtonStyle{
                                      "border-bottom-left-radius:3px;" \
                                      "font-size: 16px;" \
                                      "color:black;" \
+                                     "padding-left:5px;" \
+                                     "padding-right:5px;"        \
                                      "background-color: #6274C4;" \
                                      "font-family:\"Arial\";} " \
                                      "QPushButton::hover{color:white;}"

@@ -46,7 +46,7 @@ namespace frenchroast {
     QListWidget*                              _ranking;
     std::unordered_map<std::string,StackRow*> _traffic_rows;
     std::unordered_map<std::string, int>      _traffic_keys;
-
+    ActionEdit*                               _rate;
 
     
   public:

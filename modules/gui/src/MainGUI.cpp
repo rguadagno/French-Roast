@@ -28,20 +28,17 @@
 #include <QTWidgets/QDockWidget>
 #include <QTCore/QObject>
 #include <QtGlobal>
-#include <QHeaderView>
 #include <QAction>
 #include <QFont>
 #include <string>
 #include "fr.h"
 #include "FRMain.h"
 #include "MonitorUtil.h"
-#include "StackRow.h"
 #include <QDesktopWidget>
 #include <QMenuBar>
 #include <QToolBar>
-#include <algorithm>
-#include "CodeFont.h"
-#include "SignalDelegate.h"
+//#include <algorithm>
+//#include "CodeFont.h"
 #include "FSignalViewer.h"
 #include "FTimerViewer.h"
 #include "FClassViewer.h"
@@ -98,7 +95,7 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
   _statusMsg->waiting_for_connection();
 }
 
-QFont StackRow::_font = CodeFont();
+
 
 void FRMain::validate_hooks()
 {
@@ -129,76 +126,6 @@ void FRMain::connect_dock_win(QMenu* mptr, const std::string& actionname, const 
 {
   QAction* act = mptr->addAction(QString::fromStdString(actionname));
   QObject::connect(act, &QAction::triggered, this, _dockbuilders[docname]);
-}
-
-void FRMain::restore_dock_win(const std::string& dockname)
-{
-  _docks[dockname]->setFloating(true);
-  _settings.setValue(QString::fromStdString(dockname + ":up"), true);
-  _docks[dockname]->resize(_settings.value(QString::fromStdString(dockname + ":width"), width()).toInt(),
-                           _settings.value(QString::fromStdString(dockname + ":height"), 200).toInt()
-                           );
-
-  _docks[dockname]->move(_settings.value(QString::fromStdString(dockname + ":xpos"), width() /2).toInt(),
-                         _settings.value(QString::fromStdString(dockname + ":ypos"), height() /2).toInt());
-  addDockWidget(Qt::TopDockWidgetArea,    _docks[dockname]);
-}
-
-
-
-QWidget* FRMain::build_traffic_viewer(QTableWidget* grid, QPushButton* bstart, QLineEdit* rate)
-{
-  QWidget* buttonHolder = new QWidget;
-    QGridLayout* hlayout = new QGridLayout();
-
-  QLabel* desc = new QLabel{QString::fromStdString("sampling rate (millisec):")};
-  desc->setAlignment(Qt::AlignRight | Qt::AlignCenter);
-  desc->setStyleSheet(_settings.value("descriptive_text_style").toString());
-  buttonHolder->setLayout(hlayout);
-  rate->setText("100");
-  
-  hlayout->addWidget(desc,0,0, Qt::AlignRight);
-  hlayout->addWidget(rate,0,1, Qt::AlignLeft);
-  hlayout->addWidget(bstart,0,2);
-  hlayout->setColumnStretch(3,10);
-  
-
-  buttonHolder->setStyleSheet(_settings.value("button_holder_style").toString());
-
-  rate->setStyleSheet(_settings.value("data_entry_style").toString());
-  rate->setFixedWidth(50);
-  rate->setInputMask("0000");
-  rate->setAlignment(Qt::AlignRight);
-  bstart->setStyleSheet("QPushButton {padding:1px;border: 1px solid #404040;border-top-left-radius:2px;border-top-right-radius:2px;border-bottom-right-radius:2px; border-bottom-left-radius:2px;font-size: 16px;color:black;background-color: #08b432;font-family:\"Arial\";} QPushButton::hover{color:white;border-color:white;}");
-  
-  bstart->setFixedWidth(70);
-  QWidget* holder = new QWidget();
-  QVBoxLayout* vlayout = new QVBoxLayout();
-  vlayout->setSpacing(0);
-  holder->setLayout(vlayout);
-  grid->setStyleSheet(_settings.value("traffic_grid_style").toString());
-  grid->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-  grid->horizontalHeader()->hide();
-  grid->verticalHeader()->hide();
-  grid->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-  vlayout->addWidget(grid);
-  vlayout->addWidget(buttonHolder);
-  vlayout->setContentsMargins(1,0,1,0);
-  holder->setStyleSheet(_settings.value("zero_border_style").toString());
-  return holder;
-}
-
-
-
-QWidget* setup_central(QWidget* lists)
-{
-  QWidget* holder = new QWidget;
-  holder->setStyleSheet("QWidget {background-color: black;}");
-  QVBoxLayout* vlayout = new QVBoxLayout();
-  vlayout->setSpacing(0);
-  holder->setLayout(vlayout);
-  vlayout->addWidget(lists);
-  return holder;
 }
 
 
@@ -340,10 +267,6 @@ void FRMain::handle_exit()
   _settings.setValue("main:xpos",   pos().x());
   _settings.setValue("main:ypos",   pos().y());
 
-  for(auto& x : _dockbuilders) {
-     capture_dock(x.first);
-  }
-
   FSignalViewer::capture();
   FTimerViewer::capture();
   Editor::capture();
@@ -351,16 +274,4 @@ void FRMain::handle_exit()
   TrafficViewer::capture();
 }
 
-void FRMain::capture_dock( const std::string& dockname)
-{
-  if(_docks.count(dockname) == 1 && _docks[dockname] != nullptr) {
-    _settings.setValue(QString::fromStdString(dockname + ":up"),    true);
-    _settings.setValue(QString::fromStdString(dockname + ":width"),  _docks[dockname]->width());
-    _settings.setValue(QString::fromStdString(dockname + ":height"), _docks[dockname]->height());
-    _settings.setValue(QString::fromStdString(dockname + ":xpos"),   _docks[dockname]->pos().x());
-    _settings.setValue(QString::fromStdString(dockname + ":ypos"),   _docks[dockname]->pos().y());
-  }
-  else {
-    _settings.setValue(QString::fromStdString(dockname + ":up"),    false);
-  }
-}
+

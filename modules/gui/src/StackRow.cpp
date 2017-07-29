@@ -18,7 +18,10 @@
 //
 
 #include "StackRow.h"
+#include "Codefont.h"
 #include <iostream>
+
+QFont StackRow::_font = CodeFont();
 
 StackRow::StackRow(const std::string tname, int row, QTableWidget* tptr, std::unordered_map<std::string,int>& keys) : _tptr(tptr), _keys(keys)
 {
