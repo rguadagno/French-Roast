@@ -62,9 +62,7 @@ namespace frenchroast {
 void FClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& details)
 {
   for(auto& citem : details) {
-    int row = _data->rowCount();
-    _data->insertRow(row);
-    _data->setItem(row, 0, createItem(citem.name(), Qt::AlignLeft|Qt::AlignVCenter));
+    addRow(_data, createItem(citem.name(), Qt::AlignLeft|Qt::AlignVCenter));
     _methods[citem.name()] = citem.methods();
   }
 }

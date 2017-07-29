@@ -122,10 +122,7 @@ namespace frenchroast {
   {
     _ranking->clear();
     for(auto& x : ranks) {
-      int row = _ranking->rowCount();
-      _ranking->insertRow(row);
-      _ranking->setItem(row,0,createItem(x.invoked_count()));
-      _ranking->setItem(row,1,createItem(x.descriptor()));
+      addRow(_ranking, createItem(x.invoked_count()), createItem(x.descriptor()));
     }
   }
   

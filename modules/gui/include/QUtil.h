@@ -25,6 +25,7 @@
 
 QTableWidgetItem* createItem(int value);
 QTableWidgetItem* createItem(const std::string& value, Qt::Alignment = Qt::AlignCenter);
+void addRow(QTableWidget*, QTableWidgetItem*, QTableWidgetItem* = nullptr, QTableWidgetItem* = nullptr);
 
 
 

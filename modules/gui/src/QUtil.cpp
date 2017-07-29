@@ -32,7 +32,20 @@ QTableWidgetItem* createItem(const std::string& value, Qt::Alignment align)
 {
   QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(value));
   ditem->setFont(CodeFont());
-    ditem->setTextAlignment(align);
-    ditem->setFlags(Qt::ItemIsEnabled);
+  ditem->setTextAlignment(align);
+  ditem->setFlags(Qt::ItemIsEnabled);
   return ditem;
+}
+
+void addRow(QTableWidget* table, QTableWidgetItem* item1, QTableWidgetItem* item2, QTableWidgetItem* item3)
+{
+  int row = table->rowCount();
+  table->insertRow(row);
+  table->setItem(row,0,item1);
+  if(item2 != nullptr) {
+    table->setItem(row,1, item2);
+  }
+  if(item3 != nullptr) {
+    table->setItem(row,2, item3);
+  }
 }
