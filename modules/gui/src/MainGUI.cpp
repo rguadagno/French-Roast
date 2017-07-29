@@ -37,8 +37,6 @@
 #include <QDesktopWidget>
 #include <QMenuBar>
 #include <QToolBar>
-//#include <algorithm>
-//#include "CodeFont.h"
 #include "FSignalViewer.h"
 #include "FTimerViewer.h"
 #include "FClassViewer.h"

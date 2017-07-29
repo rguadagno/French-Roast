@@ -32,9 +32,9 @@ namespace frenchroast {
   {
     QObject::connect(_actionBar->add(new ActionButton("Start|Stop")), &ActionButton::request, 
                      this, &TrafficViewer::start_stop);
-    _rate = new ActionEdit("100");
-    _actionBar->add(_rate);    
-
+    
+    _rate = _actionBar->add(new ActionEdit("100"));    
+    _actionBar->add(new ActionLabel("sample rate (milliseconds):"));
     _traffic = new QTableWidget();
     _traffic->setStyleSheet(_settings->value("traffic_grid_style").toString());
     _traffic->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);

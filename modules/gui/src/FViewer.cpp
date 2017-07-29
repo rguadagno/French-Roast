@@ -36,10 +36,10 @@ namespace frenchroast {
   QWidget*     titlebar = new QWidget();
   QGridLayout* layout = new QGridLayout();
 
-   _title  = new QListWidgetItem{QString::fromStdString(title)};
-  _title->setSizeHint(QSize(30,24));
+  _title  = new QListWidgetItem{QString::fromStdString(title)};
+  _title->setSizeHint(QSize(30,30)); 
   sigLabel->setEnabled(false);
-  sigLabel->setFixedHeight(22);
+  sigLabel->setFixedHeight(28);
   sigLabel->addItem(_title);
   sigLabel->setStyleSheet(_settings->value("dock_title_style2").toString());
   if(codeMode) {

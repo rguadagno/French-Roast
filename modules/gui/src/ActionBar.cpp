@@ -94,6 +94,14 @@ ActionEdit::ActionEdit(const char* text) : QLineEdit(text)
 }
 
 
+ActionLabel::ActionLabel(const char* text) : QLabel(text)
+{
+  setStyleSheet("QLabel {border: none;color: #C0C0C0;font-size: 16px;font-family: \"Arial\"}  ");
+  setAlignment(Qt::AlignRight);
+}
+
+
+
 ActionButton* ActionBar::add(ActionButton* button)
 {
   _layout->addWidget(button, 0, _idx--, Qt::AlignRight);
@@ -107,12 +115,17 @@ ActionEdit* ActionBar::add(ActionEdit* button)
   return button;
 }
 
+ActionLabel* ActionBar::add(ActionLabel* button)
+{
+  _layout->addWidget(button, 0, _idx--, Qt::AlignRight);
+  return button;
+}
+
 ActionBar::ActionBar(const std::bitset<4>& actions)
   {
     _layout = new QGridLayout();
     
     if((actions & Close) == Close) {
-      _idx = 3;
       _closeButton = new QPushButton("X");
       _closeButton->setFixedSize(20,20);
       _closeButton->setStyleSheet(
@@ -128,16 +141,14 @@ ActionBar::ActionBar(const std::bitset<4>& actions)
                                   "QPushButton::hover{color:white;}"
                                   );
 
-      _layout->addWidget(_closeButton, 0, 5);
-      QLabel* spacer = new QLabel("");
-      spacer->setMinimumWidth(20);
-      spacer->setStyleSheet("QLabel{border:none;}");
-      //      _layout->addWidget(spacer, 0, 4);
+      _layout->addWidget(_closeButton, 0, _idx--);
+      QSpacerItem* spacer = new QSpacerItem(10,0);
+      _layout->addItem(spacer, 0,_idx--);
       QObject::connect(_closeButton, &QPushButton::clicked, this, &ActionBar::close_clicked);
     }
 
     setStyleSheet("QWidget {padding: 0px;}");
-    _layout->setSpacing(2);
+    _layout->setSpacing(4);
     _layout->setContentsMargins(2,2,10,2);
     setLayout(_layout);
   }
@@ -154,6 +165,25 @@ const QString ActionButton::_DisabledButtonStyle{"QPushButton {border: 1px solid
 
 
 const QString ActionButton::_EnabledButtonStyle{
+                                     "QPushButton {border: 1px solid #303030;" \
+                                     "border-top-left-radius:3px;" \
+                                     "border-top-right-radius:3px;" \
+                                     "border-bottom-right-radius:3px;" \
+                                     "border-bottom-left-radius:3px;" \
+                                     "font-size: 16px;" \
+                                     "color:black;" \
+                                     "padding-top:1px;" \
+                                     "padding-bottom:1px;" \
+                                     "padding-left:5px;" \
+                                     "padding-right:5px;"        \
+                                     "background-color: #404040;" \
+                                     "font-family:\"Arial\";} " \
+                                     "QPushButton::hover{background-color:#606060;}"
+                                       };
+
+/*
+
+const QString ActionButton::_EnabledButtonStyle{
                                      "QPushButton {border: 1px solid black;" \
                                      "border-top-left-radius:3px;" \
                                      "border-top-right-radius:3px;" \
@@ -165,6 +195,9 @@ const QString ActionButton::_EnabledButtonStyle{
                                      "padding-right:5px;"        \
                                      "background-color: #6274C4;" \
                                      "font-family:\"Arial\";} " \
-                                     "QPushButton::hover{color:white;}"
+                                     "QPushButton::hover{border: 1px solid #909090;}"
                                        };
 
+
+
+ */

@@ -23,6 +23,7 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QLabel>
 #include <QGridLayout>
 #include <bitset>
 #include "MonitorUtil.h"
@@ -51,8 +52,6 @@ Q_OBJECT
 
  public:
       ActionButton(const std::string& text, bool enabled = true);
-    
-
 };
 
 
@@ -60,19 +59,25 @@ class ActionEdit : public QLineEdit {
 
   Q_OBJECT
 
-
  signals:
   void changed(const std::string&);
   
  public:
   ActionEdit(const char*);
+};
+
+class ActionLabel : public QLabel {
+
+    Q_OBJECT
+
+ public:
+    ActionLabel(const char*);
 
 };
 
-
 class ActionBar : public QWidget {
   QGridLayout* _layout{nullptr};
-  int          _idx = 3;
+  int          _idx{10};
   QPushButton* _closeButton{nullptr};
   
    Q_OBJECT
@@ -84,6 +89,7 @@ class ActionBar : public QWidget {
     ~ActionBar();
     ActionButton* add(ActionButton*);
     ActionEdit*   add(ActionEdit*);
+    ActionLabel*  add(ActionLabel*);
     
   const static std::bitset<4> Close;
 };
