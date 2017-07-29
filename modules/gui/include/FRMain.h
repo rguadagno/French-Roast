@@ -30,7 +30,6 @@
 #include <QSettings>
 #include <QTextEdit>
 #include <unordered_map>
-#include <unordered_set>
 #include "fr.h"
 #include "StackRow.h"
 #include "ActionBar.h"
@@ -61,7 +60,6 @@ class FRMain : public QMainWindow {
   bool                                                          _exit{false};
   bool                                                          _ok_to_send_hooks{false};
   FRStatus*                                                     _statusMsg;
-  KeyListener*                                                  _trafficEnterKeyListener;
   std::unordered_map<std::string, DetailHolder>                 _detailDescriptors;
   std::string                                                   _hooksfile;
   bool                                                          _watchTraffic{false};
