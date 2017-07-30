@@ -57,6 +57,9 @@ namespace frenchroast {
     tlayout->setSpacing(0);
     trafficHolder->setLayout(tlayout);
     trafficHolder->setStyleSheet(_settings->value("zero_border_style").toString());
+    KeyListener* tkeyListener = new KeyListener;
+    _traffic->installEventFilter(tkeyListener);
+    QObject::connect(tkeyListener, &KeyListener::signalkey, this, [&](){if(_traffic->currentColumn() > 0) add_signal(_traffic->currentItem()->text());});
 
     _ranking = new QTableWidget();
     _ranking->insertColumn(0);

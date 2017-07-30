@@ -19,6 +19,8 @@
 
 #include "StackRow.h"
 #include "Codefont.h"
+#include "SignalDelegate.h"
+
 #include <iostream>
 
 QFont StackRow::_font = CodeFont();
@@ -44,6 +46,7 @@ void StackRow::append_to_column(int col, const frenchroast::monitor::StackTrace&
 
 void StackRow::add_column(const frenchroast::monitor::StackTrace& st, int col)
 {
+  _tptr->setItemDelegateForColumn(col, new SignalDelegate(_tptr));
   int count = 0;
   std::string runningKey = "";
   int extra = st.frames().size() - _totalRows;
