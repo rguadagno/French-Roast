@@ -19,14 +19,25 @@
 
 #include "FTimerViewer.h"
 #include "MonitorUtil.h"
+#include "QUtil.h"
+#include "SignalDelegate.h"
 #include <QMainWindow>
+#include <QHeaderView>
 
 namespace frenchroast {
 
   FTimerViewer::FTimerViewer(QWidget* parent) : FViewer(parent)
   {
-    _data = new QListWidget{};
-    _data->setStyleSheet(_settings->value("list_style").toString());
+    _data = new QTableWidget{};
+    _data->setStyleSheet(_settings->value("traffic_grid_style").toString());
+    _data->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    _data->horizontalHeader()->hide();
+    _data->verticalHeader()->hide();
+    _data->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    _data->insertColumn(0);
+    _data->insertColumn(0);
+    _data->setItemDelegateForColumn(1, new SignalDelegate(_data));
+
     setup_dockwin("Timers", _data, false);
   }
 
@@ -34,11 +45,11 @@ namespace frenchroast {
   void FTimerViewer::update_time(const std::string& descriptor, long elapsed)
   {
     if (_descriptors.count(descriptor) == 0 ) {
-      _descriptors[descriptor] = new FListItem(descriptor, frenchroast::monitor::format_millis(elapsed));
-      _data->addItem(_descriptors[descriptor]);
+      _descriptors[descriptor] = createItem(frenchroast::monitor::format_millis(elapsed));
+      addRow(_data, _descriptors[descriptor], createItem(descriptor));
     }
     else {
-      _descriptors[descriptor]->setText(QString::fromStdString(frenchroast::monitor::format_millis(elapsed)) + "   "  + QString::fromStdString(descriptor) );
+      _descriptors[descriptor]->setText(QString::fromStdString(frenchroast::monitor::format_millis(elapsed)));
     }
   }
   

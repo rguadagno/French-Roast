@@ -37,7 +37,6 @@ FSignalViewer::FSignalViewer(QWidget* parent) : FViewer(parent)
     _data->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     _data->insertColumn(0);
     _data->insertColumn(0);
-    _data->setStyleSheet(_settings->value("traffic_grid_style").toString());
     _data->setItemDelegateForColumn(1, new SignalDelegate(_data));
     setup_dockwin("Signals", _data, false);
     QObject::connect(_data,  &QTableWidget::itemDoubleClicked, this, [&](QTableWidgetItem* item){if(_data->currentColumn() == 1) view_detail_request(item->text().toStdString());});
@@ -53,6 +52,7 @@ FSignalViewer::FSignalViewer(QWidget* parent) : FViewer(parent)
     else {
       _descriptors[descriptor]->setText(QString::fromStdString(frenchroast::monitor::ntoa(count,5, ' ')));
     }
+    _data->resizeRowsToContents();
   }
 
   FSignalViewer* FSignalViewer::_instance{nullptr};

@@ -21,19 +21,18 @@
 #define FTIMERVIEWER_H
 #include <QWidget>
 #include <QSettings>
-#include <QListWidget>
+#include <QTableWidget>
 #include "FViewer.h"
 #include <unordered_map>
-#include "FListItem.h"
 
 namespace frenchroast {
   class FTimerViewer : public FViewer {
 
     Q_OBJECT
 
-    QListWidget*                               _data;
-    std::unordered_map<std::string,FListItem*> _descriptors;
-    static FTimerViewer*                       _instance;
+    QTableWidget*                                     _data;
+    std::unordered_map<std::string,QTableWidgetItem*> _descriptors;
+    static FTimerViewer*                              _instance;
     FTimerViewer(QWidget*);
     ~FTimerViewer();
     
