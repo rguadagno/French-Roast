@@ -21,19 +21,18 @@
 #define FSIGVIEWER_H
 #include <QWidget>
 #include <QSettings>
-#include <QListWidget>
+#include <QTableWidget>
 #include "FViewer.h"
 #include <unordered_map>
-#include "FListItem.h"
 
 namespace frenchroast {
   class FSignalViewer : public FViewer {
 
     Q_OBJECT
 
-    QListWidget*                               _data;
-    std::unordered_map<std::string,FListItem*> _descriptors;
-    static FSignalViewer*                      _instance;
+    QTableWidget*                                     _data;
+    std::unordered_map<std::string,QTableWidgetItem*> _descriptors;
+    static FSignalViewer*                             _instance;
     FSignalViewer(QWidget*);
     ~FSignalViewer();
     

@@ -20,26 +20,38 @@
 #include "FSignalViewer.h"
 #include "MonitorUtil.h"
 #include <QMainWindow>
+#include <QHeaderView>
+#include "SignalDelegate.h"
+#include "QUtil.h"
 
 namespace frenchroast {
 
 FSignalViewer::FSignalViewer(QWidget* parent) : FViewer(parent)
   {
-    _data = new QListWidget{};
-    _data->setStyleSheet(_settings->value("list_style").toString());
+
+    _data = new QTableWidget();
+    _data->setStyleSheet(_settings->value("traffic_grid_style").toString());
+    _data->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    _data->horizontalHeader()->hide();
+    _data->verticalHeader()->hide();
+    _data->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    _data->insertColumn(0);
+    _data->insertColumn(0);
+    _data->setStyleSheet(_settings->value("traffic_grid_style").toString());
+    _data->setItemDelegateForColumn(1, new SignalDelegate(_data));
     setup_dockwin("Signals", _data, false);
-    QObject::connect(_data,  &QListWidget::itemDoubleClicked, this, [&](QListWidgetItem* item){view_detail_request(dynamic_cast<FListItem*>(item)->gettext());});
+    QObject::connect(_data,  &QTableWidget::itemDoubleClicked, this, [&](QTableWidgetItem* item){if(_data->currentColumn() == 1) view_detail_request(item->text().toStdString());});
   }
 
 
-  void FSignalViewer::update_count(const std::string& descriptor, int count)
+  void FSignalViewer::update_count(const std::string& descriptor, int count )
   {
     if (_descriptors.count(descriptor) == 0 ) {
-      _descriptors[descriptor] = new FListItem(descriptor, frenchroast::monitor::ntoa(count,5,' '));
-      _data->addItem(_descriptors[descriptor]);
+      _descriptors[descriptor] = createItem(count);
+      addRow(_data, _descriptors[descriptor], createItem(descriptor));
     }
     else {
-      _descriptors[descriptor]->setText(QString::fromStdString(frenchroast::monitor::ntoa(count,5, ' ')) + "   " + QString::fromStdString(descriptor) );
+      _descriptors[descriptor]->setText(QString::fromStdString(frenchroast::monitor::ntoa(count,5, ' ')));
     }
   }
 
