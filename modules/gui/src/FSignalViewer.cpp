@@ -52,7 +52,6 @@ FSignalViewer::FSignalViewer(QWidget* parent) : FViewer(parent)
     else {
       _descriptors[descriptor]->setText(QString::fromStdString(frenchroast::monitor::ntoa(count,5, ' ')));
     }
-    _data->resizeRowsToContents();
   }
 
   FSignalViewer* FSignalViewer::_instance{nullptr};
