@@ -18,17 +18,28 @@
 //
 
 #include "AgentUtil.h"
-
 #include <iostream>
+
 std::vector<ARG_TYPE> typeTokenizer(const std::string& sigStr)
 {
-
   std::vector<ARG_TYPE> rv;
 
   size_t endidx = sigStr.find(")");
   int slot = 1;
 
   for(size_t idx = 1; idx < endidx; idx++) {
+    if(sigStr[idx] == '[') {
+      rv.push_back(ARRAY_TYPE);
+      ++idx;
+      if(sigStr[idx] == 'L') {
+        size_t curr = idx;
+        idx = sigStr.find(";", curr);
+      }
+      else {
+        ++idx;
+      }
+      continue;
+    }
     if(sigStr[idx] == 'I') {
       rv.push_back(INT_TYPE);
     }

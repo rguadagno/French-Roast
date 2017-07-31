@@ -287,6 +287,7 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
     std::vector<DescriptorVO> stack = populate_stack(frames, count);
     std::string params = "(";
     int slot = 0;
+    jstring jsvalue;
       for(auto& argtype : typeTokenizer(stack[0]._methodSignature)) {
         ++slot;
         switch(argtype) {
@@ -298,11 +299,14 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
         case STRING_TYPE:
           jobject ovalue;
           genv->GetLocalObject(aThread, 1,slot, &ovalue);
-          jstring jsvalue = jstring(ovalue);
+          jsvalue = jstring(ovalue);
           params.append(  std::string(ptr->GetStringUTFChars(jsvalue,0)) + ",");
           break;
+        case ARRAY_TYPE:
+          params.append( "[],");
+          break;
         }
-        }
+      }
 
       if(params.length() > 1) {
         params.erase(params.length() -1 ,1);

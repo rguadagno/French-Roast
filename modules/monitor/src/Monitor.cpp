@@ -44,39 +44,50 @@ namespace frenchroast { namespace monitor {
     
 
 
-    std::string translate_param_types(const std::string& pstr)
+
+    std::vector<std::string> parse_type_tokens(const std::string& tstr)
     {
-      std::string parms = "";
+      std::vector<std::string> rv;
       int pos = 0;
-      while(pos < pstr.length() ) {
-        if (pstr[pos] == 'L') {
-          int nextsemi = pstr.find(";",pos);
-          parms +=  pstr.substr(pos+1,nextsemi-(pos+1)) + std::string(",");
+
+      while(pos < tstr.length() ) {
+        std::string suffix = "";
+        if(tstr[pos] == '[') {
+          suffix = "[]";
+          ++pos;
+        }
+        if (tstr[pos] == 'L') {
+          int nextsemi = tstr.find(";",pos);
+          rv.push_back(tstr.substr(pos+1,nextsemi-(pos+1)) + suffix );
           pos = nextsemi +1;
         }
         else {
-          parms +=  _type_map[pstr[pos]] + std::string(",");
+          rv.push_back(_type_map[tstr[pos]] + suffix);
           ++pos;
         }
       }
-      if(parms.length() > 1) {
-        parms.erase(parms.length()-1);
+      return rv;
+    }
+
+
+    
+    std::string translate_param_types(const std::string& pstr)
+    {
+      std::string rv = "";
+
+      for(auto& token : parse_type_tokens(pstr)) {
+        rv.append(token);
+        rv.append(",");
       }
-      return parms;
+      if(rv.length() > 1) {
+        rv.erase(rv.length()-1);
+      }
+      return rv;
     }
 
     std::string translate_return_type(const std::string& name)
     {
-      std::string rv;
-      
-      if ( name.length() == 1) {
-        rv = _type_map[name[0]];
-      }
-      else {
-        rv = name.substr(1);
-        rv.erase(rv.length());
-      }
-      return rv;
+      return parse_type_tokens(name)[0];
     }
     
     std::string translate_descriptor(const std::string& name)

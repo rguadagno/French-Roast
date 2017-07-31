@@ -46,7 +46,8 @@ namespace frenchroast { namespace agent {
       std::unordered_map<std::string,std::vector<std::string>> _markerFields;
       
       void validate(const std::string& method);
-      void convert_name(std::string& name);
+      std::string convert_name(const std::string& name);
+      std::vector<std::string> parse_token_types(const std::string& pstr);
 
     public:
       bool is_hook_class(const std::string& name) const;

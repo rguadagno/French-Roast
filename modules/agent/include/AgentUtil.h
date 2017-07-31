@@ -23,7 +23,7 @@
 #include <vector>
 
 
-enum ARG_TYPE {INT_TYPE, STRING_TYPE};
+enum ARG_TYPE {INT_TYPE, STRING_TYPE, ARRAY_TYPE};
 
 std::vector<ARG_TYPE> typeTokenizer(const std::string& line);
 

@@ -76,40 +76,57 @@ namespace frenchroast { namespace agent {
                                                                      {"short","S"}
                                                                   };
     
-    void Hooks::convert_name(std::string& name)
+
+
+
+    std::vector<std::string> Hooks::parse_token_types(const std::string& pstr)
     {
-      if(name.find("*") != std::string::npos) {
-        name = "*";
-        return;
-      }
-      if (name.find("(") != std::string::npos) { // is method
-        std::string n1 = split(name, ':')[0];
-        std::string n2 = split(name, ':')[2];
-        std::string params = split(name, ':')[1];
-        name = n1 + ":(";
-        std::vector<std::string> plist  = split(params.substr(1,params.length()-2));
-        for (auto& x : plist) {
-          if (x.find(".") != std::string::npos) {
-            x = "L" + x + ";";
+      std::vector<std::string> rv;
+      std::string tstr = pstr;
+      replace(tstr, '(');
+      replace(tstr, ')');
+      replace(tstr, '.','/');
+      
+      for(auto& param : split(tstr, ",")) {
+        if(param.find("[]") != std::string::npos) {
+          if(param.find("/") != std::string::npos) {
+            rv.push_back("[L" + split(param,"[]")[0] + ";" );
           }
           else {
-            x = _type_map[x];
+            rv.push_back("[" + _type_map[split(param,"[]")[0]]  );
           }
-          replace(x,'.','/');
-          name += x;
-        }
-        name += ")";
-        if (n2.find(".") != std::string::npos) {
-          convert_name(n2);
-          name += "L" + n2 + ";";
         }
         else {
-          name +=  _type_map[n2];
+          if(param.find("/") != std::string::npos) {
+            rv.push_back("L" + param + ";" );
+          }
+          else {
+            rv.push_back( _type_map[param]  );
+          }
         }
       }
-      else {
-        replace(name,'.','/');
+      return rv;
+    }
+
+    
+    std::string Hooks::convert_name(const std::string& name)
+    {
+      if(name.find("*") != std::string::npos) {
+        return "*";
       }
+      std::string rv;
+
+      std::string nameStr   = split(name, ':')[0];
+      std::string returnStr = split(name, ':')[2];
+      std::string paramStr  = split(name, ':')[1];
+      rv = nameStr + ":(";
+      for(auto& token : parse_token_types(paramStr)) {
+        rv.append(token);
+      }
+      rv.append(")");
+      rv.append(parse_token_types(returnStr)[0]);
+      replace(rv,'.','/');
+      return rv;
     }
 
 
@@ -163,10 +180,10 @@ namespace frenchroast { namespace agent {
       }
       validate(line);
       std::string classname = split(line, "::")[0];
-      convert_name(classname);
+      replace(classname, '.', '/');
       std::string methName = split(split(line, '<')[0],"::")[1];
       remove_blanks(methName);
-      convert_name(methName);
+      methName = convert_name(methName);
       std::string flagStr = split(split(line, '<')[1],">")[0];
       std::bitset<4> flags;
       parse_flags(flags, flagStr);
