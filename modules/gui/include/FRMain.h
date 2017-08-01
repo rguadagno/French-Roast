@@ -52,6 +52,7 @@ class FRMain : public QMainWindow {
   const static std::string  RankingWindow;
   const static std::string  TrafficWindow;
   const static std::string  ClassViewerWindow;
+  const static std::string  AboutViewerWindow;
   
  private:
 

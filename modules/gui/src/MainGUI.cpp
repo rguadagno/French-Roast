@@ -51,12 +51,14 @@ const std::string  FRMain::EditHooksWindow = "editor";
 const std::string  FRMain::TimerWindow     = "timers";
 const std::string  FRMain::TrafficWindow   = "traffic";
 const std::string  FRMain::ClassViewerWindow  = "classviewer";
+const std::string  FRMain::AboutViewerWindow  = "aboutviewer";
 
 std::unordered_map< std::string,  void (FRMain::*)()  > FRMain::_dockbuilders {{FRMain::SignalWindow,      &FRMain::view_signals},
                                                                                {FRMain::EditHooksWindow,   &FRMain::view_hooks_editor},
                                                                                {FRMain::TimerWindow,       &FRMain::view_timers},
                                                                                {FRMain::TrafficWindow,     &FRMain::view_traffic},
-                                                                               {FRMain::ClassViewerWindow, &FRMain::view_classviewer}
+                                                                               {FRMain::ClassViewerWindow, &FRMain::view_classviewer},
+                                                                               {FRMain::AboutViewerWindow, &FRMain::view_about}
       };
 
 
@@ -298,6 +300,7 @@ void FRMain::handle_exit()
   Editor::capture();
   FClassViewer::capture();
   TrafficViewer::capture();
+  AboutHelpViewer::capture();
 }
 
 
