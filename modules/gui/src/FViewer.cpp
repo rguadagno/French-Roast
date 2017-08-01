@@ -20,9 +20,12 @@
 #include "FViewer.h"
 #include "SignalDelegate.h"
 #include <QListWidget>
+#include <QMenu>
+#include <QApplication>
 #include <iostream>
 
 namespace frenchroast {
+
   FViewer::FViewer(QWidget* parent) : _parent(parent)
   {
     _actionBar = new ActionBar();
@@ -46,7 +49,29 @@ namespace frenchroast {
     sigLabel->setItemDelegate(new SignalDelegate(sigLabel));
   }
 
-  layout->addWidget(sigLabel,1,1);
+  QPushButton* fbmenu = new QPushButton("French\nRoast");
+  fbmenu->setStyleSheet("QPushButton {background: #404040;color:#521704; "\
+                        "border: 1px solid #303030;" \
+                        "font-size:12px;" \
+                        "border-top-left-radius:6px;"               \
+                        "border-top-right-radius:6px;"                 \
+                        "border-bottom-right-radius:6px;"              \
+                        "border-bottom-left-radius:6px; }"          \
+                        "QPushButton::hover{background-color:#202020;}"
+                        );
+  QMenu* menu = new QMenu();
+  fbmenu->setMenu(menu);
+
+  QObject::connect(menu->addAction("Signals"),               &QAction::triggered, this, &FViewer::signal_viewer);
+  QObject::connect(menu->addAction("Timers"),                &QAction::triggered, this, &FViewer::timer_viewer);
+  QObject::connect(menu->addAction("Editor"),                &QAction::triggered, this, &FViewer::editor_viewer);
+  QObject::connect(menu->addAction("Traffic watcher"),       &QAction::triggered, this, &FViewer::traffic_viewer);
+  QObject::connect(menu->addAction("Class loading watcher"), &QAction::triggered, this, &FViewer::classload_viewer);
+  QObject::connect(menu->addAction("About | Help"),          &QAction::triggered, this, &FViewer::about_viewer);
+  QObject::connect(menu->addAction("Exit French-Roast"),     &QAction::triggered, this, &FViewer::exit_fr);
+
+  layout->addWidget(fbmenu,1,1);
+  layout->addWidget(sigLabel,1,3);
   layout->setContentsMargins(1,1,1,1);
   layout->addWidget(_actionBar,1, 5);
   titlebar->setLayout(layout);
@@ -62,6 +87,7 @@ namespace frenchroast {
   QObject::connect(_actionBar, &ActionBar::close_clicked, this, [&](){closed();});
 }
 
+  
   FViewer::operator QDockWidget*()
   {
     return _dock;

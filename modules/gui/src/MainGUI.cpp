@@ -42,6 +42,7 @@
 #include "FClassViewer.h"
 #include "Editor.h"
 #include "TrafficViewer.h"
+#include "AboutHelpViewer.h"
 
 using namespace frenchroast;
 
@@ -149,6 +150,7 @@ void FRMain::view_traffic()
   QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::start_watching, this,  &FRMain::start_watching_traffic);
   QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::stop_watching,  this,  &FRMain::stop_watching_traffic);
   QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::add_signal,     this,  &FRMain::add_hook);
+  connect_common_listeners(TrafficViewer::instance(this));
 }
 
 void FRMain::view_classviewer()
@@ -157,6 +159,7 @@ void FRMain::view_classviewer()
   QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::stop_watching, this,   &FRMain::stop_watch_loading);
   QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::add_signal, this,      &FRMain::add_hook);
   QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::closed, this,          &FRMain::stop_watch_loading);
+  connect_common_listeners(FClassViewer::instance(this));
 }
 
 void FRMain::start_watch_loading()
@@ -170,20 +173,40 @@ void FRMain::stop_watch_loading()
 }
 
 
+
+void FRMain::connect_common_listeners(FViewer* instance)
+{
+  QObject::connect(instance, &frenchroast::FViewer::signal_viewer,    this,  &FRMain::view_signals);
+  QObject::connect(instance, &frenchroast::FViewer::timer_viewer,     this,  &FRMain::view_timers);
+  QObject::connect(instance, &frenchroast::FViewer::editor_viewer,    this,  &FRMain::view_hooks_editor);
+  QObject::connect(instance, &frenchroast::FViewer::traffic_viewer,   this,  &FRMain::view_traffic);
+  QObject::connect(instance, &frenchroast::FViewer::classload_viewer, this,  &FRMain::view_classviewer);
+  QObject::connect(instance, &frenchroast::FViewer::about_viewer,     this,  &FRMain::view_about);
+  QObject::connect(instance, &frenchroast::FViewer::exit_fr,          this,  &FRMain::exit_fr);
+}
+
+void FRMain::view_about()
+{
+  connect_common_listeners(AboutHelpViewer::instance(this));
+}
+
 void FRMain::view_signals()
 {
-  QObject::connect(frenchroast::FSignalViewer::instance(this),  &frenchroast::FSignalViewer::view_detail_request, this, &FRMain::show_detail);
+  QObject::connect(FSignalViewer::instance(this),  &frenchroast::FSignalViewer::view_detail_request, this, &FRMain::show_detail);
+  connect_common_listeners(FSignalViewer::instance(this));
 }
 
 
 void FRMain::view_timers()
 {
-  FTimerViewer::instance(this);
+  connect_common_listeners(FTimerViewer::instance(this));
 }
 
 void FRMain::view_hooks_editor()
 {
   QObject::connect(Editor::instance(this), &frenchroast::Editor::validated_hooks,  this,    &FRMain::validated_hooks);
+  connect_common_listeners(Editor::instance(this));
+
 }
 
 void FRMain::add_hook(QString txt)
@@ -257,6 +280,10 @@ void FRMain::update_timed_list(std::string  descriptor, std::string tname, long 
   FTimerViewer::instance(this)->update_time(desc, elapsed);
 }
 
+void FRMain::exit_fr()
+{
+  QCoreApplication::quit();
+}
 
 void FRMain::handle_exit()
 {

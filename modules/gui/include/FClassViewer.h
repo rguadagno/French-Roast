@@ -24,7 +24,6 @@
 #include <QTableWidget>
 #include "FViewer.h"
 #include <unordered_map>
-#include "FListItem.h"
 #include "ClassDetail.h"
 
 namespace frenchroast {

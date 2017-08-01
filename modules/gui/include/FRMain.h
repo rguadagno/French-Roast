@@ -39,7 +39,7 @@
 #include "StackReport.h"
 #include "DetailViewer.h"
 #include "DetailHolder.h"
-
+#include "FViewer.h"
 
 class FRMain : public QMainWindow {
   Q_OBJECT
@@ -67,7 +67,7 @@ class FRMain : public QMainWindow {
   
   void bring_up_dock_if_required(const std::string dockname);
   void connect_dock_win(QMenu* mptr, const std::string& actionname, const std::string& docname);
-  
+  void connect_common_listeners(frenchroast::FViewer* instance);
  signals:
 
   void start_loading();
@@ -91,6 +91,8 @@ class FRMain : public QMainWindow {
    void view_timers();
    void view_traffic();
    void view_classviewer();
+   void view_about();
+   void exit_fr();
    void add_hook(QString);
    void show_detail(const std::string& descriptor);
    void handle_exit();

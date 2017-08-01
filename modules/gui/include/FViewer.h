@@ -48,7 +48,14 @@ namespace frenchroast {
 
   signals:
      void closed();
-
+     void signal_viewer();
+     void timer_viewer();
+     void editor_viewer();
+     void traffic_viewer();
+     void classload_viewer();
+     void about_viewer();
+     void exit_fr();
+     
      
   protected:
 
