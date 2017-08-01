@@ -36,10 +36,11 @@ namespace frenchroast {
     QDockWidget* _dock;
     QWidget* _parent;
     QListWidgetItem* _title;
-     
+    static int _opencount;
+    
   public:
     FViewer(QWidget*);
-    virtual ~FViewer() {}
+    virtual ~FViewer();
     operator QDockWidget*();
     static  void setSettings(QSettings*);
     void resize_win(int width, int height);

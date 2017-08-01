@@ -86,9 +86,14 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
   move(_settings.value("main:xpos", 0).toInt(),
        _settings.value("main:ypos", 0).toInt());
 
-  
+  bool winup = false;
   for(auto& x : _dockbuilders) {
-    bring_up_dock_if_required(x.first);    
+    if(bring_up_dock_if_required(x.first)) {
+      winup = true;
+    }
+  }
+  if(!winup) {
+    view_about();
   }
   
   _statusMsg = new FRStatus{statusBar()};  
@@ -140,11 +145,13 @@ QString FunctionPoint::get_name() const
   return _name;
 }
 
-void FRMain::bring_up_dock_if_required(const std::string dockname)
+bool FRMain::bring_up_dock_if_required(const std::string dockname)
 {
   if(_settings.value(QString::fromStdString(dockname + ":up")).toBool() == true) {
     (this->*_dockbuilders[dockname])();
+    return true;
   }
+  return false;
 }
 
 void FRMain::view_traffic()

@@ -26,28 +26,40 @@
 
 namespace frenchroast {
 
+
+  int FViewer::_opencount = 0;
+  
   FViewer::FViewer(QWidget* parent) : _parent(parent)
   {
     _actionBar = new ActionBar();
   }
+
+  FViewer::~FViewer()
+  {
+    --_opencount;
+    if(_opencount <= 0) {
+      exit_fr();
+    }
+  }
   
   void FViewer::setup_dockwin(const std::string& title, QWidget* wptr, bool codeMode)
   {
+    ++_opencount;
     _dock = new QDockWidget(QString::fromStdString(title), _parent);
-  _dock->setStyleSheet(_settings->value("dock_widget_style").toString());
-  QListWidget* sigLabel = new QListWidget{};
-  QWidget*     titlebar = new QWidget();
-  QGridLayout* layout = new QGridLayout();
-
-  _title  = new QListWidgetItem{QString::fromStdString(title)};
-  _title->setSizeHint(QSize(30,30)); 
-  sigLabel->setEnabled(false);
-  sigLabel->setFixedHeight(28);
-  sigLabel->addItem(_title);
-  sigLabel->setStyleSheet(_settings->value("dock_title_style2").toString());
-  if(codeMode) {
-    sigLabel->setItemDelegate(new SignalDelegate(sigLabel));
-  }
+    _dock->setStyleSheet(_settings->value("dock_widget_style").toString());
+    QListWidget* sigLabel = new QListWidget{};
+    QWidget*     titlebar = new QWidget();
+    QGridLayout* layout = new QGridLayout();
+    
+    _title  = new QListWidgetItem{QString::fromStdString(title)};
+    _title->setSizeHint(QSize(30,30)); 
+    sigLabel->setEnabled(false);
+    sigLabel->setFixedHeight(28);
+    sigLabel->addItem(_title);
+    sigLabel->setStyleSheet(_settings->value("dock_title_style2").toString());
+    if(codeMode) {
+      sigLabel->setItemDelegate(new SignalDelegate(sigLabel));
+    }
 
   QPushButton* fbmenu = new QPushButton("French\nRoast");
   fbmenu->setStyleSheet("QPushButton {background: #404040;color:#521704; "\

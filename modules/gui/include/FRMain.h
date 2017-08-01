@@ -66,7 +66,7 @@ class FRMain : public QMainWindow {
   bool                                                          _watchTraffic{false};
   int                                                           _trafficRate{100};
   
-  void bring_up_dock_if_required(const std::string dockname);
+  bool bring_up_dock_if_required(const std::string dockname);
   void connect_dock_win(QMenu* mptr, const std::string& actionname, const std::string& docname);
   void connect_common_listeners(frenchroast::FViewer* instance);
  signals:
