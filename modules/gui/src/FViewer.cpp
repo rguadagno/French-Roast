@@ -97,6 +97,7 @@ namespace frenchroast {
   QObject::connect(_actionBar, &ActionBar::close_clicked, _dock, &QDockWidget::close);
   QObject::connect(_dock, &QDockWidget::destroyed, this, [&](){delete this;});
   QObject::connect(_actionBar, &ActionBar::close_clicked, this, [&](){closed();});
+  _dock->activateWindow();
 }
 
   

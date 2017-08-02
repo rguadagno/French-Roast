@@ -33,10 +33,10 @@ namespace frenchroast {
 
     Q_OBJECT
     
-    QDockWidget* _dock;
-    QWidget* _parent;
-    QListWidgetItem* _title;
-    static int _opencount;
+    QDockWidget*      _dock;
+    QWidget*          _parent;
+    QListWidgetItem*  _title;
+    static int        _opencount;
     
   public:
     FViewer(QWidget*);

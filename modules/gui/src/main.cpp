@@ -30,7 +30,6 @@
 int main(int argc, char* argv[]) {
 
   QApplication app(argc,argv);
-  
   if (argc != 3 && argc != 4) {
     QMessageBox box;
     box.setText("usage: roaster <ip> <port> [path to hooks file]\nexample: roaster 127.0.0.1 6060 /home/richg/code/hooks.txt");
@@ -75,9 +74,7 @@ int main(int argc, char* argv[]) {
   QObject::connect(&main,    &FRMain::validated_hooks,     &roaster, &FRListener::validated_hooks);
   
   tt->start();
-
-  main.setWindowTitle("French Roast");
   main.show();
-
+  main.move(5000,5000);
  return app.exec();
 }

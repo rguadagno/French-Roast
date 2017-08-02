@@ -21,6 +21,7 @@
 #include "MonitorUtil.h"
 #include <QMainWindow>
 #include <QHeaderView>
+#include <QApplication>
 #include "SignalDelegate.h"
 #include "QUtil.h"
 
@@ -40,6 +41,7 @@ FSignalViewer::FSignalViewer(QWidget* parent) : FViewer(parent)
     _data->setItemDelegateForColumn(1, new SignalDelegate(_data));
     setup_dockwin("Signals", _data, false);
     QObject::connect(_data,  &QTableWidget::itemDoubleClicked, this, [&](QTableWidgetItem* item){if(_data->currentColumn() == 1) view_detail_request(item->text().toStdString());});
+
   }
 
 
