@@ -19,55 +19,57 @@
 
 #include "FRStatus.h"
 #include "MonitorUtil.h"
-#include <QGridLayout>
+#include <QBoxLayout>
 
 
-FRStatus::FRStatus(QStatusBar* ptr) : _Qstatusbar(ptr)
+FRStatus::FRStatus() 
 {
   _statusText = new QLabel;
-  _statusText->setStyleSheet("QLabel {color:#c8c8c8;font-family:\"Arial\";font-size:12px;}");
+  _statusText->setFixedHeight(24);
+  _statusText->setStyleSheet("QLabel {padding-left:50px;}");
+    
   _connectionText = new QLabel;
+  _connectionText->setFixedHeight(24);
+  _connectionText->setStyleSheet("QLabel {padding-left:2px;}");
+
   _timeText = new QLabel;
+  _timeText->setFixedHeight(24);
+  _timeText->setStyleSheet("QLabel {padding-right:2px;}");
+  _timeText->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
+  
   _timer   = new QTimer{this};
   using namespace frenchroast::monitor;
   QObject::connect(_timer,
                    &QTimer::timeout,
                    _timeText,
                    [&]() { _elapsed+= 1000; _timeText->setText(QString::fromStdString(format_millis(_elapsed, FORMAT_HOURS|FORMAT_MINUTES|FORMAT_SECONDS))); });
-  QGridLayout* layout = new QGridLayout;
-  layout->addWidget(_connectionText, 0,0, Qt::AlignLeft);
-  layout->addWidget(_statusText,0,7, Qt::AlignCenter);
-  layout->addWidget(new QLabel("Elapsed:"), 0,10, Qt::AlignRight);
-  layout->addWidget(new QLabel(""), 0,9);
-  layout->setColumnStretch(9,10);
-  layout->setColumnStretch(7,8);
-  layout->addWidget(_timeText, 0,11, Qt::AlignRight);
+  
+  auto* layout = new QHBoxLayout;
+  layout->addWidget(_connectionText);
+  layout->addWidget(_statusText);
+  layout->addWidget(_timeText, Qt::AlignRight);
   layout->setContentsMargins(1,1,1,1);
+  layout->setSpacing(0);
   setLayout(layout);
+  setStyleSheet("QLabel {border:none; background:#c8c8c8;color:black;font-family:\"Arial\";font-size:12px;}");
 }
 
 void FRStatus::waiting_for_connection()
 {
-  _Qstatusbar->setStyleSheet("QWidget{background-color: #404040;}");
-  setStyleSheet("QWidget{border:0px;background-color: #404040;color:white;font-family:\"Arial\";font-size:12px;}");
   _connectionText->setText("waiting for connection...");
 }
 
 void FRStatus::remote_connected(const std::string& from)
 {
-  _Qstatusbar->setStyleSheet("QWidget{background-color: #286c22;}");
-  setStyleSheet("QLabel {background-color: #286c22;color:white;font-family:\"Arial\";font-size:12px;}");
   _connectionText->setText(QString::fromStdString("remote agent connected: " +  from));
-  _timeText->setText("elapsed: ");
+  setStyleSheet("QWidget {border:none; background: #286c22;color:#c8c8c8;font-family:\"Arial\";font-size:12px;}");
   _statusText->setText("( Waiting for Signal Validation )");
-
 }
 
 void FRStatus::remote_disconnected(const std::string& msg)
 {
-  _Qstatusbar->setStyleSheet("QWidget{background-color:#d04949;}");
-  setStyleSheet("QLabel {background-color: #d04949;color:white;font-family:\"Arial\";font-size:12px;}");
   _connectionText->setText(QString::fromStdString("remote agent disconnected: " +  msg));
+   setStyleSheet("QWidget {border:none; background-color: #d04949;color:white;font-family:\"Arial\";font-size:12px;}");
   _statusText->clear();
   _timer->stop();
 }

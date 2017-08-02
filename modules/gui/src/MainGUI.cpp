@@ -37,9 +37,6 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
 {
   FViewer::setSettings(&settings);
   restore();
-  //  _statusMsg = new FRStatus{statusBar()};  
-  // statusBar()->addPermanentWidget(_statusMsg,10);
-  //_statusMsg->waiting_for_connection();
 }
 
 
@@ -55,17 +52,17 @@ void FRMain::handshake()
   if(_watchTraffic) {
     start_traffic(_trafficRate);
   }
-  //_statusMsg->remote_ready();
+  AboutHelpViewer::instance(this)->remote_ready();
 }
 
 void FRMain::remote_connected(const std::string& msg)
 {
-  //_statusMsg->remote_connected(msg);
+  AboutHelpViewer::instance(this)->remote_connected(msg);
 }
 
 void FRMain::remote_disconnected(const std::string& msg)
 {
-  //_statusMsg->remote_disconnected(msg);
+  AboutHelpViewer::instance(this)->remote_disconnected(msg);
 }
 
 

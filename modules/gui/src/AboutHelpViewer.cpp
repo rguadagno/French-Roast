@@ -18,13 +18,37 @@
 //
 
 #include "AboutHelpViewer.h"
-#include <QTableWidget>
+#include <QTabWidget>
+#include <QVBoxLayout>
 
 namespace frenchroast {
 
 AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
   {
-    setup_dockwin("French-Roast", new QTableWidget(), false);
+    _statusMsg = new FRStatus{};  
+    _statusMsg->waiting_for_connection();
+
+    QWidget* holder = new QWidget();
+    QVBoxLayout* vlayout = new QVBoxLayout();
+    vlayout->setSpacing(0);
+    vlayout->addWidget(_statusMsg );
+    vlayout->setContentsMargins(0,0,0,0);
+    holder->setLayout(vlayout);
+    holder->setStyleSheet(_settings->value("zero_border_style").toString());
+
+    
+    QTabWidget* tab = new QTabWidget();
+    tab->addTab(holder, "Target");
+    //    tab->addTab(holderStacks, "About");
+    //tab->addTab(holderStacks, "Help");
+
+    tab->setStyleSheet("QWidget {border: none; background:black;} "     \
+                     "QTabBar::tab {height: 18px; background-color:#606060;color:#B4B6B6;font-size: 12px;border-top-left-radius:8px;min-width: 40ex; padding:3px;margin-left:2px;} " \
+                       "QTabBar::tab:hover {color: white;border: 1px solid #B4B6B6;}"             \
+                       "QTabBar::tab:selected {background: #173496;}" );
+    tab->setDocumentMode(true);
+
+    setup_dockwin("French-Roast", tab, false);
   }
 
 
@@ -58,5 +82,23 @@ AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
     return restore_required(FName, _settings);
   }
 
+
+  void AboutHelpViewer::remote_connected(const std::string& from)
+  {
+    _statusMsg->remote_connected(from);
+  }
+  
+  void AboutHelpViewer::remote_disconnected(const std::string& msg)
+  {
+    _statusMsg->remote_disconnected(msg);
+  }
+  
+  void AboutHelpViewer::remote_ready()
+  {
+    _statusMsg->remote_ready();
+  }
+
+
+  
   
 }

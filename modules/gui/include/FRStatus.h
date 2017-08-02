@@ -21,7 +21,6 @@
 #define FRSTATUS_H
 
 #include <QLabel>
-#include <QStatusBar>
 #include <QTimer>
 
 class FRStatus : public QWidget {
@@ -29,7 +28,6 @@ class FRStatus : public QWidget {
   Q_OBJECT
 
  private:
-  QStatusBar* _Qstatusbar;
   QLabel*     _connectionText;
   QLabel*     _statusText;
   QLabel*     _timeText;
@@ -41,7 +39,7 @@ class FRStatus : public QWidget {
   void remote_disconnected(const std::string& msg);
   void remote_ready();
  public:
-  FRStatus(QStatusBar* ptr);
+  FRStatus();
   void waiting_for_connection();
 };
 

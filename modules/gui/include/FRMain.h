@@ -33,7 +33,6 @@
 #include "fr.h"
 #include "StackRow.h"
 #include "ActionBar.h"
-#include "FRStatus.h"
 #include "KeyListener.h"
 #include "MethodStats.h"
 #include "StackReport.h"
@@ -46,21 +45,12 @@ class FRMain : public QMainWindow {
 
  public:
   FRMain(QSettings&, const std::string&);
-  /* const static std::string  EditHooksWindow;
-  const static std::string  SignalWindow;
-  const static std::string  TimerWindow;
-  const static std::string  RankingWindow;
-  const static std::string  TrafficWindow;
-  const static std::string  ClassViewerWindow;
-  const static std::string  AboutViewerWindow;
-  */
+
  private:
 
-  //  static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
   QSettings&                                                    _settings;
   bool                                                          _exit{false};
   bool                                                          _ok_to_send_hooks{false};
-  //  FRStatus*                                                     _statusMsg;
   std::unordered_map<std::string, DetailHolder>                 _detailDescriptors;
   std::string                                                   _hooksfile;
   bool                                                          _watchTraffic{false};
@@ -69,6 +59,7 @@ class FRMain : public QMainWindow {
   void restore();
   void connect_common_listeners(frenchroast::FViewer* instance);
   void FRMain::restore_if_required(const bool required, void (FRMain::* func)(), bool& result);
+  
  signals:
 
   void start_loading();

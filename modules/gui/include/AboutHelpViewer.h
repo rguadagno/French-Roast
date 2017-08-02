@@ -21,6 +21,7 @@
 #define ABOUTVIEWER_H
 #include <QWidget>
 #include "FViewer.h"
+#include "FRStatus.h"
 
 
 namespace frenchroast {
@@ -30,6 +31,7 @@ namespace frenchroast {
 
     static AboutHelpViewer*          _instance;
     static const std::string         FName;
+    FRStatus*                        _statusMsg;
     AboutHelpViewer(QWidget*);
     ~AboutHelpViewer();
     
@@ -37,6 +39,12 @@ namespace frenchroast {
     static AboutHelpViewer* instance(QWidget*);
     static void capture();
     static bool restore_is_required();
+
+    public slots:
+      void remote_connected(const std::string& from);
+      void remote_disconnected(const std::string& msg);
+      void remote_ready();
+
   };
 }
 #endif
