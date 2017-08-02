@@ -27,7 +27,7 @@
 
 namespace frenchroast {
 
-FSignalViewer::FSignalViewer(QWidget* parent) : FViewer(parent)
+  FSignalViewer::FSignalViewer(QWidget* parent) : FViewer(parent)
   {
 
     _data = new QTableWidget();
@@ -57,6 +57,8 @@ FSignalViewer::FSignalViewer(QWidget* parent) : FViewer(parent)
   }
 
   FSignalViewer* FSignalViewer::_instance{nullptr};
+  const std::string FSignalViewer::FName{"signals"};
+  
   FSignalViewer::~FSignalViewer()
   {
     _instance = nullptr;
@@ -66,7 +68,7 @@ FSignalViewer::FSignalViewer(QWidget* parent) : FViewer(parent)
   {
     if(_instance != nullptr) return _instance;
     _instance = new FSignalViewer(parent);
-    restore_win("signals", _settings, _instance, dynamic_cast<QMainWindow*>(parent));
+    restore_win(FName, _settings, _instance, dynamic_cast<QMainWindow*>(parent));
     return _instance;
   }
 
@@ -74,7 +76,12 @@ FSignalViewer::FSignalViewer(QWidget* parent) : FViewer(parent)
 
   void FSignalViewer::capture()
   {
-     capture_win("signals", _settings, _instance != nullptr ? _instance : nullptr);
+     capture_win(FName, _settings, _instance != nullptr ? _instance : nullptr);
+  }
+
+  bool FSignalViewer::restore_is_required()
+  {
+    return restore_required(FName, _settings);
   }
 
 }

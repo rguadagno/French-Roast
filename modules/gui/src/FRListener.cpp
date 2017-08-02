@@ -37,7 +37,7 @@ void FRListener::signal_timed(const std::string& tag, const std::string& tname, 
 
 void FRListener::signal(const std::string& tag, const std::string& tname, int count, std::vector<std::string> args, std::vector<std::string> instances,  std::vector<frenchroast::monitor::MarkerField> markers,  std::unordered_map<std::string, frenchroast::monitor::StackReport> stacks)
 {
-  thooked(FRMain::SignalWindow,tag, tname, count, args, instances, markers, stacks);
+  thooked(tag, tname, count, args, instances, markers, stacks);
 }
 
 void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace>& items)

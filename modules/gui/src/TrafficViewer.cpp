@@ -30,6 +30,7 @@
 namespace frenchroast {
 
   TrafficViewer* TrafficViewer::_instance{nullptr};
+  const std::string TrafficViewer::FName{"traffic"};
 
   TrafficViewer::TrafficViewer(QWidget* parent) : FViewer(parent)
   {
@@ -134,7 +135,7 @@ namespace frenchroast {
   {
     if(_instance != nullptr) return _instance;
     _instance = new TrafficViewer(parent);
-    restore_win("traffic", _settings, _instance, dynamic_cast<QMainWindow*>(parent));
+    restore_win(FName, _settings, _instance, dynamic_cast<QMainWindow*>(parent));
     return _instance;
   }
 
@@ -148,9 +149,13 @@ namespace frenchroast {
 
   void TrafficViewer::capture()
   {
-     capture_win("traffic", _settings, _instance != nullptr ? _instance : nullptr);
+     capture_win(FName, _settings, _instance != nullptr ? _instance : nullptr);
   }
 
+  bool TrafficViewer::restore_is_required()
+  {
+    return restore_required(FName, _settings);
+  }
 
 
 

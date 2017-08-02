@@ -46,29 +46,29 @@ class FRMain : public QMainWindow {
 
  public:
   FRMain(QSettings&, const std::string&);
-  const static std::string  EditHooksWindow;
+  /* const static std::string  EditHooksWindow;
   const static std::string  SignalWindow;
   const static std::string  TimerWindow;
   const static std::string  RankingWindow;
   const static std::string  TrafficWindow;
   const static std::string  ClassViewerWindow;
   const static std::string  AboutViewerWindow;
-  
+  */
  private:
 
-  static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
+  //  static std::unordered_map<std::string,  void (FRMain::*)()  > _dockbuilders;
   QSettings&                                                    _settings;
   bool                                                          _exit{false};
   bool                                                          _ok_to_send_hooks{false};
-  FRStatus*                                                     _statusMsg;
+  //  FRStatus*                                                     _statusMsg;
   std::unordered_map<std::string, DetailHolder>                 _detailDescriptors;
   std::string                                                   _hooksfile;
   bool                                                          _watchTraffic{false};
   int                                                           _trafficRate{100};
   
-  bool bring_up_dock_if_required(const std::string dockname);
-  void connect_dock_win(QMenu* mptr, const std::string& actionname, const std::string& docname);
+  void restore();
   void connect_common_listeners(frenchroast::FViewer* instance);
+  void FRMain::restore_if_required(const bool required, void (FRMain::* func)(), bool& result);
  signals:
 
   void start_loading();
@@ -97,7 +97,7 @@ class FRMain : public QMainWindow {
    void add_hook(QString);
    void show_detail(const std::string& descriptor);
    void handle_exit();
-   void update_list(std::string, std::string, std::string, int, const std::vector<std::string> ,  const std::vector<std::string>, const std::vector<frenchroast::monitor::MarkerField>, std::unordered_map<std::string, frenchroast::monitor::StackReport>);
+   void update_list(std::string, std::string, int, const std::vector<std::string> ,  const std::vector<std::string>, const std::vector<frenchroast::monitor::MarkerField>, std::unordered_map<std::string, frenchroast::monitor::StackReport>);
    void update_timed_list(std::string  descriptor, std::string, long elapsed);
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void start_watching_traffic(int);

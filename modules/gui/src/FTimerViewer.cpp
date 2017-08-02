@@ -54,6 +54,7 @@ namespace frenchroast {
   }
   
   FTimerViewer* FTimerViewer::_instance{nullptr};
+  const std::string FTimerViewer::FName{"timers"};
   
   FTimerViewer::~FTimerViewer()
   {
@@ -65,13 +66,18 @@ namespace frenchroast {
   {
     if(_instance != nullptr) return _instance;
     _instance = new FTimerViewer(parent);
-    restore_win("timers", _settings, _instance, dynamic_cast<QMainWindow*>(parent));
+    restore_win(FName, _settings, _instance, dynamic_cast<QMainWindow*>(parent));
     return _instance;
   }
 
   void FTimerViewer::capture()
   {
-     capture_win("timers", _settings, _instance != nullptr ? _instance : nullptr);
+     capture_win(FName, _settings, _instance != nullptr ? _instance : nullptr);
+  }
+
+  bool FTimerViewer::restore_is_required()
+  {
+    return restore_required(FName, _settings);
   }
 
 

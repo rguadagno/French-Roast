@@ -213,6 +213,8 @@ namespace frenchroast {
 
 
   Editor* Editor::_instance{nullptr};
+  const std::string Editor::FName{"editor"};
+  
   Editor::~Editor()
   {
     _instance = nullptr;
@@ -222,15 +224,19 @@ namespace frenchroast {
   {
     if(_instance != nullptr) return _instance;
     _instance = new Editor(parent);
-    restore_win("editor", _settings, _instance, dynamic_cast<QMainWindow*>(parent));
+    restore_win(FName, _settings, _instance, dynamic_cast<QMainWindow*>(parent));
     return _instance;
   }
 
   void Editor::capture()
   {
-     capture_win("editor", _settings, _instance != nullptr ? _instance : nullptr);
+     capture_win(FName, _settings, _instance != nullptr ? _instance : nullptr);
   }
 
+  bool Editor::restore_is_required()
+  {
+    return restore_required(FName, _settings);
+  }
 
   
   MessageItem::MessageItem(const std::string& str, int line) : QListWidgetItem(QString::fromStdString(str)), _line(line)

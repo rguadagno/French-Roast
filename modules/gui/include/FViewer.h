@@ -60,6 +60,7 @@ namespace frenchroast {
      
   protected:
 
+    std::string         _name;
     static QSettings*   _settings;
     ActionBar*   _actionBar;
     void setup_dockwin(const std::string& title, QWidget* wptr, bool codeMode);
@@ -67,6 +68,6 @@ namespace frenchroast {
 
   void capture_win(const std::string& name, QSettings* settings, FViewer* win);
   void restore_win(const std::string& name, QSettings* settings, FViewer* win, QMainWindow*);
-
+  bool restore_required( const std::string& name, QSettings*);
 }
 #endif

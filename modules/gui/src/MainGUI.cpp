@@ -17,26 +17,10 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <QTWidgets/QLabel>
-#include <QTWidgets/QHBoxLayout>
-#include <QTWidgets/QListWidget>
-#include <QTWidgets/QMessageBox>
-#include <QTWidgets/QStatusBar>
-#include <QTWidgets/QSizePolicy>
-#include <QTWidgets/QPushButton>
-#include <QTWidgets/QTableWidget>
-#include <QTWidgets/QDockWidget>
-#include <QTCore/QObject>
-#include <QtGlobal>
-#include <QAction>
-#include <QFont>
 #include <string>
 #include "fr.h"
 #include "FRMain.h"
 #include "MonitorUtil.h"
-#include <QDesktopWidget>
-#include <QMenuBar>
-#include <QToolBar>
 #include "FSignalViewer.h"
 #include "FTimerViewer.h"
 #include "FClassViewer.h"
@@ -46,61 +30,17 @@
 
 using namespace frenchroast;
 
-const std::string  FRMain::SignalWindow    = "signals";
-const std::string  FRMain::EditHooksWindow = "editor";
-const std::string  FRMain::TimerWindow     = "timers";
-const std::string  FRMain::TrafficWindow   = "traffic";
-const std::string  FRMain::ClassViewerWindow  = "classviewer";
-const std::string  FRMain::AboutViewerWindow  = "aboutviewer";
-
-std::unordered_map< std::string,  void (FRMain::*)()  > FRMain::_dockbuilders {{FRMain::SignalWindow,      &FRMain::view_signals},
-                                                                               {FRMain::EditHooksWindow,   &FRMain::view_hooks_editor},
-                                                                               {FRMain::TimerWindow,       &FRMain::view_timers},
-                                                                               {FRMain::TrafficWindow,     &FRMain::view_traffic},
-                                                                               {FRMain::ClassViewerWindow, &FRMain::view_classviewer},
-                                                                               {FRMain::AboutViewerWindow, &FRMain::view_about}
-      };
-
 
 QSettings* FViewer::_settings = nullptr;
 
 FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settings(settings), _hooksfile(path_to_hooks)
 {
-  QDesktopWidget* dw = QApplication::desktop();
-
-  int height = dw->availableGeometry(dw->primaryScreen()).height() * 0.2;
-  int width  =  dw->availableGeometry(dw->primaryScreen()).width() * 0.7;
-
   FViewer::setSettings(&settings);
-  
-  QMenu* mptr = menuBar()->addMenu("&View");
-  connect_dock_win(mptr, "Signals",         SignalWindow);
-  connect_dock_win(mptr, "Timers",          TimerWindow);
-  connect_dock_win(mptr, "Hooks Editor",    EditHooksWindow);
-  connect_dock_win(mptr, "Traffic",         TrafficWindow);
-  connect_dock_win(mptr, "Class Viewer",    ClassViewerWindow);
-  
-  resize(_settings.value("main:width", width).toInt(),
-         _settings.value("main:height", height).toInt());
-
-  move(_settings.value("main:xpos", 0).toInt(),
-       _settings.value("main:ypos", 0).toInt());
-
-  bool winup = false;
-  for(auto& x : _dockbuilders) {
-    if(bring_up_dock_if_required(x.first)) {
-      winup = true;
-    }
-  }
-  if(!winup) {
-    view_about();
-  }
-  
-  _statusMsg = new FRStatus{statusBar()};  
-  statusBar()->addPermanentWidget(_statusMsg,10);
-  _statusMsg->waiting_for_connection();
+  restore();
+  //  _statusMsg = new FRStatus{statusBar()};  
+  // statusBar()->addPermanentWidget(_statusMsg,10);
+  //_statusMsg->waiting_for_connection();
 }
-
 
 
 void FRMain::validate_hooks()
@@ -115,23 +55,17 @@ void FRMain::handshake()
   if(_watchTraffic) {
     start_traffic(_trafficRate);
   }
-  _statusMsg->remote_ready();
+  //_statusMsg->remote_ready();
 }
 
 void FRMain::remote_connected(const std::string& msg)
 {
-  _statusMsg->remote_connected(msg);
+  //_statusMsg->remote_connected(msg);
 }
 
 void FRMain::remote_disconnected(const std::string& msg)
 {
-  _statusMsg->remote_disconnected(msg);
-}
-
-void FRMain::connect_dock_win(QMenu* mptr, const std::string& actionname, const std::string& docname)
-{
-  QAction* act = mptr->addAction(QString::fromStdString(actionname));
-  QObject::connect(act, &QAction::triggered, this, _dockbuilders[docname]);
+  //_statusMsg->remote_disconnected(msg);
 }
 
 
@@ -145,14 +79,6 @@ QString FunctionPoint::get_name() const
   return _name;
 }
 
-bool FRMain::bring_up_dock_if_required(const std::string dockname)
-{
-  if(_settings.value(QString::fromStdString(dockname + ":up")).toBool() == true) {
-    (this->*_dockbuilders[dockname])();
-    return true;
-  }
-  return false;
-}
 
 void FRMain::view_traffic()
 {
@@ -180,7 +106,6 @@ void FRMain::stop_watch_loading()
 {
    stop_loading();
 }
-
 
 
 void FRMain::connect_common_listeners(FViewer* instance)
@@ -256,7 +181,7 @@ void FRMain::method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks
   TrafficViewer::instance(this)->update_ranking(ranks);
 }
 
-void FRMain::update_list(std::string ltype, std::string  descriptor, std::string tname, int count,
+void FRMain::update_list(std::string  descriptor, std::string tname, int count,
                          const std::vector<std::string> argHeaders,  const std::vector<std::string> instanceHeaders, 
                          const std::vector<frenchroast::monitor::MarkerField> markers, std::unordered_map<std::string, frenchroast::monitor::StackReport> stacks)
 {
@@ -297,10 +222,6 @@ void FRMain::exit_fr()
 void FRMain::handle_exit()
 {
   _exit = true;
-  _settings.setValue("main:width",  width());
-  _settings.setValue("main:height",  height());
-  _settings.setValue("main:xpos",   pos().x());
-  _settings.setValue("main:ypos",   pos().y());
 
   FSignalViewer::capture();
   FTimerViewer::capture();
@@ -311,3 +232,25 @@ void FRMain::handle_exit()
 }
 
 
+void FRMain::restore_if_required(const bool required, void (FRMain::* func)(), bool& result)
+{
+  if(required) {
+    (this->*func)();
+    result = true;
+  }
+}
+
+void FRMain::restore()
+{
+  bool winup = false;
+  restore_if_required(FSignalViewer::restore_is_required(),   &FRMain::view_signals, winup);
+  restore_if_required(FTimerViewer::restore_is_required(),    &FRMain::view_timers, winup);
+  restore_if_required(FClassViewer::restore_is_required(),    &FRMain::view_classviewer, winup);
+  restore_if_required(Editor::restore_is_required(),          &FRMain::view_hooks_editor, winup);
+  restore_if_required(TrafficViewer::restore_is_required(),   &FRMain::view_traffic, winup);
+  restore_if_required(AboutHelpViewer::restore_is_required(), &FRMain::view_about, winup);
+
+  if(!winup) {
+    view_about();
+  }
+}

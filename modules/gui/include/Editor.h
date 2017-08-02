@@ -36,6 +36,7 @@ namespace frenchroast {
 
   private:
     static Editor*  _instance;
+    static const std::string  FName;
     Editor(QWidget*);
     ~Editor();
     QTextEdit*    _edit{nullptr};
@@ -49,6 +50,7 @@ namespace frenchroast {
   public:
     static Editor* instance(QWidget*);
     static void capture();
+    static bool restore_is_required();
 
     std::vector<std::string> lines() const;
     

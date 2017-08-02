@@ -78,7 +78,7 @@ class FRListener : public QObject
   signals:
     void send_hooks();
     void method_ranking(std::vector<frenchroast::monitor::MethodStats>);
-    void thooked(const std::string& ltype, const std::string& info,const std::string& tname, int count, const std::vector<std::string>&, const std::vector<std::string>&, const std::vector<frenchroast::monitor::MarkerField>&,  std::unordered_map<std::string, frenchroast::monitor::StackReport>);
+    void thooked(const std::string& info,const std::string& tname, int count, const std::vector<std::string>&, const std::vector<std::string>&, const std::vector<frenchroast::monitor::MarkerField>&,  std::unordered_map<std::string, frenchroast::monitor::StackReport>);
     void timersignal(const std::string& info, const std::string& tname, long elapsed);
     void remoteconnected(const std::string& addr);
     void remoteunloaded(const std::string& msg);

@@ -29,12 +29,14 @@ namespace frenchroast {
     Q_OBJECT
 
     static AboutHelpViewer*          _instance;
+    static const std::string         FName;
     AboutHelpViewer(QWidget*);
     ~AboutHelpViewer();
     
   public:
     static AboutHelpViewer* instance(QWidget*);
     static void capture();
+    static bool restore_is_required();
   };
 }
 #endif

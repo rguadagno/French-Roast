@@ -33,6 +33,7 @@ namespace frenchroast {
     QTableWidget*                                     _data;
     std::unordered_map<std::string,QTableWidgetItem*> _descriptors;
     static FSignalViewer*                             _instance;
+    static const std::string                          FName;
     FSignalViewer(QWidget*);
     ~FSignalViewer();
     
@@ -42,6 +43,7 @@ namespace frenchroast {
       void view_detail_request(const std::string&);
   public:
     static FSignalViewer* instance(QWidget*);
+    static bool restore_is_required();
     static void capture();
   };
 }

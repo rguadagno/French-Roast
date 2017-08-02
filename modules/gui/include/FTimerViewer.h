@@ -33,6 +33,7 @@ namespace frenchroast {
     QTableWidget*                                     _data;
     std::unordered_map<std::string,QTableWidgetItem*> _descriptors;
     static FTimerViewer*                              _instance;
+    static const std::string                          FName;
     FTimerViewer(QWidget*);
     ~FTimerViewer();
     
@@ -42,6 +43,7 @@ namespace frenchroast {
   public:
 
     static FTimerViewer* instance(QWidget*);
+    static bool restore_is_required();
     static void capture();
   };
 }

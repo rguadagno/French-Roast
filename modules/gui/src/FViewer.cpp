@@ -149,10 +149,15 @@ namespace frenchroast {
 
     win->move(settings->value(QString::fromStdString(name + ":xpos"), mainwin->width() /2).toInt(),
               settings->value(QString::fromStdString(name + ":ypos"), mainwin->height() /2).toInt());
-  mainwin->addDockWidget(Qt::TopDockWidgetArea,    win);
+    mainwin->addDockWidget(Qt::TopDockWidgetArea,    win);
     
   }
-
+  
+  bool restore_required( const std::string& name, QSettings* settings)
+  {
+    return settings->value(QString::fromStdString(name + ":up")).toBool();
+  }
+  
 
   
 }

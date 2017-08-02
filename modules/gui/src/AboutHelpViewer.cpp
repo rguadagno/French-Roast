@@ -30,6 +30,8 @@ AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
 
 
   AboutHelpViewer* AboutHelpViewer::_instance{nullptr};
+  const std::string AboutHelpViewer::FName{"about"};
+  
 
   AboutHelpViewer::~AboutHelpViewer()
   {
@@ -40,7 +42,7 @@ AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
   {
     if(_instance != nullptr) return _instance;
     _instance = new AboutHelpViewer(parent);
-    restore_win("aboutviewer", _settings, _instance, dynamic_cast<QMainWindow*>(parent));
+    restore_win(FName, _settings, _instance, dynamic_cast<QMainWindow*>(parent));
     return _instance;
   }
 
@@ -48,7 +50,13 @@ AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
 
   void AboutHelpViewer::capture()
   {
-     capture_win("aboutviewer", _settings, _instance != nullptr ? _instance : nullptr);
+     capture_win(FName, _settings, _instance != nullptr ? _instance : nullptr);
   }
 
+  bool AboutHelpViewer::restore_is_required()
+  {
+    return restore_required(FName, _settings);
+  }
+
+  
 }

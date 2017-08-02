@@ -39,6 +39,7 @@ namespace frenchroast {
 
   private:
     static TrafficViewer*  _instance;
+    static const std::string  FName;
     TrafficViewer(QWidget*);
     ~TrafficViewer();
 
@@ -52,6 +53,7 @@ namespace frenchroast {
   public:
     static TrafficViewer* instance(QWidget*);
     static void capture();
+    static bool restore_is_required();
     
   private slots:
     void start_stop(const std::string& );
