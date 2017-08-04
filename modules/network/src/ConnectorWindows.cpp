@@ -81,8 +81,9 @@ namespace frenchroast { namespace network {
       int len = sizeof(conn_from);
       while(1) {
         SOCKET inSock = accept(_receiver_socket,(SOCKADDR*)&conn_from, &len);
-        _sender_socket = inSock;
-        _handler->message(std::string("connected~") + inet_ntoa(conn_from.sin_addr) + ":" + std::to_string(htons(conn_from.sin_port)));
+        std::string ipport = std::string{inet_ntoa(conn_from.sin_addr)} + ":" + std::to_string(htons(conn_from.sin_port));
+        _ipport_sendersocket[ipport] = inSock;
+        _handler->message("connected~" + ipport);
         std::thread t1{process_instream,inSock,_handler};
         t1.detach();
       }
@@ -98,6 +99,7 @@ namespace frenchroast { namespace network {
       }
       
       _sender_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+      _ipport_sendersocket["client"] = _sender_socket;
       if ( _sender_socket == INVALID_SOCKET) {
         std::cout << "unable to create socket" << std::endl;
         WSACleanup();
@@ -128,7 +130,14 @@ namespace frenchroast { namespace network {
     
     void Connector::send_message(const std::string& msg)
     {
-      send(_sender_socket, msg.c_str(), msg.length()+1,0);
+      for(auto& s : _ipport_sendersocket) {
+        send(s.second, msg.c_str(), msg.length()+1,0);
+      }
+    }
+
+    void Connector::send_message(const std::string& ipport, const std::string& msg)
+    {
+      send(_ipport_sendersocket[ipport], msg.c_str(), msg.length()+1,0);
     }
 
 

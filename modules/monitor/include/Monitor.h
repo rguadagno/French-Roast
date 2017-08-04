@@ -54,6 +54,9 @@ namespace frenchroast { namespace monitor {
         std::unordered_map<std::string, std::unordered_map<std::string, int>>  _markers;
         std::unordered_map<std::string, std::unordered_map<std::string, StackReport>>  _stacks;
         std::string                                                            _opcodeFile;
+        std::unordered_map<std::string, std::string>                           _ipport_hostpid;
+
+
         
 	const int MSG_TYPE    = 0;
 	const int MSG         = 1;
@@ -142,6 +145,7 @@ namespace frenchroast { namespace monitor {
           
           if (items[MSG_TYPE] == "connected") {
             _handler.connected(items[1], "");
+            _ipport_hostpid[items[1]] = "unknown_yet";
           }
           
           if (items[MSG_TYPE] == "unloaded") {

@@ -20,6 +20,7 @@
 #ifndef FRCON_H
 #define FRCON_H
 #include <string>
+#include <unordered_map>
 #include "Listener.h"
 
 
@@ -42,11 +43,17 @@ namespace frenchroast { namespace network {
 #endif
 
       Listener* _handler;
+      #ifdef CONNECTOR_UNIX
+        std::unordered_map<std::string, int> _ipport_sendersocket;
+      #else 
+        std::unordered_map<std::string, SOCKET> _ipport_sendersocket;
+      #endif
     public:
       void wait_for_client_connection(const std::string& ipaddr, int port, Listener* handler, bool silent=true);
       void connect_to_server(const std::string& ipaddr, int port, Listener* handler = nullptr);
       void blocked_listen(Listener*);
       void send_message(const std::string& msg);
+      void send_message(const std::string& ip_port, const std::string& msg);
       void close_down();
       static std::string get_hostname();
     };
