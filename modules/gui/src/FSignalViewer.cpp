@@ -29,15 +29,16 @@ namespace frenchroast {
 
   FSignalViewer::FSignalViewer(QWidget* parent) : FViewer(parent)
   {
-
     _data = new QTableWidget();
     _data->setStyleSheet(_settings->value("traffic_grid_style").toString());
-    _data->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    _data->horizontalHeader()->hide();
+
+     _data->horizontalHeader()->hide();
     _data->verticalHeader()->hide();
     _data->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     _data->insertColumn(0);
     _data->insertColumn(0);
+    _data->horizontalHeader()->setSectionResizeMode(1,QHeaderView::ResizeToContents);
+    _data->setColumnWidth(1,100);
     _data->setItemDelegateForColumn(1, new SignalDelegate(_data));
     setup_dockwin("Signals", _data, false);
     QObject::connect(_data,  &QTableWidget::itemDoubleClicked, this, [&](QTableWidgetItem* item){if(_data->currentColumn() == 1) view_detail_request(item->text().toStdString());});

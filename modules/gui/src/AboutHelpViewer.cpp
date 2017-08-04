@@ -38,7 +38,7 @@ AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
 
     
     QTabWidget* tab = new QTabWidget();
-    tab->addTab(holder, "Target");
+    tab->addTab(holder, "Targets");
     //    tab->addTab(holderStacks, "About");
     //tab->addTab(holderStacks, "Help");
 
@@ -93,9 +93,9 @@ AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
     _statusMsg->remote_disconnected(msg);
   }
   
-  void AboutHelpViewer::remote_ready()
+  void AboutHelpViewer::remote_ready(const std::string& host, const std::string& ip)
   {
-    _statusMsg->remote_ready();
+    _statusMsg->remote_ready(host, ip);
   }
 
 

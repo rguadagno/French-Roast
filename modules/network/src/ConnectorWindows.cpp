@@ -33,6 +33,14 @@
 
 namespace frenchroast { namespace network {
 
+
+    std::string Connector::get_hostname()
+    {
+      char buf[100];
+      gethostname(buf, 100);
+      return std::string{buf};
+    }
+    
     void Connector::wait_for_client_connection(const std::string& ipaddr, int port, Listener* handler, bool silent)
     {
       _handler = handler;

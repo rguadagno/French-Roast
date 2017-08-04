@@ -48,6 +48,7 @@ namespace frenchroast { namespace network {
       void blocked_listen(Listener*);
       void send_message(const std::string& msg);
       void close_down();
+      static std::string get_hostname();
     };
   }
 }

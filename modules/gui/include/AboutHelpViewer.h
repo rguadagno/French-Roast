@@ -43,7 +43,7 @@ namespace frenchroast {
     public slots:
       void remote_connected(const std::string& from);
       void remote_disconnected(const std::string& msg);
-      void remote_ready();
+      void remote_ready(const std::string& host, const std::string& ip);
 
   };
 }

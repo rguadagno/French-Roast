@@ -21,23 +21,28 @@
 #define FRSTATUS_H
 
 #include <QLabel>
+#include <QTableWidget>
 #include <QTimer>
+#include <unordered_map>
 
 class FRStatus : public QWidget {
 
   Q_OBJECT
 
  private:
-  QLabel*     _connectionText;
-  QLabel*     _statusText;
-  QLabel*     _timeText;
-  QTimer*     _timer;
-  int         _elapsed{0};
+  QTableWidget*                                      _targets;
+  std::unordered_map<std::string, QTableWidgetItem*> _items;
+  /*  QLabel*      _connectionText;
+  QLabel*      _statusText;
+  QLabel*      _timeText;
+  */
+  QTimer*      _timer;
+  int          _elapsed{0};
 
  public slots:
   void remote_connected(const std::string& from);
   void remote_disconnected(const std::string& msg);
-  void remote_ready();
+  void remote_ready(const std::string& host, const std::string& id);
  public:
   FRStatus();
   void waiting_for_connection();

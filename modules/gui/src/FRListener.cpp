@@ -83,9 +83,9 @@ void FRListener::stop_watch_loading()
   _mon.stop_watch_loading();
 }
 
-void FRListener::ready()
+void FRListener::ready(const std::string& host, const std::string& pid)
 {
-  remote_ready();
+  remote_ready(host,pid);
 }
 
 void FRListener::request_hooks()

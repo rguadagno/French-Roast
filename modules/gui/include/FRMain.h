@@ -93,7 +93,7 @@ class FRMain : public QMainWindow {
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void start_watching_traffic(int);
    void stop_watching_traffic();
-   void handshake();
+   void handshake(const std::string& host, const std::string& ip);
 };
 
 
