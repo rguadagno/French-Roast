@@ -149,13 +149,14 @@ namespace frenchroast { namespace monitor {
     
     std::vector<ClassDetail> construct_class_details(const std::string& msg)
     {
+      std::cout << "details: "  << msg << std::endl;
       std::vector<ClassDetail> rv;
-      for(auto& citem : split(msg, "]")) {
+      for(auto& citem : split(msg, "]^")) {
         if(citem == "") break;
-        std::string name = split(citem, "[")[0];
+        std::string name = split(citem, "^[")[0];
         replace(name, "/", ".");
         std::vector<std::string> methods;
-        for(auto& mitem : split(split(citem,"[")[1],"%")) {
+        for(auto& mitem : split(split(citem,"^[")[1],"%")) {
           if(mitem == "") break;
           methods.push_back(translate_method(mitem));
         }

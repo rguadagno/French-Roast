@@ -40,11 +40,11 @@ namespace frenchroast { namespace agent {
 
       std::string outstr = "";
       for(auto& citem : details) {
-        outstr.append(citem.name() + "[");
+        outstr.append(citem.name() + "^[");
         for(auto& meth : citem.methods()) {
           outstr.append(meth + "%");
         }
-        outstr.append("]");
+        outstr.append("]^");
       }
       
       _ptr->out("loaded~" + outstr);
