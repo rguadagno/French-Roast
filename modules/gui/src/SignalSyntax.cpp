@@ -41,7 +41,7 @@ void SignalSyntax::highlightBlock(const QString& text)
   commaFormat.setFont(CodeFont{});
 
   
-  QRegularExpression countReg("^[0-9]*");
+  QRegularExpression countReg("^[0-9]*|\\[[ 0-9]*\\]");
   QRegularExpressionMatchIterator itr = countReg.globalMatch(text);
   while(itr.hasNext()) {
     QRegularExpressionMatch match = itr.next();

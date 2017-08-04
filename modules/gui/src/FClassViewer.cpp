@@ -61,9 +61,17 @@ namespace frenchroast {
 
 void FClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& details)
 {
+
   for(auto& citem : details) {
-    addRow(_data, createItem(citem.name(), Qt::AlignLeft|Qt::AlignVCenter));
-    _methods[citem.name()] = citem.methods();
+    if(_classes.count(citem.name()) == 1) {
+      ++_loadCount[citem.name()];
+      _classes[citem.name()]->setText(QString::fromStdString(citem.name() + " [ " + std::to_string(_loadCount[citem.name()]) + " ]"));
+    }
+    else {
+      _classes[citem.name()] = createItem(citem.name(), Qt::AlignLeft|Qt::AlignVCenter);
+      addRow(_data, _classes[citem.name()]);
+      _methods[citem.name()] = citem.methods();
+    }
   }
 }
 
@@ -77,15 +85,20 @@ void FClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& 
     }
   }
   
-
-void FClassViewer::expand_methods(const std::string& name, int row)
-{
-  _ind[name] = 1;
-  for(auto& mitem : _methods[name]) {
-    _data->insertRow(++row);
-    _data->setItem(row, 0, createItem("    " + mitem, Qt::AlignLeft|Qt::AlignVCenter));
+  std::string clean_name(const std::string& name) {
+    size_t idx = name.find(" [");
+    if(idx == std::string::npos) return name;
+    return name.substr(0, idx);
   }
-}
+  
+  void FClassViewer::expand_methods(const std::string& name, int row)
+  {
+    _ind[name] = 1;
+    for(auto& mitem : _methods[name]) {
+      _data->insertRow(++row);
+      _data->setItem(row, 0, createItem("    " + mitem, Qt::AlignLeft|Qt::AlignVCenter));
+    }
+  }
 
 void FClassViewer::collapse_methods(const std::string& name, int row)
 {
@@ -98,7 +111,7 @@ void FClassViewer::collapse_methods(const std::string& name, int row)
 
 void FClassViewer::methods_for_class(QTableWidgetItem* item)
 {
-  std::string name = item->text().toStdString();
+  std::string name = clean_name(item->text().toStdString());
   if(_methods.count(name) == 0) return;
 
   if(_ind[name] == 0) {
@@ -111,7 +124,7 @@ void FClassViewer::methods_for_class(QTableWidgetItem* item)
 
 void FClassViewer::handle_add_signal(int row, QString text)
 {
-  std::string name = text.toStdString();
+  std::string name = clean_name(text.toStdString());
   frenchroast::remove_blanks(name);
   if(_methods.count(name) == 0) {
     while(--row >= 0) {

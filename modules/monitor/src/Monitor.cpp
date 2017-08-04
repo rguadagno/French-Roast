@@ -149,7 +149,6 @@ namespace frenchroast { namespace monitor {
     
     std::vector<ClassDetail> construct_class_details(const std::string& msg)
     {
-      std::cout << "details: "  << msg << std::endl;
       std::vector<ClassDetail> rv;
       for(auto& citem : split(msg, "]^")) {
         if(citem == "") break;
