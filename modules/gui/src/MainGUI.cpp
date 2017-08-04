@@ -52,6 +52,9 @@ void FRMain::handshake(const std::string& host, const std::string& ip)
   if(_watchTraffic) {
     start_traffic(_trafficRate);
   }
+  if(_watchLoading) {
+    start_loading();
+  }
   AboutHelpViewer::instance(this)->remote_ready(host, ip);
 }
 
@@ -96,12 +99,14 @@ void FRMain::view_classviewer()
 
 void FRMain::start_watch_loading()
 {
-   start_loading();
+  _watchLoading = true;
+  start_loading();
 }
 
 void FRMain::stop_watch_loading()
 {
    stop_loading();
+   _watchLoading = false;
 }
 
 

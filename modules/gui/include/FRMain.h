@@ -54,6 +54,7 @@ class FRMain : public QMainWindow {
   std::unordered_map<std::string, DetailHolder>                 _detailDescriptors;
   std::string                                                   _hooksfile;
   bool                                                          _watchTraffic{false};
+  bool                                                          _watchLoading{false};
   int                                                           _trafficRate{100};
   
   void restore();
