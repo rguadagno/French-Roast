@@ -83,19 +83,19 @@ AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
   }
 
 
-  void AboutHelpViewer::remote_connected(const std::string& from)
+  void AboutHelpViewer::remote_connected(const std::string& host, const std::string& pid)
   {
-    _statusMsg->remote_connected(from);
+    _statusMsg->remote_connected(host,pid);
   }
   
-  void AboutHelpViewer::remote_disconnected(const std::string& msg)
+  void AboutHelpViewer::remote_disconnected(const std::string& host, const std::string& pid)
   {
-    _statusMsg->remote_disconnected(msg);
+    _statusMsg->remote_disconnected(host,pid);
   }
   
-  void AboutHelpViewer::remote_ready(const std::string& host, const std::string& ip)
+  void AboutHelpViewer::remote_ready(const std::string& host, const std::string& pid)
   {
-    _statusMsg->remote_ready(host, ip);
+    _statusMsg->remote_ready(host, pid);
   }
 
 

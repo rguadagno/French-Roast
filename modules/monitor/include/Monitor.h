@@ -137,15 +137,15 @@ namespace frenchroast { namespace monitor {
 	  }
 
 	  if (items[MSG_TYPE] == "ready") {
-	    _handler.ready();
+	    _handler.ready(items[1], items[2]);
 	  }
           
           if (items[MSG_TYPE] == "connected") {
-            _handler.connected(items[MSG]);
+            _handler.connected(items[1], "");
           }
           
           if (items[MSG_TYPE] == "unloaded") {
-            _handler.unloaded(items[MSG]);
+            _handler.unloaded(items[1], items[2]);
           }
           if(items[MSG_TYPE] == "transmit-opcodes") {
             transmit_lines(_opcodeFile, _conn);

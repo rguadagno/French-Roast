@@ -76,8 +76,8 @@ class FRMain : public QMainWindow {
    void stop_watch_loading();
    void validate_hooks();
    void method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks);
-   void remote_connected(const std::string& msg);
-   void remote_disconnected(const std::string& msg);
+   void remote_connected(const std::string& host, const std::string& pid);
+   void remote_disconnected(const std::string& host, const std::string& pid);
    void view_hooks_editor();
    void view_signals();
    void view_timers();

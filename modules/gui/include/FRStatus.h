@@ -30,8 +30,8 @@ class FRStatus : public QWidget {
   Q_OBJECT
 
  private:
-  QTableWidget*                                      _targets;
-  std::unordered_map<std::string, QTableWidgetItem*> _items;
+  QTableWidget*                        _targets;
+  std::unordered_map<std::string, int> _items;
   /*  QLabel*      _connectionText;
   QLabel*      _statusText;
   QLabel*      _timeText;
@@ -40,9 +40,9 @@ class FRStatus : public QWidget {
   int          _elapsed{0};
 
  public slots:
-  void remote_connected(const std::string& from);
-  void remote_disconnected(const std::string& msg);
-  void remote_ready(const std::string& host, const std::string& id);
+  void remote_connected(const std::string& host, const std::string& pid);
+  void remote_disconnected(const std::string& host, const std::string& pid);
+  void remote_ready(const std::string& host, const std::string& ip);
  public:
   FRStatus();
   void waiting_for_connection();

@@ -41,8 +41,8 @@ namespace frenchroast {
     static bool restore_is_required();
 
     public slots:
-      void remote_connected(const std::string& from);
-      void remote_disconnected(const std::string& msg);
+      void remote_connected(const std::string& host, const std::string& pid);
+      void remote_disconnected(const std::string& host, const std::string& pid);
       void remote_ready(const std::string& host, const std::string& ip);
 
   };

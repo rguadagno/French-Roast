@@ -55,14 +55,14 @@ void FRMain::handshake(const std::string& host, const std::string& ip)
   AboutHelpViewer::instance(this)->remote_ready(host, ip);
 }
 
-void FRMain::remote_connected(const std::string& msg)
+void FRMain::remote_connected(const std::string& host, const std::string& pid)
 {
-  AboutHelpViewer::instance(this)->remote_connected(msg);
+  AboutHelpViewer::instance(this)->remote_connected(host,pid);
 }
 
-void FRMain::remote_disconnected(const std::string& msg)
+void FRMain::remote_disconnected(const std::string& host, const std::string& pid)
 {
-  AboutHelpViewer::instance(this)->remote_disconnected(msg);
+  AboutHelpViewer::instance(this)->remote_disconnected(host,pid);
 }
 
 

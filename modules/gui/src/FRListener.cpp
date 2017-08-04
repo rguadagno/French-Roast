@@ -45,14 +45,14 @@ void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace>& items)
   traffic_signal(items);
 }
 
-void FRListener::connected(const std::string& msg)
+void FRListener::connected(const std::string& host, const std::string& pid)
 {
-  remoteconnected( msg);
+  remoteconnected( host,pid);
 }
 
-void FRListener::unloaded(const std::string& msg)
+void FRListener::unloaded(const std::string& host, const std::string& pid)
 {
-  remoteunloaded(msg);
+  remoteunloaded(host,pid);
 }
 
 void FRListener::init()

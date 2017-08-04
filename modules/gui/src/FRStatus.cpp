@@ -22,25 +22,24 @@
 #include "QUtil.h"
 #include <QBoxLayout>
 #include <QHeaderView>
+#include <QSizePolicy>
 
 
 FRStatus::FRStatus() 
 {
-
     _targets = new QTableWidget();
-    _targets->setStyleSheet("QTableWidget {border: 0px solid grey; background: black;font-size: 16px;font-family: \"Arial\"} " \
-                            "QTableWidget::item {background:#286c22; color:#c8c8c8;}");
-
-
+    _targets->setStyleSheet("QTableWidget {border: 0px solid grey; background: black;font-size: 16px;font-family: \"Arial\"} ");
     _targets->verticalHeader()->hide();
     _targets->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     _targets->insertColumn(0);
     _targets->insertColumn(0);
-    _targets->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    _targets->setHorizontalHeaderItem(0, createItem("host"));
-    _targets->setHorizontalHeaderItem(1,createItem("PID"));
-    _targets->horizontalHeader()->setStyleSheet("QWidget {background: #606060;}");
-
+    _targets->insertColumn(0);
+    _targets->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+    _targets->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    _targets->setHorizontalHeaderItem(0,createItem("PID"));
+    _targets->setHorizontalHeaderItem(1, createItem("host"));
+    _targets->setHorizontalHeaderItem(2, createItem("elapsed time connected"));
+    _targets->horizontalHeader()->setStyleSheet("QWidget {background: #606060;} ");
     auto* layout = new QHBoxLayout;
     layout->addWidget(_targets);
     layout->setContentsMargins(1,1,1,1);
@@ -61,7 +60,7 @@ void FRStatus::waiting_for_connection()
   //  _connectionText->setText("waiting for connection...");
 }
 
-void FRStatus::remote_connected(const std::string& from)
+void FRStatus::remote_connected(const std::string& host, const std::string& pid)
 {
 
   /*
@@ -78,22 +77,27 @@ void FRStatus::remote_connected(const std::string& from)
   //  _statusText->setText("( Waiting for Signal Validation )");
 }
 
-void FRStatus::remote_disconnected(const std::string& msg)
+void FRStatus::remote_disconnected(const std::string& host, const std::string& pid)
 {
-  //_connectionText->setText(QString::fromStdString("remote agent disconnected: " +  msg));
-  // setStyleSheet("QWidget {border:none; background-color: #d04949;color:white;font-family:\"Arial\";font-size:12px;}");
-   //  _statusText->clear();
+  _targets->item(_items[host + pid ], 0)->setBackground(QBrush(QColor(208,73,73)));
+  _targets->item(_items[host + pid ], 1)->setBackground(QBrush(QColor(208,73,73)));
+  //  _targets->item(_items[host + pid ], 1)->setBackground(QBrush(QColor(96,96,96)));
   //_timer->stop();
 }
 
 
-void FRStatus::remote_ready(const std::string& host, const std::string& ip)
+void FRStatus::remote_ready(const std::string& host, const std::string& pid)
 {
   _elapsed = 0;
 
-  if(_items.count(host+ip) == 0) {
-    _items[host+ip] = createItem("[ " + ip + " ]");
-    addRow(_targets, createItem(host), _items[host+ip] );
+  if(_items.count(host + pid) == 0) {
+    _items[host + pid] = addRow(_targets, createItem(pid) , createItem(host)  );
+    _targets->item(_items[host + pid ], 0)->setBackground(QBrush(QColor(40,108,34)));
+    _targets->item(_items[host + pid ], 0)->setForeground(QBrush(QColor(200,200,200)));
+
+    _targets->item(_items[host + pid ], 1)->setBackground(QBrush(QColor(40,108,34)));
+    _targets->item(_items[host + pid ], 1)->setForeground(QBrush(QColor(200,200,200)));
+
   }
   
   //_timer->start(1000);

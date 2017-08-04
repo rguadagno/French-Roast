@@ -37,7 +37,7 @@ QTableWidgetItem* createItem(const std::string& value, Qt::Alignment align)
   return ditem;
 }
 
-void addRow(QTableWidget* table, QTableWidgetItem* item1, QTableWidgetItem* item2, QTableWidgetItem* item3)
+int addRow(QTableWidget* table, QTableWidgetItem* item1, QTableWidgetItem* item2, QTableWidgetItem* item3)
 {
   int row = table->rowCount();
   table->insertRow(row);
@@ -48,4 +48,5 @@ void addRow(QTableWidget* table, QTableWidgetItem* item1, QTableWidgetItem* item
   if(item3 != nullptr) {
     table->setItem(row,2, item3);
   }
+  return row;
 }
