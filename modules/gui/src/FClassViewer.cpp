@@ -34,7 +34,6 @@ namespace frenchroast {
   {
     _data = new QTableWidget;
     _data->setStyleSheet(_settings->value("traffic_grid_style").toString());
-    _data->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     _data->verticalHeader()->hide();
     _data->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 
@@ -47,6 +46,7 @@ namespace frenchroast {
     setStyleSheet(_settings->value("zero_border_style").toString());
     
     _data->insertColumn(0);
+    _data->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     _data->setHorizontalHeaderItem(0, createItem("Class"));
     _data->setItemDelegateForColumn(0, new SignalDelegate(_data)); 
 
