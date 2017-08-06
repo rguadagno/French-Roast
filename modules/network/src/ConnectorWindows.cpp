@@ -84,7 +84,7 @@ namespace frenchroast { namespace network {
         std::string ipport = std::string{inet_ntoa(conn_from.sin_addr)} + ":" + std::to_string(htons(conn_from.sin_port));
         _ipport_sendersocket[ipport] = inSock;
         _handler->message("connected~" + ipport);
-        std::thread t1{process_instream,inSock,_handler};
+        std::thread t1{process_instream, inSock, ipport, _handler};
         t1.detach();
       }
     }
@@ -118,14 +118,14 @@ namespace frenchroast { namespace network {
       std::cout << "========== CONNECTED TO SERVER ============ " << std::endl;
       if(handler != nullptr) {
 
-        std::thread t1{process_instream,_sender_socket,handler};
+        std::thread t1{process_instream,_sender_socket,"",handler};
         t1.detach();
       }
     }
 
     void Connector::blocked_listen(Listener* handler)
     {
-      process_instream(_sender_socket,handler);
+      process_instream(_sender_socket,"", handler);
     }
     
     void Connector::send_message(const std::string& msg)
@@ -137,6 +137,7 @@ namespace frenchroast { namespace network {
 
     void Connector::send_message(const std::string& ipport, const std::string& msg)
     {
+      std::cout << "SENDING: " << ipport << " " << msg << std::endl;
       send(_ipport_sendersocket[ipport], msg.c_str(), msg.length()+1,0);
     }
 

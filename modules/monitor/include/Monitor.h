@@ -54,20 +54,24 @@ namespace frenchroast { namespace monitor {
         std::unordered_map<std::string, std::unordered_map<std::string, int>>  _markers;
         std::unordered_map<std::string, std::unordered_map<std::string, StackReport>>  _stacks;
         std::string                                                            _opcodeFile;
-        std::unordered_map<std::string, std::string>                           _ipport_hostpid;
+        std::unordered_map<std::string, std::string>                           _clients;
 
 
+       const int IP_PORT     = 0;
+       
+       const int HOST_NAME   = 2;
+       const int PID         = 3;
         
-	const int MSG_TYPE    = 0;
-	const int MSG         = 1;
-        const int MARKER      = 3;
-        const int PARAMS      = 4;
-        const int STACK       = 5;
+	const int MSG_TYPE    = 1;
+	const int MSG         = 2;
+       const int MARKER      = 4;
+       const int PARAMS      = 5;
+       const int STACK       = 6;
 
-	const int TIME        = 1;
-	const int DIRECTION   = 2;
-	const int DESCRIPTOR  = 3;
-	const int THREAD_NAME = 4;
+	const int TIME        = 2;
+	const int DIRECTION   = 3;
+	const int DESCRIPTOR  = 4;
+	const int THREAD_NAME = 5;
         
     public:
     Monitor(T& handler, const std::string& opcodeFile) : _handler(handler), _opcodeFile(opcodeFile)
@@ -140,16 +144,17 @@ namespace frenchroast { namespace monitor {
 	  }
 
 	  if (items[MSG_TYPE] == "ready") {
-	    _handler.ready(items[1], items[2]);
+            _clients[items[HOST_NAME] + items[PID]] = items[IP_PORT];
+            std::cout << " MON HERE 1: " << items[IP_PORT] << std::endl;
+	    _handler.ready(items[HOST_NAME], items[PID]);
 	  }
           
           if (items[MSG_TYPE] == "connected") {
             _handler.connected(items[1], "");
-            _ipport_hostpid[items[1]] = "unknown_yet";
           }
           
           if (items[MSG_TYPE] == "unloaded") {
-            _handler.unloaded(items[1], items[2]);
+            _handler.unloaded(items[2], items[3]);
           }
           if(items[MSG_TYPE] == "transmit-opcodes") {
             transmit_lines(_opcodeFile, _conn);
@@ -172,21 +177,35 @@ namespace frenchroast { namespace monitor {
 
 
 
-      void start_watch_loading()
-      {
-	_conn.send_message("watch_loading");
-      }
+        void turn_on_profiler(const std::string& hostname_pid)
+        {
+          _conn.send_message(_clients[hostname_pid], "turn_on_profiler");
+        }
 
-      void stop_watch_loading()
-      {
-	_conn.send_message("stop_watch_loading");
-      }
+        void turn_off_profiler(const std::string& hostname_pid)
+        {
+          std::cout << "turnoff: " << hostname_pid << std::endl;
+          _conn.send_message(_clients[hostname_pid], "turn_off_profiler");
+        }
+                
+
+        
+
+        void start_watch_loading()
+        {
+          _conn.send_message("watch_loading");
+        }
+
+        void stop_watch_loading()
+        {
+          _conn.send_message("stop_watch_loading");
+        }
 
             
-      void watch_traffic(const int interval_millis)
-      {
-	_conn.send_message("watch_traffic~" + std::to_string(interval_millis));
-      }
+        void watch_traffic(const int interval_millis)
+        {
+          _conn.send_message("watch_traffic~" + std::to_string(interval_millis));
+        }
 
       std::vector<MethodStats> stop_watch_traffic()
       {

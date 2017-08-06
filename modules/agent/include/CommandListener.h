@@ -29,6 +29,8 @@ namespace frenchroast { namespace agent {
       virtual void stop_watch_traffic() = 0;
       virtual void watch_loading() = 0;
       virtual void stop_watch_loading() = 0;
+      virtual void turn_on_profiler() = 0;
+      virtual void turn_off_profiler() = 0;
 
     };
   }

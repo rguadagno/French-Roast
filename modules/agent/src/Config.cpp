@@ -85,8 +85,9 @@ template
       {
       }
       
-      void message(const std::string& msg)
+      void message(const std::string& pmsg)
       {
+        std::string msg = frenchroast::split(pmsg,"~")[1];
         if(msg.find("<end>") != std::string::npos) {
           _conn.close_down();
       }

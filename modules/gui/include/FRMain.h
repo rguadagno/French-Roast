@@ -70,6 +70,8 @@ class FRMain : public QMainWindow {
   void stop_traffic();
   void validated_hooks(std::vector<std::string>);
   void update_detail_list(std::string, const DetailHolder& detailholder);
+  void turn_on_profiler(const std::string& hostname_pid);
+  void turn_off_profiler(const std::string& hostname_pid);
   
  public slots:
    void update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>&);

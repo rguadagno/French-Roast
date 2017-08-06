@@ -23,11 +23,15 @@
 #include <QBoxLayout>
 #include <QHeaderView>
 #include <QSizePolicy>
+#include <QMenu>
+#include <iostream>
 
 
 FRStatus::FRStatus() 
 {
     _targets = new QTableWidget();
+    _targets->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(_targets, &QTableWidget::customContextMenuRequested, this, &FRStatus::show_menu);
     _targets->setStyleSheet("QTableWidget {border: 0px solid grey; background: black;font-size: 16px;font-family: \"Arial\"} ");
     _targets->verticalHeader()->hide();
     _targets->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -55,6 +59,51 @@ FRStatus::FRStatus()
   */
 }
 
+void FRStatus::show_menu(const QPoint& pos)
+{
+  QMenu* menu = new QMenu();
+  STATUS srow = _clientStatus[_targets->currentRow()];
+  if( srow == NOT_CONNECTED ) {
+    QObject::connect(menu->addAction("Connect"), &QAction::triggered, this, &FRStatus::connect_client);
+  }
+
+  if(srow == DROPPED) {
+    QObject::connect(menu->addAction("Acknowledge"), &QAction::triggered, this, [&]() { _targets->setRowHidden(_targets->currentRow(),true); });
+  }
+
+  if(srow == CONNECTED) {
+    QObject::connect(menu->addAction("Disconnect"), &QAction::triggered, this, &FRStatus::disconnect_client);
+  }
+
+  menu->exec(mapToGlobal(pos));
+  
+  delete menu;
+
+}
+
+
+void FRStatus::connect_client()
+{
+  _clientStatus[_targets->currentRow()] = CONNECTED; // fix this, msut wait for client to ACK
+  turn_on_profiler(_targets->item(_targets->currentRow(), 1)->text().toStdString() + _targets->item(_targets->currentRow(), 0)->text().toStdString());
+  
+  _targets->item(_targets->currentRow(), 0)->setBackground(QBrush(QColor(40,108,34)));
+  _targets->item(_targets->currentRow(), 1)->setBackground(QBrush(QColor(40,108,34)));
+}
+
+void FRStatus::disconnect_client()
+{
+  _clientStatus[_targets->currentRow()] = NOT_CONNECTED; // fix this, msut wait for client to ACK
+  turn_off_profiler(_targets->item(_targets->currentRow(), 1)->text().toStdString() + _targets->item(_targets->currentRow(), 0)->text().toStdString());
+  
+  _targets->item(_targets->currentRow(), 0)->setForeground(QBrush(QColor(0,0,0)));
+  _targets->item(_targets->currentRow(), 1)->setForeground(QBrush(QColor(200,200,200)));
+  _targets->item(_targets->currentRow(), 0)->setBackground(QBrush(QColor(90,90,90)));
+  _targets->item(_targets->currentRow(), 1)->setBackground(QBrush(QColor(90,90,90)));
+
+}
+
+
 void FRStatus::waiting_for_connection()
 {
   //  _connectionText->setText("waiting for connection...");
@@ -79,8 +128,9 @@ void FRStatus::remote_connected(const std::string& host, const std::string& pid)
 
 void FRStatus::remote_disconnected(const std::string& host, const std::string& pid)
 {
-  _targets->item(_items[host + pid ], 0)->setBackground(QBrush(QColor(208,73,73)));
-  _targets->item(_items[host + pid ], 1)->setBackground(QBrush(QColor(208,73,73)));
+  _clientStatus[_targets->item(_items[host + pid ], 0)->row()] = DROPPED;
+  _targets->item(_items[host + pid ], 0)->setBackground(QBrush(QColor(165,13,13)));
+  _targets->item(_items[host + pid ], 1)->setBackground(QBrush(QColor(165,13,13)));
   //  _targets->item(_items[host + pid ], 1)->setBackground(QBrush(QColor(96,96,96)));
   //_timer->stop();
 }
@@ -92,10 +142,13 @@ void FRStatus::remote_ready(const std::string& host, const std::string& pid)
 
   if(_items.count(host + pid) == 0) {
     _items[host + pid] = addRow(_targets, createItem(pid) , createItem(host)  );
-    _targets->item(_items[host + pid ], 0)->setBackground(QBrush(QColor(40,108,34)));
+    std::cout << " ADDED ROW: " << _items[host + pid ] << std::endl;
+    //QBrush(QColor(40,108,34)));
+    _clientStatus[_targets->item(_items[host + pid ], 0)->row()] = NOT_CONNECTED;
+    _targets->item(_items[host + pid ], 0)->setBackground(QBrush(QColor(90,90,90)));
     _targets->item(_items[host + pid ], 0)->setForeground(QBrush(QColor(200,200,200)));
 
-    _targets->item(_items[host + pid ], 1)->setBackground(QBrush(QColor(40,108,34)));
+    _targets->item(_items[host + pid ], 1)->setBackground(QBrush(QColor(90,90,90)));
     _targets->item(_items[host + pid ], 1)->setForeground(QBrush(QColor(200,200,200)));
 
   }

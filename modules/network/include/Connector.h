@@ -31,7 +31,7 @@
 
 namespace frenchroast { namespace network {
     
-    void process_instream(int connfd, Listener* handler);
+    void process_instream(int connfd, const std::string, Listener* handler);
     
     class Connector {
 #ifdef CONNECTOR_UNIX

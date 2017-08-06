@@ -28,7 +28,7 @@
 #endif 
 
 namespace frenchroast { namespace network {
-    void process_instream(int connfd, Listener* handler) 
+    void process_instream(int connfd, const std::string ipport, Listener* handler) 
     {
       int rv;
       char databuf[3000];
@@ -58,7 +58,7 @@ namespace frenchroast { namespace network {
           if (flowbuf[end] == '\0') {
             memcpy(strbuf, &flowbuf[start],(end-start) + 1);
             std::string item{strbuf};
-            handler->message(item);
+            handler->message(ipport+"~"+item);
             start = end + 1;
         }
         ++end;

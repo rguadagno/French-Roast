@@ -32,6 +32,8 @@ class FRStatus : public QWidget {
  private:
   QTableWidget*                        _targets;
   std::unordered_map<std::string, int> _items;
+  enum STATUS {NOT_CONNECTED, CONNECTED, DROPPED};
+  std::unordered_map<int, STATUS>         _clientStatus;
   /*  QLabel*      _connectionText;
   QLabel*      _statusText;
   QLabel*      _timeText;
@@ -43,6 +45,14 @@ class FRStatus : public QWidget {
   void remote_connected(const std::string& host, const std::string& pid);
   void remote_disconnected(const std::string& host, const std::string& pid);
   void remote_ready(const std::string& host, const std::string& ip);
+  void show_menu(const QPoint&);
+  void connect_client( );
+  void disconnect_client( );
+
+ signals:
+  void turn_on_profiler(const std::string& hostname_pid);
+  void turn_off_profiler(const std::string& hostname_pid);
+  
  public:
   FRStatus();
   void waiting_for_connection();

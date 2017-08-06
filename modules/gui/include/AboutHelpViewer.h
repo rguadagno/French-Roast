@@ -40,6 +40,10 @@ namespace frenchroast {
     static void capture();
     static bool restore_is_required();
 
+  signals:
+    void turn_on_profiler(const std::string& hostname_pid);
+    void turn_off_profiler(const std::string& hostname_pid);
+    
     public slots:
       void remote_connected(const std::string& host, const std::string& pid);
       void remote_disconnected(const std::string& host, const std::string& pid);

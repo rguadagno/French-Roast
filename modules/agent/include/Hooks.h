@@ -51,6 +51,7 @@ namespace frenchroast { namespace agent {
 
     public:
       bool is_hook_class(const std::string& name) const;
+      std::vector<std::string> classes() const;
       const std::vector<Hook>& get(const std::string& name);
       void load(const std::string&);
       void load_from_file(const std::string&);

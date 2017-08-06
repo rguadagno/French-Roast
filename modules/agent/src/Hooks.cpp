@@ -65,6 +65,16 @@ namespace frenchroast { namespace agent {
       return _hlist.count(name) > 0;
     }
 
+    std::vector<std::string> Hooks::classes() const
+    {
+      std::vector<std::string> rv;
+      for(auto& x : _hlist) {
+        rv.push_back(x.first);
+      }
+      return rv;
+    }
+
+    
     std::unordered_map<std::string, std::string> Hooks::_type_map {  {"int","I"},
                                                                      {"bool","Z"},
                                                                      {"void","V"},

@@ -24,6 +24,7 @@
 #include <thread>
 #include <atomic>
 #include <condition_variable>
+#include <unordered_set>
 #include "jvmti.h"
 #include "Agent.h"
 #include "Hooks.h"
@@ -51,38 +52,61 @@ struct GlobalAgentData {
 std::mutex _traffic_mutex;
 std::mutex _loading_mutex;
 std::mutex _loading_data_mutex;
+std::mutex _profiler_mutex;
+std::mutex _all_loaded_mutex;
+
+class ClassPtr {
+public:
+  ClassPtr(jint size) : _size(size) {}
+  ClassPtr() {}
+  unsigned char* _class_data;
+   jint           _size;
+};
+
+std::unordered_set<std::string>           _all_loadedClasses;
+std::unordered_map<std::string, ClassPtr> _origClass;
+
 frenchroast::network::Connector  _conn;
 
 class CommandBridge : public frenchroast::agent::CommandListener, public frenchroast::network::Listener {
   
 public:
   std::atomic<int>        _millis{};
+  std::atomic<bool>       _runProfile{false};
   std::condition_variable _traffic_cond;
   std::atomic<int>        _load_watch_interval{};
   std::condition_variable _load_watch_cond;
+  std::condition_variable _profilerCond;
 
     void message(const std::string& msg)
     {
       std::vector<std::string> items = frenchroast::split(msg,"~");
 
-      if (items[0] == "stop_watch_traffic") { 
+      if (items[1] == "stop_watch_traffic") { 
         stop_watch_traffic();
       }
-      if (items.size() == 2 && items[0] == "watch_traffic") {
-        watch_traffic(atoi(items[1].c_str()));
+      if (items[1] == "watch_traffic") {
+        watch_traffic(atoi(items[2].c_str()));
       }
-      if (items[0] == "watch_loading") { 
+      if (items[1] == "watch_loading") { 
         watch_loading();
       }
-      if (items[0] == "stop_watch_loading") { 
+      if (items[1] == "stop_watch_loading") { 
         stop_watch_loading();
+      }
+      if (items[1] == "turn_on_profiler") { 
+        turn_on_profiler();
+      }
+      if (items[1] == "turn_off_profiler") { 
+        turn_off_profiler();
       }
       
     }
 
   
   void watch_traffic(const int interval_millis)
-  {    
+  {
+    std::cout << " ** START TRAFFIC **" << std::endl;
     std::lock_guard<std::mutex> lck{_traffic_mutex};
     _millis.store(interval_millis);
     _traffic_cond.notify_one();
@@ -91,6 +115,7 @@ public:
   void stop_watch_traffic()
   {
     std::lock_guard<std::mutex> lck{_traffic_mutex};
+    std::cout << " ** STOP TRAFFIC **" << std::endl;
     _millis.store(-1);
     _traffic_cond.notify_one();
   }
@@ -113,6 +138,23 @@ public:
     std::cout << "** START WATCH LOADING **" << std::endl;
   }
 
+  void turn_on_profiler()
+  {
+    std::lock_guard<std::mutex> lck{_profiler_mutex};
+    _runProfile.store(true);
+    _profilerCond.notify_one();
+  }
+
+  void turn_off_profiler()
+  {
+    std::lock_guard<std::mutex> lck{_profiler_mutex};
+    _runProfile.store(false);
+    _profilerCond.notify_one();
+    stop_watch_loading();
+    stop_watch_traffic();
+  }
+
+  
 };
 
 
@@ -148,6 +190,7 @@ std::mutex                                 _sig_time_mutex;
 
 jvmtiEnv* genv;
 JavaVM*   g_java_vm;
+JNIEnv*   gxenv;
 
 /*
 void enter_section(jvmtiEnv *env) {
@@ -334,6 +377,120 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
   }
 
 
+bool profiler_predicate() 
+{
+  return _commandListener._runProfile.load();
+}
+
+
+void reload_monitor() 
+{
+  g_java_vm->AttachCurrentThread((void**)&gxenv,(void*)NULL);
+  std::unique_lock<std::mutex> lck{_profiler_mutex};
+  _commandListener._profilerCond.wait(lck);
+  while(1) {
+    _all_loaded_mutex.lock();
+    int total = 0;
+    for(auto& x : _hooks.classes()) {
+      if(_all_loadedClasses.count(x) == 1) {
+        ++total;
+      }
+    }
+    jclass* tclasses;      
+    genv->Allocate( total * sizeof(jclass), reinterpret_cast<unsigned char**>(&tclasses));
+    jclass* ptr = tclasses;
+    int idx = 0;
+    jclass theclass;
+    for(auto& cname : _hooks.classes()) {
+      if(_all_loadedClasses.count(cname) == 1) {
+              std::cout << " reloading : "<< cname <<std::endl;
+        theclass = gxenv->FindClass(cname.c_str()); 
+        memcpy(ptr, &theclass, sizeof(jclass));
+        ++ptr;
+      }
+    }
+    _all_loaded_mutex.unlock();
+    genv->RetransformClasses(total, tclasses);
+    _commandListener._profilerCond.wait(lck);
+
+  }
+}
+
+
+
+bool ok_to_track(const std::string& name)
+{
+  return name.find("java/") == std::string::npos && name.find("sun/") == std::string::npos;
+}
+
+void track_class(const std::string& name)
+{
+
+  std::vector<std::string> descriptors;
+  for(auto methdesc : _fr.get_method_descriptors()) {
+    if(methdesc.find("main") == std::string::npos ) {
+      descriptors.push_back(methdesc);
+    }
+  }
+  _loading_data_mutex.lock();
+  _loadedClasses.emplace_back(name, descriptors);
+  _loading_data_mutex.unlock();
+}
+
+
+
+void remove_hooks(const std::string& sname, jvmtiEnv *env,jint*& new_class_data_len, unsigned char** new_class_data)
+{
+  jvmtiError  err =    env->Allocate(_origClass[sname]._size, new_class_data);
+  *new_class_data_len = _origClass[sname]._size;
+  memcpy(*new_class_data, _origClass[sname]._class_data, _origClass[sname]._size);
+}
+
+
+
+
+void add_hooks(const std::string& sname, jvmtiEnv *env,jint*& new_class_data_len, unsigned char** new_class_data)
+{
+  for (auto& x : _hooks.get(sname)) {
+    if (x.line_number() > 0) {
+      _fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
+    }
+    else {
+      if ((x.flags() & frenchroast::FrenchRoast::METHOD_TIMER) == frenchroast::FrenchRoast::METHOD_TIMER) {
+        _fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
+      }
+      else {
+        if(x.all()) {
+          for(auto methdesc : _fr.get_method_descriptors()) {
+            if(methdesc.find("main") == std::string::npos         ) {
+              if( methdesc.find("<init") == std::string::npos ) {
+                _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
+              }
+              else {
+                  _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", frenchroast::FrenchRoast::METHOD_EXIT);
+              }
+            }
+          }
+        }
+        else {
+          _fr.add_method_call(x.method_name(), "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
+        }
+      }
+    }
+    jint size = _fr.size_in_bytes();
+    jvmtiError  err =    env->Allocate(size,new_class_data);
+    *new_class_data_len = size;
+    _fr.load_to_buffer(*new_class_data);
+  }
+}
+
+
+void move(const std::string& name, std::unordered_set<std::string>& from, std::unordered_set<std::string>& to)
+{
+  from.erase(name);
+  to.insert(name);
+}
+
 
 void JNICALL
      ClassFileLoadHook(
@@ -363,58 +520,38 @@ void JNICALL
     jint size = _fr.size_in_bytes();
     jvmtiError  err =    env->Allocate(size,new_class_data);
     *new_class_data_len = size;
-    _fr.load_to_buffer(*new_class_data); 
+    _fr.load_to_buffer(*new_class_data);
+    return;
   }
 
+      bool loaded = false;
+      if(profiler_predicate() && ok_to_track(sname)) { // for now this means when not profiling we miss classes ok  for now
+      _fr.load_from_buffer(class_data);
+      loaded = true;
+      track_class(sname);
 
-  if(sname.find("java/") == std::string::npos && sname.find("sun/") == std::string::npos) {
-    _fr.load_from_buffer(class_data);
-    std::vector<std::string> descriptors;
-    for(auto methdesc : _fr.get_method_descriptors()) {
-      if(methdesc.find("main") == std::string::npos ) {
-        descriptors.push_back(methdesc);
-      }
     }
-    _loading_data_mutex.lock();
-    _loadedClasses.emplace_back(sname, descriptors);
-    _loading_data_mutex.unlock();
-    
-    
-    if (_hooks.is_hook_class(sname)) {
-      for (auto& x : _hooks.get(sname)) {
-        if (x.line_number() > 0) {
-          _fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
-        }
-        else {
-          if ((x.flags() & frenchroast::FrenchRoast::METHOD_TIMER) == frenchroast::FrenchRoast::METHOD_TIMER) {
-            _fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
-          }
-          else {
-            if(x.all()) {
-              for(auto methdesc : _fr.get_method_descriptors()) {
-                if(methdesc.find("main") == std::string::npos         ) {
-                  if( methdesc.find("<init") == std::string::npos ) {
-                    _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
-                  }
-                else {
-                  _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", frenchroast::FrenchRoast::METHOD_EXIT);
-                }
-                }
-              }
-            }
-            else {
-              _fr.add_method_call(x.method_name(), "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
-            }
-          }
-        }
-        jint size = _fr.size_in_bytes();
-        jvmtiError  err =    env->Allocate(size,new_class_data);
-        *new_class_data_len = size;
-        _fr.load_to_buffer(*new_class_data);
+    if (profiler_predicate() && _hooks.is_hook_class(sname) ) {
+      if(!loaded) {
+        _fr.load_from_buffer(class_data);
+        loaded = true;
       }
+      add_hooks(sname, env, new_class_data_len, new_class_data);
+      _origClass[sname] = ClassPtr{class_data_len};
+       env->Allocate(class_data_len, &_origClass[sname]._class_data);
+       memcpy(_origClass[sname]._class_data, class_data,class_data_len);
     }
-  }
+
+    if(!profiler_predicate() && _hooks.is_hook_class(sname) && _all_loadedClasses.count(sname) == 1) {
+      _fr.load_from_buffer(class_data);
+      remove_hooks(sname, env, new_class_data_len, new_class_data);
+    }
+    std::unique_lock<std::mutex> lck{_all_loaded_mutex};
+    _all_loadedClasses.insert(sname);
 }
+
+
+
 
 /*
 void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread thread, jobject object)
@@ -429,6 +566,8 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   exit_section(env);
 }
 */
+
+
 
 
 bool traffic_predicate() 
@@ -460,7 +599,7 @@ void traffic_monitor()
 
   while(1) {
     genv->GetAllStackTraces(10, &stack_info, &thread_count);
-
+    std::cout << "* *** ALL STACKS" << std::endl;
     std::string rv = "";
     for(int idx = 0; idx < thread_count; idx++) {
       jvmtiStackInfo* stackptr = &stack_info[idx];
@@ -556,10 +695,16 @@ void class_loading_monitor()
   }
   }
 
+
+
+
+
+
 void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
 {
   std::cout << "*** INIT() " << std::endl;
   genv = env;
+  gxenv = jni_env;
   jvmtiEventCallbacks* xx = new jvmtiEventCallbacks();
   xx->VMInit                = &VMInit;
   xx->ThreadStart           = &ThreadStart;
@@ -581,12 +726,13 @@ void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
     std::cout << "thread: " << info.name << " ( " << (info.is_daemon == true) << " ) " << std::endl;
   }
   env->Deallocate((unsigned char *)threads);
-
+  
   std::thread t1{traffic_monitor};
   t1.detach();
   std::thread t2{class_loading_monitor};
   t2.detach();
-
+  std::thread t3{reload_monitor};
+  t3.detach();
 }
 
 
@@ -607,7 +753,8 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     std::cout << "ERROR loading Config" << std::endl;
     exit(0);
   }
-    
+
+  
   if(_config.is_server_required()) {
     _conn.connect_to_server(_config.get_server_ip(), _config.get_server_port(), &_commandListener);
   }
@@ -647,10 +794,12 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   capa.can_generate_monitor_events = 1;
   capa.can_generate_all_class_hook_events = 1;
   capa.can_access_local_variables = 1;
+  capa.can_retransform_classes = 1;
   jvmtiError errcapa  = env->AddCapabilities(&capa);
   std::cout << "err capa: " << errcapa << std::endl;
   env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_CLASS_FILE_LOAD_HOOK,NULL);
   env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_VM_INIT,NULL);
+
   _rptr.ready();
   return 0;
 }

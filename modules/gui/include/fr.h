@@ -74,6 +74,8 @@ class FRListener : public QObject
     void start_watch_loading();
     void stop_watch_loading();
     void class_watch(const std::vector<frenchroast::monitor::ClassDetail>& details);
+    void turn_on_profiler(const std::string&);
+    void turn_off_profiler(const std::string&);
     
   signals:
     void send_hooks();

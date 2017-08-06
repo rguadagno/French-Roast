@@ -123,6 +123,8 @@ void FRMain::connect_common_listeners(FViewer* instance)
 
 void FRMain::view_about()
 {
+  QObject::connect(AboutHelpViewer::instance(this),  &frenchroast::AboutHelpViewer::turn_on_profiler, this, &FRMain::turn_on_profiler);
+  QObject::connect(AboutHelpViewer::instance(this),  &frenchroast::AboutHelpViewer::turn_off_profiler, this, &FRMain::turn_off_profiler);
   connect_common_listeners(AboutHelpViewer::instance(this));
 }
 

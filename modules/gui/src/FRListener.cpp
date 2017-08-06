@@ -94,6 +94,19 @@ void FRListener::request_hooks()
   send_hooks();
 }
 
+void FRListener::turn_on_profiler(const std::string& hostname_pid)
+{
+  _mon.turn_on_profiler(hostname_pid);
+}
+
+
+void FRListener::turn_off_profiler(const std::string& hostname_pid)
+{
+  _mon.turn_off_profiler(hostname_pid);
+}
+
+
+
 void FRListener::class_watch( const std::vector<frenchroast::monitor::ClassDetail>& details)
 {
   class_loaded(details);

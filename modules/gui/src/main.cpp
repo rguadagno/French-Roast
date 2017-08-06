@@ -72,6 +72,8 @@ int main(int argc, char* argv[]) {
   QObject::connect(&roaster, &FRListener::method_ranking,  &main,    &FRMain::method_ranking);
   QObject::connect(&roaster, &FRListener::send_hooks,      &main,    &FRMain::validate_hooks);
   QObject::connect(&main,    &FRMain::validated_hooks,     &roaster, &FRListener::validated_hooks);
+  QObject::connect(&main,    &FRMain::turn_on_profiler,    &roaster, &FRListener::turn_on_profiler);
+  QObject::connect(&main,    &FRMain::turn_off_profiler,   &roaster, &FRListener::turn_off_profiler);
   
   tt->start();
   main.show();
