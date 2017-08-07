@@ -30,10 +30,11 @@
 
 FRStatus::FRStatus() 
 {
+    setStyleSheet("QWidget {background: #202020;color:#909090;font-family:\"Arial\";font-size:14px;}");
     _targets = new QTableWidget();
     _targets->setContextMenuPolicy(Qt::CustomContextMenu);
     QObject::connect(_targets, &QTableWidget::customContextMenuRequested, this, &FRStatus::show_menu);
-    _targets->setStyleSheet("QTableWidget {border: 0px solid grey; background: black;font-size: 16px;font-family: \"Arial\"} ");
+    _targets->setStyleSheet("QTableWidget {border: 0px solid grey; background: black;color:#202020;font-size: 16px;font-family: \"Arial\";} ");
     _targets->verticalHeader()->hide();
     _targets->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     _targets->insertColumn(0);
@@ -45,7 +46,10 @@ FRStatus::FRStatus()
     _targets->setHorizontalHeaderItem(1, createItem("host"));
     _targets->setHorizontalHeaderItem(2, createItem("elapsed time connected"));
     _targets->horizontalHeader()->setStyleSheet("QWidget {background: #606060;} ");
-    auto* layout = new QHBoxLayout;
+    _autoConnect = new QCheckBox("auto connect");
+    _autoConnect->setCheckState(Qt::Checked);
+    auto* layout = new QVBoxLayout;
+    layout->addWidget(_autoConnect);
     layout->addWidget(_targets);
     layout->setContentsMargins(1,1,1,1);
     layout->setSpacing(0);
@@ -92,7 +96,7 @@ void display_row_dropped(int row, QTableWidget* table)
 {
   int totalcols = table->columnCount();
   for(int col = 0; col < totalcols; col++) {
-    table->item(row, col)->setBackground(QBrush(QColor(165,13,13)));
+    table->item(row, col)->setBackground(QBrush(QColor(146,23,23)));
   }
 }
 
@@ -133,5 +137,9 @@ void FRStatus::remote_ready(const std::string& host, const std::string& pid)
     _items[host + pid] = addRow(_targets, createItem(pid) , createItem(host), createItem(new TimerItem())  );
     _clientStatus[_targets->item(_items[host + pid ], 0)->row()] = NOT_CONNECTED;
     display_row_disconnected(_items[host + pid ], _targets);
+    if(_autoConnect->checkState() == Qt::Checked) {
+      _targets->setCurrentCell(_items[host + pid],0);
+      connect_client();
+    }
   }
 }

@@ -22,6 +22,7 @@
 
 #include <QLabel>
 #include <QTableWidget>
+#include <QCheckBox>
 #include <unordered_map>
 
 class FRStatus : public QWidget {
@@ -32,7 +33,8 @@ class FRStatus : public QWidget {
   QTableWidget*                        _targets;
   std::unordered_map<std::string, int> _items;
   enum STATUS {NOT_CONNECTED, CONNECTED, DROPPED};
-  std::unordered_map<int, STATUS>      _clientStatus; 
+  std::unordered_map<int, STATUS>      _clientStatus;
+  QCheckBox*                           _autoConnect;
 
  public slots:
   void remote_connected(const std::string& host, const std::string& pid);
