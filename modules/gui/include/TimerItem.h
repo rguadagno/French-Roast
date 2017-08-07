@@ -17,37 +17,39 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef FRSTATUS_H
-#define FRSTATUS_H
+#ifndef TIMERITEM_H
+#define TIMERITEM_H
 
-#include <QLabel>
 #include <QTableWidget>
-#include <unordered_map>
+#include <QTimer>
 
-class FRStatus : public QWidget {
 
-  Q_OBJECT
+class TimerListener : public QObject {
 
- private:
-  QTableWidget*                        _targets;
-  std::unordered_map<std::string, int> _items;
-  enum STATUS {NOT_CONNECTED, CONNECTED, DROPPED};
-  std::unordered_map<int, STATUS>      _clientStatus; 
-
- public slots:
-  void remote_connected(const std::string& host, const std::string& pid);
-  void remote_disconnected(const std::string& host, const std::string& pid);
-  void remote_ready(const std::string& host, const std::string& ip);
-  void show_menu(const QPoint&);
-  void connect_client( );
-  void disconnect_client( );
-
- signals:
-  void turn_on_profiler(const std::string& hostname_pid);
-  void turn_off_profiler(const std::string& hostname_pid);
+    int               _elapsed{0};
+    QTableWidgetItem* _item;
   
+Q_OBJECT
  public:
-  FRStatus();
+ TimerListener(QTableWidgetItem*);
+ 
+  public slots:
+    void tick();
+
 };
+
+  class TimerItem : public QTableWidgetItem {
+
+  private:
+
+    QTimer*           _timer;
+    TimerListener*    _listener;
+    
+  public:
+    TimerItem();
+    void start();
+    void stop();
+  };
+
 
 #endif

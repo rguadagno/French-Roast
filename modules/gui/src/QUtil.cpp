@@ -20,6 +20,14 @@
 #include "QUtil.h"
 #include "CodeFont.h"
 
+QTableWidgetItem* createItem(QTableWidgetItem* ditem)
+{
+  ditem->setFont(CodeFont());
+  ditem->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
+  return ditem;
+}
+
+
 QTableWidgetItem* createItem(int value)
 {
   QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(std::to_string(value)));

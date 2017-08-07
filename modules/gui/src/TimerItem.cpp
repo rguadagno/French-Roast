@@ -17,17 +17,38 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef QUTIL_H
-#define QUTIL_H
-
-#include <QTableWidgetItem>
-#include <string>
-
-QTableWidgetItem* createItem(int value);
-QTableWidgetItem* createItem(const std::string& value, Qt::Alignment = Qt::AlignCenter);
-QTableWidgetItem* createItem(QTableWidgetItem*);
-int addRow(QTableWidget*, QTableWidgetItem*, QTableWidgetItem* = nullptr, QTableWidgetItem* = nullptr);
+#include "TimerItem.h"
+#include "MonitorUtil.h"
 
 
 
-#endif
+TimerListener::TimerListener(QTableWidgetItem* item) : _item(item)
+{
+}
+
+void TimerListener::tick()
+{
+  using namespace frenchroast::monitor;
+  _elapsed += 1000;
+  _item->setText(QString::fromStdString(format_millis(_elapsed, FORMAT_HOURS|FORMAT_MINUTES|FORMAT_SECONDS)));
+}
+
+
+
+TimerItem::TimerItem() : QTableWidgetItem("")
+  {
+    _timer   = new QTimer{};
+    _listener = new TimerListener(this);
+    QObject::connect(_timer,&QTimer::timeout, _listener, &TimerListener::tick);
+  }
+
+
+void TimerItem::start()
+{
+  _timer->start(1000);
+}
+
+void TimerItem::stop()
+{
+  _timer->stop();
+}

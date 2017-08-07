@@ -28,7 +28,6 @@ AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
     _statusMsg = new FRStatus{};
     QObject::connect(_statusMsg, &FRStatus::turn_on_profiler, this, &AboutHelpViewer::turn_on_profiler);
     QObject::connect(_statusMsg, &FRStatus::turn_off_profiler, this, &AboutHelpViewer::turn_off_profiler);
-    _statusMsg->waiting_for_connection();
 
     QWidget* holder = new QWidget();
     QVBoxLayout* vlayout = new QVBoxLayout();
