@@ -18,7 +18,6 @@
 //
 
 #include "AboutHelpViewer.h"
-#include <QTabWidget>
 #include <QVBoxLayout>
 
 namespace frenchroast {
@@ -36,20 +35,7 @@ AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
     vlayout->setContentsMargins(0,0,0,0);
     holder->setLayout(vlayout);
     holder->setStyleSheet(_settings->value("zero_border_style").toString());
-
-    
-    QTabWidget* tab = new QTabWidget();
-    tab->addTab(holder, "Targets");
-    //    tab->addTab(holderStacks, "About");
-    //tab->addTab(holderStacks, "Help");
-
-    tab->setStyleSheet("QWidget {border: none; background:black;} "     \
-                     "QTabBar::tab {height: 18px; background-color:#606060;color:#B4B6B6;font-size: 12px;border-top-left-radius:8px;min-width: 40ex; padding:3px;margin-left:2px;} " \
-                       "QTabBar::tab:hover {color: white;border: 1px solid #B4B6B6;}"             \
-                       "QTabBar::tab:selected {background: #173496;}" );
-    tab->setDocumentMode(true);
-
-    setup_dockwin("French-Roast", tab, false);
+    setup_dockwin("Targets", holder, false);
   }
 
 

@@ -52,7 +52,8 @@ namespace frenchroast {
     QGridLayout* layout = new QGridLayout();
     
     _title  = new QListWidgetItem{QString::fromStdString(title)};
-    _title->setSizeHint(QSize(30,30)); 
+    _title->setSizeHint(QSize(30,30));
+    _title->setTextAlignment(Qt::AlignCenter);
     sigLabel->setEnabled(false);
     sigLabel->setFixedHeight(28);
     sigLabel->addItem(_title);
@@ -62,30 +63,33 @@ namespace frenchroast {
     }
 
   QPushButton* fbmenu = new QPushButton("French\nRoast");
-  fbmenu->setStyleSheet("QPushButton {background: #404040;color:#521704; "\
+  fbmenu->setStyleSheet("QPushButton {background: #404040;color:#C0C0C0; "\
                         "border: 1px solid #303030;" \
                         "font-size:12px;" \
                         "border-top-left-radius:6px;"               \
                         "border-top-right-radius:6px;"                 \
                         "border-bottom-right-radius:6px;"              \
-                        "border-bottom-left-radius:6px; }"          \
+                        "border-bottom-left-radius:6px; "          \
+                        "padding-right:4px; "          \
+                        "padding-left:4px; }"              \
                         "QPushButton::hover{background-color:#202020;}"
                         );
   QMenu* menu = new QMenu();
   fbmenu->setMenu(menu);
 
+  QObject::connect(menu->addAction("Targets"),               &QAction::triggered, this, &FViewer::about_viewer);
   QObject::connect(menu->addAction("Signals"),               &QAction::triggered, this, &FViewer::signal_viewer);
   QObject::connect(menu->addAction("Timers"),                &QAction::triggered, this, &FViewer::timer_viewer);
   QObject::connect(menu->addAction("Editor"),                &QAction::triggered, this, &FViewer::editor_viewer);
   QObject::connect(menu->addAction("Traffic watcher"),       &QAction::triggered, this, &FViewer::traffic_viewer);
   QObject::connect(menu->addAction("Class loading watcher"), &QAction::triggered, this, &FViewer::classload_viewer);
-  QObject::connect(menu->addAction("About | Help"),          &QAction::triggered, this, &FViewer::about_viewer);
   QObject::connect(menu->addAction("Exit French-Roast"),     &QAction::triggered, this, &FViewer::exit_fr);
 
   layout->addWidget(fbmenu,1,1);
   layout->addWidget(sigLabel,1,3);
   layout->setContentsMargins(1,1,1,1);
   layout->addWidget(_actionBar,1, 5);
+  layout->setContentsMargins(5,4,2,2);
   titlebar->setLayout(layout);
   titlebar->setStyleSheet(_settings->value("dock_win_header_style").toString());
 
