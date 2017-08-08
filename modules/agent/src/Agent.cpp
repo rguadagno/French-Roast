@@ -68,6 +68,8 @@ std::unordered_map<std::string, ClassPtr> _origClass;
 
 frenchroast::network::Connector  _conn;
 
+bool profiler_predicate();
+
 class CommandBridge : public frenchroast::agent::CommandListener, public frenchroast::network::Listener {
   
 public:
@@ -103,9 +105,10 @@ public:
       
     }
 
-  
+
   void watch_traffic(const int interval_millis)
   {
+    if(!profiler_predicate()) return;
     std::cout << " ** START TRAFFIC **" << std::endl;
     std::lock_guard<std::mutex> lck{_traffic_mutex};
     _millis.store(interval_millis);
@@ -131,6 +134,7 @@ public:
 
   void watch_loading()
   {
+    if(!profiler_predicate()) return;
     std::lock_guard<std::mutex> lck{_loading_mutex};
     _load_watch_interval.store(5000);
     _load_watch_cond.notify_one();
@@ -403,7 +407,6 @@ void reload_monitor()
     jclass theclass;
     for(auto& cname : _hooks.classes()) {
       if(_all_loadedClasses.count(cname) == 1) {
-              std::cout << " reloading : "<< cname <<std::endl;
         theclass = gxenv->FindClass(cname.c_str()); 
         memcpy(ptr, &theclass, sizeof(jclass));
         ++ptr;
@@ -482,13 +485,6 @@ void add_hooks(const std::string& sname, jvmtiEnv *env,jint*& new_class_data_len
     *new_class_data_len = size;
     _fr.load_to_buffer(*new_class_data);
   }
-}
-
-
-void move(const std::string& name, std::unordered_set<std::string>& from, std::unordered_set<std::string>& to)
-{
-  from.erase(name);
-  to.insert(name);
 }
 
 
@@ -599,7 +595,6 @@ void traffic_monitor()
 
   while(1) {
     genv->GetAllStackTraces(10, &stack_info, &thread_count);
-    std::cout << "* *** ALL STACKS" << std::endl;
     std::string rv = "";
     for(int idx = 0; idx < thread_count; idx++) {
       jvmtiStackInfo* stackptr = &stack_info[idx];
