@@ -49,13 +49,14 @@ void FRMain::validate_hooks()
 
 void FRMain::handshake(const std::string& host, const std::string& ip)
 {
+  AboutHelpViewer::instance(this)->remote_ready(host, ip);
   if(_watchTraffic) {
     start_traffic(_trafficRate);
   }
   if(_watchLoading) {
     start_loading();
   }
-  AboutHelpViewer::instance(this)->remote_ready(host, ip);
+
 }
 
 void FRMain::remote_connected(const std::string& host, const std::string& pid)
