@@ -26,6 +26,7 @@
 #include "TrafficViewer.h"
 #include "QUtil.h"
 #include "KeyListener.h"
+#include "StackColumn.h"
 
 namespace frenchroast {
 
@@ -42,10 +43,8 @@ namespace frenchroast {
     _traffic = new QTableWidget();
     _traffic->setStyleSheet(_settings->value("traffic_grid_style").toString());
     _traffic->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    _traffic->horizontalHeader()->hide();
     _traffic->verticalHeader()->hide();
     _traffic->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    _traffic->insertColumn(0);
 
     QWidget* trafficHolder = new QWidget();
     QGridLayout* tlayout = new QGridLayout();
@@ -68,8 +67,6 @@ namespace frenchroast {
     _ranking->horizontalHeader()->hide();
     _ranking->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     _ranking->verticalHeader()->hide();
-
-
     _ranking->setStyleSheet(_settings->value("traffic_grid_style").toString());
     QWidget* rankingHolder = new QWidget();
     QGridLayout* rlayout = new QGridLayout();
@@ -90,7 +87,6 @@ namespace frenchroast {
     QSplitter* splitter = new QSplitter();
     splitter->setContentsMargins(0,0,0,0);
     splitter->addWidget(trafficHolder);
-
     splitter->addWidget(rankingHolder);
     splitter->setSizes({650,250});
     
@@ -111,13 +107,39 @@ namespace frenchroast {
   void TrafficViewer::update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks)
   {
     for(auto& x : stacks) {
-      int currRow = _traffic->rowCount();
-      if(_traffic_rows.count(x.thread_name()) == 0) {
-        _traffic->insertRow(currRow);
-        StackRow* sr = new StackRow{x.thread_name(), currRow, _traffic, _traffic_keys};
-        _traffic_rows[x.thread_name()] = sr;
+      if(_thread_col.count(x.thread_name()) == 0  ) {
+        _traffic->insertColumn(_traffic->columnCount());
+        _thread_col[x.thread_name()] = StackColumn{_traffic->columnCount()-1};
+        _traffic->setHorizontalHeaderItem(_thread_col[x.thread_name()].column(), createItem(x.thread_name()));
+        _traffic->setItemDelegateForColumn(_thread_col[x.thread_name()].column(), new SignalDelegate(_traffic));
       }
-      _traffic_rows[x.thread_name()]->add(x);
+
+      if(_thread_col[x.thread_name()].update(x)) {
+        int newrows = _thread_col[x.thread_name()].required_rows() - _traffic->rowCount();
+        int totalrows = newrows +  _traffic->rowCount() + _thread_col[x.thread_name()].stacks().size();
+        for(int r = _traffic->rowCount(); r < totalrows; r++) {
+          _traffic->insertRow(r);
+        }
+        int rowidx = 0;
+        int col = _thread_col[x.thread_name()].column();
+        for(auto& stack : _thread_col[x.thread_name()].stacks()) {
+          if(rowidx > 0 ) {
+            if(_traffic->item(rowidx,col) != 0) {
+              _traffic->item(rowidx,col)->setText("");
+            }
+            ++rowidx;
+          }            
+          for(auto& item : stack) {
+            if(_traffic->item(rowidx,col) == 0) {
+              _traffic->setItem(rowidx,col,createItem(item));
+            }
+            else {
+              _traffic->item(rowidx,col)->setText(QString::fromStdString(item));
+            }
+            ++rowidx;
+          }
+        }
+      }
     }
   }
 

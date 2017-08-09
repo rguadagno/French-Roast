@@ -127,7 +127,7 @@ namespace frenchroast { namespace monitor {
                 first = false;
               }
             }
-            st.addFrame(StackFrame{descriptor,fitems[idx]});
+            st.addFrame(descriptor);
           }
         }
         rv.push_back(st);

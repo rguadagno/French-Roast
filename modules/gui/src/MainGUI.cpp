@@ -70,17 +70,6 @@ void FRMain::remote_disconnected(const std::string& host, const std::string& pid
 }
 
 
-void FunctionPoint::set_decorated_name(const QString& name)
-{
-  _name = name;
-}
-
-QString FunctionPoint::get_name() const
-{
-  return _name;
-}
-
-
 void FRMain::view_traffic()
 {
   QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::start_watching, this,  &FRMain::start_watching_traffic);

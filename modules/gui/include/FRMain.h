@@ -31,7 +31,6 @@
 #include <QTextEdit>
 #include <unordered_map>
 #include "fr.h"
-#include "StackRow.h"
 #include "ActionBar.h"
 #include "KeyListener.h"
 #include "MethodStats.h"

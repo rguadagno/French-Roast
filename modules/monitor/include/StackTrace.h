@@ -21,6 +21,7 @@
 #define FRSTACKTRACE_H
 
 #include <vector>
+#include <stack>
 #include <string>
 #include "StackFrame.h"
 
@@ -29,13 +30,14 @@ namespace frenchroast { namespace monitor {
     class StackTrace {
       std::string _key;
       std::string _thread_name;
-      std::vector<StackFrame> _frames;
+      std::vector<std::string> _frames;
     public:
       StackTrace(const std::string tname);
       std::string key()  const;
       std::string thread_name()  const;
-      const std::vector<StackFrame>& frames() const;
-      void addFrame(const StackFrame& frame);
+      std::vector<std::string> frames() const;
+      void addFrame(const std::string& frame);
+      std::stack<std::string> keys() const;
     };
 
   }

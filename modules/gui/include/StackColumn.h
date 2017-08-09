@@ -17,41 +17,34 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef STACKROW_H
-#define STACKROW_H
+#ifndef STACKCOL_H
+#define STACKCOL_H
 
 
-#include <QTableWidget>
 #include <unordered_map>
 #include <unordered_set>
 #include "StackTrace.h"
 
-class FunctionPoint : public QTableWidgetItem {
-  QString _name;
-
-public:
-  void set_decorated_name(const QString& name);
-  QString get_name() const;
-};
-
-
-
-class StackRow {
-  int _totalRows{1};
-  int _col{1};
-  FunctionPoint* _threadName;
-  QTableWidget* _tptr;
-  std::unordered_map<std::string, int>& _keys;
-  std::unordered_set<std::string> _complete_keys;
-  static QFont _font;
+namespace frenchroast {
+  using namespace frenchroast::monitor;
   
-  void add_column(const frenchroast::monitor::StackTrace& st, int col);
-  void append_to_column(int col, const frenchroast::monitor::StackTrace& st);
+
+class StackColumn {
+
+  int _column;
+  int _totalRows;
+  std::unordered_map<std::string, int> _stackline;
+  std::vector<std::vector<std::string>> _stacks;
+  std::unordered_set<std::string>       _allkeys;
+
  public:
-  StackRow(const std::string tname, int row, QTableWidget* tptr, std::unordered_map<std::string,int>& keys);
-  FunctionPoint* thread_name();
-  void add(const frenchroast::monitor::StackTrace& st);
+  StackColumn(int col);
+  StackColumn();
+  int column();
+  bool update(const StackTrace&);
+  int required_rows();
+  std::vector<std::vector<std::string>>& stacks();
 
 };
-
+}
 #endif

@@ -64,6 +64,7 @@ namespace frenchroast { namespace monitor {
         
 	const int MSG_TYPE    = 1;
 	const int MSG         = 2;
+
        const int MARKER      = 4;
        const int PARAMS      = 5;
        const int STACK       = 6;

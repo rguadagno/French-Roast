@@ -25,7 +25,7 @@
 #include <QListWidget>
 #include <unordered_map>
 #include "FViewer.h"
-#include "StackRow.h"
+#include "StackColumn.h"
 #include "StackTrace.h"
 #include "MethodStats.h"
 
@@ -45,10 +45,11 @@ namespace frenchroast {
 
     QTableWidget*                             _traffic;
     QTableWidget*                             _ranking;
-    std::unordered_map<std::string,StackRow*> _traffic_rows;
     std::unordered_map<std::string, int>      _traffic_keys;
     ActionEdit*                               _rate;
 
+    std::unordered_map<std::string, StackColumn>      _thread_col;
+    
     
   public:
     static TrafficViewer* instance(QWidget*);
