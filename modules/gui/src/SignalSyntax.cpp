@@ -48,7 +48,7 @@ void SignalSyntax::highlightBlock(const QString& text)
     setFormat(match.capturedStart(), match.capturedLength(), ppointFormat);
   }
 
-  QRegularExpression pointReg("[A-Za-z,\\.:() <>\\[\\]\\_]*");
+  QRegularExpression pointReg("[A-Za-z,\\.:() <>\\[\\]\\_$0-9]*");
   itr = pointReg.globalMatch(text);
   while(itr.hasNext()) {
     QRegularExpressionMatch match = itr.next();

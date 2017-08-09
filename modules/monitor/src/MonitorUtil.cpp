@@ -1,5 +1,6 @@
 #include <iostream>
 #include "MonitorUtil.h"
+#include "Util.h"
 
 
 std::string frenchroast::monitor::ntoa(int x, int amount, char ch )
@@ -20,7 +21,11 @@ std::string  frenchroast::monitor::pad(const std::string& str, int amount, char 
   return rv;
 }
 
-//const std::bitset<4> frenchroast::monitor::FORMAT_HOURS{"0001"};
+std::string frenchroast::monitor::pad_front(const std::string& str, int amount, const std::string point )
+{
+  const std::string lstr =  frenchroast::split(str, point)[0];
+  return std::string(  lstr.length() < amount ? std::string(amount - lstr.length(), ' ') : "") + lstr + point + frenchroast::split(str, point)[1];
+}
 
 
 std::string frenchroast::monitor::format_millis(long millis, std::bitset<4> format)

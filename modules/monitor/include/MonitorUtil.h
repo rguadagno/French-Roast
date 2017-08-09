@@ -16,6 +16,7 @@ namespace frenchroast {  namespace monitor {
     const char* get_env_variable(const std::string& var, const std::string& msg = "");
     void pad(std::string& str, int amount, char ch = ' ');
     std::string pad(const std::string& str, int amount, char ch = ' ');
+    std::string pad_front(const std::string& str, int amount, const std::string point );
 
 
 

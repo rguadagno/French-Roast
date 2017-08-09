@@ -131,10 +131,10 @@ namespace frenchroast {
           }            
           for(auto& item : stack) {
             if(_traffic->item(rowidx,col) == 0) {
-              _traffic->setItem(rowidx,col,createItem(item));
+              _traffic->setItem(rowidx,col,createItem(frenchroast::monitor::pad_front(item,50,":(")));
             }
             else {
-              _traffic->item(rowidx,col)->setText(QString::fromStdString(item));
+              _traffic->item(rowidx,col)->setText(QString::fromStdString(   frenchroast::monitor::pad_front(item,50,":(")   ));
             }
             ++rowidx;
           }
