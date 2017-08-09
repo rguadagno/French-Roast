@@ -132,7 +132,7 @@ namespace frenchroast { namespace monitor {
               ++_stacks[desc][skey];
             }
             
-            _handler.signal(desc , items[2] , ++_signals[items[MSG]], argHeaders, instanceHeaders, mfields, _stacks[desc]);
+            _handler.signal(desc , items[3] , ++_signals[items[MSG]], argHeaders, instanceHeaders, mfields, _stacks[desc]);
 	   }
 
 	  if (items[MSG_TYPE] == "traffic") {
@@ -145,7 +145,6 @@ namespace frenchroast { namespace monitor {
 
 	  if (items[MSG_TYPE] == "ready") {
             _clients[items[HOST_NAME] + items[PID]] = items[IP_PORT];
-            std::cout << " MON HERE 1: " << items[IP_PORT] << std::endl;
 	    _handler.ready(items[HOST_NAME], items[PID]);
 	  }
           
