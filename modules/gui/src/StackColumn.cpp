@@ -51,24 +51,32 @@ namespace frenchroast {
   {
     return _stacks;
   }
-  
+
+  std::vector<std::vector<int>>& StackColumn::monstacks() 
+  {
+    return _monstacks;
+  }
+
 
   bool StackColumn::update(const StackTrace& trace)
   {
     if(_allkeys.count(trace.key()) == 1) return false;  
     _allkeys.insert(trace.key());
     std::stack<std::string> skey = trace.keys();
+    
     while(!skey.empty()) {
       if(_stackline.count(skey.top()) == 1) {
         _stackline[trace.key()] =  _stackline[skey.top()];
         _stackline.erase(skey.top());
-        std::swap(_stacks[_stackline[trace.key()]], trace.frames());
+        std::swap(_stacks[_stackline[trace.key()]], trace.descriptor_frames());
+        std::swap(_monstacks[_stackline[trace.key()]], trace.monitor_frames());
         return true;;
       }
       skey.pop();
     }
     if(_stackline.count(trace.key()) == 0) {
-      _stacks.push_back(trace.frames());
+      _stacks.push_back(trace.descriptor_frames());
+      _monstacks.push_back(trace.monitor_frames());
       _stackline[trace.key()] = _stacks.size() - 1;
       return true;
     }

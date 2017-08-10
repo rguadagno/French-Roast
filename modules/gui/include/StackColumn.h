@@ -35,15 +35,17 @@ class StackColumn {
   int _totalRows;
   std::unordered_map<std::string, int> _stackline;
   std::vector<std::vector<std::string>> _stacks;
+  std::vector<std::vector<int>>         _monstacks;
   std::unordered_set<std::string>       _allkeys;
 
  public:
   StackColumn(int col);
   StackColumn();
-  int column();
+  int  column();
   bool update(const StackTrace&);
-  int required_rows();
+  int  required_rows();
   std::vector<std::vector<std::string>>& stacks();
+  std::vector<std::vector<int>>&         monstacks();
 
 };
 }

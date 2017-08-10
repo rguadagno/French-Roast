@@ -90,19 +90,28 @@ namespace frenchroast { namespace monitor {
       return parse_type_tokens(name)[0];
     }
     
-    std::string translate_descriptor(const std::string& name)
+    std::string translate_descriptor(const std::string& name, int* moncount)
     {
-      std::string rv = name.substr(1);
+      std::string rv = name;
       replace(rv,'/','.');
-      std::string classname = split(rv,"::")[0];
+      std::string classname;
+      if(moncount != nullptr) {
+        classname = split(rv,"::")[0];
+        *moncount = atoi(  split(classname, "!")[0].c_str());
+        classname = split(classname, "!")[1];
+      }
+      else {
+         classname = split(rv,"::")[0];
+      }
+      
       replace(classname,';');
       std::string methodname = split(split(rv,"::")[1],":")[0];
       std::string pstr = split(split(rv,"(")[1],")")[0];
       std::string rvstr = translate_return_type(split(split(rv,")")[1],":")[0]);
       std::string parms = translate_param_types(pstr);
-      return classname + "::" + methodname + ":(" + parms + "):" + rvstr;
+      rv = classname + "::" + methodname + ":(" + parms + "):" + rvstr;
+      return rv;
     }
-
 
     std::vector<StackTrace> construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters)
     {
@@ -110,13 +119,14 @@ namespace frenchroast { namespace monitor {
       std::vector<std::string> items = split(msg, "%");
       for(auto& x : items) {
         StackTrace st{split(x,"^")[0]};
-        //      for(auto& y : split(split(x,"^")[1],"#")) {
         std::vector<std::string> fitems = split(split(x,"^")[1],"#");
 
         bool first=true;
         for(int idx = fitems.size()-1;idx >= 0; idx--) {
           if(fitems[idx].find("thook") == std::string::npos ) {
-            std::string descriptor = translate_descriptor(fitems[idx]);
+            std::string descriptor;
+            int moncount=0;
+            descriptor = translate_descriptor(fitems[idx], &moncount);
             if(fitems[idx].find("java") == std::string::npos && fitems[idx].find("sun") == std::string::npos)  {
               if(counters.count(descriptor) == 0 ) {
                 counters[descriptor] = MethodStats(descriptor);
@@ -127,7 +137,7 @@ namespace frenchroast { namespace monitor {
                 first = false;
               }
             }
-            st.addFrame(descriptor);
+            st.addFrame(StackFrame{descriptor,moncount});
           }
         }
         rv.push_back(st);

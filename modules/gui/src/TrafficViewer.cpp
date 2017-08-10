@@ -103,11 +103,17 @@ namespace frenchroast {
   }
   
   
-  
+  std::string getvalue(int v)
+  {
+    return v > 0 ? std::to_string(v) : "";
+  }
   void TrafficViewer::update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks)
   {
     for(auto& x : stacks) {
       if(_thread_col.count(x.thread_name()) == 0  ) {
+        _traffic->insertColumn(_traffic->columnCount());
+        _traffic->setHorizontalHeaderItem(_traffic->columnCount() -1, createItem("monitors"));
+                
         _traffic->insertColumn(_traffic->columnCount());
         _thread_col[x.thread_name()] = StackColumn{_traffic->columnCount()-1};
         _traffic->setHorizontalHeaderItem(_thread_col[x.thread_name()].column(), createItem(x.thread_name()));
@@ -122,22 +128,31 @@ namespace frenchroast {
         }
         int rowidx = 0;
         int col = _thread_col[x.thread_name()].column();
+        auto monstacks = _thread_col[x.thread_name()].monstacks();
+
+        int stackidx = 0;
         for(auto& stack : _thread_col[x.thread_name()].stacks()) {
           if(rowidx > 0 ) {
             if(_traffic->item(rowidx,col) != 0) {
               _traffic->item(rowidx,col)->setText("");
-            }
-            ++rowidx;
-          }            
-          for(auto& item : stack) {
-            if(_traffic->item(rowidx,col) == 0) {
-              _traffic->setItem(rowidx,col,createItem(frenchroast::monitor::pad_front(item,50,":(")));
-            }
-            else {
-              _traffic->item(rowidx,col)->setText(QString::fromStdString(   frenchroast::monitor::pad_front(item,50,":(")   ));
+               _traffic->item(rowidx,col-1)->setText("");
             }
             ++rowidx;
           }
+          int methidx  = 0;
+          for(auto& item : stack) {
+            if(_traffic->item(rowidx,col) == 0) {
+              _traffic->setItem(rowidx,col,createItem(item));
+              _traffic->setItem(rowidx,col-1,createItem(getvalue(monstacks[stackidx][methidx])));
+            }
+            else {
+              _traffic->item(rowidx,col)->setText(QString::fromStdString(  item   ));
+              _traffic->item(rowidx,col-1)->setText(QString::fromStdString(   getvalue(monstacks[stackidx][methidx])   ));
+            }
+            ++rowidx;
+            ++methidx;
+          }
+          ++stackidx;
         }
       }
     }

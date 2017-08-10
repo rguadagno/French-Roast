@@ -179,6 +179,8 @@ void FRMain::update_list(std::string  descriptor, std::string tname, int count,
                          const std::vector<std::string> argHeaders,  const std::vector<std::string> instanceHeaders, 
                          const std::vector<frenchroast::monitor::MarkerField> markers, std::unordered_map<std::string, frenchroast::monitor::StackReport> stacks)
 {
+  if(_exit) return;
+
   tname = "[ " + tname + " ]";
   frenchroast::monitor::pad(descriptor, 50);
   frenchroast::monitor::pad(tname, 10);
@@ -186,9 +188,8 @@ void FRMain::update_list(std::string  descriptor, std::string tname, int count,
   descriptor = tname + descriptor;
   _detailDescriptors[descriptor] = DetailHolder{count, argHeaders, instanceHeaders, markers, stacks};
   frenchroast::FSignalViewer::instance(this)->update_count(descriptor, count);
-  if(!_exit) {
-    update_detail_list(descriptor, _detailDescriptors[descriptor]);
-  }
+  update_detail_list(descriptor, _detailDescriptors[descriptor]);
+  
 }
 
 void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks)

@@ -605,16 +605,25 @@ void traffic_monitor()
       }
       else {
         continue;
-      }  
+      }
+      jvmtiMonitorStackDepthInfo* monitorInfo;
+      jint infoCount;
+      genv->GetOwnedMonitorStackDepthInfo(thd, &infoCount,  &monitorInfo);
+      std::unordered_map<int,int> monmap;
+      
+      for(int idx = 0; idx < infoCount; idx++, monitorInfo++) {
+        monmap[monitorInfo->stack_depth] = 1;
+      }
+      int dcount = 0;
       for(int fidx = stackptr->frame_count - 1; fidx >= 0; fidx--) {
         jvmtiError   err = genv->GetMethodName(stackptr->frame_buffer[fidx].method, &methodName,&sig,&generic);
-
         jclass theclass;
         genv->GetMethodDeclaringClass(stackptr->frame_buffer[fidx].method, &theclass);
         err = genv->GetClassSignature(theclass, &class_sig,&generic);
         std::string classinfo{class_sig};
-        rv += classinfo + "::";
+        rv += (monmap.count(fidx) == 1 ? "1!" : "0!") + classinfo.substr(1) + "::";
         rv +=  std::string{methodName} + ":" + std::string{sig} + "#";
+        ++dcount;
       }
       rv.erase(rv.end() -1);
       rv += "%";
@@ -624,8 +633,6 @@ void traffic_monitor()
   
  
     _sig_mutex.lock();
-    if(rv.find("calc") != std::string::npos)
-      std::cout << rv << std::endl;
     _rptr.traffic(rv);
     _sig_mutex.unlock();
     
@@ -790,6 +797,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   capa.can_generate_all_class_hook_events = 1;
   capa.can_access_local_variables = 1;
   capa.can_retransform_classes = 1;
+  capa.can_get_owned_monitor_stack_depth_info = 1;
   jvmtiError errcapa  = env->AddCapabilities(&capa);
   std::cout << "err capa: " << errcapa << std::endl;
   env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_CLASS_FILE_LOAD_HOOK,NULL);

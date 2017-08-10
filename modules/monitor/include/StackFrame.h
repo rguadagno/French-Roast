@@ -26,9 +26,10 @@ namespace frenchroast { namespace monitor {
 
     class StackFrame {
       std::string _name;
-      std::string _decorated_name;
+      int         _monitorCount;
+      
     public:
-    StackFrame(const std::string& name, const std::string& deco) : _name(name), _decorated_name(deco)
+    StackFrame(const std::string& name, int count) : _name(name), _monitorCount(count)
       {
       }
 
@@ -37,10 +38,12 @@ namespace frenchroast { namespace monitor {
         return _name;
       }
 
-      std::string get_decorated_name()  const
+      int  get_monitor_count()  const
       {
-	return _decorated_name;
+	return _monitorCount;
       }
+      
+      std::string operator();
     };
 
   }

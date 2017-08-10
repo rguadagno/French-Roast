@@ -32,7 +32,7 @@
 namespace frenchroast { namespace monitor {
 
     
-    std::string              translate_descriptor(const std::string& name);
+    std::string              translate_descriptor(const std::string& name, int* = nullptr);
     std::vector<StackTrace>  construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters);
     std::vector<ClassDetail> construct_class_details(const std::string& msg);
     void transmit_lines(const std::string& fileName, frenchroast::network::Connector&);
