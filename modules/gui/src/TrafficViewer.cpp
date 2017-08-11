@@ -105,8 +105,9 @@ namespace frenchroast {
   
   std::string getvalue(int v)
   {
-    return v > 0 ? std::to_string(v) : "";
+    return v > 0 ? "X" : "";
   }
+  
   void TrafficViewer::update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks)
   {
     for(auto& x : stacks) {
@@ -126,35 +127,49 @@ namespace frenchroast {
         for(int r = _traffic->rowCount(); r < totalrows; r++) {
           _traffic->insertRow(r);
         }
-        int rowidx = 0;
-        int col = _thread_col[x.thread_name()].column();
-        auto monstacks = _thread_col[x.thread_name()].monstacks();
 
-        int stackidx = 0;
-        for(auto& stack : _thread_col[x.thread_name()].stacks()) {
+        int col = _thread_col[x.thread_name()].column();
+        
+        int rowidx = 0;
+        for(auto& trace : _thread_col[x.thread_name()].stacks()) {
           if(rowidx > 0 ) {
             if(_traffic->item(rowidx,col) != 0) {
               _traffic->item(rowidx,col)->setText("");
-               _traffic->item(rowidx,col-1)->setText("");
             }
             ++rowidx;
           }
           int methidx  = 0;
-          for(auto& item : stack) {
+          for(auto& item : trace.descriptor_frames()) {
             if(_traffic->item(rowidx,col) == 0) {
               _traffic->setItem(rowidx,col,createItem(item));
-              _traffic->setItem(rowidx,col-1,createItem(getvalue(monstacks[stackidx][methidx])));
             }
             else {
               _traffic->item(rowidx,col)->setText(QString::fromStdString(  item   ));
-              _traffic->item(rowidx,col-1)->setText(QString::fromStdString(   getvalue(monstacks[stackidx][methidx])   ));
             }
             ++rowidx;
             ++methidx;
           }
-          ++stackidx;
         }
-      }
+        rowidx = 0;
+        for(auto& trace : _thread_col[x.thread_name()].stacks()) {
+          if(rowidx > 0 ) {
+            if(_traffic->item(rowidx,col-1) != 0) {
+              _traffic->item(rowidx,col-1)->setText("");
+            }
+            ++rowidx;
+          }
+          int methidx  = 0;
+          for(auto& item : trace.monitor_frames()) {
+          if(_traffic->item(rowidx,col-1) == 0) {
+            _traffic->setItem(rowidx,col-1,createItem(getvalue(item)));
+          }
+          else {
+              _traffic->item(rowidx,col-1)->setText(QString::fromStdString(   getvalue(item )   ));
+          }
+          ++rowidx;
+          }
+          }
+        }
     }
   }
 

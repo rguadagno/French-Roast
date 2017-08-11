@@ -20,16 +20,74 @@
 
 #include <vector>
 #include "StackTrace.h"
+#include <iostream>
 
 namespace frenchroast { namespace monitor {
 
     StackTrace::StackTrace(const std::string tname) : _thread_name(tname), _key("")
     {
     }
+    
+    StackTrace::StackTrace(const StackTrace& ref)
+    {
+      _key = ref._key;
+      _thread_name = ref._thread_name;
+      _frames = ref._frames;
+      _monitors = ref._monitors;
+    }
 
+    void StackTrace::operator=(const StackTrace& ref)
+    {
+      _key = ref._key;
+      _thread_name = ref._thread_name;
+      _frames = ref._frames;
+      _monitors = ref._monitors;
+    }
+    
+    int StackTrace::size()
+    {
+      return _frames.size();
+    }
+
+    
     std::string StackTrace::key()  const
     {
       return _key;
+    }
+
+    bool StackTrace::operator==(const StackTrace& ref)
+    {
+      return _key == ref._key;
+    }
+
+
+    bool StackTrace::operator>(const StackTrace& ref)
+    {
+      if(_key == ref._key) return false;
+      if(_frames.size() < ref._frames.size()) return false;
+      auto frame = _frames.rbegin();
+      for(auto rframe = ref._frames.rbegin();  rframe != ref._frames.rend(); rframe++, frame++) {
+        if(*rframe != *frame) return false;
+      }
+      return true;
+    }
+
+    bool StackTrace::operator<(const StackTrace& ref)
+    { 
+      if(_key == ref._key) return false;
+      if(_frames.size() > ref._frames.size()) return false;
+      auto frame = ref._frames.rbegin();
+      for(auto rframe = _frames.rbegin();  rframe != _frames.rend(); rframe++, frame++) {
+        if(*rframe != *frame) return false;
+      }
+      return true;
+
+    }
+
+    
+    std::string StackTrace::monitor_key()  const
+    {
+      return _monitorkey;
     }
 
     std::vector<std::string> StackTrace::descriptor_frames() const
@@ -45,6 +103,8 @@ namespace frenchroast { namespace monitor {
     void StackTrace::addFrame(const StackFrame& frame) 
     {
       _key += frame.get_name();
+      _monitorkey += frame.get_monitor_count() > 0 ? "X" : "0";
+      
       _frames.push_back(frame.get_name());
       _monitors.push_back(frame.get_monitor_count());
     }
@@ -52,14 +112,6 @@ namespace frenchroast { namespace monitor {
     std::string StackTrace::thread_name()  const 
     {
       return _thread_name;
-    }
-    std::stack<std::string> StackTrace::keys() const
-    {
-      std::stack<std::string> rv;
-      for(auto& x: _frames) {
-        rv.push(x);
-      }
-      return rv;
     }
   }
 }

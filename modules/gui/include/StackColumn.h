@@ -34,8 +34,7 @@ class StackColumn {
   int _column;
   int _totalRows;
   std::unordered_map<std::string, int> _stackline;
-  std::vector<std::vector<std::string>> _stacks;
-  std::vector<std::vector<int>>         _monstacks;
+  std::vector<StackTrace>               _stacks;
   std::unordered_set<std::string>       _allkeys;
 
  public:
@@ -44,9 +43,7 @@ class StackColumn {
   int  column();
   bool update(const StackTrace&);
   int  required_rows();
-  std::vector<std::vector<std::string>>& stacks();
-  std::vector<std::vector<int>>&         monstacks();
-
+  std::vector<StackTrace>&               stacks();
 };
 }
 #endif

@@ -29,17 +29,27 @@ namespace frenchroast { namespace monitor {
 
     class StackTrace {
       std::string              _key;
+      std::string              _monitorkey;
       std::string              _thread_name;
       std::vector<std::string> _frames;
       std::vector<int>         _monitors;
+
     public:
       StackTrace(const std::string tname);
+      StackTrace(const StackTrace&);
       std::string               key()  const;
+      std::string               monitor_key()  const;
       std::string               thread_name()  const;
       std::vector<std::string>  descriptor_frames() const;
       std::vector<int>          monitor_frames() const;
       void                      addFrame(const StackFrame& frame);
-      std::stack<std::string>   keys() const;
+      int size();
+      bool operator==(const StackTrace&);
+      void operator=(const StackTrace&);
+      bool operator>(const StackTrace&);
+      bool operator<(const StackTrace&);
+      
+      
     };
 
   }
