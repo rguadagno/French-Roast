@@ -576,7 +576,7 @@ void traffic_monitor()
   jvmtiEnv* xenv;
   g_java_vm->AttachCurrentThread((void**)&xenv,(void*)NULL);
 
-  jvmtiStackInfo* stack_info;
+  //  jvmtiStackInfo* stack_info;
   jint thread_count;
   jvmtiThreadInfo tinfo;
 
@@ -594,31 +594,36 @@ void traffic_monitor()
   }
 
   while(1) {
-    genv->GetAllStackTraces(10, &stack_info, &thread_count);
+
+    jthread* threads;
+    genv->GetAllThreads(&thread_count, &threads);
     std::string rv = "";
     for(int idx = 0; idx < thread_count; idx++) {
-      jvmtiStackInfo* stackptr = &stack_info[idx];
-      jthread thd  = stackptr->thread;
-      genv->GetThreadInfo(thd, &tinfo);
-      if (stackptr->frame_count >= 1) {
+      jvmtiMonitorStackDepthInfo* monitorInfo;
+      jint infoCount;
+
+      genv->GetOwnedMonitorStackDepthInfo(threads[idx], &infoCount,  &monitorInfo);
+      jint frame_count;
+      jvmtiFrameInfo frame_info[20];
+      genv->GetStackTrace(threads[idx],0,20, frame_info, &frame_count);
+      genv->GetThreadInfo(threads[idx], &tinfo);
+
+      if (frame_count >= 1) {
         rv += std::string{tinfo.name} + "^";
       }
       else {
         continue;
       }
-      jvmtiMonitorStackDepthInfo* monitorInfo;
-      jint infoCount;
-      genv->GetOwnedMonitorStackDepthInfo(thd, &infoCount,  &monitorInfo);
       std::unordered_map<int,int> monmap;
-      
       for(int idx = 0; idx < infoCount; idx++, monitorInfo++) {
         monmap[monitorInfo->stack_depth] = 1;
       }
+
       int dcount = 0;
-      for(int fidx = stackptr->frame_count - 1; fidx >= 0; fidx--) {
-        jvmtiError   err = genv->GetMethodName(stackptr->frame_buffer[fidx].method, &methodName,&sig,&generic);
+      for(int fidx = frame_count - 1; fidx >= 0; fidx--) {
+        jvmtiError   err = genv->GetMethodName(frame_info[fidx].method, &methodName,&sig,&generic);
         jclass theclass;
-        genv->GetMethodDeclaringClass(stackptr->frame_buffer[fidx].method, &theclass);
+        genv->GetMethodDeclaringClass(frame_info[fidx].method, &theclass);
         err = genv->GetClassSignature(theclass, &class_sig,&generic);
         std::string classinfo{class_sig};
         rv += (monmap.count(fidx) == 1 ? "1!" : "0!") + classinfo.substr(1) + "::";
@@ -628,14 +633,14 @@ void traffic_monitor()
       rv.erase(rv.end() -1);
       rv += "%";
     }
-    
+    if(rv.size() > 1) {
     rv.erase(rv.end() -1);
   
  
     _sig_mutex.lock();
     _rptr.traffic(rv);
     _sig_mutex.unlock();
-    
+    }
     
     if (!traffic_predicate()) {
       std::unique_lock<std::mutex> lck{_traffic_mutex};

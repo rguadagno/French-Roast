@@ -135,10 +135,10 @@ namespace frenchroast {
           if(rowidx > 0 ) {
             if(_traffic->item(rowidx,col) != 0) {
               _traffic->item(rowidx,col)->setText("");
+              _traffic->item(rowidx,col-1)->setText("");
             }
             ++rowidx;
           }
-          int methidx  = 0;
           for(auto& item : trace.descriptor_frames()) {
             if(_traffic->item(rowidx,col) == 0) {
               _traffic->setItem(rowidx,col,createItem(item));
@@ -147,29 +147,30 @@ namespace frenchroast {
               _traffic->item(rowidx,col)->setText(QString::fromStdString(  item   ));
             }
             ++rowidx;
-            ++methidx;
           }
         }
-        rowidx = 0;
-        for(auto& trace : _thread_col[x.thread_name()].stacks()) {
-          if(rowidx > 0 ) {
-            if(_traffic->item(rowidx,col-1) != 0) {
-              _traffic->item(rowidx,col-1)->setText("");
-            }
-            ++rowidx;
+      
+        
+      rowidx = 0;
+      for(auto& trace : _thread_col[x.thread_name()].stacks()) {
+        if(rowidx > 0 ) {
+          if(_traffic->item(rowidx,col-1) != 0) {
+            _traffic->item(rowidx,col-1)->setText("");
           }
-          int methidx  = 0;
-          for(auto& item : trace.monitor_frames()) {
+          ++rowidx;
+        }
+        for(auto& item : trace.monitor_frames()) {
           if(_traffic->item(rowidx,col-1) == 0) {
             _traffic->setItem(rowidx,col-1,createItem(getvalue(item)));
           }
           else {
-              _traffic->item(rowidx,col-1)->setText(QString::fromStdString(   getvalue(item )   ));
+            _traffic->item(rowidx,col-1)->setText(QString::fromStdString(   getvalue(item )   ));
           }
           ++rowidx;
-          }
-          }
         }
+      }
+      
+      }
     }
   }
 

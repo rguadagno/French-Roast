@@ -48,7 +48,7 @@ namespace frenchroast { namespace monitor {
       void operator=(const StackTrace&);
       bool operator>(const StackTrace&);
       bool operator<(const StackTrace&);
-      
+      bool update_monitors(const StackTrace&);      
       
     };
 
