@@ -49,12 +49,6 @@ namespace frenchroast { namespace monitor {
       return _frames.size();
     }
 
-    
-    std::string StackTrace::key()  const
-    {
-      return _key;
-    }
-
     bool StackTrace::operator==(const StackTrace& ref)
     {
       return _key == ref._key;
@@ -73,15 +67,8 @@ namespace frenchroast { namespace monitor {
     }
 
     bool StackTrace::operator<(const StackTrace& ref)
-    { 
-      if(_key == ref._key) return false;
-      if(_frames.size() > ref._frames.size()) return false;
-      auto frame = ref._frames.rbegin();
-      for(auto rframe = _frames.rbegin();  rframe != _frames.rend(); rframe++, frame++) {
-        if(*rframe != *frame) return false;
-      }
-      return true;
-
+    {
+      return const_cast<StackTrace&>(ref) > *this;
     }
 
     bool StackTrace::update_monitors(const StackTrace& ref)
@@ -115,12 +102,6 @@ namespace frenchroast { namespace monitor {
       return rv;
     }
 
-    
-    
-    std::string StackTrace::monitor_key()  const
-    {
-      return _monitorkey;
-    }
 
     std::vector<std::string> StackTrace::descriptor_frames() const
     {

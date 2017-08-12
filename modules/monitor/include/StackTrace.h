@@ -37,8 +37,6 @@ namespace frenchroast { namespace monitor {
     public:
       StackTrace(const std::string tname);
       StackTrace(const StackTrace&);
-      std::string               key()  const;
-      std::string               monitor_key()  const;
       std::string               thread_name()  const;
       std::vector<std::string>  descriptor_frames() const;
       std::vector<int>          monitor_frames() const;

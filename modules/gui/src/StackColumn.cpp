@@ -57,12 +57,9 @@ namespace frenchroast {
     for(auto& ctrace  : _stacks) {
       if(ctrace == trace) {
         return ctrace.update_monitors(trace);
-        //ctrace = trace;
-        //        return false;
       }
       if(ctrace > trace) {
         return ctrace.update_monitors(trace);
-                //return false;
       }
       if(ctrace < trace) {
         ctrace = trace;
