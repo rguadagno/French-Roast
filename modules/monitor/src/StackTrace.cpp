@@ -76,24 +76,22 @@ namespace frenchroast { namespace monitor {
       bool rv = false;
       StackTrace* larger = nullptr;
       StackTrace* smaller = nullptr;
-      bool this_is_larger = false;
       if(_monitors.size() < ref._monitors.size()) {
         larger = const_cast<StackTrace*>(&ref);
         smaller = this;
       }
       else {
-        this_is_larger = true;
         larger =  this;
         smaller = const_cast<StackTrace*>(&ref);
       }
 
       auto rmonitor = larger->_monitors.rbegin();
       for(auto monitor = smaller->_monitors.rbegin();  monitor != smaller->_monitors.rend(); monitor++, rmonitor++) {
-        if(*rmonitor > 0 && *monitor == 0 && !this_is_larger) {
+        if(*rmonitor > 0 && *monitor == 0 ) {
           *monitor = 1;
           rv = true;
         }
-        if(*monitor > 0 && *rmonitor == 0 && this_is_larger) {
+        if(*monitor > 0 && *rmonitor == 0 ) {
           *rmonitor = 1;
           rv = true;
         }
