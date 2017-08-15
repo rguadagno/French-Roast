@@ -541,8 +541,8 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   jvmtiFrameInfo owner_frame_info[20];
   genv->GetStackTrace(monitorInfo.owner,0, sizeof(owner_frame_info), owner_frame_info, &owner_frame_count);
 
-  std::string ownerStr  = formatStackTrace(genv,       frame_info,       frame_count); 
-  std::string waiterStr = formatStackTrace(genv, owner_frame_info, owner_frame_count); 
+  std::string waiterStr  = formatStackTrace(genv,       frame_info,       frame_count); 
+  std::string ownerStr = formatStackTrace(genv, owner_frame_info, owner_frame_count); 
 
   genv->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.waiters));
   genv->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
