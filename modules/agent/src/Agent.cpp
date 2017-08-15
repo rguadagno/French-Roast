@@ -602,19 +602,35 @@ void traffic_monitor()
       memset(frame_info, 0, sizeof(frame_info));
       memset(before_frame_info, 0, sizeof(before_frame_info));
 
-      genv->GetStackTrace(*(threads + idx) ,0,20, before_frame_info, &before_frame_count);
+      ferr = genv->GetStackTrace(*(threads + idx) ,0,20, before_frame_info, &before_frame_count);
+      if(ferr != JVMTI_ERROR_NONE)  {
+        std::cout << "ERROR" << std::endl;
+        continue;
+      }
+
       infoCount = 0;
       ferr = genv->GetOwnedMonitorStackDepthInfo(*(threads + idx) , &infoCount,  &monitorInfo);  
-      if(ferr != JVMTI_ERROR_NONE) std::cout << "ERROR" << std::endl;
+      if(ferr != JVMTI_ERROR_NONE)  {
+        std::cout << "ERROR" << std::endl;
+        continue;
+      }
       ferr = genv->GetStackTrace(*(threads + idx) ,0,20, frame_info, &frame_count);
       if(frame_count != before_frame_count) continue;
       
-      if(ferr != JVMTI_ERROR_NONE) std::cout << "ERROR" << std::endl;
+      if(ferr != JVMTI_ERROR_NONE) {
+        std::cout << "ERROR" << std::endl;
+        continue;
+      }
       if(frame_count < 1) continue;
       std::unordered_map<int,int> monmap;
+      bool invalid = false;
       for(int idx = 0; idx < infoCount; idx++, monitorInfo++) {
         monmap[(int)(monitorInfo->stack_depth)] = 1;
+        if(monitorInfo->stack_depth >= frame_count) {
+          invalid = true;
+        }
       }
+      if(invalid) continue;
       if (frame_count >= 1) {
         rv += std::string{tinfo.name} + "^";
       }
