@@ -38,6 +38,7 @@ namespace frenchroast { namespace agent {
       void signal_timer(long long time, const std::string& direction, const std::string& tag, const std::string threadname);
       void close();
       void unloaded(const std::string& msg);
+      void jammed(const std::string& waiter, const std::string& owner);
 
     };
 

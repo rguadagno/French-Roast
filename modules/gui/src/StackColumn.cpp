@@ -54,21 +54,29 @@ namespace frenchroast {
 
   bool StackColumn::update(const StackTrace& trace)
   {
+    bool rv = false;
+    bool matched = false;
     for(auto& ctrace  : _stacks) {
+      
       if(ctrace == trace) {
-        return ctrace.update_monitors(trace);
+          matched = true;
+         rv = ctrace.update_monitors(trace);
       }
       if(ctrace > trace) {
-        return ctrace.update_monitors(trace);
+        matched = true;
+       rv =  ctrace.update_monitors(trace);
       }
       if(ctrace < trace) {
-        ctrace = trace;
-        return true;
+       ctrace = trace;
+      return true;
       }
     }
-    _stacks.push_back(trace);
 
-    return true;;
+    if(!matched) {
+      rv =true;
+      _stacks.push_back(trace);
+    }
+    return rv;
   }
 
   

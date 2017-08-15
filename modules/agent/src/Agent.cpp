@@ -40,20 +40,12 @@
 #include "AgentUtil.h"
 #include "ClassDetail.h"
 
-/*
-struct GlobalAgentData {
-
-  
-  jrawMonitorID _lock;
-
-};
-*/
-
 std::mutex _traffic_mutex;
 std::mutex _loading_mutex;
 std::mutex _loading_data_mutex;
 std::mutex _profiler_mutex;
 std::mutex _all_loaded_mutex;
+std::mutex _jammed_mutex;
 
 class ClassPtr {
 public:
@@ -180,7 +172,6 @@ public:
   
 };
 
-static int counter = 0;
 std::vector<frenchroast::monitor::ClassDetail>                  _loadedClasses;
 std::unordered_map<std::string, FieldInfo> _reportingFields;
 frenchroast::OpCode                        _opcodes;
@@ -196,16 +187,6 @@ jvmtiEnv* genv;
 JavaVM*   g_java_vm;
 JNIEnv*   gxenv;
 
-/*
-void enter_section(jvmtiEnv *env) {
-
-  env->RawMonitorEnter(gdata->_lock);
-}
-
-void exit_section(jvmtiEnv *env) {
-  env->RawMonitorExit(gdata->_lock);
-}
-*/
 
 void JNICALL
 ThreadStart(jvmtiEnv *env, JNIEnv* jni_env, jthread thread) {
@@ -214,10 +195,6 @@ ThreadStart(jvmtiEnv *env, JNIEnv* jni_env, jthread thread) {
     std::cout << "Thred Started: " << info.name << std::endl;
 }
 
-void JNICALL
- MonitorWait(jvmtiEnv* env, JNIEnv* jni_env, jthread thread, jobject object, jlong timeout) {
-  std::cout << "*** About to get lock " << std::endl;
-}
 
 JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass object, jlong stime, jstring tag, jstring tname)
 {
@@ -549,19 +526,32 @@ void JNICALL
 
 
 
-/*
+
 void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread thread, jobject object)
 {
-  enter_section(env);
-  jclass klass = jni_env->GetObjectClass(object);
-  char* signature;
-  char* generic;
-  env->GetClassSignature(klass, &signature, &generic);
-  // gdata->_out << "*** Blocked on : " << signature << std::endl;
-  ++counter;
-  exit_section(env);
+  std::unique_lock<std::mutex> lck{_jammed_mutex};
+
+  jint frame_count;
+  jvmtiFrameInfo frame_info[20];
+  genv->GetStackTrace(thread,0,20, frame_info, &frame_count);
+  
+  jvmtiMonitorUsage monitorInfo;
+  genv->GetObjectMonitorUsage(object, &monitorInfo);
+  jint owner_frame_count;
+  jvmtiFrameInfo owner_frame_info[20];
+  genv->GetStackTrace(monitorInfo.owner,0, sizeof(owner_frame_info), owner_frame_info, &owner_frame_count);
+
+  std::string ownerStr  = formatStackTrace(genv,       frame_info,       frame_count); 
+  std::string waiterStr = formatStackTrace(genv, owner_frame_info, owner_frame_count); 
+
+  genv->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.waiters));
+  genv->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
+  
+  _sig_mutex.lock();
+  _rptr.jammed(waiterStr, ownerStr);
+  _sig_mutex.unlock();
 }
-*/
+
 
 
 
@@ -576,7 +566,6 @@ void traffic_monitor()
   jvmtiEnv* xenv;
   g_java_vm->AttachCurrentThread((void**)&xenv,(void*)NULL);
 
-  //  jvmtiStackInfo* stack_info;
   jint thread_count;
   jvmtiThreadInfo tinfo;
 
@@ -586,40 +575,52 @@ void traffic_monitor()
   char *generic;
  
   int delay = _commandListener._millis.load();
-
   if (!traffic_predicate()) {
     std::unique_lock<std::mutex> lck{_traffic_mutex};
     _commandListener._traffic_cond.wait(lck,&traffic_predicate);
     delay = _commandListener._millis.load();
   }
-
   while(1) {
-
     jthread* threads;
     genv->GetAllThreads(&thread_count, &threads);
     std::string rv = "";
     for(int idx = 0; idx < thread_count; idx++) {
+      if((threads + idx) == NULL) continue;
+      genv->GetThreadInfo(threads[idx], &tinfo);
+      jint tstate;
+      genv->GetThreadState(threads[idx], &tstate);
+
       jvmtiMonitorStackDepthInfo* monitorInfo;
       jint infoCount;
+      jvmtiError ferr;
 
-      genv->GetOwnedMonitorStackDepthInfo(threads[idx], &infoCount,  &monitorInfo);
       jint frame_count;
       jvmtiFrameInfo frame_info[20];
-      genv->GetStackTrace(threads[idx],0,20, frame_info, &frame_count);
-      genv->GetThreadInfo(threads[idx], &tinfo);
+      jint before_frame_count;
+      jvmtiFrameInfo before_frame_info[20];
 
+      memset(frame_info, 0, sizeof(frame_info));
+      memset(before_frame_info, 0, sizeof(before_frame_info));
+
+      genv->GetStackTrace(*(threads + idx) ,0,20, before_frame_info, &before_frame_count);
+      infoCount = 0;
+      ferr = genv->GetOwnedMonitorStackDepthInfo(*(threads + idx) , &infoCount,  &monitorInfo);  
+      if(ferr != JVMTI_ERROR_NONE) std::cout << "ERROR" << std::endl;
+      ferr = genv->GetStackTrace(*(threads + idx) ,0,20, frame_info, &frame_count);
+      if(frame_count != before_frame_count) continue;
+      
+      if(ferr != JVMTI_ERROR_NONE) std::cout << "ERROR" << std::endl;
+      if(frame_count < 1) continue;
+      std::unordered_map<int,int> monmap;
+      for(int idx = 0; idx < infoCount; idx++, monitorInfo++) {
+        monmap[(int)(monitorInfo->stack_depth)] = 1;
+      }
       if (frame_count >= 1) {
         rv += std::string{tinfo.name} + "^";
       }
       else {
         continue;
       }
-      std::unordered_map<int,int> monmap;
-      for(int idx = 0; idx < infoCount; idx++, monitorInfo++) {
-        monmap[monitorInfo->stack_depth] = 1;
-      }
-
-      int dcount = 0;
       for(int fidx = frame_count - 1; fidx >= 0; fidx--) {
         jvmtiError   err = genv->GetMethodName(frame_info[fidx].method, &methodName,&sig,&generic);
         jclass theclass;
@@ -628,15 +629,12 @@ void traffic_monitor()
         std::string classinfo{class_sig};
         rv += (monmap.count(fidx) == 1 ? "1!" : "0!") + classinfo.substr(1) + "::";
         rv +=  std::string{methodName} + ":" + std::string{sig} + "#";
-        ++dcount;
       }
       rv.erase(rv.end() -1);
       rv += "%";
     }
     if(rv.size() > 1) {
     rv.erase(rv.end() -1);
-  
- 
     _sig_mutex.lock();
     _rptr.traffic(rv);
     _sig_mutex.unlock();
@@ -715,8 +713,6 @@ void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
   jvmtiEventCallbacks* xx = new jvmtiEventCallbacks();
   xx->VMInit                = &VMInit;
   xx->ThreadStart           = &ThreadStart;
-  xx->MonitorWait           = &MonitorWait;
-  //  xx->MonitorContendedEnter = &MonitorContendedEnter;
   xx->ClassFileLoadHook     = &ClassFileLoadHook;
   
   jvmtiError  err = env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_MONITOR_WAIT,NULL);
@@ -786,13 +782,12 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   _rptr.setTransport(tptr);
   jvmtiError err;
   jvmtiEnv* env;
-  vm->GetEnv((void**)&env, JVMTI_VERSION_1_0);
+  vm->GetEnv((void**)&env, JVMTI_VERSION);
 
   jvmtiEventCallbacks* xx = new jvmtiEventCallbacks();
   xx->VMInit                = &VMInit;
   xx->ThreadStart           = &ThreadStart;
-  xx->MonitorWait           = &MonitorWait;
-  //  xx->MonitorContendedEnter = &MonitorContendedEnter;
+  xx->MonitorContendedEnter = &MonitorContendedEnter;
   xx->ClassFileLoadHook     = &ClassFileLoadHook;
   err =   env->SetEventCallbacks(xx, sizeof(jvmtiEventCallbacks));
 
@@ -803,6 +798,8 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   capa.can_access_local_variables = 1;
   capa.can_retransform_classes = 1;
   capa.can_get_owned_monitor_stack_depth_info = 1;
+  capa.can_get_monitor_info = 1;
+  capa.can_suspend = 1;
   jvmtiError errcapa  = env->AddCapabilities(&capa);
   std::cout << "err capa: " << errcapa << std::endl;
   env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_CLASS_FILE_LOAD_HOOK,NULL);

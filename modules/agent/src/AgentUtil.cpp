@@ -53,3 +53,23 @@ std::vector<ARG_TYPE> typeTokenizer(const std::string& sigStr)
   }
   return rv;
 }
+
+
+std::string formatStackTrace(jvmtiEnv* env, jvmtiFrameInfo* fptr, int frame_count)
+{
+  std::string rv;
+  for(int fidx = frame_count - 1; fidx >= 0; fidx--) {
+    char *methodName;
+    char *sig;
+    char *class_sig;
+    char *generic;
+
+    jvmtiError   err = env->GetMethodName(fptr[fidx].method, &methodName,&sig,&generic);
+    jclass theclass;
+    env->GetMethodDeclaringClass(fptr[fidx].method, &theclass);
+    err = env->GetClassSignature(theclass, &class_sig,&generic);
+    std::string classinfo{class_sig};
+    rv +=  classinfo.substr(1) + "::" + std::string{methodName} + ":" + std::string{sig} + "#";
+  }
+  return rv;
+}

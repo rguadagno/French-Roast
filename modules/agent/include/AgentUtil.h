@@ -21,10 +21,11 @@
 #define AGENTUTIL_H
 
 #include <vector>
+#include "jvmti.h"
 
 
 enum ARG_TYPE {INT_TYPE, STRING_TYPE, ARRAY_TYPE};
 
 std::vector<ARG_TYPE> typeTokenizer(const std::string& line);
-
+std::string formatStackTrace(jvmtiEnv* env, jvmtiFrameInfo* fptr, int frame_count);
 #endif
