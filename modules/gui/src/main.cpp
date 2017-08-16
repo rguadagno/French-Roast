@@ -49,6 +49,7 @@ int main(int argc, char* argv[]) {
   qRegisterMetaType<frenchroast::MessageItem>();
   qRegisterMetaType<DetailHolder>();
   qRegisterMetaType<std::vector<frenchroast::monitor::ClassDetail>>();
+  qRegisterMetaType<frenchroast::monitor::JammedReport>("frenchroast::monitor::JammedReport");
   
   FRListener roaster{std::string{argv[1]}, atoi(argv[2]), path_to_opcodes};
   QThread* tt = new QThread(&roaster);
@@ -59,6 +60,7 @@ int main(int argc, char* argv[]) {
   QObject::connect(&roaster, &FRListener::thooked,         &main,    &FRMain::update_list);
   QObject::connect(&roaster, &FRListener::timersignal,     &main,    &FRMain::update_timed_list);
   QObject::connect(&roaster, &FRListener::traffic_signal,  &main,    &FRMain::update_traffic);
+  QObject::connect(&roaster, &FRListener::stack_jammed,    &main,    &FRMain::update_jammed);
   QObject::connect(&roaster, &FRListener::class_loaded,    &main,    &FRMain::update_class_viewer);
   QObject::connect(tt,       &QThread::started,            &roaster, &FRListener::init);
   QObject::connect(&app,     &QApplication::aboutToQuit,   &main,    &FRMain::handle_exit);

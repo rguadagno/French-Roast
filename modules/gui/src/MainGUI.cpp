@@ -26,6 +26,7 @@
 #include "FClassViewer.h"
 #include "Editor.h"
 #include "TrafficViewer.h"
+#include "JammedViewer.h"
 #include "AboutHelpViewer.h"
 
 using namespace frenchroast;
@@ -87,6 +88,13 @@ void FRMain::view_classviewer()
   connect_common_listeners(FClassViewer::instance(this));
 }
 
+void FRMain::view_jammed()
+{
+  QObject::connect(JammedViewer::instance(this), &JammedViewer::add_signal, this,  &FRMain::add_hook);
+  //  QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::closed, this,          &FRMain::stop_watch_loading);
+  connect_common_listeners(JammedViewer::instance(this));
+}
+
 void FRMain::start_watch_loading()
 {
   _watchLoading = true;
@@ -106,6 +114,7 @@ void FRMain::connect_common_listeners(FViewer* instance)
   QObject::connect(instance, &frenchroast::FViewer::timer_viewer,     this,  &FRMain::view_timers);
   QObject::connect(instance, &frenchroast::FViewer::editor_viewer,    this,  &FRMain::view_hooks_editor);
   QObject::connect(instance, &frenchroast::FViewer::traffic_viewer,   this,  &FRMain::view_traffic);
+  QObject::connect(instance, &frenchroast::FViewer::jammed_viewer,    this,  &FRMain::view_jammed);
   QObject::connect(instance, &frenchroast::FViewer::classload_viewer, this,  &FRMain::view_classviewer);
   QObject::connect(instance, &frenchroast::FViewer::about_viewer,     this,  &FRMain::view_about);
   QObject::connect(instance, &frenchroast::FViewer::exit_fr,          this,  &FRMain::exit_fr);
@@ -154,6 +163,11 @@ void FRMain::show_detail(const std::string& descriptor)
 void FRMain::update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>& details)
 {
   FClassViewer::instance(this)->update(details);
+}
+
+void FRMain::update_jammed(const frenchroast::monitor::JammedReport& rpt)
+{
+  JammedViewer::instance(this)->update(rpt);
 }
 
 void FRMain::start_watching_traffic(int rate)
@@ -223,6 +237,7 @@ void FRMain::handle_exit()
   Editor::capture();
   FClassViewer::capture();
   TrafficViewer::capture();
+  JammedViewer::capture();
   AboutHelpViewer::capture();
 }
 
@@ -243,6 +258,7 @@ void FRMain::restore()
   restore_if_required(FClassViewer::restore_is_required(),    &FRMain::view_classviewer, winup);
   restore_if_required(Editor::restore_is_required(),          &FRMain::view_hooks_editor, winup);
   restore_if_required(TrafficViewer::restore_is_required(),   &FRMain::view_traffic, winup);
+  restore_if_required(JammedViewer::restore_is_required(),    &FRMain::view_jammed, winup);
   restore_if_required(AboutHelpViewer::restore_is_required(), &FRMain::view_about, winup);
 
   if(!winup) {

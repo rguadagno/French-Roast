@@ -74,6 +74,7 @@ class FRMain : public QMainWindow {
   
  public slots:
    void update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>&);
+   void update_jammed(const frenchroast::monitor::JammedReport&);
    void start_watch_loading();
    void stop_watch_loading();
    void validate_hooks();
@@ -85,6 +86,7 @@ class FRMain : public QMainWindow {
    void view_timers();
    void view_traffic();
    void view_classviewer();
+   void view_jammed();
    void view_about();
    void exit_fr();
    void add_hook(QString);

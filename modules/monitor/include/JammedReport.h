@@ -1,4 +1,4 @@
-// copyright (c) 2016 Richard Guadagno
+// copyright (c) 2017 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -17,32 +17,31 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef RRPT_H
-#define RRPT_H
-#include <string>
-#include <vector>
-#include "Transport.h"
-#include "ClassDetail.h"
+#ifndef JAMMEDH_H
+#define JAMMEDH_H
 
-namespace frenchroast { namespace agent {
+#include <unordered_set>
+#include "StackTrace.h"
 
-        
-    class Reporter {
-      Transport* _ptr;
+namespace frenchroast { namespace monitor {
+    class JammedReport {
+      int                      _count{0};
+      std::string              _key;
+      StackTrace               _waiter;
+      StackTrace               _owner;
+      std::unordered_set<std::string>    _monitors;
     public:
-      void traffic(const std::string& tag);
-      void Reporter::loaded_classes(std::vector<frenchroast::monitor::ClassDetail> details);
-      void ready();
-      void setTransport(Transport* ptr);
-      void signal(const std::string& tag);
-      void signal_timer(long long time, const std::string& direction, const std::string& tag, const std::string threadname);
-      void close();
-      void unloaded(const std::string& msg);
-      void jammed(const std::string& monitor, const std::string& waiter, const std::string& owner);
 
+      JammedReport(StackTrace waiter, StackTrace owner);
+      JammedReport();
+      std::vector<std::string> monitors() const;
+      JammedReport& add_monitor(const std::string&);
+      const std::string& key() const;
+      const StackTrace& waiter() const;
+      const StackTrace& owner() const;
     };
+
 
   }
 }
-
 #endif

@@ -33,6 +33,10 @@ namespace frenchroast { namespace monitor {
       {
       }
 
+    StackFrame(const std::string& name) : StackFrame(name , 0)
+        {
+        }
+      
       std::string get_name()  const 
       {
         return _name;

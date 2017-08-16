@@ -28,12 +28,16 @@
 #include "MethodStats.h"
 #include "StackReport.h"
 #include "ClassDetail.h"
+#include "JammedReport.h"
 
 namespace frenchroast { namespace monitor {
 
     
     std::string              translate_descriptor(const std::string& name, int* = nullptr);
     std::vector<StackTrace>  construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters);
+    JammedReport&            process_jammed(const std::string& monitor, const std::string& waiter, const std::string& owner,
+                                            std::unordered_map<std::string, JammedReport>& jcount);
+                                            
     std::vector<ClassDetail> construct_class_details(const std::string& msg);
     void transmit_lines(const std::string& fileName, frenchroast::network::Connector&);
     void transmit_lines(const std::vector<std::string>&, frenchroast::network::Connector&);
@@ -46,11 +50,12 @@ namespace frenchroast { namespace monitor {
     template
     <typename T>
       class Monitor : public network::Listener {
-	T&                                                                     _handler;
-	network::Connector                                                     _conn;
-	std::unordered_map<std::string, time_holder>                           _timed_signals;
-	std::unordered_map<std::string, int>                                   _signals;
+	T&                                                                      _handler;
+	network::Connector                                                      _conn;
+	std::unordered_map<std::string, time_holder>                            _timed_signals;
+	std::unordered_map<std::string, int>                                    _signals;
         std::unordered_map<std::string, MethodStats>                           _method_counters;
+        std::unordered_map<std::string, JammedReport>                          _jammedReports;
         std::unordered_map<std::string, std::unordered_map<std::string, int>>  _markers;
         std::unordered_map<std::string, std::unordered_map<std::string, StackReport>>  _stacks;
         std::string                                                            _opcodeFile;
@@ -73,6 +78,10 @@ namespace frenchroast { namespace monitor {
 	const int DIRECTION   = 3;
 	const int DESCRIPTOR  = 4;
 	const int THREAD_NAME = 5;
+
+        const int MONITOR         = 2;
+        const int WAITER          = 3;
+        const int OWNER           = 4;
         
     public:
     Monitor(T& handler, const std::string& opcodeFile) : _handler(handler), _opcodeFile(opcodeFile)
@@ -138,6 +147,9 @@ namespace frenchroast { namespace monitor {
 
 	  if (items[MSG_TYPE] == "traffic") {
 	    _handler.traffic( construct_traffic(items[MSG], _method_counters));
+	  }
+	  if (items[MSG_TYPE] == "jammed") {
+	    _handler.jammed( process_jammed(items[MONITOR], items[WAITER], items[OWNER], _jammedReports));
 	  }
 
           if (items[MSG_TYPE] == "loaded") {

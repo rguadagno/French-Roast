@@ -28,8 +28,13 @@
 #include "Connector.h"
 #include "MethodStats.h"
 #include "ClassDetail.h"
+#include "StackFrame.h"
+#include "JammedReport.h"
 
 namespace frenchroast { namespace monitor {
+
+    std::string translate_descriptor(const std::string& name, int* = nullptr);
+    
             std::unordered_map<char, std::string> _type_map { {'I',"int"},
                                                              {'Z',"bool"},
                                                              {'V',"void"},
@@ -201,6 +206,32 @@ namespace frenchroast { namespace monitor {
       }
       conn.send_message("<end>");
     }
+
+
+
+    StackTrace build_trace(const std::string& str)
+    {
+      StackTrace rv{};
+      std::vector<std::string> funcs = split(str, "#");
+      for(int idx = funcs.size()-2;idx >= 0; idx--) {
+        rv.addFrame(StackFrame{translate_descriptor(funcs[idx])});
+      }
+      return rv;
+    }
     
+    JammedReport& process_jammed(const std::string& monitor, const std::string& waiter, const std::string& owner, std::unordered_map<std::string, JammedReport>& reports)
+    {
+      if(reports.count(waiter + owner) == 0) {
+        reports[waiter + owner] = JammedReport{build_trace(waiter), build_trace(owner)};
+      }
+      std::string mon = monitor.substr(1);
+      replace(mon,'/','.');
+      replace(mon,';');
+      return reports[waiter + owner].add_monitor(mon);
+    }
+
+
+
+
     
   }}

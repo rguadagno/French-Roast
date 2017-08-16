@@ -544,11 +544,17 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   std::string waiterStr  = formatStackTrace(genv,       frame_info,       frame_count); 
   std::string ownerStr = formatStackTrace(genv, owner_frame_info, owner_frame_count); 
 
+  jclass theclass = gxenv->GetObjectClass(object);
+  char *class_sig;
+  char *generic;
+  genv->GetClassSignature(theclass, &class_sig,&generic);
+  
+  std::string monitorStr{class_sig};
   genv->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.waiters));
   genv->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
   
   _sig_mutex.lock();
-  _rptr.jammed(waiterStr, ownerStr);
+  _rptr.jammed(monitorStr, waiterStr, ownerStr);
   _sig_mutex.unlock();
 }
 

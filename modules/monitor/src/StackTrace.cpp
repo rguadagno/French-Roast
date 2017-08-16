@@ -24,7 +24,12 @@
 
 namespace frenchroast { namespace monitor {
 
+    
     StackTrace::StackTrace(const std::string tname) : _thread_name(tname), _key("")
+    {
+    }
+
+    StackTrace::StackTrace() : StackTrace("")
     {
     }
     
@@ -44,7 +49,7 @@ namespace frenchroast { namespace monitor {
       _monitors = ref._monitors;
     }
     
-    int StackTrace::size()
+    int StackTrace::size() const
     {
       return _frames.size();
     }
@@ -124,6 +129,12 @@ namespace frenchroast { namespace monitor {
     {
       return _thread_name;
     }
+    
+    const std::string& StackTrace::key()  const 
+    {
+      return _key;
+    }
+    
   }
 }
 

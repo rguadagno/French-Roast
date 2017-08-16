@@ -32,6 +32,7 @@
 #include "StackReport.h"
 #include "DetailHolder.h"
 #include "ClassDetail.h"
+#include "JammedReport.h"
 
 Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::StackTrace>);
@@ -41,6 +42,7 @@ using SRType =   std::unordered_map<std::string, frenchroast::monitor::StackRepo
 Q_DECLARE_METATYPE(SRType);
 Q_DECLARE_METATYPE(DetailHolder);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::ClassDetail>);
+Q_DECLARE_METATYPE(frenchroast::monitor::JammedReport);
 
 
 class FRListener : public QObject
@@ -65,6 +67,7 @@ class FRListener : public QObject
     void unloaded(const std::string& host, const std::string& pid);
     void ready(const std::string& host, const std::string& pid);
     void request_hooks();
+    void jammed(frenchroast::monitor::JammedReport&);
 
   public slots:
     void init();
@@ -86,6 +89,7 @@ class FRListener : public QObject
     void remoteunloaded(const std::string& host, const std::string& pid);
     void traffic_signal(const std::vector<frenchroast::monitor::StackTrace>&);
     void class_loaded(const std::vector<frenchroast::monitor::ClassDetail>&);
+    void stack_jammed(const frenchroast::monitor::JammedReport&);
     void remote_ready(const std::string&, const std::string&);
 
 };

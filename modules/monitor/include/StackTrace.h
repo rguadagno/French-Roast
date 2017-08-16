@@ -37,11 +37,13 @@ namespace frenchroast { namespace monitor {
     public:
       StackTrace(const std::string tname);
       StackTrace(const StackTrace&);
+      StackTrace();
       std::string               thread_name()  const;
       std::vector<std::string>  descriptor_frames() const;
       std::vector<int>          monitor_frames() const;
       void                      addFrame(const StackFrame& frame);
-      int size();
+      int size() const;
+      const std::string& key() const;
       bool operator==(const StackTrace&);
       void operator=(const StackTrace&);
       bool operator>(const StackTrace&);

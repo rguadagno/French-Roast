@@ -45,6 +45,11 @@ void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace>& items)
   traffic_signal(items);
 }
 
+void FRListener::jammed(frenchroast::monitor::JammedReport& rpt)
+{
+  stack_jammed(rpt);
+}
+
 void FRListener::connected(const std::string& host, const std::string& pid)
 {
   remoteconnected( host,pid);

@@ -54,6 +54,7 @@ namespace frenchroast {
      void editor_viewer();
      void traffic_viewer();
      void classload_viewer();
+     void jammed_viewer();
      void about_viewer();
      void exit_fr();
      
