@@ -1,4 +1,4 @@
-// copyright (c) 2016 Richard Guadagno
+// copyright (c) 2017 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -17,26 +17,27 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef FRSTACKFRAME_H
-#define FRSTACKFRAME_H
-
-#include <vector>
+#include "StackFrame.h"
 
 namespace frenchroast { namespace monitor {
 
-    class StackFrame {
-      std::string _name;
-      int         _monitorCount;
-      
-    public:
-      StackFrame(const std::string& name, int count);
-      StackFrame(const std::string& name);
-      std::string get_name()  const; 
-      int  get_monitor_count()  const;
-    };
+    StackFrame::StackFrame(const std::string& name, int count) : _name(name), _monitorCount(count)
+      {
+      }
 
+    StackFrame::StackFrame(const std::string& name) : StackFrame(name , 0)
+    {
+    }
+      
+    std::string StackFrame::get_name()  const 
+    {
+      return _name;
+    }
+
+    int  StackFrame::get_monitor_count()  const
+    {
+      return _monitorCount;
+    }
+      
   }
 }
-
-
-#endif
