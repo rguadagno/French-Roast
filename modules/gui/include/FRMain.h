@@ -71,6 +71,7 @@ class FRMain : public QMainWindow {
   void update_detail_list(std::string, const DetailHolder& detailholder);
   void turn_on_profiler(const std::string& hostname_pid);
   void turn_off_profiler(const std::string& hostname_pid);
+  void reset();
   
  public slots:
    void update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>&);
@@ -98,7 +99,7 @@ class FRMain : public QMainWindow {
    void start_watching_traffic(int);
    void stop_watching_traffic();
    void handshake(const std::string& host, const std::string& ip);
-   void reset();
+   void reset_viewers();
 };
 
 

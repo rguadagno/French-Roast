@@ -232,7 +232,16 @@ namespace frenchroast { namespace monitor {
         
       }
 
-
+      void reset()
+      {
+        _timed_signals.clear();
+        _signals.clear();
+        _method_counters.clear();
+        _jammedReports.clear();
+        _markers.clear();
+        _stacks.clear();
+      }
+      
     };
   }
 }

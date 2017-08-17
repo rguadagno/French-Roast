@@ -125,3 +125,7 @@ void FRListener::validated_hooks(std::vector<std::string> hooks)
   }
 }
 
+void FRListener::reset()
+{
+  _mon.reset();
+}

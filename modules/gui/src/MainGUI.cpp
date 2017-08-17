@@ -117,7 +117,7 @@ void FRMain::connect_common_listeners(FViewer* instance)
   QObject::connect(instance, &frenchroast::FViewer::jammed_viewer,    this,  &FRMain::view_jammed);
   QObject::connect(instance, &frenchroast::FViewer::classload_viewer, this,  &FRMain::view_classviewer);
   QObject::connect(instance, &frenchroast::FViewer::about_viewer,     this,  &FRMain::view_about);
-  QObject::connect(instance, &frenchroast::FViewer::reset,            this,  &FRMain::reset);
+  QObject::connect(instance, &frenchroast::FViewer::reset,            this,  &FRMain::reset_viewers);
   QObject::connect(instance, &frenchroast::FViewer::exit_fr,          this,  &FRMain::exit_fr);
 }
 
@@ -267,12 +267,13 @@ void FRMain::restore()
   }
 }
 
-void FRMain::reset()
+void FRMain::reset_viewers()
 {
   FSignalViewer::reset();
   FTimerViewer::reset();
   FClassViewer::reset();
   TrafficViewer::reset();
   JammedViewer::reset();
+  reset();
 }
 
