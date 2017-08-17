@@ -105,10 +105,11 @@ namespace frenchroast { namespace monitor {
 	    }
 	  }
 	  if (items[MSG_TYPE] == "signal") {
+            const std::string thread_name  = items[SIGNAL_THREAD_NAME];
             std::vector<MarkerField> mfields;
-            ++((_markers[items[MSG]])[ items[PARAMS] + items[MARKER]]);
+            ++((_markers[thread_name + items[MSG]])[ items[PARAMS] + items[MARKER]]);
             std::vector<std::string> instanceHeaders;
-            for(auto& item : _markers[items[MSG]]) {
+            for(auto& item : _markers[thread_name + items[MSG]]) {
               MarkerField mf{item.first, item.second};
               for(auto& x: frenchroast::split(frenchroast::split(item.first, ")")[0].substr(1),",")) {
                 mf._arg_items.push_back(x);
@@ -136,14 +137,14 @@ namespace frenchroast { namespace monitor {
                 sframes.push_back(translate_descriptor(x));
               }
             }
-            if(_stacks[desc].count(skey) == 0) {
-              _stacks[desc][skey] = StackReport(sframes);
+            if(_stacks[thread_name + desc].count(skey) == 0) {
+              _stacks[thread_name + desc][skey] = StackReport(sframes);
             }
             else {
-              ++_stacks[desc][skey];
+              ++_stacks[thread_name + desc][skey];
             }
             
-            _handler.signal(desc , items[SIGNAL_THREAD_NAME] , ++_signals[items[SIGNAL_THREAD_NAME] + items[MSG]], argHeaders, instanceHeaders, mfields, _stacks[desc]);
+            _handler.signal(desc , thread_name  , ++_signals[thread_name  + items[MSG]], argHeaders, instanceHeaders, mfields, _stacks[thread_name + desc]);
 	   }
 
 	  if (items[MSG_TYPE] == "traffic") {
