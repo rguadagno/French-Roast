@@ -50,16 +50,16 @@ namespace frenchroast { namespace monitor {
     template
     <typename T>
       class Monitor : public network::Listener {
-	T&                                                                      _handler;
-	network::Connector                                                      _conn;
-	std::unordered_map<std::string, time_holder>                            _timed_signals;
-	std::unordered_map<std::string, int>                                    _signals;
-        std::unordered_map<std::string, MethodStats>                           _method_counters;
-        std::unordered_map<std::string, JammedReport>                          _jammedReports;
-        std::unordered_map<std::string, std::unordered_map<std::string, int>>  _markers;
-        std::unordered_map<std::string, std::unordered_map<std::string, StackReport>>  _stacks;
-        std::string                                                            _opcodeFile;
-        std::unordered_map<std::string, std::string>                           _clients;
+	T&                                                                             _handler;
+        network::Connector                                                            _conn;
+        std::unordered_map<std::string, time_holder>                                  _timed_signals;
+        std::unordered_map<std::string, int>                                          _signals;
+        std::unordered_map<std::string, MethodStats>                                  _method_counters;
+        std::unordered_map<std::string, JammedReport>                                 _jammedReports;
+        std::unordered_map<std::string, std::unordered_map<std::string, int>>         _markers;
+        std::unordered_map<std::string, std::unordered_map<std::string, StackReport>> _stacks;
+        std::string                                                                   _opcodeFile;
+        std::unordered_map<std::string, std::string>                                  _clients;
 
 
        const int IP_PORT     = 0;
@@ -69,6 +69,7 @@ namespace frenchroast { namespace monitor {
         
 	const int MSG_TYPE    = 1;
 	const int MSG         = 2;
+       const int SIGNAL_THREAD_NAME = 3;
 
        const int MARKER      = 4;
        const int PARAMS      = 5;
@@ -142,7 +143,7 @@ namespace frenchroast { namespace monitor {
               ++_stacks[desc][skey];
             }
             
-            _handler.signal(desc , items[3] , ++_signals[items[MSG]], argHeaders, instanceHeaders, mfields, _stacks[desc]);
+            _handler.signal(desc , items[SIGNAL_THREAD_NAME] , ++_signals[items[SIGNAL_THREAD_NAME] + items[MSG]], argHeaders, instanceHeaders, mfields, _stacks[desc]);
 	   }
 
 	  if (items[MSG_TYPE] == "traffic") {
