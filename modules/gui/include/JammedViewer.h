@@ -48,12 +48,14 @@ namespace frenchroast {
     QTableWidget*                             _data;
     std::unordered_map<std::string, int>      _jamsRow;
     std::unordered_map<std::string, int>      _jamsCount;
-    
+    void reset_all();    
     
   public:
     static JammedViewer* instance(QWidget*);
     static void capture();
+    static void reset();
     static bool restore_is_required();
+
     
   public slots:
     void update(const frenchroast::monitor::JammedReport& rpt);

@@ -36,6 +36,7 @@ namespace frenchroast {
     static const std::string                          FName;
     FTimerViewer(QWidget*);
     ~FTimerViewer();
+    void reset_all();
     
   public slots:
       void update_time(const std::string& descriptor, long elapsed);
@@ -45,6 +46,7 @@ namespace frenchroast {
     static FTimerViewer* instance(QWidget*);
     static bool restore_is_required();
     static void capture();
+    static void reset();
   };
 }
 #endif

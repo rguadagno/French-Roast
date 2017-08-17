@@ -80,5 +80,16 @@ namespace frenchroast {
     return restore_required(FName, _settings);
   }
 
+  void FTimerViewer::reset()
+  {
+    if(_instance == nullptr) return;
+    _instance->reset_all();
+  }
 
+  void FTimerViewer::reset_all()
+  {
+    clearTable(_data);
+    _descriptors.clear();
+  }
+  
 }

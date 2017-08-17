@@ -27,7 +27,7 @@ QTableWidgetItem* createItem(int value);
 QTableWidgetItem* createItem(const std::string& value, Qt::Alignment = Qt::AlignCenter);
 QTableWidgetItem* createItem(QTableWidgetItem*);
 int addRow(QTableWidget*, QTableWidgetItem*, QTableWidgetItem* = nullptr, QTableWidgetItem* = nullptr);
-
+void clearTable(QTableWidget*, bool clearcols = false);
 
 
 #endif

@@ -65,13 +65,11 @@ namespace frenchroast {
     KeyListener* keyListener = new KeyListener;
     _data->installEventFilter(keyListener);
     setup_dockwin("Jammed Stacks", _data, false);
-    //    QObject::connect(keyListener  , &KeyListener::signalkey,          this, [&](){handle_add_signal(_data->currentColumn(),2 _data->currentItem()->text());});
     QObject::connect(keyListener  , &KeyListener::signalkey,          this, [&](){handle_add_signal(_data->currentRow(), _data->currentColumn()); });
 }
 
 void JammedViewer::update(const frenchroast::monitor::JammedReport& rpt)
 {
-
   if(_jamsRow.count(rpt.key()) == 0) {
     if(_data->rowCount() > 0) {
       _data->insertRow(_data->rowCount());
@@ -135,6 +133,18 @@ void JammedViewer::update(const frenchroast::monitor::JammedReport& rpt)
      capture_win(FName, _settings, _instance != nullptr ? _instance : nullptr);
   }
 
+  void JammedViewer::reset()
+  {
+    if(_instance == nullptr) return;
+    _instance->reset_all();
+  }
+  void JammedViewer::reset_all()
+  {
+    clearTable(_data);
+    _jamsRow.clear();
+    _jamsCount.clear();
+  }
+  
   bool JammedViewer::restore_is_required()
   {
     return restore_required(FName, _settings);

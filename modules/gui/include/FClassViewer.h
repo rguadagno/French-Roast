@@ -43,6 +43,7 @@ namespace frenchroast {
   ~FClassViewer();
   void expand_methods(const std::string&, int);
   void collapse_methods(const std::string&, int);
+  void reset_all();
   
 Q_OBJECT
  
@@ -50,6 +51,7 @@ Q_OBJECT
  static FClassViewer* instance(QWidget*);
  static void capture();
  static bool restore_is_required();
+ static void reset();
  
  signals:
   void add_signal(QString);

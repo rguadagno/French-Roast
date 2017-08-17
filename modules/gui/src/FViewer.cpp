@@ -84,6 +84,9 @@ namespace frenchroast {
   QObject::connect(menu->addAction("Traffic watcher"),       &QAction::triggered, this, &FViewer::traffic_viewer);
   QObject::connect(menu->addAction("Jammed Stacks"),         &QAction::triggered, this, &FViewer::jammed_viewer);
   QObject::connect(menu->addAction("Class loading watcher"), &QAction::triggered, this, &FViewer::classload_viewer);
+  menu->addSeparator();
+  QObject::connect(menu->addAction("Reset"),                 &QAction::triggered, this, &FViewer::reset);
+  menu->addSeparator();
   QObject::connect(menu->addAction("Exit French-Roast"),     &QAction::triggered, this, &FViewer::exit_fr);
 
   layout->addWidget(fbmenu,1,1);

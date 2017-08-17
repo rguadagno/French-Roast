@@ -36,6 +36,7 @@ namespace frenchroast {
     static const std::string                          FName;
     FSignalViewer(QWidget*);
     ~FSignalViewer();
+    void reset_all();
     
   public slots:
       void update_count(const std::string& descriptor, int count);
@@ -45,6 +46,7 @@ namespace frenchroast {
     static FSignalViewer* instance(QWidget*);
     static bool restore_is_required();
     static void capture();
+    static void reset();
   };
 }
 #endif

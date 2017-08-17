@@ -85,4 +85,16 @@ namespace frenchroast {
     return restore_required(FName, _settings);
   }
 
+  void FSignalViewer::reset()
+  {
+    if(_instance == nullptr) return;
+    _instance->reset_all();
+  }
+
+  void FSignalViewer::reset_all()
+  {
+    clearTable(_data);
+    _descriptors.clear();
+  }
+  
 }

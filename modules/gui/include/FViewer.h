@@ -57,6 +57,7 @@ namespace frenchroast {
      void jammed_viewer();
      void about_viewer();
      void exit_fr();
+     void reset();
      
      
   protected:

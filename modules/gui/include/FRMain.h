@@ -98,6 +98,7 @@ class FRMain : public QMainWindow {
    void start_watching_traffic(int);
    void stop_watching_traffic();
    void handshake(const std::string& host, const std::string& ip);
+   void reset();
 };
 
 

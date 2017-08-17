@@ -43,18 +43,19 @@ namespace frenchroast {
     TrafficViewer(QWidget*);
     ~TrafficViewer();
 
-    QTableWidget*                             _traffic;
-    QTableWidget*                             _ranking;
-    std::unordered_map<std::string, int>      _traffic_keys;
-    ActionEdit*                               _rate;
-
-    std::unordered_map<std::string, StackColumn>      _thread_col;
+    QTableWidget*                                _traffic;
+    QTableWidget*                                _ranking;
+    std::unordered_map<std::string, int>         _traffic_keys;
+    ActionEdit*                                  _rate;
+    std::unordered_map<std::string, StackColumn> _thread_col;
     
-    
+   void reset_all();
+   
   public:
     static TrafficViewer* instance(QWidget*);
     static void capture();
     static bool restore_is_required();
+    static void reset();
     
   private slots:
     void start_stop(const std::string& );

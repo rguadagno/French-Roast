@@ -210,6 +210,17 @@ namespace frenchroast {
     return restore_required(FName, _settings);
   }
 
+  void TrafficViewer::reset()
+  {
+    if(_instance == nullptr) return;
+    _instance->reset_all();
+  }
 
-
+  void TrafficViewer::reset_all()
+  {
+    clearTable(_traffic, true);
+    clearTable(_ranking);
+    _traffic_keys.clear();
+    _thread_col.clear(); 
+  }
 }

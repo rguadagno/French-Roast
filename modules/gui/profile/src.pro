@@ -25,7 +25,8 @@ SOURCES += \
 ../../monitor/src/MethodStats.cpp \
 ../../monitor/src/StackReport.cpp \
 ../../monitor/src/ClassDetail.cpp \
-../../monitor/src/JammedReport.cpp 
+../../monitor/src/JammedReport.cpp \
+../../monitor/src/StackFrame.cpp
 
 HEADERS += ../include/*.h
 LIBS +=  ws2_32.lib

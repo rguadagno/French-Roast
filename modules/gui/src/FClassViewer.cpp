@@ -168,5 +168,21 @@ void FClassViewer::handle_add_signal(int row, QString text)
     return restore_required(FName, _settings);
   }
 
+
+  void FClassViewer::reset()
+  {
+    if(_instance == nullptr) return;
+    _instance->reset_all();
+  }
+
+
+  void FClassViewer::reset_all()
+  {
+    clearTable(_data);
+    _methods.clear();
+    _loadCount.clear();
+    _classes.clear();
+    _ind.clear();
+  }
   
 }

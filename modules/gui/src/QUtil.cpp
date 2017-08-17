@@ -58,3 +58,17 @@ int addRow(QTableWidget* table, QTableWidgetItem* item1, QTableWidgetItem* item2
   }
   return row;
 }
+
+void clearTable(QTableWidget* table, bool clearcols)
+{
+  table->clearContents();
+  while(table->rowCount() > 0) {
+    table->removeRow(0);
+  }
+  if(clearcols) {
+  while(table->columnCount() > 0) {
+    table->removeColumn(0);
+  }
+    
+  }
+}
