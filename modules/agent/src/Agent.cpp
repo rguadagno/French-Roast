@@ -45,7 +45,6 @@ std::mutex _loading_mutex;
 std::mutex _loading_data_mutex;
 std::mutex _profiler_mutex;
 std::mutex _all_loaded_mutex;
-std::mutex _jammed_mutex;
 
 class ClassPtr {
 public:
@@ -529,8 +528,12 @@ void JNICALL
 
 void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread thread, jobject object)
 {
-  std::unique_lock<std::mutex> lck{_jammed_mutex};
 
+  jclass theclass = gxenv->GetObjectClass(object);
+  char *class_sig;
+  char *generic;
+  genv->GetClassSignature(theclass, &class_sig,&generic);
+  
   jint frame_count;
   jvmtiFrameInfo frame_info[20];
   genv->GetStackTrace(thread,0,20, frame_info, &frame_count);
@@ -540,15 +543,18 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   jint owner_frame_count;
   jvmtiFrameInfo owner_frame_info[20];
   genv->GetStackTrace(monitorInfo.owner,0, sizeof(owner_frame_info), owner_frame_info, &owner_frame_count);
-
+ 
   std::string waiterStr  = formatStackTrace(genv,       frame_info,       frame_count); 
   std::string ownerStr = formatStackTrace(genv, owner_frame_info, owner_frame_count); 
 
-  jclass theclass = gxenv->GetObjectClass(object);
-  char *class_sig;
-  char *generic;
-  genv->GetClassSignature(theclass, &class_sig,&generic);
-  
+  // doing here causes jvm crash sometimes, known bug ...
+  //  jclass theclass = gxenv->GetObjectClass(object);
+ 
+  //char *class_sig;
+  //char *generic;
+  // genv->GetClassSignature(theclass, &class_sig,&generic);
+ 
+
   std::string monitorStr{class_sig};
   genv->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.waiters));
   genv->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
