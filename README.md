@@ -60,7 +60,7 @@ Then we re-kick the target app.
 After we observe that the function is called 50,000 times with the same arguments we stop the target app!
 ![alt text](https://github.com/rguadagno/French-Roast/blob/master/docs/with_details.png "")
 
-Looking at the code we understand that the ```process``` function is actually called 10 million times with the same argument values each time... his could have been cached once.
+Looking at the code we understand that the ```process``` function is actually called 10 million times with the same argument values each time... this could have been cached once.
 
 You meet with the team again asking about the process method and they respond "oh that was written by Louie, the summer intern..."
 
@@ -69,6 +69,8 @@ You meet with the team again asking about the process method and they respond "o
 
 - C++
 - Qt
+- JVMTI
+- JNI
 - Sockets
 - multi-threading
 
