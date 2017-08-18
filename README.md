@@ -50,7 +50,7 @@ worse as far as performance goes. But what else is going on ? Let's take a look 
 We set the sample rate to 10 milliseconds and re-kick the app again...
 ![alt text](https://github.com/rguadagno/French-Roast/blob/master/docs/traffic.png "")
 
-You notice a hot method called ```process```, a member of the ```Parse``` class and that it obtains a monitor. So we add a signal to it by clicking the ```s``` key - the signal pops over to the Editor
+You notice a hot method called ```doSomething```, a member of the ```Parse``` class and that it calls ```process``` which obtains a monitor. So we add a signal to it by clicking the ```s``` key - the signal pops over to the Editor
 ![alt text](https://github.com/rguadagno/French-Roast/blob/master/docs/editor_3.png "")
 
 Then we re-kick the target app.
@@ -62,7 +62,7 @@ After we observe that the function is called 50,000 times with the same argument
 
 Looking at the code we understand that the ```process``` function is actually called 10 million times with the same argument values each time... this could have been cached once.
 
-You meet with the team again asking about the process method and they respond "oh that was written by Louie, the summer intern..."
+You meet with the team again asking about the ```process``` method and they respond "oh that was written by Louie, the summer intern..."
 
 
 ### Technology
