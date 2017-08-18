@@ -41,6 +41,12 @@ So it appears the function in question is only invoked 10 times. You run this by
 time to run.  So we change the ```<ENTER>``` to a ```<TIMER>```
 ![alt text](https://github.com/rguadagno/French-Roast/blob/master/docs/editor_2.png "")
 
+And re-kick the target app.
+![alt text](https://github.com/rguadagno/French-Roast/blob/master/docs/timers.png "")
+
+Now we see that the elapsed time is 45 seconds (for all 10 calls to the function ) for the "bad" method. Seems not so great but also could be
+worse as far as performance goes. But what else is going on ? Let's take a look at some Hot Stacks and Methods.
+
 
 
 ### Technology
