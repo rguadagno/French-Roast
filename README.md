@@ -34,11 +34,13 @@ We then start the target application. We have copied the French-Roast agent.dll 
 
 ![alt text](https://github.com/rguadagno/French-Roast/blob/master/docs/cmd_line_target.png "")
 
-The Signals viewer shows us the what happened with badFunction. The 10 is number of times the function was invoked. The name of the thread is
+The Signals viewer shows us the what happened with the badFunction. 10 is the number of times the function was invoked. The name of the thread is
 indicated by [ main ].
 ![alt text](https://github.com/rguadagno/French-Roast/blob/master/docs/bad_func.png "")
-So it appears the function in question badFunction is only invoked 10 times. You run this by the team and they say yeah but it takes a long
-time to run.  So we change the <ENTER> to a <TIMER> [ screen shot of editor] and rerun.
+So it appears the function in question is only invoked 10 times. You run this by the team and they say yeah but it takes a long
+time to run.  So we change the ```<ENTER>``` to a ```<TIMER>```
+![alt text](https://github.com/rguadagno/French-Roast/blob/master/docs/editor_2.png "")
+
 
 
 ### Technology
