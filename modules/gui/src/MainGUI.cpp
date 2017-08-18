@@ -196,7 +196,7 @@ void FRMain::update_list(std::string  descriptor, std::string tname, int count,
 {
   if(_exit) return;
 
-  tname = "[ " + tname + " ]";
+  tname = "[ " + tname + " ] ";
   frenchroast::monitor::pad(descriptor, 50);
   frenchroast::monitor::pad(tname, 10);
 

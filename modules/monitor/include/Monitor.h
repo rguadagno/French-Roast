@@ -124,7 +124,7 @@ namespace frenchroast { namespace monitor {
               mfields.push_back(mf);
             }
             std::vector<std::string> argHeaders;
-            std::string desc = translate_descriptor(items[MSG]);
+            std::string desc = translate_descriptor(items[MSG].substr(1));
             for(auto& x : frenchroast::split(frenchroast::split(frenchroast::split(desc,")")[0], "(")[1], ",")) {
               argHeaders.push_back(x);
             }
@@ -134,7 +134,7 @@ namespace frenchroast { namespace monitor {
             for(auto& x : frenchroast::split(items[STACK], "%")) {
               if(x.find("::") != std::string::npos) {
                 skey.append(x);
-                sframes.push_back(translate_descriptor(x));
+                sframes.push_back(translate_descriptor(x.substr(1)));
               }
             }
             if(_stacks[thread_name + desc].count(skey) == 0) {
