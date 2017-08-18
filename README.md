@@ -22,7 +22,7 @@ intimate with all of the details such as which method is invoked the most and by
 
 Your are the new line manager for a dev group. One of the applications you are now responsible for has been marked out as being slow.
 Its one part of some batch process running in the past in around 5 minutes now takes over 20 minutes ... You meet with the
-team and they suspect the cause is a class written by Vicktor. Victor no longer works here and you get the feeling no one liked him
+team and they suspect the cause is a class written by Vicktor. Vicktor no longer works here and you get the feeling no one liked him
 that much. The re-write of this class by Vicktor has been slated for 4 weeks of dev time by the previous manager. The class in question
 is over 5000 lines, and the function in question is a nice 1500 lines.  So lets take a look and see what will discover...
 
