@@ -412,11 +412,7 @@ namespace frenchroast {
          meth.add_instructions(x,instructions, adjust);
          adjust = true;
       }
-
-      if (meth.get_max_stack() < 4) {
-        meth.set_max_stack(4);
-      }
-      
+      meth.set_max_stack( meth.get_max_stack() + 4);
     }
     
     
