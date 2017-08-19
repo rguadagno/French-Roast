@@ -529,10 +529,10 @@ void JNICALL
 void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread thread, jobject object)
 {
 
-  jclass theclass = gxenv->GetObjectClass(object);
-  char *class_sig;
-  char *generic;
-  genv->GetClassSignature(theclass, &class_sig,&generic);
+  //  jclass theclass = gxenv->GetObjectClass(object);
+  // char *class_sig;
+  //char *generic;
+  //genv->GetClassSignature(theclass, &class_sig,&generic);
   
   jint frame_count;
   jvmtiFrameInfo frame_info[20];
@@ -555,7 +555,7 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   // genv->GetClassSignature(theclass, &class_sig,&generic);
  
 
-  std::string monitorStr{class_sig};
+  std::string monitorStr="";//{class_sig};
   genv->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.waiters));
   genv->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
   
