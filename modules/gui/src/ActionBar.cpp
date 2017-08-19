@@ -121,6 +121,14 @@ ActionLabel* ActionBar::add(ActionLabel* button)
   return button;
 }
 
+
+QWidget* ActionBar::add(QWidget* button)
+{
+  _layout->addWidget(button, 0, _idx--, Qt::AlignRight);
+  return button;
+}
+
+
 ActionBar::ActionBar(const std::bitset<4>& actions)
   {
     _layout = new QGridLayout();

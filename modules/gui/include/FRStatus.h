@@ -49,7 +49,7 @@ class FRStatus : public QWidget {
   void turn_off_profiler(const std::string& hostname_pid);
   
  public:
-  FRStatus();
+  FRStatus(QCheckBox*);
 };
 
 #endif

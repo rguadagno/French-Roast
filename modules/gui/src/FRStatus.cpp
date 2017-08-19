@@ -28,7 +28,7 @@
 #include <iostream>
 
 
-FRStatus::FRStatus() 
+FRStatus::FRStatus(QCheckBox* autocon) : _autoConnect(autocon)
 {
     setStyleSheet("QWidget {background: #202020;color:#909090;font-family:\"Arial\";font-size:14px;}");
     _targets = new QTableWidget();
@@ -46,10 +46,7 @@ FRStatus::FRStatus()
     _targets->setHorizontalHeaderItem(1, createItem("host"));
     _targets->setHorizontalHeaderItem(2, createItem("elapsed time connected"));
     _targets->horizontalHeader()->setStyleSheet("QWidget {background: #606060;} ");
-    _autoConnect = new QCheckBox("auto connect");
-    _autoConnect->setCheckState(Qt::Checked);
     auto* layout = new QVBoxLayout;
-    layout->addWidget(_autoConnect);
     layout->addWidget(_targets);
     layout->setContentsMargins(1,1,1,1);
     layout->setSpacing(0);

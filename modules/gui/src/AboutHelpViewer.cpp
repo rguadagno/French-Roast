@@ -24,7 +24,11 @@ namespace frenchroast {
 
 AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
   {
-    _statusMsg = new FRStatus{};
+    QCheckBox* autoConnect = new QCheckBox("auto connect");
+    autoConnect->setStyleSheet("QCheckBox{border: none; background:#404040;color:#C0C0C0;font-size:14px;}");
+    autoConnect->setCheckState(Qt::Checked);
+    _actionBar->add(autoConnect);
+    _statusMsg = new FRStatus{autoConnect};
     QObject::connect(_statusMsg, &FRStatus::turn_on_profiler, this, &AboutHelpViewer::turn_on_profiler);
     QObject::connect(_statusMsg, &FRStatus::turn_off_profiler, this, &AboutHelpViewer::turn_off_profiler);
 

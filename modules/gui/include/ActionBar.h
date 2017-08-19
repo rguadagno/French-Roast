@@ -90,6 +90,7 @@ class ActionBar : public QWidget {
     ActionButton* add(ActionButton*);
     ActionEdit*   add(ActionEdit*);
     ActionLabel*  add(ActionLabel*);
+    QWidget*      add(QWidget*);
     
   const static std::bitset<4> Close;
 };
