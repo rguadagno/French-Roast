@@ -579,7 +579,7 @@ void traffic_monitor()
   g_java_vm->AttachCurrentThread((void**)&xenv,(void*)NULL);
 
   jint thread_count;
-  jvmtiThreadInfo tinfo;
+
 
   char *methodName;
   char *sig;
@@ -594,13 +594,22 @@ void traffic_monitor()
   }
   while(1) {
     jthread* threads;
+    thread_count=0;
     genv->GetAllThreads(&thread_count, &threads);
+
     std::string rv = "";
     for(int idx = 0; idx < thread_count; idx++) {
-      if((threads + idx) == NULL) continue;
+      jthread thd = *(threads + idx);
+      
+      jvmtiThreadInfo tinfo;
       genv->GetThreadInfo(threads[idx], &tinfo);
-      jint tstate;
-      genv->GetThreadState(threads[idx], &tstate);
+      std::string tname = std::string{tinfo.name};
+      jthreadGroup tg = tinfo.thread_group;
+      gxenv->DeleteLocalRef(tg);
+      jobject ctx = tinfo.context_class_loader;
+      gxenv->DeleteLocalRef(ctx);      
+      genv->Deallocate((unsigned char *)tinfo.name);
+      
 
       jvmtiMonitorStackDepthInfo* monitorInfo;
       jint infoCount;
@@ -613,7 +622,7 @@ void traffic_monitor()
 
       memset(frame_info, 0, sizeof(frame_info));
       memset(before_frame_info, 0, sizeof(before_frame_info));
-
+      
       ferr = genv->GetStackTrace(*(threads + idx) ,0,20, before_frame_info, &before_frame_count);
       if(ferr != JVMTI_ERROR_NONE)  {
         std::cout << "ERROR" << std::endl;
@@ -622,50 +631,74 @@ void traffic_monitor()
 
       infoCount = 0;
       ferr = genv->GetOwnedMonitorStackDepthInfo(*(threads + idx) , &infoCount,  &monitorInfo);  
-      if(ferr != JVMTI_ERROR_NONE)  {
-        std::cout << "ERROR" << std::endl;
-        continue;
-      }
+      if(ferr != JVMTI_ERROR_NONE)  { std::cout << "ERROR" << std::endl; continue; }
       ferr = genv->GetStackTrace(*(threads + idx) ,0,20, frame_info, &frame_count);
-      if(frame_count != before_frame_count) continue;
-      
-      if(ferr != JVMTI_ERROR_NONE) {
-        std::cout << "ERROR" << std::endl;
-        continue;
-      }
-      if(frame_count < 1) continue;
+      if(ferr != JVMTI_ERROR_NONE) { std::cout << "ERROR" << std::endl; continue; }
+
       std::unordered_map<int,int> monmap;
       bool invalid = false;
-      for(int idx = 0; idx < infoCount; idx++, monitorInfo++) {
-        monmap[(int)(monitorInfo->stack_depth)] = 1;
-        if(monitorInfo->stack_depth >= frame_count) {
+      for(int idx = 0; idx < infoCount; idx++) {
+        monmap[((monitorInfo + idx)->stack_depth)] = 1;
+        if((monitorInfo + idx)->stack_depth >= frame_count) {
           invalid = true;
         }
+        jobject mon = (monitorInfo + idx)->monitor;
+        gxenv->DeleteLocalRef(mon);      
+        
       }
+
+
+      if(frame_count != before_frame_count) {
+        gxenv->DeleteLocalRef(thd);
+        genv->Deallocate((unsigned char *)monitorInfo);
+     
+        continue;
+      }
+      if(frame_count < 1) {
+        gxenv->DeleteLocalRef(thd);
+        genv->Deallocate((unsigned char *)monitorInfo);
+        continue;
+      }
+
+      genv->Deallocate((unsigned char *)monitorInfo);
+      
+      
       if(invalid) continue;
       if (frame_count >= 1) {
-        rv += std::string{tinfo.name} + "^";
+        rv += tname + "^";
       }
       else {
         continue;
       }
+      
+      
       for(int fidx = frame_count - 1; fidx >= 0; fidx--) {
         jvmtiError   err = genv->GetMethodName(frame_info[fidx].method, &methodName,&sig,&generic);
+        genv->Deallocate((unsigned char *)generic );
         jclass theclass;
         genv->GetMethodDeclaringClass(frame_info[fidx].method, &theclass);
         err = genv->GetClassSignature(theclass, &class_sig,&generic);
+        gxenv->DeleteLocalRef(theclass);
         std::string classinfo{class_sig};
         rv += (monmap.count(fidx) == 1 ? "1!" : "0!") + classinfo.substr(1) + "::";
         rv +=  std::string{methodName} + ":" + std::string{sig} + "#";
-      }
+        genv->Deallocate((unsigned char *)methodName );
+        genv->Deallocate((unsigned char *)sig );
+        genv->Deallocate((unsigned char *)class_sig );
+        genv->Deallocate((unsigned char *)generic );
+        }
       rv.erase(rv.end() -1);
       rv += "%";
+      
+      gxenv->DeleteLocalRef(thd);
     }
+    genv->Deallocate((unsigned char *)threads);
+
     if(rv.size() > 1) {
-    rv.erase(rv.end() -1);
-    _sig_mutex.lock();
-    _rptr.traffic(rv);
-    _sig_mutex.unlock();
+      rv.erase(rv.end() -1);
+      _sig_mutex.lock();
+      _rptr.traffic(rv);
+      _sig_mutex.unlock();
     }
     
     if (!traffic_predicate()) {
