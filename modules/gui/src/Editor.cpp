@@ -247,6 +247,10 @@ namespace frenchroast {
     return _line;
   }
   
+  bool Editor::up()
+  {
+      return _instance != nullptr;
+  }
 
 
 }

@@ -150,5 +150,10 @@ void JammedViewer::update(const frenchroast::monitor::JammedReport& rpt)
     return restore_required(FName, _settings);
   }
 
-  
+
+  bool JammedViewer::up()
+  {
+      return _instance != nullptr;
+  }
+
 }

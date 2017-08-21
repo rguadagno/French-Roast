@@ -52,6 +52,7 @@ Q_OBJECT
  static void capture();
  static bool restore_is_required();
  static void reset();
+ static bool up();
  
  signals:
   void add_signal(QString);

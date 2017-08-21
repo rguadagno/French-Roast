@@ -51,6 +51,7 @@ namespace frenchroast {
     static Editor* instance(QWidget*);
     static void capture();
     static bool restore_is_required();
+    static bool up();
 
     std::vector<std::string> lines() const;
     

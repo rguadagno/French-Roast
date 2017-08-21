@@ -47,6 +47,7 @@ namespace frenchroast {
     static bool restore_is_required();
     static void capture();
     static void reset();
+    static bool up();
   };
 }
 #endif

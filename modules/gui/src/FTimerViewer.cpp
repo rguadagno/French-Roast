@@ -92,4 +92,10 @@ namespace frenchroast {
     _descriptors.clear();
   }
   
+  bool FTimerViewer::up()
+  {
+      return _instance != nullptr;
+  }
+  
+  
 }

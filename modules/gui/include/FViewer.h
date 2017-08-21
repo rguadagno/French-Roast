@@ -39,6 +39,7 @@ namespace frenchroast {
     static int        _opencount;
     
   public:
+      
     FViewer(QWidget*);
     virtual ~FViewer();
     operator QDockWidget*();
@@ -46,7 +47,7 @@ namespace frenchroast {
     void resize_win(int width, int height);
     void move(int x, int y);
     void update_title(const std::string&);
-
+    void bring_to_top();
   signals:
      void closed();
      void signal_viewer();
@@ -61,7 +62,6 @@ namespace frenchroast {
      
      
   protected:
-
     std::string         _name;
     static QSettings*   _settings;
     ActionBar*   _actionBar;

@@ -223,4 +223,10 @@ namespace frenchroast {
     _traffic_keys.clear();
     _thread_col.clear(); 
   }
+
+  bool TrafficViewer::up()
+  {
+      return _instance != nullptr;
+  }
+
 }

@@ -42,6 +42,10 @@ namespace frenchroast {
       exit_fr();
     }
   }
+  void FViewer::bring_to_top()
+  {
+    _dock->raise();
+  }
   
   void FViewer::setup_dockwin(const std::string& title, QWidget* wptr, bool codeMode)
   {

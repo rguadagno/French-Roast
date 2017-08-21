@@ -56,6 +56,7 @@ namespace frenchroast {
     static void capture();
     static bool restore_is_required();
     static void reset();
+    static bool up();
     
   private slots:
     void start_stop(const std::string& );

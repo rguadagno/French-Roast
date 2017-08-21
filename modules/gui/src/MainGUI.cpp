@@ -43,7 +43,12 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
 
 void FRMain::validate_hooks()
 {
-  QObject::connect(Editor::instance(this), &frenchroast::Editor::validated_hooks,  this,    &FRMain::validated_hooks);
+  if(Editor::up()) {
+    Editor::instance(this)->bring_to_top();
+  }
+  else {
+    QObject::connect(Editor::instance(this), &frenchroast::Editor::validated_hooks,  this,    &FRMain::validated_hooks);
+  }
   Editor::instance(this)->validate_hooks();
 }
 
@@ -73,26 +78,40 @@ void FRMain::remote_disconnected(const std::string& host, const std::string& pid
 
 void FRMain::view_traffic()
 {
-  QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::start_watching, this,  &FRMain::start_watching_traffic);
-  QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::stop_watching,  this,  &FRMain::stop_watching_traffic);
-  QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::add_signal,     this,  &FRMain::add_hook);
-  connect_common_listeners(TrafficViewer::instance(this));
+  if(TrafficViewer::up()) {
+    TrafficViewer::instance(this)->bring_to_top();
+  }
+  else {
+    QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::start_watching, this,  &FRMain::start_watching_traffic);
+    QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::stop_watching,  this,  &FRMain::stop_watching_traffic);
+    QObject::connect(TrafficViewer::instance(this), &frenchroast::TrafficViewer::add_signal,     this,  &FRMain::add_hook);
+    connect_common_listeners(TrafficViewer::instance(this));
+  }
 }
 
 void FRMain::view_classviewer()
 {
-  QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::start_watching, this,  &FRMain::start_watch_loading);
-  QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::stop_watching, this,   &FRMain::stop_watch_loading);
-  QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::add_signal, this,      &FRMain::add_hook);
-  QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::closed, this,          &FRMain::stop_watch_loading);
-  connect_common_listeners(FClassViewer::instance(this));
+  if(FClassViewer::up()) {
+    FClassViewer::instance(this)->bring_to_top();
+  }
+  else {
+    QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::start_watching, this,  &FRMain::start_watch_loading);
+    QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::stop_watching, this,   &FRMain::stop_watch_loading);
+    QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::add_signal, this,      &FRMain::add_hook);
+    QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::closed, this,          &FRMain::stop_watch_loading);
+    connect_common_listeners(FClassViewer::instance(this));
+  }
 }
 
 void FRMain::view_jammed()
 {
-  QObject::connect(JammedViewer::instance(this), &JammedViewer::add_signal, this,  &FRMain::add_hook);
-  //  QObject::connect(FClassViewer::instance(this), &frenchroast::FClassViewer::closed, this,          &FRMain::stop_watch_loading);
-  connect_common_listeners(JammedViewer::instance(this));
+  if(JammedViewer::up()) {
+    JammedViewer::instance(this)->bring_to_top();
+  }
+  else {
+    QObject::connect(JammedViewer::instance(this), &JammedViewer::add_signal, this,  &FRMain::add_hook);
+    connect_common_listeners(JammedViewer::instance(this));
+  }
 }
 
 void FRMain::start_watch_loading()
@@ -123,28 +142,47 @@ void FRMain::connect_common_listeners(FViewer* instance)
 
 void FRMain::view_about()
 {
-  QObject::connect(AboutHelpViewer::instance(this),  &frenchroast::AboutHelpViewer::turn_on_profiler, this, &FRMain::turn_on_profiler);
-  QObject::connect(AboutHelpViewer::instance(this),  &frenchroast::AboutHelpViewer::turn_off_profiler, this, &FRMain::turn_off_profiler);
-  connect_common_listeners(AboutHelpViewer::instance(this));
+  if(AboutHelpViewer::up()) {
+    AboutHelpViewer::instance(this)->bring_to_top();
+  }
+  else {
+    QObject::connect(AboutHelpViewer::instance(this),  &frenchroast::AboutHelpViewer::turn_on_profiler, this, &FRMain::turn_on_profiler);
+    QObject::connect(AboutHelpViewer::instance(this),  &frenchroast::AboutHelpViewer::turn_off_profiler, this, &FRMain::turn_off_profiler);
+    connect_common_listeners(AboutHelpViewer::instance(this));
+  }
 }
 
 void FRMain::view_signals()
 {
-  QObject::connect(FSignalViewer::instance(this),  &frenchroast::FSignalViewer::view_detail_request, this, &FRMain::show_detail);
-  connect_common_listeners(FSignalViewer::instance(this));
+  if(FSignalViewer::up()) {
+    FSignalViewer::instance(this)->bring_to_top();
+  }
+  else {
+    QObject::connect(FSignalViewer::instance(this),  &frenchroast::FSignalViewer::view_detail_request, this, &FRMain::show_detail);
+    connect_common_listeners(FSignalViewer::instance(this));
+  }
 }
 
 
 void FRMain::view_timers()
 {
-  connect_common_listeners(FTimerViewer::instance(this));
+  if(FTimerViewer::up()) {
+    FTimerViewer::instance(this)->bring_to_top();
+  }
+  else {
+    connect_common_listeners(FTimerViewer::instance(this));
+  }
 }
 
 void FRMain::view_hooks_editor()
 {
-  QObject::connect(Editor::instance(this), &frenchroast::Editor::validated_hooks,  this,    &FRMain::validated_hooks);
-  connect_common_listeners(Editor::instance(this));
-
+  if(Editor::up()) {
+    Editor::instance(this)->bring_to_top();
+  }
+  else {
+    QObject::connect(Editor::instance(this), &frenchroast::Editor::validated_hooks,  this,    &FRMain::validated_hooks);
+    connect_common_listeners(Editor::instance(this));
+  }
 }
 
 void FRMain::add_hook(QString txt)
@@ -154,6 +192,7 @@ void FRMain::add_hook(QString txt)
 
 void FRMain::show_detail(const std::string& descriptor)
 {
+  std::cout << "SHOW DETAL" << std::endl;
   DetailViewer* dv = DetailViewer::instance(this, descriptor);
   QObject::connect(this, &FRMain::update_detail_list, dv, &DetailViewer::update);
   QDockWidget* dock = *frenchroast::FSignalViewer::instance(this);

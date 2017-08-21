@@ -39,6 +39,7 @@ namespace frenchroast {
     static AboutHelpViewer* instance(QWidget*);
     static void capture();
     static bool restore_is_required();
+    static bool up();
 
   signals:
     void turn_on_profiler(const std::string& hostname_pid);

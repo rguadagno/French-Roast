@@ -65,6 +65,11 @@ namespace frenchroast {
     _instance = nullptr;
   }
 
+  bool FSignalViewer::up()
+  {
+      return _instance != nullptr;
+  }
+
   FSignalViewer* FSignalViewer::instance(QWidget* parent)
   {
     if(_instance != nullptr) return _instance;

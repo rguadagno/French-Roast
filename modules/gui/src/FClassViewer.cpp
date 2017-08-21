@@ -185,4 +185,9 @@ void FClassViewer::handle_add_signal(int row, QString text)
     _ind.clear();
   }
   
+  bool FClassViewer::up()
+  {
+      return _instance != nullptr;
+  }
+  
 }

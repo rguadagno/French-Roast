@@ -90,6 +90,10 @@ AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
   }
 
 
+  bool AboutHelpViewer::up()
+  {
+      return _instance != nullptr;
+  }
   
   
 }

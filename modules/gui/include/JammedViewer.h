@@ -55,6 +55,7 @@ namespace frenchroast {
     static void capture();
     static void reset();
     static bool restore_is_required();
+    static bool up();
 
     
   public slots:
