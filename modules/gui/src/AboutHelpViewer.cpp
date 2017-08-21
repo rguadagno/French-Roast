@@ -38,7 +38,7 @@ AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
     vlayout->addWidget(_statusMsg );
     vlayout->setContentsMargins(0,0,0,0);
     holder->setLayout(vlayout);
-    holder->setStyleSheet(_settings->value("zero_border_style").toString());
+    holder->setStyleSheet("QWidget {border: none;background-color: black;font-size:16px;font-family: \"Arial\"}");
     setup_dockwin("Targets", holder, false);
   }
 

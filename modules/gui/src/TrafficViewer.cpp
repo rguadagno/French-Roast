@@ -89,7 +89,7 @@ namespace frenchroast {
     splitter->addWidget(trafficHolder);
     splitter->addWidget(rankingHolder);
     splitter->setSizes({650,250});
-    
+    splitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setup_dockwin("Traffic", splitter, false);
   }
 

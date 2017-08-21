@@ -22,6 +22,7 @@
 #include <QListWidget>
 #include <QMenu>
 #include <QApplication>
+#include <QSizeGrip>
 #include <iostream>
 
 namespace frenchroast {
@@ -100,7 +101,17 @@ namespace frenchroast {
   _dock->setTitleBarWidget(titlebar);
   _dock->setAttribute(Qt::WA_DeleteOnClose);
   _dock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
-  _dock->setWidget(wptr);
+  QWidget* dockwidget = new QWidget();
+  dockwidget->setStyleSheet("QWidget {border:none; background: black;}");
+  QVBoxLayout* dlayout = new QVBoxLayout(wptr);
+  dockwidget->setLayout(dlayout);
+  QSizeGrip* grip = new QSizeGrip(_dock);
+  grip->setStyleSheet("QSizeGrip { background-color: #404040; width: 12px; height: 12px; border:none;}");
+  dlayout->addWidget(wptr);
+  dlayout->addWidget(grip, 0, Qt::AlignBottom | Qt::AlignRight);
+  dlayout->setSpacing(0);
+  dlayout->setContentsMargins(QMargins());
+  _dock->setWidget(dockwidget);
   _dock->setFloating(true);
   QObject::connect(_actionBar, &ActionBar::close_clicked, _dock, &QDockWidget::close);
   QObject::connect(_dock, &QDockWidget::destroyed, this, [&](){delete this;});

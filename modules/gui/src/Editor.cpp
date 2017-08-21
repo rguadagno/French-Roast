@@ -41,7 +41,6 @@ namespace frenchroast {
     _edit->setStyleSheet(_settings->value("edit_style").toString());
     new HooksSyntax(_edit->document());
     _edit->document()->setModified(false);
-    QVBoxLayout* vlayout = new QVBoxLayout();
     QSplitter* splitter = new QSplitter();
     splitter->setOrientation(Qt::Vertical);
     splitter->setContentsMargins(0,0,0,0);
