@@ -224,9 +224,12 @@ namespace frenchroast { namespace monitor {
       if(reports.count(waiter + owner) == 0) {
         reports[waiter + owner] = JammedReport{build_trace(waiter), build_trace(owner)};
       }
-      std::string mon = monitor.substr(1);
-      replace(mon,'/','.');
-      replace(mon,';');
+      std::string mon = monitor;
+      if(mon != "") {
+        mon = mon.substr(1);
+        replace(mon,'/','.');
+        replace(mon,';');
+      }
       return reports[waiter + owner].add_monitor(mon);
     }
 
