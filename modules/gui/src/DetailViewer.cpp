@@ -138,7 +138,7 @@ void DetailViewer::update(const std::string& descriptor, const DetailHolder& hol
       
       int colidx = 2;
       int idx=1;
-      int totalargs = item._arg_items.size();
+      auto totalargs = item._arg_items.size();
       for(auto& x : item._arg_items) {
         std::string xx = x;
         if(idx < totalargs) {
@@ -181,7 +181,7 @@ void DetailViewer::update(const std::string& descriptor, const DetailHolder& hol
       _argData->setItem(currRow, 1, createItem("("));
       int colidx = 2;
       int idx=1;
-      int totalargs = item._arg_items.size();
+      auto totalargs = item._arg_items.size();
       for(auto& x : item._arg_items) {
         std::string xx = x;
         if(idx < totalargs) {
