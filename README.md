@@ -17,6 +17,7 @@ intimate with all of the details such as which method is invoked the most and by
 - Loaded classes viewer (displays as classes are loaded)
 - Remote profiling (only agent dll or so lib required on target machine(s)
 - Multiple JVM clients can be profiled at same time
+  - ability to turn on/off profiling for specific JVM clients 
 
 ### Scenario
 
@@ -71,6 +72,7 @@ You meet with the team again asking about the ```process``` method and they resp
 - Qt
 - JVMTI
 - JNI
+- bytecode instrumentation
 - Sockets
 - multi-threading
 
