@@ -108,3 +108,15 @@ void delete_refs(JNIEnv* jni_env, jthread* tptr, jint count)
 
 }
 
+bool get_thread_name(JNIEnv* jni_env, jvmtiEnv* env, jthread thd, std::string& name)
+{
+  jvmtiThreadInfo tinfo;
+  if(!ErrorHandler::check_jvmti_error(env->GetThreadInfo(thd, &tinfo), "GetThreadInfo")) return false;;
+  name = std::string{tinfo.name};
+  jthreadGroup tg = tinfo.thread_group;
+  jni_env->DeleteLocalRef(tg);
+  jobject ctx = tinfo.context_class_loader;
+  jni_env->DeleteLocalRef(ctx);
+  env->Deallocate((unsigned char *)tinfo.name);
+  return true;
+}

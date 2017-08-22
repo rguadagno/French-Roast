@@ -184,8 +184,6 @@ std::mutex                                 _sig_time_mutex;
 
 jvmtiEnv* genv;
 JavaVM*   g_java_vm;
-JNIEnv*   gxenv;
-
 
 void JNICALL
 ThreadStart(jvmtiEnv *env, JNIEnv* jni_env, jthread thread) {
@@ -365,7 +363,12 @@ bool profiler_predicate()
 
 void reload_monitor() 
 {
-  g_java_vm->AttachCurrentThread((void**)&gxenv,(void*)NULL);
+  jvmtiEnv* env;
+  g_java_vm->AttachCurrentThread((void**)&env,(void*)NULL);
+
+  JNIEnv* jni_env;
+  g_java_vm->GetEnv((void**)&jni_env, JNI_VERSION_1_6);
+  
   std::unique_lock<std::mutex> lck{_profiler_mutex};
   _commandListener._profilerCond.wait(lck);
   while(1) {
@@ -383,7 +386,7 @@ void reload_monitor()
     jclass theclass;
     for(auto& cname : _hooks.classes()) {
       if(_all_loadedClasses.count(cname) == 1) {
-        theclass = gxenv->FindClass(cname.c_str()); 
+        theclass = jni_env->FindClass(cname.c_str()); 
         memcpy(ptr, &theclass, sizeof(jclass));
         ++ptr;
       }
@@ -553,8 +556,10 @@ bool traffic_predicate()
 
 void traffic_monitor() 
 {
-  jvmtiEnv* xenv;
-  g_java_vm->AttachCurrentThread((void**)&xenv,(void*)NULL);
+  jvmtiEnv* env;
+  g_java_vm->AttachCurrentThread((void**)&env,(void*)NULL);
+  JNIEnv* jni_env;
+  g_java_vm->GetEnv((void**)&jni_env, JNI_VERSION_1_6);
 
   jint thread_count;
 
@@ -578,16 +583,8 @@ void traffic_monitor()
     std::string rv = "";
     for(int idx = 0; idx < thread_count; idx++) {
       jthread thd = *(threads + idx);
-      
-      jvmtiThreadInfo tinfo;
-      genv->GetThreadInfo(threads[idx], &tinfo);
-      std::string tname = std::string{tinfo.name};
-      jthreadGroup tg = tinfo.thread_group;
-      gxenv->DeleteLocalRef(tg);
-      jobject ctx = tinfo.context_class_loader;
-      gxenv->DeleteLocalRef(ctx);      
-      genv->Deallocate((unsigned char *)tinfo.name);
-      
+      std::string tname;
+      if(!get_thread_name(jni_env,genv, thd, tname)) continue; 
 
       jvmtiMonitorStackDepthInfo* monitorInfo;
       jint infoCount;
@@ -601,17 +598,11 @@ void traffic_monitor()
       memset(frame_info, 0, sizeof(frame_info));
       memset(before_frame_info, 0, sizeof(before_frame_info));
       
-      ferr = genv->GetStackTrace(*(threads + idx) ,0,20, before_frame_info, &before_frame_count);
-      if(ferr != JVMTI_ERROR_NONE)  {
-        std::cout << "ERROR" << std::endl;
-        continue;
-      }
+      if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(*(threads + idx) ,0,20, before_frame_info, &before_frame_count), "GetStackTrace")) continue;
 
       infoCount = 0;
-      ferr = genv->GetOwnedMonitorStackDepthInfo(*(threads + idx) , &infoCount,  &monitorInfo);  
-      if(ferr != JVMTI_ERROR_NONE)  { std::cout << "ERROR" << std::endl; continue; }
-      ferr = genv->GetStackTrace(*(threads + idx) ,0,20, frame_info, &frame_count);
-      if(ferr != JVMTI_ERROR_NONE) { std::cout << "ERROR" << std::endl; continue; }
+      if(!ErrorHandler::check_jvmti_error(genv->GetOwnedMonitorStackDepthInfo(*(threads + idx) , &infoCount,  &monitorInfo),"GetOwnedMonitorStackDepthInfo")) continue;
+      if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(*(threads + idx) ,0,20, frame_info, &frame_count), "GetStackTrace")) continue;
 
       std::unordered_map<int,int> monmap;
       bool invalid = false;
@@ -621,19 +612,19 @@ void traffic_monitor()
           invalid = true;
         }
         jobject mon = (monitorInfo + idx)->monitor;
-        gxenv->DeleteLocalRef(mon);      
+        jni_env->DeleteLocalRef(mon);      
         
       }
 
 
       if(frame_count != before_frame_count) {
-        gxenv->DeleteLocalRef(thd);
+        jni_env->DeleteLocalRef(thd);
         genv->Deallocate((unsigned char *)monitorInfo);
      
         continue;
       }
       if(frame_count < 1) {
-        gxenv->DeleteLocalRef(thd);
+        jni_env->DeleteLocalRef(thd);
         genv->Deallocate((unsigned char *)monitorInfo);
         continue;
       }
@@ -656,7 +647,7 @@ void traffic_monitor()
         jclass theclass;
         genv->GetMethodDeclaringClass(frame_info[fidx].method, &theclass);
         err = genv->GetClassSignature(theclass, &class_sig,&generic);
-        gxenv->DeleteLocalRef(theclass);
+        jni_env->DeleteLocalRef(theclass);
         std::string classinfo{class_sig};
         rv += (monmap.count(fidx) == 1 ? "1!" : "0!") + classinfo.substr(1) + "::";
         rv +=  std::string{methodName} + ":" + std::string{sig} + "#";
@@ -668,7 +659,7 @@ void traffic_monitor()
       rv.erase(rv.end() -1);
       rv += "%";
       
-      gxenv->DeleteLocalRef(thd);
+      jni_env->DeleteLocalRef(thd);
     }
     genv->Deallocate((unsigned char *)threads);
 
@@ -743,7 +734,6 @@ void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
 {
   std::cout << "*** INIT() " << std::endl;
   genv = env;
-  gxenv = jni_env;
   jvmtiEventCallbacks* xx = new jvmtiEventCallbacks();
   xx->VMInit                = &VMInit;
   xx->ThreadStart           = &ThreadStart;

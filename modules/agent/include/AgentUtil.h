@@ -36,6 +36,7 @@ class ErrorHandler {
 
 
 bool get_class_name(jvmtiEnv*, jclass, std::string&);
+bool get_thread_name(JNIEnv*,  jvmtiEnv* env, jthread, std::string&);
 
-void delete_refs(JNIEnv* jni_env, jthread*, jint count);
+void delete_refs(JNIEnv* jni_env,jthread*, jint count);
 #endif
