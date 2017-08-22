@@ -27,5 +27,15 @@
 enum ARG_TYPE {INT_TYPE, STRING_TYPE, ARRAY_TYPE};
 
 std::vector<ARG_TYPE> typeTokenizer(const std::string& line);
-std::string formatStackTrace(jvmtiEnv* env, jvmtiFrameInfo* fptr, int frame_count);
+bool format_stack_trace(jvmtiEnv* env, jthread&, std::string&);
+
+class ErrorHandler {
+ public:
+  static bool check_jvmti_error(jvmtiError error, const std::string& msg);
+};
+
+
+bool get_class_name(jvmtiEnv*, jclass, std::string&);
+
+void delete_refs(JNIEnv* jni_env, jthread*, jint count);
 #endif

@@ -523,32 +523,20 @@ void JNICALL
 }
 
 
-
-
-
 void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread thread, jobject object)
 {
-  jclass theclass = jni_env->GetObjectClass(object);
-  char *class_sig;
-  char *generic;
-  env->GetClassSignature(theclass, &class_sig,&generic);
-  
-  jint frame_count;
-  jvmtiFrameInfo frame_info[20];
-  env->GetStackTrace(thread,0,20, frame_info, &frame_count);
-  
+  std::string monitorStr;
+  if(!get_class_name(env, jni_env->GetObjectClass(object), monitorStr)) return;
+  std::string waiterStr;
+  if(!format_stack_trace(env, thread, waiterStr)) return;
   jvmtiMonitorUsage monitorInfo;
-  env->GetObjectMonitorUsage(object, &monitorInfo);
-  jint owner_frame_count;
-  jvmtiFrameInfo owner_frame_info[20];
-  env->GetStackTrace(monitorInfo.owner,0, sizeof(owner_frame_info), owner_frame_info, &owner_frame_count);
- 
-  std::string waiterStr  = formatStackTrace(genv,       frame_info,       frame_count); 
-  std::string ownerStr = formatStackTrace(genv, owner_frame_info, owner_frame_count); 
-  
-  std::string monitorStr{class_sig};
-  env->Deallocate(reinterpret_cast<unsigned char*>(class_sig));
-  env->Deallocate(reinterpret_cast<unsigned char*>(generic));
+  if(!ErrorHandler::check_jvmti_error(env->GetObjectMonitorUsage(object, &monitorInfo), "GetObjectMonitorUsage")) return;
+  std::string ownerStr;
+  if(!format_stack_trace(env, monitorInfo.owner, ownerStr)) return;
+  jthread owner = monitorInfo.owner;
+  jni_env->DeleteLocalRef(owner);
+  delete_refs(jni_env, monitorInfo.waiters, monitorInfo.waiter_count);
+  delete_refs(jni_env, monitorInfo.notify_waiters, monitorInfo.notify_waiter_count);
   env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.waiters));
   env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
   
@@ -556,9 +544,6 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   _rptr.jammed(monitorStr, waiterStr, ownerStr);
   _sig_mutex.unlock();
 }
-
-
-
 
 
 bool traffic_predicate() 
@@ -753,11 +738,6 @@ void class_loading_monitor()
     }
   }
   }
-
-
-
-
-
 
 void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
 {

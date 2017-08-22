@@ -19,6 +19,7 @@
 
 #include "AgentUtil.h"
 #include <iostream>
+#include <string>
 
 std::vector<ARG_TYPE> typeTokenizer(const std::string& sigStr)
 {
@@ -55,21 +56,55 @@ std::vector<ARG_TYPE> typeTokenizer(const std::string& sigStr)
 }
 
 
-std::string formatStackTrace(jvmtiEnv* env, jvmtiFrameInfo* fptr, int frame_count)
+bool format_stack_trace(jvmtiEnv* env, jthread& thread, std::string& trace)
 {
-  std::string rv;
+  jint frame_count;
+  jvmtiFrameInfo frame_info[20];
+  if(!ErrorHandler::check_jvmti_error(env->GetStackTrace(thread,0,20, frame_info, &frame_count), "GetStackTrace")) return false;
+
   for(int fidx = frame_count - 1; fidx >= 0; fidx--) {
     char *methodName;
     char *sig;
-    char *class_sig;
     char *generic;
 
-    jvmtiError   err = env->GetMethodName(fptr[fidx].method, &methodName,&sig,&generic);
+    if(!ErrorHandler::check_jvmti_error(env->GetMethodName(frame_info[fidx].method, &methodName,&sig,&generic), "GetMethodName")) return false;
     jclass theclass;
-    env->GetMethodDeclaringClass(fptr[fidx].method, &theclass);
-    err = env->GetClassSignature(theclass, &class_sig,&generic);
-    std::string classinfo{class_sig};
-    rv +=  classinfo.substr(1) + "::" + std::string{methodName} + ":" + std::string{sig} + "#";
+    env->GetMethodDeclaringClass(frame_info[fidx].method, &theclass);
+    
+    std::string classinfo;
+    if(!get_class_name(env, theclass, classinfo)) return false;
+    trace +=  classinfo.substr(1) + "::" + std::string{methodName} + ":" + std::string{sig} + "#";
   }
-  return rv;
+  return true;;
 }
+
+
+bool ErrorHandler::check_jvmti_error(jvmtiError error, const std::string& msg)
+{
+  if(error != 0) {
+      std::cout << "JVMTI ERROR: " << msg << std::endl;
+  }
+  return error == 0;
+}
+
+bool get_class_name(jvmtiEnv* env, jclass theclass, std::string& name)
+{
+  char *class_sig;
+  char *generic;
+  if(!ErrorHandler::check_jvmti_error(env->GetClassSignature(theclass, &class_sig,&generic), "GetClassSignature")) return false;
+  name = std::string{class_sig};
+  env->Deallocate(reinterpret_cast<unsigned char*>(class_sig));
+  env->Deallocate(reinterpret_cast<unsigned char*>(generic));
+  return true;
+}
+
+
+void delete_refs(JNIEnv* jni_env, jthread* tptr, jint count)
+{
+  for(int idx = 0; idx < count; idx++) {
+    jthread thd = *(tptr + idx);
+    jni_env->DeleteLocalRef(thd);
+  }
+
+}
+
