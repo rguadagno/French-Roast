@@ -282,11 +282,10 @@ std::vector<DescriptorVO> populate_stack(  jvmtiFrameInfo* frames, int count)
     std::string methodNameStr{methodName};
     std::string sigStr{methodSig};
     jclass theclass;
-    char *classSig;
     genv->GetMethodDeclaringClass(frames->method, &theclass);
-    genv->GetClassSignature(theclass, &classSig,&generic);
-    std::string classinfo{classSig};
-     rv.emplace_back(classinfo, methodNameStr, sigStr);
+    std::string className;
+    if(!get_class_name(genv,theclass, className)) continue; 
+    rv.emplace_back(className, methodNameStr, sigStr);
   }
   return rv;
 }
@@ -296,15 +295,13 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
 {
   jvmtiFrameInfo frames[10];
   jint count;
-  jvmtiError err;
   jthread aThread;
 
-  genv->GetCurrentThread(&aThread);
-  jvmtiThreadInfo info;
-  genv->GetThreadInfo(aThread, &info);
-  
-  err = genv->GetStackTrace(aThread, 0, sizeof(frames), frames, &count);
-  if (err == JVMTI_ERROR_NONE && count >= 1) {
+  if(!ErrorHandler::check_jvmti_error(genv->GetCurrentThread(&aThread),"GetCurrentThread")) return;
+  std::string tname;
+  if(!get_thread_name(ptr, genv, aThread, tname)) return;; 
+  if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(aThread, 0, sizeof(frames), frames, &count),"GetStackTrace")) return;
+  if (count >= 1) {
     std::vector<DescriptorVO> stack = populate_stack(frames, count);
     std::string params = "(";
     int slot = 0;
@@ -314,12 +311,12 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
         switch(argtype) {
         case INT_TYPE:
           jint ivalue;
-          genv->GetLocalInt(aThread, 1,slot, &ivalue);
+          if(!ErrorHandler::check_jvmti_error(genv->GetLocalInt(aThread, 1,slot, &ivalue), "GetLocalInt")) return;
           params.append(std::to_string(ivalue) + ",");
           break;
         case STRING_TYPE:
           jobject ovalue;
-          genv->GetLocalObject(aThread, 1,slot, &ovalue);
+             if(!ErrorHandler::check_jvmti_error(genv->GetLocalObject(aThread, 1,slot, &ovalue), "GetLocalObject")) return;
           jsvalue = jstring(ovalue);
           params.append(  std::string(ptr->GetStringUTFChars(jsvalue,0)) + ",");
           break;
@@ -334,7 +331,7 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
       }
       params.append(")");
       jclass theclass;
-      genv->GetMethodDeclaringClass(frames[1].method, &theclass);
+      if(!ErrorHandler::check_jvmti_error(genv->GetMethodDeclaringClass(frames[1].method, &theclass), "GetMethodDeclaringClass")) return;
       std::string fieldValues = "";
       for(auto& fieldname : _hooks.get_marker_fields(stack[0]._classSignature, stack[0]._methodName + ":" + stack[0]._methodSignature)) {
         if(_reportingFields.count(stack[0]._classSignature + ">" + fieldname) == 0) {
@@ -349,7 +346,7 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
         stackstr.append("%");
         }
       _sig_mutex.lock();
-      _rptr.signal(stack[0].descriptor() + "~" + std::string{info.name} + "~" + fieldValues + "~" + params + "~" + stackstr);
+      _rptr.signal(stack[0].descriptor() + "~" + tname + "~" + fieldValues + "~" + params + "~" + stackstr);
       _sig_mutex.unlock();
   }
   }
@@ -562,12 +559,6 @@ void traffic_monitor()
   g_java_vm->GetEnv((void**)&jni_env, JNI_VERSION_1_6);
 
   jint thread_count;
-
-
-  char *methodName;
-  char *sig;
-  char *class_sig;
-  char *generic;
  
   int delay = _commandListener._millis.load();
   if (!traffic_predicate()) {
@@ -575,21 +566,18 @@ void traffic_monitor()
     _commandListener._traffic_cond.wait(lck,&traffic_predicate);
     delay = _commandListener._millis.load();
   }
+
   while(1) {
     jthread* threads;
     thread_count=0;
-    genv->GetAllThreads(&thread_count, &threads);
-
+    if(!ErrorHandler::check_jvmti_error(genv->GetAllThreads(&thread_count, &threads),"GetAllThreads")) continue;
     std::string rv = "";
     for(int idx = 0; idx < thread_count; idx++) {
       jthread thd = *(threads + idx);
       std::string tname;
       if(!get_thread_name(jni_env,genv, thd, tname)) continue; 
-
       jvmtiMonitorStackDepthInfo* monitorInfo;
       jint infoCount;
-      jvmtiError ferr;
-
       jint frame_count;
       jvmtiFrameInfo frame_info[20];
       jint before_frame_count;
@@ -599,7 +587,6 @@ void traffic_monitor()
       memset(before_frame_info, 0, sizeof(before_frame_info));
       
       if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(*(threads + idx) ,0,20, before_frame_info, &before_frame_count), "GetStackTrace")) continue;
-
       infoCount = 0;
       if(!ErrorHandler::check_jvmti_error(genv->GetOwnedMonitorStackDepthInfo(*(threads + idx) , &infoCount,  &monitorInfo),"GetOwnedMonitorStackDepthInfo")) continue;
       if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(*(threads + idx) ,0,20, frame_info, &frame_count), "GetStackTrace")) continue;
@@ -616,11 +603,9 @@ void traffic_monitor()
         
       }
 
-
       if(frame_count != before_frame_count) {
         jni_env->DeleteLocalRef(thd);
         genv->Deallocate((unsigned char *)monitorInfo);
-     
         continue;
       }
       if(frame_count < 1) {
@@ -628,9 +613,7 @@ void traffic_monitor()
         genv->Deallocate((unsigned char *)monitorInfo);
         continue;
       }
-
       genv->Deallocate((unsigned char *)monitorInfo);
-      
       
       if(invalid) continue;
       if (frame_count >= 1) {
@@ -639,22 +622,23 @@ void traffic_monitor()
       else {
         continue;
       }
-      
-      
+      char *methodName;
+      char *sig;
+      char *generic;
+
       for(int fidx = frame_count - 1; fidx >= 0; fidx--) {
-        jvmtiError   err = genv->GetMethodName(frame_info[fidx].method, &methodName,&sig,&generic);
-        genv->Deallocate((unsigned char *)generic );
+        generic = nullptr;
+        if(!ErrorHandler::check_jvmti_error(genv->GetMethodName(frame_info[fidx].method, &methodName,&sig,&generic), "GetMethodName")) continue;
+        if(!ErrorHandler::check_jvmti_error(genv->Deallocate((unsigned char *)generic ), "Deallocate")) continue;
         jclass theclass;
-        genv->GetMethodDeclaringClass(frame_info[fidx].method, &theclass);
-        err = genv->GetClassSignature(theclass, &class_sig,&generic);
+        if(!ErrorHandler::check_jvmti_error(genv->GetMethodDeclaringClass(frame_info[fidx].method, &theclass), "GetMethodDeclaringClass")) continue;
+        std::string className;
+        if(!get_class_name(genv, theclass, className)) continue;
         jni_env->DeleteLocalRef(theclass);
-        std::string classinfo{class_sig};
-        rv += (monmap.count(fidx) == 1 ? "1!" : "0!") + classinfo.substr(1) + "::";
+        rv += (monmap.count(fidx) == 1 ? "1!" : "0!") + className.substr(1) + "::";
         rv +=  std::string{methodName} + ":" + std::string{sig} + "#";
         genv->Deallocate((unsigned char *)methodName );
         genv->Deallocate((unsigned char *)sig );
-        genv->Deallocate((unsigned char *)class_sig );
-        genv->Deallocate((unsigned char *)generic );
         }
       rv.erase(rv.end() -1);
       rv += "%";
@@ -732,27 +716,15 @@ void class_loading_monitor()
 
 void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
 {
-  std::cout << "*** INIT() " << std::endl;
   genv = env;
   jvmtiEventCallbacks* xx = new jvmtiEventCallbacks();
   xx->VMInit                = &VMInit;
   xx->ThreadStart           = &ThreadStart;
   xx->ClassFileLoadHook     = &ClassFileLoadHook;
   
-  jvmtiError  err = env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_MONITOR_WAIT,NULL);
-  err = env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_MONITOR_CONTENDED_ENTER,NULL);
-  err = env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_CLASS_FILE_LOAD_HOOK,NULL);
-  std::cout << "ERR: " << err << std::endl;
-  
-  jint counter;
-  jthread* threads;
-  jvmtiThreadInfo info;
-  env->GetAllThreads(&counter, &threads);
-  for (int idx = 0; idx < counter; idx++ ) {
-    env->GetThreadInfo(*(threads+idx), &info);
-    std::cout << "thread: " << info.name << " ( " << (info.is_daemon == true) << " ) " << std::endl;
-  }
-  env->Deallocate((unsigned char *)threads);
+  if(!ErrorHandler::check_jvmti_error(env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_MONITOR_WAIT,NULL), "SetEventNotificationMode")) return;
+  if(!ErrorHandler::check_jvmti_error(env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_MONITOR_CONTENDED_ENTER,NULL), "SetEventNotificationMode")) return;
+  if(!ErrorHandler::check_jvmti_error(env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_CLASS_FILE_LOAD_HOOK,NULL), "SetEventNotificationMode")) return;
   
   std::thread t1{traffic_monitor};
   t1.detach();
@@ -760,13 +732,19 @@ void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
   t2.detach();
   std::thread t3{reload_monitor};
   t3.detach();
+  std::cout << "********************************" << std::endl;
+  std::cout << "  French-Roast: Agent running" << std::endl;
+  std::cout << "********************************" << std::endl;
+
 }
 
 
 
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 {
-    std::cout << "*** OnLoad() ********" << std::endl;
+  std::cout << "******************************" << std::endl;
+  std::cout << "  French-Roast: agent loaded" << std::endl;
+  std::cout << "******************************" << std::endl;
   g_java_vm = vm;
   std::string configDescriptor;
   if (options != NULL)
@@ -813,7 +791,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   xx->ThreadStart           = &ThreadStart;
   xx->MonitorContendedEnter = &MonitorContendedEnter;
   xx->ClassFileLoadHook     = &ClassFileLoadHook;
-  err =   env->SetEventCallbacks(xx, sizeof(jvmtiEventCallbacks));
+  if(!ErrorHandler::check_jvmti_error(env->SetEventCallbacks(xx, sizeof(jvmtiEventCallbacks)), "SetEventCallbacks")) return -1;
 
   jvmtiCapabilities capa;
   memset(&capa, 0, sizeof(capa));
@@ -824,10 +802,9 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   capa.can_get_owned_monitor_stack_depth_info = 1;
   capa.can_get_monitor_info = 1;
   capa.can_suspend = 1;
-  jvmtiError errcapa  = env->AddCapabilities(&capa);
-  std::cout << "err capa: " << errcapa << std::endl;
-  env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_CLASS_FILE_LOAD_HOOK,NULL);
-  env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_VM_INIT,NULL);
+  if(!ErrorHandler::check_jvmti_error(env->AddCapabilities(&capa), "AddCapabilities")) return -1;
+  if(!ErrorHandler::check_jvmti_error(env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_CLASS_FILE_LOAD_HOOK,NULL),"SetEventNotificationMode")) return -1;
+  if(!ErrorHandler::check_jvmti_error(env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_VM_INIT,NULL), "SetEventNotificationMode")) return -1;
 
   _rptr.ready();
   return 0;
