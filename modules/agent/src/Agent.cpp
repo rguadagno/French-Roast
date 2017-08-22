@@ -528,36 +528,29 @@ void JNICALL
 
 void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread thread, jobject object)
 {
-
-  //  jclass theclass = gxenv->GetObjectClass(object);
-  // char *class_sig;
-  //char *generic;
-  //genv->GetClassSignature(theclass, &class_sig,&generic);
+  jclass theclass = jni_env->GetObjectClass(object);
+  char *class_sig;
+  char *generic;
+  env->GetClassSignature(theclass, &class_sig,&generic);
   
   jint frame_count;
   jvmtiFrameInfo frame_info[20];
-  genv->GetStackTrace(thread,0,20, frame_info, &frame_count);
+  env->GetStackTrace(thread,0,20, frame_info, &frame_count);
   
   jvmtiMonitorUsage monitorInfo;
-  genv->GetObjectMonitorUsage(object, &monitorInfo);
+  env->GetObjectMonitorUsage(object, &monitorInfo);
   jint owner_frame_count;
   jvmtiFrameInfo owner_frame_info[20];
-  genv->GetStackTrace(monitorInfo.owner,0, sizeof(owner_frame_info), owner_frame_info, &owner_frame_count);
+  env->GetStackTrace(monitorInfo.owner,0, sizeof(owner_frame_info), owner_frame_info, &owner_frame_count);
  
   std::string waiterStr  = formatStackTrace(genv,       frame_info,       frame_count); 
   std::string ownerStr = formatStackTrace(genv, owner_frame_info, owner_frame_count); 
-
-  // doing here causes jvm crash sometimes, known bug ...
-  //  jclass theclass = gxenv->GetObjectClass(object);
- 
-  //char *class_sig;
-  //char *generic;
-  // genv->GetClassSignature(theclass, &class_sig,&generic);
- 
-
-  std::string monitorStr="";//{class_sig};
-  genv->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.waiters));
-  genv->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
+  
+  std::string monitorStr{class_sig};
+  env->Deallocate(reinterpret_cast<unsigned char*>(class_sig));
+  env->Deallocate(reinterpret_cast<unsigned char*>(generic));
+  env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.waiters));
+  env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
   
   _sig_mutex.lock();
   _rptr.jammed(monitorStr, waiterStr, ownerStr);
