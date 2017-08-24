@@ -58,7 +58,7 @@ class FRMain : public QMainWindow {
   
   void restore();
   void connect_common_listeners(frenchroast::FViewer* instance);
-  void FRMain::restore_if_required(const bool required, void (FRMain::* func)(), bool& result);
+  void restore_if_required(const bool required, void (FRMain::* func)(), bool& result);
   
  signals:
 

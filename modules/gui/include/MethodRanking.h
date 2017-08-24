@@ -17,7 +17,7 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <QTWidgets/QListWidget>
+#include <QListWidget>
 #include <QWidget>
 #include <QVBoxLayout>
 #include "MethodStats.h"

@@ -40,7 +40,7 @@ void FRListener::signal(const std::string& tag, const std::string& tname, int co
   thooked(tag, tname, count, args, instances, markers, stacks);
 }
 
-void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace>& items)
+void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace> items)
 {
   traffic_signal(items);
 }

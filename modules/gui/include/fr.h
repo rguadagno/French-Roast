@@ -20,9 +20,9 @@
 #ifndef FRLIST_H
 #define FRLIST_H
 
-#include <QTWidgets/QApplication>
-#include <QTWidgets/QLabel>
-#include <QTCore/QObject>
+#include <QApplication>
+#include <QLabel>
+#include <QObject>
 #include <unordered_map>
 #include <string>
 #include <QMetaType>
@@ -61,7 +61,7 @@ class FRListener : public QObject
     FRListener(const std::string ip, int port, const std::string& opcodFile);
     int getCount(const std::string& item);
     void signal(const std::string& tag, const std::string& tname, int count,  std::vector<std::string>,std::vector<std::string>, std::vector<frenchroast::monitor::MarkerField>, std::unordered_map<std::string, frenchroast::monitor::StackReport>);
-    void traffic(std::vector<frenchroast::monitor::StackTrace>&);
+    void traffic(std::vector<frenchroast::monitor::StackTrace>);
     void signal_timed(const std::string& tag, const std::string& tname, long elapsed, int last);
     void connected(const std::string& host, const std::string& pid);
     void unloaded(const std::string& host, const std::string& pid);

@@ -17,8 +17,8 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <QTWidgets/QApplication>
-#include <QTWidgets/QMessageBox>
+#include <QApplication>
+#include <QMessageBox>
 #include <QThread>
 #include <string>
 #include "fr.h"
