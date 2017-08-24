@@ -23,6 +23,7 @@
 #include <windows.h>
 #include <iostream>
 #include <ws2tcpip.h>
+#include <process.h>
 #include <sstream>
 #include <unordered_map>
 #include <thread>
@@ -33,7 +34,11 @@
 
 namespace frenchroast { namespace network {
 
-
+    int Connector::get_pid()
+    {
+      return _getpid();
+    }
+    
     std::string Connector::get_hostname()
     {
       char buf[100];
@@ -137,7 +142,6 @@ namespace frenchroast { namespace network {
 
     void Connector::send_message(const std::string& ipport, const std::string& msg)
     {
-      std::cout << "SENDING: " << ipport << " " << msg << std::endl;
       send(_ipport_sendersocket[ipport], msg.c_str(), msg.length()+1,0);
     }
 

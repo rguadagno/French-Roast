@@ -21,6 +21,7 @@
 #define FRSTACKFRAME_H
 
 #include <vector>
+#include <string>
 
 namespace frenchroast { namespace monitor {
 

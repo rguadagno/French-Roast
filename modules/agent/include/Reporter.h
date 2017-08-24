@@ -31,7 +31,7 @@ namespace frenchroast { namespace agent {
       Transport* _ptr;
     public:
       void traffic(const std::string& tag);
-      void Reporter::loaded_classes(std::vector<frenchroast::monitor::ClassDetail> details);
+      void loaded_classes(std::vector<frenchroast::monitor::ClassDetail> details);
       void ready();
       void setTransport(Transport* ptr);
       void signal(const std::string& tag);

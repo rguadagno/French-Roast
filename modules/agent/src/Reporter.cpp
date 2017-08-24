@@ -19,11 +19,7 @@
 #include "Reporter.h"
 #include "Util.h"
 #include "ClassDetail.h"
-
 #include "Connector.h"
-//
-#include <process.h>
-//
 
 namespace frenchroast { namespace agent {
 
@@ -72,14 +68,14 @@ namespace frenchroast { namespace agent {
 
     void Reporter::unloaded(const std::string& msg)
     {
-      _ptr->out("unloaded~" + frenchroast::network::Connector::get_hostname() + "~" +       std::to_string(_getpid()));
+      using  namespace frenchroast::network;
+      _ptr->out("unloaded~" + Connector::get_hostname() + "~" +       std::to_string(Connector::get_pid()));
     }
 
     void Reporter::ready()
     {
-
-
-      _ptr->out("ready~" + frenchroast::network::Connector::get_hostname() + "~" +       std::to_string(_getpid()));
+      using  frenchroast::network::Connector;
+      _ptr->out("ready~" + Connector::get_hostname() + "~" +       std::to_string(Connector::get_pid()));
     }
 
     

@@ -21,6 +21,7 @@
 #define AGENTUTIL_H
 
 #include <vector>
+#include <string>
 #include "jvmti.h"
 
 

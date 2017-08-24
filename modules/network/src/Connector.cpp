@@ -20,11 +20,15 @@
 #include <iostream>
 #include "Listener.h"
 #include <cstring>
+#include <iostream>
+
 
 #ifdef CONNECTOR_UNIX
-#include <sys/socket.h>
+  #include <sys/socket.h>
+  #include <sys/types.h>
+  #include <unistd.h>
 #else
-#include <winsock2.h>
+  #include <winsock2.h>
 #endif 
 
 namespace frenchroast { namespace network {
@@ -48,6 +52,7 @@ namespace frenchroast { namespace network {
           break;
         }
         if (rv == 0 ) {
+          close(connfd);
           std::cout << "CLOSED. " << std::endl;
           break;
         }

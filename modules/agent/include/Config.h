@@ -20,7 +20,7 @@
 #ifndef RPT_H
 #define RPT_H
 #include <string>
-#include "Opcode.h"
+#include "OpCode.h"
 #include "Hooks.h"
 
 namespace frenchroast { namespace agent {

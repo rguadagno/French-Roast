@@ -25,6 +25,8 @@
 
 
 #ifdef CONNECTOR_UNIX
+    #include <sys/types.h>
+    #include <sys/socket.h>
 #else
     #include <winsock2.h>
 #endif
@@ -56,6 +58,7 @@ namespace frenchroast { namespace network {
       void send_message(const std::string& ip_port, const std::string& msg);
       void close_down();
       static std::string get_hostname();
+      static int get_pid();
     };
   }
 }

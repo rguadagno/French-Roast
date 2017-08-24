@@ -21,7 +21,6 @@
 #include "Config.h"
 #include "Util.h"
 #include "Listener.h"
-#include "Opcode.h"
 #include "Connector.h"
 
 namespace frenchroast { namespace agent {
@@ -88,6 +87,7 @@ template
       void message(const std::string& pmsg)
       {
         std::string msg = frenchroast::split(pmsg,"~")[1];
+        std::cout << pmsg << std::endl;
         if(msg.find("<end>") != std::string::npos) {
           _conn.close_down();
       }
