@@ -20,6 +20,7 @@
 #ifndef FRMON_H
 #define FRMON_H
 #include <unordered_map>
+#include <algorithm>
 #include "Connector.h"
 #include "Listener.h"
 #include "Util.h"
