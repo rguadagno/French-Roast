@@ -8,6 +8,7 @@
  }
  win32 {
  SOURCES += ../../network/src/ConnectorWindows.cpp
+ LIBS +=  ws2_32.lib
  }
 
 TEMPLATE = app
@@ -36,6 +37,5 @@ SOURCES += \
 ../../monitor/src/StackFrame.cpp
 
 HEADERS += ../include/*.h
-#LIBS +=  ws2_32.lib
 CONFIG += console
 CONFIG += c++11

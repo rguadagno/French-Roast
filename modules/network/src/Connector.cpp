@@ -52,7 +52,11 @@ namespace frenchroast { namespace network {
           break;
         }
         if (rv == 0 ) {
-          close(connfd);
+          #ifdef CONNECTOR_UNIX
+            close(connfd);
+          #else
+            closesocket(connfd);
+          #endif
           std::cout << "CLOSED. " << std::endl;
           break;
         }
