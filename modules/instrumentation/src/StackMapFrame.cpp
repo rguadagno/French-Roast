@@ -144,7 +144,7 @@ namespace frenchroast {
       if (offset > 63) {
          return false;
       }
-      _frameType = offset;
+      _frameType = static_cast<frenchroast::BYTE>(offset);
       return true;
     }
 

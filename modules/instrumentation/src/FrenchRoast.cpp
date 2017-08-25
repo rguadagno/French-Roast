@@ -93,7 +93,7 @@ namespace frenchroast {
 
   int InterfacesComponent::size_in_bytes() const
   {
-    return sizeof(_count) + _items.size() * 2 ;
+    return static_cast<int>(sizeof(_count) + _items.size() * 2) ;
   }
 
   int InterfacesComponent::get_count() const

@@ -782,7 +782,6 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   */
   tptr = new frenchroast::agent::ServerTransport{_conn};
   _rptr.setTransport(tptr);
-  jvmtiError err;
   jvmtiEnv* env;
   vm->GetEnv((void**)&env, JVMTI_VERSION);
 

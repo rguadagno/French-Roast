@@ -43,9 +43,9 @@ namespace frenchroast {
   std::vector<std::string> xsplit(const std::string& str, const std::string& delim)
   {
     std::vector<std::string> rv;
-    int pos = 0;
-    int idx = str.length();
-    int len = delim.length();
+    size_t pos = 0;
+    size_t idx = str.length();
+    size_t len = delim.length();
     while ((idx = str.find(delim,pos)) != std::string::npos) {
       rv.push_back(str.substr(pos,idx-pos));
       if (len == 1) {
@@ -67,8 +67,8 @@ namespace frenchroast {
   std::vector<std::string> split(const std::string& str, const std::string& delim)
   {
     std::vector<std::string> rv;
-    int pos = 0;
-    int next = str.find(delim, pos);
+    size_t pos = 0;
+    size_t next = str.find(delim, pos);
     while ((next = str.find(delim,pos)) != std::string::npos) {
       rv.push_back(str.substr(pos,next-pos));
       pos = next + delim.length();

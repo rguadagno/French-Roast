@@ -63,7 +63,7 @@ namespace frenchroast {
       offset += x.load_to_buffer(buf + offset);
     }
 
-    write_bytes(excepbuf, _exceptions.size(),2);
+    write_bytes(excepbuf, static_cast<int>(_exceptions.size()),2);
     int idx = 0;
     for(auto& x: _exceptions) {
       x.load_to_buffer(excepbuf + 2 + idx*8);
@@ -289,7 +289,7 @@ namespace frenchroast {
   {
     std::vector<int> rv;
 
-    int total = _instructions.size() -1;
+    int total = static_cast<int>(_instructions.size()) -1;
     for (int idx = total;idx >=0;idx--) {
       if (_instructions[idx] == opcode::xreturn) {
         rv.push_back(_instructions[idx].address());

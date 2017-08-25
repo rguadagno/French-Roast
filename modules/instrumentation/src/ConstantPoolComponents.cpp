@@ -1,4 +1,4 @@
-\// copyright (c) 2016 Richard Guadagno
+// copyright (c) 2016 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -128,7 +128,6 @@ namespace frenchroast {
   std::string IntegerHolder::get_params() const
   {
     std::ostringstream ss;
-    short result;
     ss << to_int(_bytes, sizeof(_bytes));
     return ss.str();
   }
@@ -243,7 +242,7 @@ namespace frenchroast {
   
     int size_in_bytes() const
     {
-      return sizeof(_length) + _data.size();
+      return static_cast<int>(sizeof(_length) + _data.size());
     }
   };
     
@@ -637,14 +636,14 @@ namespace frenchroast {
       return _names[tname];
     }
     // calc size in bytes
-    int len = sizeof(PoolInfo::_tag) + sizeof(Utf8Holder::_length) + tname.length();
+    int len = static_cast<int>(sizeof(PoolInfo::_tag) + sizeof(Utf8Holder::_length) + tname.length());
     // allocate buffer 
     BYTE* nbuf = new BYTE[len];
     //set tag
     nbuf[0] = TAG_Utf8;
 
     // set length
-    short lenb = tname.length();
+    short lenb = static_cast<short>(tname.length());
     write_big_e_bytes<short>(&nbuf[1], &lenb);
 
     // copy bytes for newname
