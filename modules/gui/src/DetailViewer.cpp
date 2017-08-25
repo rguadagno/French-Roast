@@ -17,13 +17,12 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-
-#include "DetailViewer.h"
+#include <iostream>
 #include <QHeaderView>
 #include <QVBoxLayout>
 #include "QUtil.h"
 #include "SignalDelegate.h"
-#include <iostream>
+#include "DetailViewer.h"
 
 namespace frenchroast {
 

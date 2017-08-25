@@ -19,11 +19,12 @@
 
 #ifndef FCLASSVIEWER_H
 #define FCLASSVIEWER_H
+
+#include <unordered_map>
 #include <QWidget>
 #include <QSettings>
 #include <QTableWidget>
 #include "FViewer.h"
-#include <unordered_map>
 #include "ClassDetail.h"
 
 namespace frenchroast {

@@ -20,10 +20,10 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
+#include <unordered_map>
 #include <QTextEdit>
 #include <QListWidget>
 #include <QSettings>
-#include <unordered_map>
 #include "FViewer.h"
 
 

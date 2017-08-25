@@ -17,14 +17,14 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <iostream>
+#include <fstream>
+#include <QBoxLayout>
+#include <QSplitter>
 #include "Editor.h"
 #include "CodeFont.h"
 #include "HooksSyntax.h"
 #include "HookValidator.h"
-#include <QBoxLayout>
-#include <QSplitter>
-#include <iostream>
-#include <fstream>
 #include "Util.h"
 
 namespace frenchroast {

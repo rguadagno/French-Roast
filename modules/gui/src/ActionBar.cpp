@@ -17,12 +17,12 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "ActionBar.h"
 #include <QApplication>
 #include <QPushButton>
 #include <QStyle>
 #include <QSizePolicy>
 #include <QLabel>
+#include "ActionBar.h"
 #include "Util.h"
 
 const std::bitset<4> ActionBar::Close{"0001"};

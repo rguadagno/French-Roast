@@ -16,11 +16,11 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
+
+#include <set>
 #include "Method.h"
 #include "OpCodeConst.h"
 #include "FrameConst.h"
-#include <set>
-
 
 namespace frenchroast {
   void Method::load_from_buffer(const BYTE* buf,const BYTE* excepbuf)

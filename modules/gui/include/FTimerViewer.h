@@ -19,11 +19,12 @@
 
 #ifndef FTIMERVIEWER_H
 #define FTIMERVIEWER_H
+
+#include <unordered_map>
 #include <QWidget>
 #include <QSettings>
 #include <QTableWidget>
 #include "FViewer.h"
-#include <unordered_map>
 
 namespace frenchroast {
   class FTimerViewer : public FViewer {

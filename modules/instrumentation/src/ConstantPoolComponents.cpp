@@ -1,4 +1,4 @@
-// copyright (c) 2016 Richard Guadagno
+\// copyright (c) 2016 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -17,12 +17,12 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "FrenchRoast.h"
-#include "ConstantPool.h"
-#include "Util.h"
 #include <sstream>
 #include <exception>
 #include <cmath>
+#include "FrenchRoast.h"
+#include "ConstantPool.h"
+#include "Util.h"
 
 
 namespace frenchroast {

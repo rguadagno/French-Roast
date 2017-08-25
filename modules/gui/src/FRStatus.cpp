@@ -17,15 +17,15 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "FRStatus.h"
-#include "MonitorUtil.h"
-#include "QUtil.h"
-#include "TimerItem.h"
+#include <iostream>
 #include <QBoxLayout>
 #include <QHeaderView>
 #include <QSizePolicy>
 #include <QMenu>
-#include <iostream>
+#include "FRStatus.h"
+#include "MonitorUtil.h"
+#include "QUtil.h"
+#include "TimerItem.h"
 
 
 FRStatus::FRStatus(QCheckBox* autocon) : _autoConnect(autocon)

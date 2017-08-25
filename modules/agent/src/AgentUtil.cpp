@@ -17,9 +17,9 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "AgentUtil.h"
 #include <iostream>
 #include <string>
+#include "AgentUtil.h"
 
 std::vector<ARG_TYPE> typeTokenizer(const std::string& sigStr)
 {

@@ -20,11 +20,11 @@
 #ifndef FRLIST_H
 #define FRLIST_H
 
+#include <unordered_map>
+#include <string>
 #include <QApplication>
 #include <QLabel>
 #include <QObject>
-#include <unordered_map>
-#include <string>
 #include <QMetaType>
 #include "Monitor.h"
 #include "StackTrace.h"

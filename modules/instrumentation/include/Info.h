@@ -19,9 +19,10 @@
 
 #ifndef INFO_H
 #define INFO_H
+
+#include <string>
 #include "AccessFlags.h"
 #include "Attribute.h"
-#include <string>
 
 namespace frenchroast {
     

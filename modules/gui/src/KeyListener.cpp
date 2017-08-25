@@ -17,8 +17,8 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "KeyListener.h"
 #include <QKeyEvent>
+#include "KeyListener.h"
 
 bool KeyListener::eventFilter(QObject* obj, QEvent* event)
 {

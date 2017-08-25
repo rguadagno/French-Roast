@@ -17,9 +17,8 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "SignalDelegate.h"
 #include <QPainter>
-
+#include "SignalDelegate.h"
 
 SignalDelegate::SignalDelegate(QObject* parent) : QItemDelegate(parent)
 {

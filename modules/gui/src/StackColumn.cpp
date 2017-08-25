@@ -17,9 +17,8 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "StackColumn.h"
 #include <iostream>
-
+#include "StackColumn.h"
 
 namespace frenchroast {
 

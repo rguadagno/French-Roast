@@ -17,8 +17,8 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "AboutHelpViewer.h"
 #include <QVBoxLayout>
+#include "AboutHelpViewer.h"
 
 namespace frenchroast {
 

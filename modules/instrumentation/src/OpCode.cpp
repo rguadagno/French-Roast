@@ -17,8 +17,8 @@
 //    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "OpCode.h"
 #include <string>
+#include "OpCode.h"
 
 namespace frenchroast {
   

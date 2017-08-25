@@ -20,10 +20,11 @@
 #ifndef FRSTATUS_H
 #define FRSTATUS_H
 
+#include <unordered_map>
 #include <QLabel>
 #include <QTableWidget>
 #include <QCheckBox>
-#include <unordered_map>
+
 
 class FRStatus : public QWidget {
 

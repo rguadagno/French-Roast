@@ -17,15 +17,16 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <string>
 #include <QApplication>
 #include <QMessageBox>
 #include <QThread>
-#include <string>
+#include <QSettings>
 #include "fr.h"
 #include "FRMain.h"
 #include "Editor.h"
 #include "MonitorUtil.h"
-#include <QSettings>
+
 
 int main(int argc, char* argv[]) {
 

@@ -19,11 +19,13 @@
 
 #ifndef FSIGVIEWER_H
 #define FSIGVIEWER_H
+
+#include <unordered_map>
 #include <QWidget>
 #include <QSettings>
 #include <QTableWidget>
 #include "FViewer.h"
-#include <unordered_map>
+
 
 namespace frenchroast {
   class FSignalViewer : public FViewer {

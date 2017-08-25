@@ -18,15 +18,14 @@
 //
 
 
-#include "FClassViewer.h"
+#include <iostream>
 #include <QHeaderView>
 #include <QVBoxLayout>
 #include "QUtil.h"
 #include "SignalDelegate.h"
 #include "KeyListener.h"
 #include "Util.h"
-#include <iostream>
-
+#include "FClassViewer.h"
 
 namespace frenchroast {
   

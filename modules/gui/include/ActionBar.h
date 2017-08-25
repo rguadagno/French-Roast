@@ -20,12 +20,12 @@
 #ifndef ACTIONBAR_H
 #define ACTIONBAR_H
 
+#include <bitset>
 #include <QWidget>
 #include <QPushButton>
 #include <QLineEdit>
 #include <QLabel>
 #include <QGridLayout>
-#include <bitset>
 #include "MonitorUtil.h"
 
 class ActionButton : public QPushButton {

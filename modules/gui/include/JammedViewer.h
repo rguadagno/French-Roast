@@ -20,10 +20,10 @@
 #ifndef JAMMEDV_H
 #define JAMMEDV_H
 
+#include <unordered_map>
 #include <QSettings>
 #include <QTableWidget>
 #include <QListWidget>
-#include <unordered_map>
 #include "FViewer.h"
 #include "JammedReport.h"
 

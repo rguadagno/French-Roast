@@ -17,8 +17,8 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "MethodStats.h"
 #include <string>
+#include "MethodStats.h"
 
 namespace frenchroast { namespace monitor {
     MethodStats::MethodStats()

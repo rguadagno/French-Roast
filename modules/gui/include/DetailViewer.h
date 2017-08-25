@@ -19,6 +19,7 @@
 
 #ifndef DETAILVIEWER_H
 #define DETAILVIEWER_H
+
 #include <QTableWidget>
 #include <QTabWidget>
 #include <QListWidget>

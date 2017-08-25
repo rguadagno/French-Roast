@@ -18,8 +18,8 @@
 //
 
 
-#include "JammedReport.h"
 #include <iostream>
+#include "JammedReport.h"
 
 namespace frenchroast { namespace monitor {
 

@@ -20,10 +20,10 @@
 #ifndef TRAFFIC_H
 #define TRAFFIC_H
 
+#include <unordered_map>
 #include <QSettings>
 #include <QTableWidget>
 #include <QListWidget>
-#include <unordered_map>
 #include "FViewer.h"
 #include "StackColumn.h"
 #include "StackTrace.h"

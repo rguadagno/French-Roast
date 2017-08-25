@@ -21,12 +21,11 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <thread>
-#include "Connector.h"
 #include <iostream>
 #include <sstream>
 #include <cstring>
 #include <unordered_map>
-
+#include "Connector.h"
 #include "Listener.h"
 
 namespace frenchroast { namespace network {

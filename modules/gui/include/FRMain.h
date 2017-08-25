@@ -20,6 +20,7 @@
 #ifndef MAINWIN_H
 #define MAINWIN_H
 
+#include <unordered_map>
 #include <QMainWindow>
 #include <QLabel>
 #include <QListWidget>
@@ -29,7 +30,6 @@
 #include <QDockWidget>
 #include <QSettings>
 #include <QTextEdit>
-#include <unordered_map>
 #include "fr.h"
 #include "ActionBar.h"
 #include "KeyListener.h"

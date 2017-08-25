@@ -20,8 +20,8 @@
 #ifndef QUTIL_H
 #define QUTIL_H
 
-#include <QTableWidgetItem>
 #include <string>
+#include <QTableWidgetItem>
 
 QTableWidgetItem* createItem(int value);
 QTableWidgetItem* createItem(const std::string& value, Qt::Alignment = Qt::AlignCenter);

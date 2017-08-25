@@ -20,8 +20,8 @@
 #ifndef ATTRIB_H
 #define ATTRIB_H
 
-#include "ClassFileComponent.h"
 #include <unordered_map>
+#include "ClassFileComponent.h"
 
 namespace frenchroast {
     

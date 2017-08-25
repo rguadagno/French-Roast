@@ -17,14 +17,11 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-
-
-
+#include <unordered_map>
+#include <string>
 #include "Util.h"
 #include "StackTrace.h"
 #include "MarkerField.h"
-#include <unordered_map>
-#include <string>
 #include "Connector.h"
 #include "MethodStats.h"
 #include "ClassDetail.h"

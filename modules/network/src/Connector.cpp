@@ -17,11 +17,6 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <iostream>
-#include "Listener.h"
-#include <cstring>
-#include <iostream>
-
 
 #ifdef CONNECTOR_UNIX
   #include <sys/socket.h>
@@ -30,6 +25,12 @@
 #else
   #include <winsock2.h>
 #endif 
+
+#include <iostream>
+#include <cstring>
+#include <iostream>
+#include "Listener.h"
+
 
 namespace frenchroast { namespace network {
     void process_instream(int connfd, const std::string ipport, Listener* handler) 

@@ -17,9 +17,10 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <thread>
 #include "fr.h"
 #include "FRMain.h"
-#include <thread>
+
 
 FRListener::FRListener(const std::string ip, int port, const std::string& opcodeFile) : _ip(ip), _port(port), _mon(*this, opcodeFile)
 {
