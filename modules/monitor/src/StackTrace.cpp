@@ -50,7 +50,7 @@ namespace frenchroast { namespace monitor {
     
     int StackTrace::size() const
     {
-      return _frames.size();
+      return static_cast<int>(_frames.size());
     }
 
     bool StackTrace::operator==(const StackTrace& ref)

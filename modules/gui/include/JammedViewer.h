@@ -44,7 +44,7 @@ namespace frenchroast {
     
     JammedViewer(QWidget*);
     ~JammedViewer();
-    void handle_add_signal(int row, int col);
+    void handle_add_signal(int col);
     QTableWidget*                             _data;
     std::unordered_map<std::string, int>      _jamsRow;
     std::unordered_map<std::string, int>      _jamsCount;

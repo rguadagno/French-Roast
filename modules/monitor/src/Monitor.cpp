@@ -59,7 +59,7 @@ namespace frenchroast { namespace monitor {
           ++pos;
         }
         if (tstr[pos] == 'L') {
-          int nextsemi = tstr.find(";",pos);
+          int nextsemi = static_cast<int>(tstr.find(";",pos));
           rv.push_back(tstr.substr(pos+1,nextsemi-(pos+1)) + suffix );
           pos = nextsemi +1;
         }
@@ -124,7 +124,7 @@ namespace frenchroast { namespace monitor {
         std::vector<std::string> fitems = split(split(x,"^")[1],"#");
 
         bool first=true;
-        for(int idx = fitems.size()-1;idx >= 0; idx--) {
+        for(int idx = static_cast<int>(fitems.size())-1;idx >= 0; idx--) {
           if(fitems[idx].find("thook") == std::string::npos ) {
             std::string descriptor;
             int moncount=0;
@@ -210,7 +210,7 @@ namespace frenchroast { namespace monitor {
     {
       StackTrace rv{};
       std::vector<std::string> funcs = split(str, "#");
-      for(int idx = funcs.size()-2;idx >= 0; idx--) {
+      for(int idx = static_cast<int>(funcs.size())-2;idx >= 0; idx--) {
         rv.addFrame(StackFrame{translate_descriptor(funcs[idx])});
       }
       return rv;

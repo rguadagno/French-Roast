@@ -123,7 +123,7 @@ namespace frenchroast {
 
       if(_thread_col[x.thread_name()].update(x)) {
         int newrows = _thread_col[x.thread_name()].required_rows() - _traffic->rowCount();
-        int totalrows = newrows +  _traffic->rowCount() + _thread_col[x.thread_name()].stacks().size();
+        int totalrows = static_cast<int>(newrows +  _traffic->rowCount() + _thread_col[x.thread_name()].stacks().size());
         for(int r = _traffic->rowCount(); r < totalrows; r++) {
           _traffic->insertRow(r);
         }

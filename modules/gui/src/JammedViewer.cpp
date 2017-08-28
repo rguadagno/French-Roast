@@ -65,7 +65,7 @@ namespace frenchroast {
     KeyListener* keyListener = new KeyListener;
     _data->installEventFilter(keyListener);
     setup_dockwin("Jammed Stacks", _data, false);
-    QObject::connect(keyListener  , &KeyListener::signalkey,          this, [&](){handle_add_signal(_data->currentRow(), _data->currentColumn()); });
+    QObject::connect(keyListener  , &KeyListener::signalkey,          this, [&](){handle_add_signal(_data->currentColumn()); });
 }
 
 void JammedViewer::update(const frenchroast::monitor::JammedReport& rpt)
@@ -100,7 +100,7 @@ void JammedViewer::update(const frenchroast::monitor::JammedReport& rpt)
 }
 
 
-  void JammedViewer::handle_add_signal(int row, int col )
+  void JammedViewer::handle_add_signal(int col )
   {
     if(col == COL_COUNT || col == COL_MONITORS) return;
     if(_data->currentItem() == 0) return;

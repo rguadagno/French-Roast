@@ -81,7 +81,9 @@ namespace frenchroast { namespace network {
     int len = sizeof(conn_from);
 
     FRSocket rv{::accept(_socket, (SOCKADDR*)&conn_from, &len)};
-    rv._ipport = std::string{inet_ntoa(conn_from.sin_addr)} + ":" + std::to_string(htons(conn_from.sin_port));
+
+    char buf[INET_ADDRSTRLEN];
+    rv._ipport = std::string{inet_ntop(AF_INET, &conn_from.sin_addr, buf, sizeof(buf))} + ":" + std::to_string(htons(conn_from.sin_port));
     return rv;
   }
 
