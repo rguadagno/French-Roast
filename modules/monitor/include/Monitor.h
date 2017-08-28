@@ -40,8 +40,8 @@ namespace frenchroast { namespace monitor {
                                             std::unordered_map<std::string, JammedReport>& jcount);
                                             
     std::vector<ClassDetail> construct_class_details(const std::string& msg);
-    void transmit_lines(const std::string& fileName, frenchroast::network::Connector&);
-    void transmit_lines(const std::vector<std::string>&, frenchroast::network::Connector&);
+    void transmit_lines(const std::string& fileName, const std::string& ipport, frenchroast::network::Connector&);
+    void transmit_lines(const std::vector<std::string>&, const std::string& ipport, frenchroast::network::Connector&);
 
     struct time_holder {
       long      _elapsed;
@@ -172,17 +172,17 @@ namespace frenchroast { namespace monitor {
             _handler.unloaded(items[2], items[3]);
           }
           if(items[MSG_TYPE] == "transmit-opcodes") {
-            transmit_lines(_opcodeFile, _conn);
+            transmit_lines(_opcodeFile, items[IP_PORT], _conn);
           }
           if(items[MSG_TYPE] == "transmit-hooks") {
-            _handler.request_hooks();
+            _handler.request_hooks(items[IP_PORT]);
           }
          
       }
 
-        void send_hooks(const std::vector<std::string>& hooks)
+        void send_hooks(const std::vector<std::string>& hooks, const std::string& ipport)
         {
-          transmit_lines(hooks, _conn);
+          transmit_lines(hooks, ipport, _conn);
         }
 
         void init_receiver(const std::string& ipAddr, int port)

@@ -4,10 +4,8 @@
 
 !win32 {
  DEFINES += CONNECTOR_UNIX
- SOURCES += ../../network/src/ConnectorUnix.cpp
  }
  win32 {
- SOURCES += ../../network/src/ConnectorWindows.cpp
  LIBS +=  ws2_32.lib
  }
 
@@ -34,6 +32,8 @@ SOURCES += \
 ../../monitor/src/StackReport.cpp \
 ../../monitor/src/ClassDetail.cpp \
 ../../monitor/src/JammedReport.cpp \
+../../network/src/Connector.cpp \
+../../network/src/FRSocket.cpp \
 ../../monitor/src/StackFrame.cpp
 
 HEADERS += ../include/*.h

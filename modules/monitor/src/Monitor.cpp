@@ -178,17 +178,17 @@ namespace frenchroast { namespace monitor {
     }
     
 
-    void transmit_lines(const std::string& fileName, frenchroast::network::Connector& conn)
+    void transmit_lines(const std::string& fileName, const std::string& ipport, frenchroast::network::Connector& conn)
     {
       try {
         std::ifstream in;
         in.open(fileName);
         std::string line;
         while (getline(in,line)) {
-          conn.send_message(line);
+          conn.send_message(ipport,line);
         }
         in.close();
-        conn.send_message("<end>");
+        conn.send_message(ipport,"<end>");
       }
       catch(std::ifstream::failure& ) {
         throw std::ifstream::failure("cannot open file: " + fileName);
@@ -196,12 +196,12 @@ namespace frenchroast { namespace monitor {
       
     }
 
-    void transmit_lines(const std::vector<std::string>& lines, frenchroast::network::Connector& conn)
+    void transmit_lines(const std::vector<std::string>& lines,  const std::string& ipport, frenchroast::network::Connector& conn)
     {
       for(auto& line : lines) {
-        conn.send_message(line);
+        conn.send_message(ipport, line );
       }
-      conn.send_message("<end>");
+      conn.send_message(ipport, "<end>");
     }
 
 

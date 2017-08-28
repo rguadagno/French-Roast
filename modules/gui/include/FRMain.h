@@ -67,7 +67,7 @@ class FRMain : public QMainWindow {
   void hooks_saved();
   void start_traffic(int);
   void stop_traffic();
-  void validated_hooks(std::vector<std::string>);
+  void validated_hooks(std::vector<std::string>, const std::string& ipport);
   void update_detail_list(std::string, const DetailHolder& detailholder);
   void turn_on_profiler(const std::string& hostname_pid);
   void turn_off_profiler(const std::string& hostname_pid);
@@ -78,7 +78,7 @@ class FRMain : public QMainWindow {
    void update_jammed(const frenchroast::monitor::JammedReport&);
    void start_watch_loading();
    void stop_watch_loading();
-   void validate_hooks();
+   void validate_hooks(const std::string&);
    void method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks);
    void remote_connected(const std::string& host, const std::string& pid);
    void remote_disconnected(const std::string& host, const std::string& pid);

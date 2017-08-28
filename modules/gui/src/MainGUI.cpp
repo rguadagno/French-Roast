@@ -41,7 +41,7 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
 }
 
 
-void FRMain::validate_hooks()
+void FRMain::validate_hooks(const std::string& ipport)
 {
   if(Editor::up()) {
     Editor::instance(this)->bring_to_top();
@@ -49,7 +49,7 @@ void FRMain::validate_hooks()
   else {
     QObject::connect(Editor::instance(this), &frenchroast::Editor::validated_hooks,  this,    &FRMain::validated_hooks);
   }
-  Editor::instance(this)->validate_hooks();
+  Editor::instance(this)->validate_hooks(ipport);
 }
 
 

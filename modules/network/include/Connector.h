@@ -22,34 +22,18 @@
 #include <string>
 #include <unordered_map>
 #include "Listener.h"
-
-
-#ifdef CONNECTOR_UNIX
-    #include <sys/types.h>
-    #include <sys/socket.h>
-#else
-    #include <winsock2.h>
-#endif
+#include "FRSocket.h"
 
 namespace frenchroast { namespace network {
     
-    void process_instream(int connfd, const std::string, Listener* handler);
-    
-    class Connector {
-#ifdef CONNECTOR_UNIX
-    int  _receiver_socket;
-    int  _sender_socket;
-#else
-    SOCKET _receiver_socket;
-    SOCKET _sender_socket;
-#endif
 
+    void process_instream(FRSocket& connfd, const std::string, Listener* handler,std::unordered_map<std::string, FRSocket>&);
+      
+    class Connector {
+      FRSocket  _receiver_socket;
+      std::unordered_map<std::string, FRSocket> _ipport_sendersocket;
       Listener* _handler;
-      #ifdef CONNECTOR_UNIX
-        std::unordered_map<std::string, int> _ipport_sendersocket;
-      #else 
-        std::unordered_map<std::string, SOCKET> _ipport_sendersocket;
-      #endif
+   
     public:
       void wait_for_client_connection(const std::string& ipaddr, int port, Listener* handler, bool silent=true);
       void connect_to_server(const std::string& ipaddr, int port, Listener* handler = nullptr);

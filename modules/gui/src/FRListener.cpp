@@ -94,10 +94,10 @@ void FRListener::ready(const std::string& host, const std::string& pid)
   remote_ready(host,pid);
 }
 
-void FRListener::request_hooks()
+void FRListener::request_hooks(const std::string& ipport)
 {
   _hooks_request = true;
-  send_hooks();
+  send_hooks(ipport);
 }
 
 void FRListener::turn_on_profiler(const std::string& hostname_pid)
@@ -118,11 +118,11 @@ void FRListener::class_watch( const std::vector<frenchroast::monitor::ClassDetai
   class_loaded(details);
 }
 
-void FRListener::validated_hooks(std::vector<std::string> hooks)
+void FRListener::validated_hooks(std::vector<std::string> hooks, const std::string& ipport)
 {
   if(_hooks_request) {
     _hooks_request = false;
-    _mon.send_hooks(hooks);
+    _mon.send_hooks(hooks, ipport);
   }
 }
 

@@ -85,8 +85,9 @@ namespace frenchroast {
     _changesToSave = true;
     changed();
   }
-  
-  void Editor::validate_hooks()
+
+
+  void Editor::validate_hooks(const std::string& forIPPORT)
   {
     _message->clear();
     bool validated = true;
@@ -121,7 +122,7 @@ namespace frenchroast {
        item->setForeground(QColor("#443355"));
        item->setFont(CodeFont());
        _message->addItem(item);
-       validated_hooks(hooks);
+       validated_hooks(hooks, forIPPORT);
     }
   }
 

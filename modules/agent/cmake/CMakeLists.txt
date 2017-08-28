@@ -17,7 +17,7 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     ../src/*.cpp
     ../../instrumentation/src/*.cpp
     ../../monitor/src/ClassDetail.cpp
-    ../../network/src/ConnectorUnix.cpp
+    ../../network/src/FRSocket.cpp
     ../../network/src/Connector.cpp)	
     find_package(Threads)
     add_definitions("-std=c++14")
@@ -31,7 +31,7 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     ../src/*.cpp
     ../../instrumentation/src/*.cpp
     ../../monitor/src/ClassDetail.cpp
-    ../../network/src/ConnectorWindows.cpp
+    ../../network/src/FRSocket.cpp
     ../../network/src/Connector.cpp)	
   endif ()
 

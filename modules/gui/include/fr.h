@@ -66,14 +66,14 @@ class FRListener : public QObject
     void connected(const std::string& host, const std::string& pid);
     void unloaded(const std::string& host, const std::string& pid);
     void ready(const std::string& host, const std::string& pid);
-    void request_hooks();
+    void request_hooks(const std::string& ipport);
     void jammed(frenchroast::monitor::JammedReport&);
 
   public slots:
     void init();
     void start_traffic(int);
     void stop_traffic();
-    void validated_hooks(std::vector<std::string>);
+    void validated_hooks(std::vector<std::string>, const std::string& ipport);
     void start_watch_loading();
     void stop_watch_loading();
     void class_watch(const std::vector<frenchroast::monitor::ClassDetail>& details);
@@ -82,7 +82,7 @@ class FRListener : public QObject
     void reset();
     
   signals:
-    void send_hooks();
+    void send_hooks(const std::string& ipport);
     void method_ranking(std::vector<frenchroast::monitor::MethodStats>);
     void thooked(const std::string& info,const std::string& tname, int count, const std::vector<std::string>&, const std::vector<std::string>&, const std::vector<frenchroast::monitor::MarkerField>&,  std::unordered_map<std::string, frenchroast::monitor::StackReport>);
     void timersignal(const std::string& info, const std::string& tname, long elapsed);
