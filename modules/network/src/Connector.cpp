@@ -50,7 +50,7 @@ namespace frenchroast { namespace network {
         FRSocket inSock = _receiver_socket.accept();
         _ipport_sendersocket[inSock.ipport()] = inSock;
         _handler->message("connected~" + inSock.ipport());
-        std::thread t1{process_instream, std::ref(inSock), inSock.ipport(), _handler,std::ref(_ipport_sendersocket)};
+        std::thread t1{process_instream, inSock.ipport(), _handler,std::ref(_ipport_sendersocket)};
         t1.detach();
       }
     }
@@ -62,7 +62,7 @@ namespace frenchroast { namespace network {
       _ipport_sendersocket["client"].connect(ipaddr,port);
       std::cout << "========== CONNECTED TO SERVER ============ " << std::endl;
       if(handler != nullptr) {
-        std::thread t1{process_instream,std::ref(_ipport_sendersocket["client"]),"",handler,std::ref(_ipport_sendersocket)};
+        std::thread t1{process_instream,"client", handler, std::ref(_ipport_sendersocket)};
         t1.detach();
       }
     }
@@ -70,7 +70,7 @@ namespace frenchroast { namespace network {
     
     void Connector::blocked_listen(Listener* handler)
     {
-      process_instream(std::ref(_ipport_sendersocket["client"]),"", handler,std::ref(_ipport_sendersocket));
+      process_instream("client", handler,std::ref(_ipport_sendersocket));
     }
 
     void Connector::send_message(const std::string& msg)
@@ -90,7 +90,11 @@ namespace frenchroast { namespace network {
     void Connector::close_down()
     {
       _ipport_sendersocket["client"].close();
+#ifdef CONNECTOR_UNIX      
+      ;
+#else
       WSACleanup();
+#endif
     }
 
     int Connector::get_pid()
@@ -111,7 +115,7 @@ namespace frenchroast { namespace network {
     }
 
     
-    void process_instream(FRSocket& insock, const std::string ipport, Listener* handler,std::unordered_map<std::string, FRSocket>& sockets) 
+    void process_instream(std::string ipport, Listener* handler,std::unordered_map<std::string, FRSocket>& sockets) 
     {
       char databuf[3000];
       char flowbuf[6000];
@@ -122,8 +126,8 @@ namespace frenchroast { namespace network {
       
       memset(databuf,0,sizeof(databuf));
       int total = 0;
-      while(insock.recv(databuf, sizeof(databuf))) {
-        int rv = insock.bytes_received();
+      while(sockets[ipport].recv(databuf, sizeof(databuf))) {
+        int rv = sockets[ipport].bytes_received();
         total += rv;
         memcpy(&flowbuf[buflen], databuf, rv);
         int total_bytes = buflen + rv;

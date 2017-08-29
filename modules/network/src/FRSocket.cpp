@@ -30,7 +30,7 @@ namespace frenchroast { namespace network {
       if(create) {
 #ifdef CONNECTOR_UNIX
       handle_error((_socket = socket(AF_INET, SOCK_STREAM, 0)), "unable to create socket: ");
-      }
+      
 #else
     _socket = INVALID_SOCKET;
     _socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -78,10 +78,8 @@ namespace frenchroast { namespace network {
   FRSocket FRSocket::accept()
   {
     struct sockaddr_in    conn_from;
-    int len = sizeof(conn_from);
-
-    FRSocket rv{::accept(_socket, (SOCKADDR*)&conn_from, &len)};
-
+    socklen_t len = sizeof(conn_from);
+    FRSocket rv{::accept(_socket, (struct sockaddr*)&conn_from, &len)};
     char buf[INET_ADDRSTRLEN];
     rv._ipport = std::string{inet_ntop(AF_INET, &conn_from.sin_addr, buf, sizeof(buf))} + ":" + std::to_string(htons(conn_from.sin_port));
     return rv;
@@ -133,6 +131,7 @@ namespace frenchroast { namespace network {
     
     bool FRSocket::recv(char* outbuf, int len)
     {
+      if(!_valid) return false;
       if(handle_error((_byteCount = ::recv(_socket, outbuf, len, 0)), "socket recv error: ",false)) {
         _valid = false;
         return false;
@@ -157,6 +156,9 @@ namespace frenchroast { namespace network {
 
     void FRSocket::send(const std::string& str)
     {
+      if(!_valid) { std::cout << "cannot send: " << str << std::endl;
+return;
+}
       handle_error(::send(_socket, str.c_str(), static_cast<int>(str.length()+1),0), "send");
     }
 
@@ -189,6 +191,7 @@ namespace frenchroast { namespace network {
   void FRSocket::startup_env()
   {
 #ifdef CONNECTOR_UNIX
+    ;
 #else
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2,2), &wsaData) != 0 ) {
@@ -201,8 +204,10 @@ namespace frenchroast { namespace network {
 
   void FRSocket::close()
   {
+            std::cout << "on demand closed " << std::endl;
+    if(!_valid) return;
 #ifdef CONNECTOR_UNIX
-    handle_error(::close(_socket), "socket close error ");
+    handle_error(::close(_socket), "socket close error ",false);
 #else
     handle_error(closesocket(_socket), "socket close error ");
 

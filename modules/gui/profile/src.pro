@@ -4,9 +4,11 @@
 
 !win32 {
  DEFINES += CONNECTOR_UNIX
+ QMAKE_CXXFLAGS += -std=c++11
  }
  win32 {
  LIBS +=  ws2_32.lib
+ CONFIG += c++11
  }
 
 TEMPLATE = app
@@ -23,7 +25,6 @@ QT += core gui widgets
 SOURCES += \
 ../src/*.cpp \
 ../../agent/src/HookValidator.cpp  \
-../../network/src/Connector.cpp \
 ../../instrumentation/src/Util.cpp \
 ../../monitor/src/Monitor.cpp \
 ../../monitor/src/StackTrace.cpp \
@@ -38,4 +39,4 @@ SOURCES += \
 
 HEADERS += ../include/*.h
 CONFIG += console
-CONFIG += c++11
+

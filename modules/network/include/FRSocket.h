@@ -24,6 +24,9 @@
   #include <sys/socket.h>
   #include <sys/types.h>
   #include <unistd.h>
+  #include <netinet/in.h>
+  #include <arpa/inet.h>
+  #include <string.h>
 #else
   #include <winsock2.h>
   #include <ws2tcpip.h>
@@ -32,6 +35,7 @@
 namespace frenchroast { namespace network {
 
     class FRSocket {
+           public:
       bool _valid{false};
       int _byteCount;
       std::string _ipport;
@@ -42,7 +46,7 @@ namespace frenchroast { namespace network {
 #endif 
       bool handle_error(int errorid, const std::string& msg, bool exit_on_error = true);
       
-     public:
+      //     public:
       FRSocket(bool create = false);
       FRSocket(const FRSocket&);
       bool is_valid() const;

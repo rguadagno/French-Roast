@@ -27,7 +27,7 @@
 namespace frenchroast { namespace network {
     
 
-    void process_instream(FRSocket& connfd, const std::string, Listener* handler,std::unordered_map<std::string, FRSocket>&);
+    void process_instream(std::string, Listener* handler,std::unordered_map<std::string, FRSocket>&);
       
     class Connector {
       FRSocket  _receiver_socket;
