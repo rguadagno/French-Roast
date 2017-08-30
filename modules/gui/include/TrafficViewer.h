@@ -57,6 +57,7 @@ namespace frenchroast {
     static bool restore_is_required();
     static void reset();
     static bool up();
+    int traffic_rate() const;
     
   private slots:
     void start_stop(const std::string& );

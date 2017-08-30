@@ -57,7 +57,7 @@ void FRMain::handshake(const std::string& host, const std::string& ip)
 {
   AboutHelpViewer::instance(this)->remote_ready(host, ip);
   if(_watchTraffic) {
-    start_traffic(_trafficRate);
+    start_traffic(TrafficViewer::instance(this)->traffic_rate());
   }
   if(_watchLoading) {
     start_loading();

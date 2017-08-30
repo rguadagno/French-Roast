@@ -93,6 +93,11 @@ namespace frenchroast {
     setup_dockwin("Traffic", splitter, false);
   }
 
+
+  int TrafficViewer::traffic_rate() const
+  {
+    return atoi(_rate->text().toStdString().c_str());
+  }
   
   void TrafficViewer::start_stop(const std::string& text)
   {
