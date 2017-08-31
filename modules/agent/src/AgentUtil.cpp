@@ -79,21 +79,28 @@ bool format_stack_trace(jvmtiEnv* env, jthread& thread, std::string& trace)
 }
 
 
-bool ErrorHandler::check_jvmti_error(jvmtiError error, const std::string& msg)
+inline bool ErrorHandler::check_jvmti_error(jvmtiError error, const std::string& msg)
 {
-  if(error != 0) {
-      std::cout << "JVMTI ERROR: " << msg << std::endl;
-  }
-  return error == 0;
+  if(error == JVMTI_ERROR_NONE) return true;
+  std::cout << "JVMTI ERROR: " << msg << std::endl;
+  return false;
 }
 
-bool get_class_name(jvmtiEnv* env, jclass theclass, std::string& name)
+inline bool get_class_name(jvmtiEnv* env, jclass theclass, std::string& name)
 {
   char *class_sig;
   char *generic;
   if(!ErrorHandler::check_jvmti_error(env->GetClassSignature(theclass, &class_sig,&generic), "GetClassSignature")) return false;
   name = std::string{class_sig};
   env->Deallocate(reinterpret_cast<unsigned char*>(class_sig));
+  env->Deallocate(reinterpret_cast<unsigned char*>(generic));
+  return true;
+}
+
+bool get_class_name_fast(jvmtiEnv* env, jclass theclass, char** class_sig)
+{
+  char *generic;
+  if(!ErrorHandler::check_jvmti_error(env->GetClassSignature(theclass, class_sig,&generic), "GetClassSignature")) return false;
   env->Deallocate(reinterpret_cast<unsigned char*>(generic));
   return true;
 }
@@ -118,5 +125,18 @@ bool get_thread_name(JNIEnv* jni_env, jvmtiEnv* env, jthread thd, std::string& n
     jobject ctx = tinfo.context_class_loader;
     jni_env->DeleteLocalRef(ctx);
     env->Deallocate((unsigned char *)tinfo.name);
+  return true;
+}
+
+bool get_thread_name_fast(JNIEnv* jni_env, jvmtiEnv* env, jthread thd, char** name)
+{
+    jvmtiThreadInfo tinfo;
+    if(!ErrorHandler::check_jvmti_error(env->GetThreadInfo(thd, &tinfo), "GetThreadInfo")) return false;;
+    *name = tinfo.name;
+    jthreadGroup tg = tinfo.thread_group;
+    jni_env->DeleteLocalRef(tg);
+    jobject ctx = tinfo.context_class_loader;
+    jni_env->DeleteLocalRef(ctx);
+    
   return true;
 }

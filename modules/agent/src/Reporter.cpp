@@ -55,7 +55,7 @@ namespace frenchroast { namespace agent {
     {
       _ptr->out("traffic~" + tag);
     }
-
+    
     void Reporter::jammed(const std::string& monitor, const std::string& waiter, const std::string& owner)
     {
       _ptr->out("jammed~" + monitor + "~" + waiter + "~" + owner);

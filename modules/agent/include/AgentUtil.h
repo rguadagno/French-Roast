@@ -33,12 +33,14 @@ bool format_stack_trace(jvmtiEnv* env, jthread&, std::string&);
 
 class ErrorHandler {
  public:
-  static bool check_jvmti_error(jvmtiError error, const std::string& msg);
+   static bool check_jvmti_error(jvmtiError error, const std::string& msg);
 };
 
 
 bool get_class_name(jvmtiEnv*, jclass, std::string&);
+bool get_class_name_fast(jvmtiEnv*, jclass, char**);
 bool get_thread_name(JNIEnv*,  jvmtiEnv* env, jthread, std::string&);
+bool get_thread_name_fast(JNIEnv*,  jvmtiEnv* env, jthread, char**);
 
 void delete_refs(JNIEnv* jni_env,jthread*, jint count);
 #endif

@@ -186,9 +186,6 @@ std::mutex                                 _sig_time_mutex;
 jvmtiEnv* genv;
 JavaVM*   g_java_vm;
 
-std::unordered_map<long,char*> g_mnames;
-std::unordered_map<long,char*> g_sigs;
-std::unordered_map<long,std::string> g_classname;
 
 
 void JNICALL
@@ -557,6 +554,14 @@ bool traffic_predicate()
   return _commandListener._millis.load() > 0;
 }
 
+
+struct jni_cache {
+  char* meth_name;
+  char* sig;
+  char* classname;
+
+};
+
 void traffic_monitor() 
 {
   jvmtiEnv* env;
@@ -576,46 +581,44 @@ void traffic_monitor()
   int counter=0;
   int elapsed=0;
   std::string rv = "";
+  jthread thd;
+
+  std::unordered_map<long long,struct jni_cache> cache;
+  struct jni_cache lcache;
+  char *methodName;
+  char *sig;
+  char *generic;
+  char* className;
+  jclass theclass;
+  bool found;
+  jint frame_count=0;
+  jvmtiFrameInfo frame_info[20];
+  jint before_frame_count;
+  jvmtiFrameInfo before_frame_info[20];
+  char* tname;
+  long long cacheid;
+  int notfoundcount = 0;
+  std::unordered_map<int,int> monmap;
   while(1) {
-   
-      ++counter;
-       auto tstart = std::chrono::high_resolution_clock::now();      
-   
     jthread* threads;
     thread_count=0;
 
     if(!ErrorHandler::check_jvmti_error(genv->GetAllThreads(&thread_count, &threads),"GetAllThreads")) continue;
 
     rv = "";
-    //std::unordered_map<int,int> monmap;      
     for(int idx = 0; idx < thread_count; idx++) {
-      // monmap.clear();
-      jthread thd = *(threads + idx);
-      std::string tname;
-      if(!get_thread_name(jni_env,genv, thd, tname)) continue; 
-      jint frame_count=0;
-      jvmtiFrameInfo frame_info[20];
-      memset(frame_info, 0, sizeof(frame_info));
-      
-      /*
-      jvmtiMonitorStackDepthInfo* monitorInfo;
-      jint infoCount;
-      jint frame_count;
-      jvmtiFrameInfo frame_info[20];
-      jint before_frame_count;
-      jvmtiFrameInfo before_frame_info[20];
-
+      monmap.clear();
+      thd = *(threads + idx);
+      if(!get_thread_name_fast(jni_env,genv, thd, &tname)) continue;
       memset(frame_info, 0, sizeof(frame_info));
       memset(before_frame_info, 0, sizeof(before_frame_info));
-
+      jint infoCount;
+      jvmtiMonitorStackDepthInfo* monitorInfo;
       if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(*(threads + idx) ,0,20, before_frame_info, &before_frame_count), "GetStackTrace")) continue;
       infoCount = 0;
       if(!ErrorHandler::check_jvmti_error(genv->GetOwnedMonitorStackDepthInfo(*(threads + idx) , &infoCount,  &monitorInfo),"GetOwnedMonitorStackDepthInfo")) continue;
-      */
-      if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(*(threads + idx) ,0,20, frame_info, &frame_count), "GetStackTrace")) continue;
-
       
-      /*
+      if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(*(threads + idx) ,0,20, frame_info, &frame_count), "GetStackTrace")) continue;
 
       bool invalid = false;
       for(int idx = 0; idx < infoCount; idx++) {
@@ -639,67 +642,61 @@ void traffic_monitor()
         continue;
       }
       genv->Deallocate((unsigned char *)monitorInfo);
-      */
-      //      if(invalid) continue;
+      
+      if(invalid)  {
+          jni_env->DeleteLocalRef(thd);
+        continue;
+      }
       if (frame_count >= 1) {
         rv.append(tname);
         rv.append("^");
+        genv->Deallocate((unsigned char *)tname);
       }
       else {
+        genv->Deallocate((unsigned char *)tname);
+        jni_env->DeleteLocalRef(thd);
         continue;
       }
-      char *methodName;
-      char *sig;
-      char *generic;
 
 
-      std::string className;
-        jclass theclass;
-        
       for(int fidx = frame_count - 1; fidx >= 0; fidx--) {
         generic = nullptr;
-        bool found=false;
-        if(g_mnames.find((long)frame_info[fidx].method) != g_mnames.end()) {
+        found=false;
+        cacheid = (long long)frame_info[fidx].method;
+        if(cache.find(cacheid) != cache.end()) {
           found=true;
-          methodName = g_mnames[(long)frame_info[fidx].method];
-          sig =        g_sigs[(long)frame_info[fidx].method];
-          className  = g_classname[(long)frame_info[fidx].method];
+          lcache = cache[cacheid];
+          methodName = lcache.meth_name;
+          sig =        lcache.sig;
+          className  = lcache.classname;
          }
         else {
           if(!ErrorHandler::check_jvmti_error(genv->GetMethodName(frame_info[fidx].method, &methodName,&sig,&generic), "GetMethodName")) continue;
           if(!ErrorHandler::check_jvmti_error(genv->Deallocate((unsigned char *)generic ), "Deallocate")) continue;
 
           if(!ErrorHandler::check_jvmti_error(genv->GetMethodDeclaringClass(frame_info[fidx].method, &theclass), "GetMethodDeclaringClass")) continue;
-          if(!get_class_name(genv, theclass, className)) continue;
+          if(!get_class_name_fast(genv, theclass, &className)) continue;
           jni_env->DeleteLocalRef(theclass);
         }
-        
-   
-        //rv.append((monmap.find(fidx) != monmap.end() ? "1!" : "0!"));
-        rv.append("0!");
-        rv.append(className.substr(1));
+        rv.append((monmap.find(fidx) != monmap.end() ? "1!" : "0!"));
+        rv.append(className + 1);
         rv.append( "::");
 
         rv.append(methodName);
         rv.append(":");
         rv.append(sig);
         rv.append("#");
-        //
-        
+     
         if(!found) {
-          g_mnames[(long)frame_info[fidx].method] = methodName;
-          g_sigs[(long)frame_info[fidx].method] = sig;
-          g_classname[(long)frame_info[fidx].method] = className;
+          cache[cacheid] = {methodName, sig,className};
         }
         }
       rv.erase(rv.end() -1);
       rv += "%";
-      
       jni_env->DeleteLocalRef(thd);
     }
-
-     genv->Deallocate((unsigned char *)threads);
-       
+    genv->Deallocate((unsigned char *)threads);
+     
     if(rv.size() > 1) {
       rv.erase(rv.end() -1);
       _sig_mutex.lock();
@@ -707,18 +704,7 @@ void traffic_monitor()
       _sig_mutex.unlock();
     }
     
-     auto tend = std::chrono::high_resolution_clock::now();
-      elapsed += std::chrono::duration_cast<std::chrono::microseconds>(tend-tstart).count();
-
-
-    
-    //    std::cout <<  "DONE: " <<  << std::endl;
     if (!traffic_predicate()) {
-
-      std::cout <<  "DONE: " <<  elapsed / counter << std::endl;
-          elapsed= 0;
-          counter=0;
-          
       std::unique_lock<std::mutex> lck{_traffic_mutex};
       _commandListener._traffic_cond.wait(lck,&traffic_predicate);
       delay = _commandListener._millis.load();
@@ -728,18 +714,12 @@ void traffic_monitor()
       std::this_thread::sleep_for(std::chrono::milliseconds(delay));
     }
     if (!traffic_predicate()) {
-      std::cout <<  "DONE: " <<  elapsed / counter << std::endl;
-          elapsed= 0;
-          counter=0;
-
       std::unique_lock<std::mutex> lck{_traffic_mutex};
       _commandListener._traffic_cond.wait(lck,&traffic_predicate);
       delay = _commandListener._millis.load();
     }
-
-        
   }
-  }
+}
 
 
 
