@@ -17,6 +17,7 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -184,6 +185,11 @@ std::mutex                                 _sig_time_mutex;
 
 jvmtiEnv* genv;
 JavaVM*   g_java_vm;
+
+std::unordered_map<long,char*> g_mnames;
+std::unordered_map<long,char*> g_sigs;
+std::unordered_map<long,std::string> g_classname;
+
 
 void JNICALL
 ThreadStart(jvmtiEnv *env, JNIEnv* jni_env, jthread thread) {
@@ -567,15 +573,31 @@ void traffic_monitor()
     delay = _commandListener._millis.load();
   }
 
+  int counter=0;
+  int elapsed=0;
+  std::string rv = "";
   while(1) {
+   
+      ++counter;
+       auto tstart = std::chrono::high_resolution_clock::now();      
+   
     jthread* threads;
     thread_count=0;
+
     if(!ErrorHandler::check_jvmti_error(genv->GetAllThreads(&thread_count, &threads),"GetAllThreads")) continue;
-    std::string rv = "";
+
+    rv = "";
+    //std::unordered_map<int,int> monmap;      
     for(int idx = 0; idx < thread_count; idx++) {
+      // monmap.clear();
       jthread thd = *(threads + idx);
       std::string tname;
       if(!get_thread_name(jni_env,genv, thd, tname)) continue; 
+      jint frame_count=0;
+      jvmtiFrameInfo frame_info[20];
+      memset(frame_info, 0, sizeof(frame_info));
+      
+      /*
       jvmtiMonitorStackDepthInfo* monitorInfo;
       jint infoCount;
       jint frame_count;
@@ -585,13 +607,16 @@ void traffic_monitor()
 
       memset(frame_info, 0, sizeof(frame_info));
       memset(before_frame_info, 0, sizeof(before_frame_info));
-      
+
       if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(*(threads + idx) ,0,20, before_frame_info, &before_frame_count), "GetStackTrace")) continue;
       infoCount = 0;
       if(!ErrorHandler::check_jvmti_error(genv->GetOwnedMonitorStackDepthInfo(*(threads + idx) , &infoCount,  &monitorInfo),"GetOwnedMonitorStackDepthInfo")) continue;
+      */
       if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(*(threads + idx) ,0,20, frame_info, &frame_count), "GetStackTrace")) continue;
 
-      std::unordered_map<int,int> monmap;
+      
+      /*
+
       bool invalid = false;
       for(int idx = 0; idx < infoCount; idx++) {
         monmap[((monitorInfo + idx)->stack_depth)] = 1;
@@ -614,10 +639,11 @@ void traffic_monitor()
         continue;
       }
       genv->Deallocate((unsigned char *)monitorInfo);
-      
-      if(invalid) continue;
+      */
+      //      if(invalid) continue;
       if (frame_count >= 1) {
-        rv += tname + "^";
+        rv.append(tname);
+        rv.append("^");
       }
       else {
         continue;
@@ -626,27 +652,54 @@ void traffic_monitor()
       char *sig;
       char *generic;
 
+
+      std::string className;
+        jclass theclass;
+        
       for(int fidx = frame_count - 1; fidx >= 0; fidx--) {
         generic = nullptr;
-        if(!ErrorHandler::check_jvmti_error(genv->GetMethodName(frame_info[fidx].method, &methodName,&sig,&generic), "GetMethodName")) continue;
-        if(!ErrorHandler::check_jvmti_error(genv->Deallocate((unsigned char *)generic ), "Deallocate")) continue;
-        jclass theclass;
-        if(!ErrorHandler::check_jvmti_error(genv->GetMethodDeclaringClass(frame_info[fidx].method, &theclass), "GetMethodDeclaringClass")) continue;
-        std::string className;
-        if(!get_class_name(genv, theclass, className)) continue;
-        jni_env->DeleteLocalRef(theclass);
-        rv += (monmap.count(fidx) == 1 ? "1!" : "0!") + className.substr(1) + "::";
-        rv +=  std::string{methodName} + ":" + std::string{sig} + "#";
-        genv->Deallocate((unsigned char *)methodName );
-        genv->Deallocate((unsigned char *)sig );
+        bool found=false;
+        if(g_mnames.find((long)frame_info[fidx].method) != g_mnames.end()) {
+          found=true;
+          methodName = g_mnames[(long)frame_info[fidx].method];
+          sig =        g_sigs[(long)frame_info[fidx].method];
+          className  = g_classname[(long)frame_info[fidx].method];
+         }
+        else {
+          if(!ErrorHandler::check_jvmti_error(genv->GetMethodName(frame_info[fidx].method, &methodName,&sig,&generic), "GetMethodName")) continue;
+          if(!ErrorHandler::check_jvmti_error(genv->Deallocate((unsigned char *)generic ), "Deallocate")) continue;
+
+          if(!ErrorHandler::check_jvmti_error(genv->GetMethodDeclaringClass(frame_info[fidx].method, &theclass), "GetMethodDeclaringClass")) continue;
+          if(!get_class_name(genv, theclass, className)) continue;
+          jni_env->DeleteLocalRef(theclass);
+        }
+        
+   
+        //rv.append((monmap.find(fidx) != monmap.end() ? "1!" : "0!"));
+        rv.append("0!");
+        rv.append(className.substr(1));
+        rv.append( "::");
+
+        rv.append(methodName);
+        rv.append(":");
+        rv.append(sig);
+        rv.append("#");
+        //
+        
+        if(!found) {
+          g_mnames[(long)frame_info[fidx].method] = methodName;
+          g_sigs[(long)frame_info[fidx].method] = sig;
+          g_classname[(long)frame_info[fidx].method] = className;
+        }
         }
       rv.erase(rv.end() -1);
       rv += "%";
       
       jni_env->DeleteLocalRef(thd);
     }
-    genv->Deallocate((unsigned char *)threads);
 
+     genv->Deallocate((unsigned char *)threads);
+       
     if(rv.size() > 1) {
       rv.erase(rv.end() -1);
       _sig_mutex.lock();
@@ -654,15 +707,31 @@ void traffic_monitor()
       _sig_mutex.unlock();
     }
     
+     auto tend = std::chrono::high_resolution_clock::now();
+      elapsed += std::chrono::duration_cast<std::chrono::microseconds>(tend-tstart).count();
+
+
+    
+    //    std::cout <<  "DONE: " <<  << std::endl;
     if (!traffic_predicate()) {
+
+      std::cout <<  "DONE: " <<  elapsed / counter << std::endl;
+          elapsed= 0;
+          counter=0;
+          
       std::unique_lock<std::mutex> lck{_traffic_mutex};
       _commandListener._traffic_cond.wait(lck,&traffic_predicate);
       delay = _commandListener._millis.load();
+
     }
     else {
       std::this_thread::sleep_for(std::chrono::milliseconds(delay));
     }
     if (!traffic_predicate()) {
+      std::cout <<  "DONE: " <<  elapsed / counter << std::endl;
+          elapsed= 0;
+          counter=0;
+
       std::unique_lock<std::mutex> lck{_traffic_mutex};
       _commandListener._traffic_cond.wait(lck,&traffic_predicate);
       delay = _commandListener._millis.load();
