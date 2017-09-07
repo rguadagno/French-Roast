@@ -26,6 +26,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <unordered_set>
+#include <map>
 #include "jvmti.h"
 #include "Agent.h"
 #include "Hooks.h"
@@ -46,6 +47,9 @@ std::mutex _loading_mutex;
 std::mutex _loading_data_mutex;
 std::mutex _profiler_mutex;
 std::mutex _all_loaded_mutex;
+
+std::mutex _cache_mutex;
+
 
 class ClassPtr {
 public:
@@ -154,7 +158,12 @@ public:
 };
 
 
+struct jni_cache {
+  char* meth_name;
+  char* sig;
+  char* classname;
 
+};
 
 class FieldInfo {
 public:
@@ -185,7 +194,6 @@ std::mutex                                 _sig_time_mutex;
 
 jvmtiEnv* genv;
 JavaVM*   g_java_vm;
-
 
 
 void JNICALL
@@ -237,9 +245,11 @@ std::string get_value(JNIEnv* ptr, jobject obj, FieldInfo& field)
 }
 
 
-void populate_class_fields_info(std::string classDescriptor, jclass theclass, std::unordered_map<std::string, FieldInfo>& gfieldinfo)
+void populate_class_fields_info(char* classDescriptor, jclass theclass, std::unordered_map<std::string, FieldInfo>& gfieldinfo)
 {
 
+  static std::unordered_map<void*, int> _cache;
+  
   jint fieldcount=0;
   jfieldID* idPtr;
   genv->GetClassFields(theclass, &fieldcount, &idPtr);
@@ -248,49 +258,71 @@ void populate_class_fields_info(std::string classDescriptor, jclass theclass, st
   char* sigptr;
   char* genericptr;
 
-
+  _cache_mutex.lock();
+  if(_cache.find(idPtr) != _cache.end()) {
+     _cache_mutex.unlock();
+     return;
+  }
   for(int idx = 0; idx < fieldcount; idx++) {
+    
     genv->GetFieldName(theclass,  *(idPtr + idx), &nameptr, &sigptr, &genericptr);
     std::string fieldName{nameptr};
-    gfieldinfo[classDescriptor + ">" + fieldName] = FieldInfo{fieldName, std::string{sigptr}, *(idPtr + idx)};
+    std::string desc = classDescriptor;
+    desc.append(">");
+    desc.append(fieldName);
+    gfieldinfo[desc] = FieldInfo{fieldName, std::string{sigptr}, *(idPtr + idx)};
+    _cache[(idPtr + idx)] = 1;
   }
+  _cache_mutex.unlock();
 }
+
 
 
 
 class DescriptorVO {
 public:
-  std::string _classSignature;
-  std::string _methodName;
-  std::string _methodSignature;
-  DescriptorVO(std::string cSig, std::string mname, std::string mSig) : _classSignature(cSig), _methodName(mname), _methodSignature(mSig)
+  char* _classSignature;
+  char* _methodName;
+  char* _methodSignature;
+  DescriptorVO(char* cSig, char* mname, char* mSig) : _classSignature(cSig), _methodName(mname), _methodSignature(mSig)
   {
   }
 
   std::string descriptor() const
   {
-    return _classSignature + "::" + _methodName + ":" + _methodSignature;
+    std::string rv = _classSignature;
+    rv.append("::");
+    rv.append(_methodName);
+    rv.append(":");
+    rv.append(_methodSignature);
+    return rv;
   }
 };
 
-std::vector<DescriptorVO> populate_stack(  jvmtiFrameInfo* frames, int count)
+
+
+
+void populate_stack( JNIEnv * jni_env, jvmtiFrameInfo* frames, int count, std::vector<DescriptorVO>& rv )
 {
-  std::vector<DescriptorVO> rv;
+  void* cacheid;
+  char *methodName;
+  char *sig;
+  char *generic;
+  char* className;
+  jclass theclass;
+
+  rv.reserve(count);
   for(int idx = 1; idx < count; idx++) {
     ++frames;
-    char *methodName;
-    char *methodSig;
-    char *generic;
-    genv->GetMethodName(frames->method, &methodName,&methodSig,&generic);
-    std::string methodNameStr{methodName};
-    std::string sigStr{methodSig};
-    jclass theclass;
-    genv->GetMethodDeclaringClass(frames->method, &theclass);
-    std::string className;
-    if(!get_class_name(genv,theclass, className)) continue; 
-    rv.emplace_back(className, methodNameStr, sigStr);
+    if(!ErrorHandler::check_jvmti_error(genv->GetMethodName(frames->method, &methodName,&sig,&generic), "GetMethodName")) continue;
+    if(!ErrorHandler::check_jvmti_error(genv->Deallocate((unsigned char *)generic ), "Deallocate")) continue;
+      
+    if(!ErrorHandler::check_jvmti_error(genv->GetMethodDeclaringClass(frames->method, &theclass), "GetMethodDeclaringClass")) continue;
+    if(!get_class_name_fast(genv, theclass, &className)) continue;
+    jni_env->DeleteLocalRef(theclass);
+    rv.emplace_back(className, methodName, sig);
   }
-  return rv;
+
 }
 
 
@@ -300,15 +332,20 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
   jint count;
   jthread aThread;
 
+
+  memset(frames, 0, sizeof(frames));         
   if(!ErrorHandler::check_jvmti_error(genv->GetCurrentThread(&aThread),"GetCurrentThread")) return;
   std::string tname;
   if(!get_thread_name(ptr, genv, aThread, tname)) return;; 
   if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(aThread, 0, sizeof(frames), frames, &count),"GetStackTrace")) return;
   if (count >= 1) {
-    std::vector<DescriptorVO> stack = populate_stack(frames, count);
+    std::vector<DescriptorVO>  stack;
+     populate_stack(ptr, frames, count, stack);
+
     std::string params = "(";
     int slot = 0;
     jstring jsvalue;
+       
       for(auto& argtype : typeTokenizer(stack[0]._methodSignature)) {
         ++slot;
         switch(argtype) {
@@ -316,12 +353,14 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
           jint ivalue;
           if(!ErrorHandler::check_jvmti_error(genv->GetLocalInt(aThread, 1,slot, &ivalue), "GetLocalInt")) return;
           params.append(std::to_string(ivalue) + ",");
+
           break;
         case STRING_TYPE:
           jobject ovalue;
-             if(!ErrorHandler::check_jvmti_error(genv->GetLocalObject(aThread, 1,slot, &ovalue), "GetLocalObject")) return;
+          if(!ErrorHandler::check_jvmti_error(genv->GetLocalObject(aThread, 1,slot, &ovalue), "GetLocalObject")) return;
           jsvalue = jstring(ovalue);
           params.append(  std::string(ptr->GetStringUTFChars(jsvalue,0)) + ",");
+          ptr->DeleteLocalRef(ovalue);
           break;
         case ARRAY_TYPE:
           params.append( "[],");
@@ -333,23 +372,49 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
         params.erase(params.length() -1 ,1);
       }
       params.append(")");
-      jclass theclass;
-      if(!ErrorHandler::check_jvmti_error(genv->GetMethodDeclaringClass(frames[1].method, &theclass), "GetMethodDeclaringClass")) return;
       std::string fieldValues = "";
-      for(auto& fieldname : _hooks.get_marker_fields(stack[0]._classSignature, stack[0]._methodName + ":" + stack[0]._methodSignature)) {
-        if(_reportingFields.count(stack[0]._classSignature + ">" + fieldname) == 0) {
-          populate_class_fields_info(stack[0]._classSignature, theclass, _reportingFields);          
-        }
-        fieldValues += get_value(ptr, obj, _reportingFields[stack[0]._classSignature + ">" + fieldname]);       
-      }
+      
+      if(_hooks.get_marker_fields(stack[0]._classSignature, std::string{stack[0]._methodName} + ":" + stack[0]._methodSignature).size() > 0) {
+        jclass theclass;
+        if(!ErrorHandler::check_jvmti_error(genv->GetMethodDeclaringClass(frames[1].method, &theclass), "GetMethodDeclaringClass")) return;
+       
+        std::string classStr = std::string{stack[0]._classSignature};
+        std::string key;
 
-      std::string stackstr = "";
-      for(auto& x : stack) {
-        stackstr.append(x.descriptor());
-        stackstr.append("%");
+        for(auto& fieldname : _hooks.get_marker_fields(stack[0]._classSignature, std::string{stack[0]._methodName} + ":" + stack[0]._methodSignature)) {
+          key = classStr + ">" + fieldname;
+          if(_reportingFields.find(key) == _reportingFields.end()) {
+            populate_class_fields_info(stack[0]._classSignature, theclass, _reportingFields);          
+          }
+          fieldValues.append(get_value(ptr, obj, _reportingFields[ key]));       
         }
+        
+        ptr->DeleteLocalRef(theclass);
+      }
+      
+      std::string stackstr = "";
+      std::string firstStr = stack[0].descriptor();
+      for(auto& x : stack) {
+         stackstr.append(x.descriptor());
+         stackstr.append("%");
+        genv->Deallocate((unsigned char*)x._methodName);
+        genv->Deallocate((unsigned char*)x._methodSignature);
+        genv->Deallocate((unsigned char*)x._classSignature);
+      }
+      
+      
+      std::string outstr = firstStr;
+      outstr.append("~");
+      outstr.append(tname);
+      outstr.append("~");
+      outstr.append(fieldValues);
+      outstr.append("~");
+      outstr.append(params);
+      outstr.append("~");
+      outstr.append(stackstr);
+
       _sig_mutex.lock();
-      _rptr.signal(stack[0].descriptor() + "~" + tname + "~" + fieldValues + "~" + params + "~" + stackstr);
+      _rptr.signal(outstr);
       _sig_mutex.unlock();
   }
   }
@@ -542,7 +607,6 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   delete_refs(jni_env, monitorInfo.notify_waiters, monitorInfo.notify_waiter_count);
   env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.waiters));
   env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
-  
   _sig_mutex.lock();
   _rptr.jammed(monitorStr, waiterStr, ownerStr);
   _sig_mutex.unlock();
@@ -555,12 +619,6 @@ bool traffic_predicate()
 }
 
 
-struct jni_cache {
-  char* meth_name;
-  char* sig;
-  char* classname;
-
-};
 
 void traffic_monitor() 
 {

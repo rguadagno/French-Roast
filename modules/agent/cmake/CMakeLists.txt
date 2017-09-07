@@ -32,7 +32,9 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     ../../instrumentation/src/*.cpp
     ../../monitor/src/ClassDetail.cpp
     ../../network/src/FRSocket.cpp
-    ../../network/src/Connector.cpp)	
+    ../../network/src/Connector.cpp)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
+#    add_definitions(${CMAKE_CXX_FLAGS})
   endif ()
 
   add_library(agent SHARED ${huh} )

@@ -126,6 +126,7 @@ namespace frenchroast { namespace network {
       
       memset(databuf,0,sizeof(databuf));
       int total = 0;
+      std::string str = "";
       while(sockets[ipport].recv(databuf, sizeof(databuf))) {
         int rv = sockets[ipport].bytes_received();
         total += rv;
@@ -133,9 +134,12 @@ namespace frenchroast { namespace network {
         int total_bytes = buflen + rv;
         while(end < total_bytes) {
           if (flowbuf[end] == '\0') {
+            str.clear();
+            str.append(ipport);
+            str.append("~");
             memcpy(strbuf, &flowbuf[start],(end-start) + 1);
-            std::string item{strbuf};
-            handler->message(ipport+"~"+item);
+            str.append(strbuf);
+            handler->message(str);
             start = end + 1;
         }
         ++end;

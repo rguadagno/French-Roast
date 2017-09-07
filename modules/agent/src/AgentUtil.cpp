@@ -79,7 +79,7 @@ bool format_stack_trace(jvmtiEnv* env, jthread& thread, std::string& trace)
 }
 
 
-inline bool ErrorHandler::check_jvmti_error(jvmtiError error, const std::string& msg)
+inline bool ErrorHandler::check_jvmti_error(jvmtiError error, const char* msg)
 {
   if(error == JVMTI_ERROR_NONE) return true;
   std::cout << "JVMTI ERROR: " << msg << std::endl;

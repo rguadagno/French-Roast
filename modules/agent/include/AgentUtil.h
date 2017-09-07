@@ -33,7 +33,7 @@ bool format_stack_trace(jvmtiEnv* env, jthread&, std::string&);
 
 class ErrorHandler {
  public:
-   static bool check_jvmti_error(jvmtiError error, const std::string& msg);
+   static bool check_jvmti_error(jvmtiError error, const char* msg);
 };
 
 
