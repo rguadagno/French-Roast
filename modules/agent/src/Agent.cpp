@@ -254,23 +254,22 @@ void populate_class_fields_info(char* classDescriptor, jclass theclass, std::uno
   jfieldID* idPtr;
   genv->GetClassFields(theclass, &fieldcount, &idPtr);
 
-  char* nameptr;
+  char* fieldname;
   char* sigptr;
   char* genericptr;
 
-  _cache_mutex.lock();
-  if(_cache.find(idPtr) != _cache.end()) {
+   _cache_mutex.lock();
+   if(_cache.find(idPtr) != _cache.end()) {
      _cache_mutex.unlock();
-     return;
+  return;
   }
   for(int idx = 0; idx < fieldcount; idx++) {
     
-    genv->GetFieldName(theclass,  *(idPtr + idx), &nameptr, &sigptr, &genericptr);
-    std::string fieldName{nameptr};
+    genv->GetFieldName(theclass,  *(idPtr + idx), &fieldname, &sigptr, &genericptr);
     std::string desc = classDescriptor;
     desc.append(">");
-    desc.append(fieldName);
-    gfieldinfo[desc] = FieldInfo{fieldName, std::string{sigptr}, *(idPtr + idx)};
+    desc.append(fieldname);
+    gfieldinfo[desc] = FieldInfo{fieldname, sigptr, *(idPtr + idx)};
     _cache[(idPtr + idx)] = 1;
   }
   _cache_mutex.unlock();
@@ -312,17 +311,16 @@ void populate_stack( JNIEnv * jni_env, jvmtiFrameInfo* frames, int count, std::v
   jclass theclass;
 
   rv.reserve(count);
+
   for(int idx = 1; idx < count; idx++) {
     ++frames;
     if(!ErrorHandler::check_jvmti_error(genv->GetMethodName(frames->method, &methodName,&sig,&generic), "GetMethodName")) continue;
     if(!ErrorHandler::check_jvmti_error(genv->Deallocate((unsigned char *)generic ), "Deallocate")) continue;
-      
     if(!ErrorHandler::check_jvmti_error(genv->GetMethodDeclaringClass(frames->method, &theclass), "GetMethodDeclaringClass")) continue;
     if(!get_class_name_fast(genv, theclass, &className)) continue;
     jni_env->DeleteLocalRef(theclass);
     rv.emplace_back(className, methodName, sig);
   }
-
 }
 
 
@@ -332,7 +330,6 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
   jint count;
   jthread aThread;
 
-
   memset(frames, 0, sizeof(frames));         
   if(!ErrorHandler::check_jvmti_error(genv->GetCurrentThread(&aThread),"GetCurrentThread")) return;
   std::string tname;
@@ -340,7 +337,7 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
   if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(aThread, 0, sizeof(frames), frames, &count),"GetStackTrace")) return;
   if (count >= 1) {
     std::vector<DescriptorVO>  stack;
-     populate_stack(ptr, frames, count, stack);
+    populate_stack(ptr, frames, count, stack);
 
     std::string params = "(";
     int slot = 0;
@@ -397,9 +394,9 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
       for(auto& x : stack) {
          stackstr.append(x.descriptor());
          stackstr.append("%");
-        genv->Deallocate((unsigned char*)x._methodName);
-        genv->Deallocate((unsigned char*)x._methodSignature);
-        genv->Deallocate((unsigned char*)x._classSignature);
+         genv->Deallocate((unsigned char*)x._methodName);
+         genv->Deallocate((unsigned char*)x._methodSignature);
+         genv->Deallocate((unsigned char*)x._classSignature);
       }
       
       
