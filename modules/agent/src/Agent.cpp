@@ -106,14 +106,12 @@ public:
   {
     if(!profiler_predicate()) return;
     std::cout << " ** START TRAFFIC **" << std::endl;
-    std::lock_guard<std::mutex> lck{_traffic_mutex};
     _millis.store(interval_millis);
     _traffic_cond.notify_one();
   }
 
   void stop_watch_traffic()
   {
-    std::lock_guard<std::mutex> lck{_traffic_mutex};
     std::cout << " ** STOP TRAFFIC **" << std::endl;
     _millis.store(-1);
     _traffic_cond.notify_one();
@@ -121,7 +119,6 @@ public:
 
   void stop_watch_loading()
   {
-    std::lock_guard<std::mutex> lck{_loading_mutex};
     _load_watch_interval.store(-1);
     _load_watch_cond.notify_one();
 
@@ -131,7 +128,6 @@ public:
   void watch_loading()
   {
     if(!profiler_predicate()) return;
-    std::lock_guard<std::mutex> lck{_loading_mutex};
     _load_watch_interval.store(5000);
     _load_watch_cond.notify_one();
 
@@ -140,14 +136,12 @@ public:
 
   void turn_on_profiler()
   {
-    std::lock_guard<std::mutex> lck{_profiler_mutex};
     _runProfile.store(true);
     _profilerCond.notify_one();
   }
 
   void turn_off_profiler()
   {
-    std::lock_guard<std::mutex> lck{_profiler_mutex};
     _runProfile.store(false);
     _profilerCond.notify_one();
     stop_watch_loading();
