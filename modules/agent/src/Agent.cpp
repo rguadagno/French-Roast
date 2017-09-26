@@ -41,6 +41,7 @@
 #include "Listener.h"
 #include "AgentUtil.h"
 #include "ClassDetail.h"
+#include "AsynchQueue.h"
 
 std::mutex _traffic_mutex;
 std::mutex _loading_mutex;
@@ -50,6 +51,7 @@ std::mutex _all_loaded_mutex;
 
 std::mutex _cache_mutex;
 
+frenchroast::AsynchQueue<std::string> _signalQueue;
 
 class ClassPtr {
 public:
@@ -320,6 +322,7 @@ void populate_stack( JNIEnv * jni_env, jvmtiFrameInfo* frames, int count, std::v
 
 JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass, jobject obj)
 {
+  
   jvmtiFrameInfo frames[10];
   jint count;
   jthread aThread;
@@ -404,12 +407,24 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
       outstr.append("~");
       outstr.append(stackstr);
 
-      _sig_mutex.lock();
-      _rptr.signal(outstr);
-      _sig_mutex.unlock();
+     
+      _signalQueue.push(outstr);
   }
   }
 
+
+
+void signal_sender()
+{
+  std::string signal;
+  while(1) {
+    _signalQueue.get(signal);
+    _rptr.signal(signal);
+        //std::this_thread::sleep_for(std::chrono::microseconds(300));
+  }
+
+  
+}
 
 bool profiler_predicate() 
 {
@@ -830,6 +845,11 @@ void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
   t2.detach();
   std::thread t3{reload_monitor};
   t3.detach();
+  std::thread t4{signal_sender};
+  t4.detach();
+
+  
+    
   std::cout << "********************************" << std::endl;
   std::cout << "  French-Roast: Agent running" << std::endl;
   std::cout << "********************************" << std::endl;
