@@ -21,6 +21,7 @@
 #define FRMON_H
 #include <unordered_map>
 #include <algorithm>
+#include <thread>
 #include <boost/lockfree/spsc_queue.hpp>
 #include "Connector.h"
 #include "Listener.h"
