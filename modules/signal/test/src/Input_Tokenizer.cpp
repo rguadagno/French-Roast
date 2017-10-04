@@ -17,9 +17,11 @@
 //    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <stdexcept>
 #include "catch.hpp"
 #include "fr_signals.h"
-#include <stdexcept>
+#include <iostream>
+
 
 
 using namespace frenchroast::signal;
@@ -81,6 +83,25 @@ TEST_CASE("load good descriptor <ENTER> and 2 fields")
   REQUIRE( sigs.get_marker_fields("Lmypackage/MyClass;", "funcA:(I)V")[1] == "pickle");
   
 }
+
+TEST_CASE("load good descriptor <ENTER> , all methods")
+{
+  frenchroast::signal::Signals sigs;
+  sigs.load("mypackage.MyClass::* <ENTER> ");
+  
+  REQUIRE( sigs.classes().size() == 1);
+  REQUIRE( sigs["mypackage/MyClass"].size() == 1);
+  REQUIRE( sigs["mypackage/MyClass"][0].method_name() == "*");
+  REQUIRE( sigs["mypackage/MyClass"][0].artifacts());
+  REQUIRE( sigs["mypackage/MyClass"][0].all());
+  REQUIRE( (sigs["mypackage/MyClass"][0].flags() &= Signals::METHOD_ENTER) == true);
+}
+
+
+
+
+
+
 TEST_CASE("load good descriptor <ENTER> and bad fields")
 {
   frenchroast::signal::Signals sigs;
@@ -114,4 +135,16 @@ TEST_CASE("junk line")
 }
 
 
+TEST_CASE("load good descriptor <ENTER> , turn off artifacts <ARTIFACTS:OFF>")
+{
+  frenchroast::signal::Signals sigs;
+  sigs.load("mypackage.MyClass::funcA:(int):void <ENTER> <ARTIFACTS:OFF>");
+  
+  REQUIRE( sigs.classes().size() == 1);
+  REQUIRE( sigs["mypackage/MyClass"].size() == 1);
+  REQUIRE( sigs["mypackage/MyClass"][0].method_name() == "funcA:(I)V");
+  REQUIRE( sigs["mypackage/MyClass"][0].artifacts() == false);
+  REQUIRE( sigs["mypackage/MyClass"][0].all() == false);
+  REQUIRE( (sigs["mypackage/MyClass"][0].flags() &= Signals::METHOD_ENTER) == true);
+}
 

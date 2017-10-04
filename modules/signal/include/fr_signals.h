@@ -45,13 +45,13 @@ namespace frenchroast { namespace signal {
     };
     
     class Signals {
-      std::regex  _fullRegex{"((?:[A-Za-z0-9_]+\\.)+[A-Za-z0-9]+)::([A-Za-z0-9_]+:\\([a-z]*\\):[a-z]+)(<ENTER>|<EXIT>|<TIMER>){1}((?:\\[[A-Za-z0-9_]+\\]){0,})"};
+      std::regex  _fullRegex{"((?:[A-Za-z0-9_]+\\.)+[A-Za-z0-9]+)::([A-Za-z0-9_\\*]+(?::\\([a-z]*\\):[a-z]+){0,})(<ENTER>|<EXIT>|<TIMER>){1}((?:\\[[A-Za-z0-9_]+\\]){0,})((?:<ARTIFACTS:OFF>){0,})"};
       std::regex  _methodRegex{"((?:[A-Za-z0-9_]+\\.)+[A-Za-z0-9]+)::([A-Za-z0-9_]+:\\([a-z]*\\):[a-z]+)(.*)"};
       static std::unordered_map<std::string, std::string>      _type_map;
       std::unordered_map<std::string,std::vector<Signal>>      _hlist;
       std::unordered_map<std::string,std::vector<std::string>> _markerFields;
       
-      void validate(const std::string& line, std::string& classstr,std::string& methodstr,std::string& flagstr,std::string& fieldstr);
+      void validate(const std::string& line, std::string& classstr,std::string& methodstr,std::string& flagstr,std::string& fieldstr, std::string& artifactStr);
       std::string convert_name(const std::string& name);
       std::vector<std::string> parse_token_types(const std::string& pstr);
       void parse_flags(std::bitset<4>& flags, std::string str);

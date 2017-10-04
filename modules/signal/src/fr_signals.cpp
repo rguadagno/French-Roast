@@ -198,7 +198,8 @@ namespace frenchroast { namespace signal {
       std::string methName;
       std::string flagStr;
       std::string fieldStr;
-      validate(line,classname, methName,flagStr, fieldStr);
+      std::string artifactStr;
+      validate(line,classname, methName,flagStr, fieldStr, artifactStr);
       replace(classname, '.', '/');
       std::bitset<4> flags;
       parse_flags(flags, flagStr);
@@ -213,7 +214,7 @@ namespace frenchroast { namespace signal {
       }
       _markerFields["L" + classname + ";" + methName] = fields;
       
-      _hlist[classname].push_back(Signal{methName, flags, true});
+      _hlist[classname].push_back(Signal{methName, flags, artifactStr.find("OFF") != std::string::npos ? false : true});
     }
 
     const std::vector<Signal>& Signals::operator[](const std::string& name) 
@@ -221,7 +222,7 @@ namespace frenchroast { namespace signal {
       return _hlist[name];
     }
     
-    void Signals::validate(const std::string& method, std::string& classStr, std::string& methodStr, std::string& flagStr,std::string& fieldStr)
+    void Signals::validate(const std::string& method, std::string& classStr, std::string& methodStr, std::string& flagStr,std::string& fieldStr, std::string& artifactStr)
     {
       std::smatch sm;
       std::regex_match(method,sm,_fullRegex);
@@ -237,12 +238,13 @@ namespace frenchroast { namespace signal {
       classStr = sm[1].str();
       methodStr = sm[2].str();
       flagStr = sm[3].str();
-      if(sm.size() == 5 && sm[4].str() != "") {
+      if(sm.size() >= 5 && sm[4].str() != "") {
         fieldStr = sm[4].str();
-        std::cout << "YES: "  << sm.size() << "  " << fieldStr << "-->" << method << std::endl;
       }
-      else
-        std::cout << "NO: "  << sm.size() << std::endl;
+      if(sm.size() == 6 && sm[5].str() != "") {
+        artifactStr = sm[5].str();
+      }
+
     }
 
     
