@@ -50,7 +50,7 @@ namespace frenchroast { namespace monitor {
       long long _last;
     };
 
-
+   
     template
     <typename T>
       class Monitor : public network::Listener {
@@ -64,8 +64,8 @@ namespace frenchroast { namespace monitor {
         std::unordered_map<std::string, std::unordered_map<std::string, StackReport>> _stacks;
         std::string                                                                   _opcodeFile;
         std::unordered_map<std::string, std::string>                                  _clients;
-        boost::lockfree::spsc_queue<std::string, boost::lockfree::fixed_sized<true>>  _iq{15000};
-
+        boost::lockfree::spsc_queue<std::string, boost::lockfree::capacity<60000>>  _iq;
+        int ggtotal = 0;
        const int IP_PORT     = 0;
        
        const int HOST_NAME   = 2;
@@ -96,8 +96,8 @@ namespace frenchroast { namespace monitor {
 
         void message(const std::string& msg)
         {
-          _iq.push(msg);
-          }
+          while(!_iq.push(msg));
+        }
         
         void mhandler()
         {
