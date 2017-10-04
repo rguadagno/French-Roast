@@ -26,10 +26,11 @@
 #include <atomic>
 #include <condition_variable>
 #include <unordered_set>
+#include <unordered_map>
 #include <map>
 #include "jvmti.h"
 #include "Agent.h"
-#include "Hooks.h"
+#include "fr_signals.h"
 #include "FrenchRoast.h"
 #include "OpCode.h"
 #include "Reporter.h"
@@ -181,7 +182,8 @@ std::vector<frenchroast::monitor::ClassDetail>                  _loadedClasses;
 std::unordered_map<std::string, FieldInfo> _reportingFields;
 frenchroast::OpCode                        _opcodes;
 frenchroast::FrenchRoast                   _fr{_opcodes};
-frenchroast::agent::Hooks                  _hooks;
+frenchroast::signal::Signals               _hooks;
+std::unordered_map<std::string, bool>      _artifacts;
 frenchroast::agent::Config                 _config;
 frenchroast::agent::Reporter               _rptr;
 CommandBridge                              _commandListener;
@@ -297,7 +299,8 @@ public:
 
 
 
-void populate_stack( JNIEnv * jni_env, jvmtiFrameInfo* frames, int count, std::vector<DescriptorVO>& rv )
+void populate_stack( JNIEnv * jni_env, jvmtiFrameInfo* frames, int count, std::vector<DescriptorVO>& rv,
+                     std::unordered_map<std::string, bool>& artifacts )
 {
   void* cacheid;
   char *methodName;
@@ -316,30 +319,17 @@ void populate_stack( JNIEnv * jni_env, jvmtiFrameInfo* frames, int count, std::v
     if(!get_class_name_fast(genv, theclass, &className)) continue;
     jni_env->DeleteLocalRef(theclass);
     rv.emplace_back(className, methodName, sig);
+    if(idx == 1 && !artifacts[rv[0].descriptor()]) {
+      return;
+    }
   }
 }
 
 
-JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass, jobject obj)
+void populate_artifacts(JNIEnv * ptr,   jvmtiFrameInfo* frames, jobject& obj, std::string& params, std::string& fieldValues, std::vector<DescriptorVO>& stack, jthread& aThread)
 {
-  
-  jvmtiFrameInfo frames[10];
-  jint count;
-  jthread aThread;
-
-  memset(frames, 0, sizeof(frames));         
-  if(!ErrorHandler::check_jvmti_error(genv->GetCurrentThread(&aThread),"GetCurrentThread")) return;
-  std::string tname;
-  if(!get_thread_name(ptr, genv, aThread, tname)) return;; 
-  if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(aThread, 0, sizeof(frames), frames, &count),"GetStackTrace")) return;
-  if (count >= 1) {
-    std::vector<DescriptorVO>  stack;
-    populate_stack(ptr, frames, count, stack);
-
-    std::string params = "(";
-    int slot = 0;
+      int slot = 0;
     jstring jsvalue;
-       
       for(auto& argtype : typeTokenizer(stack[0]._methodSignature)) {
         ++slot;
         switch(argtype) {
@@ -361,12 +351,11 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
           break;
         }
       }
-
+    
       if(params.length() > 1) {
         params.erase(params.length() -1 ,1);
       }
-      params.append(")");
-      std::string fieldValues = "";
+    
       
       if(_hooks.get_marker_fields(stack[0]._classSignature, std::string{stack[0]._methodName} + ":" + stack[0]._methodSignature).size() > 0) {
         jclass theclass;
@@ -385,7 +374,37 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
         
         ptr->DeleteLocalRef(theclass);
       }
-      
+
+}
+
+
+JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass, jobject obj)
+{
+  
+  jvmtiFrameInfo frames[10];
+  jint count;
+  jthread aThread;
+
+  memset(frames, 0, sizeof(frames));         
+  if(!ErrorHandler::check_jvmti_error(genv->GetCurrentThread(&aThread),"GetCurrentThread")) return;
+  std::string tname;
+  if(!get_thread_name(ptr, genv, aThread, tname)) return;; 
+  if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(aThread, 0, sizeof(frames), frames, &count),"GetStackTrace")) return;
+  if (count >= 1) {
+    std::vector<DescriptorVO>  stack;
+    populate_stack(ptr, frames, count, stack, _artifacts );
+
+    std::string params = "(";
+    std::string fieldValues = "";
+    if(_artifacts[stack[0].descriptor()]) {
+      populate_artifacts(ptr, frames, obj, params, fieldValues, stack, aThread);
+    }
+
+    params.append(")");
+    //----------------------------------------------------------------    
+
+
+    //----------------------------------------------------------------          
       std::string stackstr = "";
       std::string firstStr = stack[0].descriptor();
       for(auto& x : stack) {
@@ -396,21 +415,18 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
          genv->Deallocate((unsigned char*)x._classSignature);
       }
       
-      
-      std::string outstr = firstStr;
-      outstr.append("~");
-      outstr.append(tname);
-      outstr.append("~");
-      outstr.append(fieldValues);
-      outstr.append("~");
-      outstr.append(params);
-      outstr.append("~");
-      outstr.append(stackstr);
+      firstStr.append("~");
+      firstStr.append(tname);
+      firstStr.append("~");
+      firstStr.append(fieldValues);
+      firstStr.append("~");
+      firstStr.append(params);
+      firstStr.append("~");
+      firstStr.append(stackstr);
 
-     
-      _signalQueue.push(outstr);
+      _signalQueue.push(firstStr);
   }
-  }
+}
 
 
 
@@ -419,8 +435,7 @@ void signal_sender()
   std::string signal;
   while(1) {
     _signalQueue.get(signal);
-    _rptr.signal(signal);
-        //std::this_thread::sleep_for(std::chrono::microseconds(300));
+     _rptr.signal(signal);
   }
 
   
@@ -504,7 +519,8 @@ void remove_hooks(const std::string& sname, jvmtiEnv *env,jint*& new_class_data_
 
 void add_hooks(const std::string& sname, jvmtiEnv *env,jint*& new_class_data_len, unsigned char** new_class_data)
 {
-  for (auto& x : _hooks.get(sname)) {
+  for (auto& x : _hooks[sname]) {
+    _artifacts["L" + sname + ";::" + x.method_name()] = x.artifacts();
     if (x.line_number() > 0) {
       _fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
     }
@@ -577,7 +593,7 @@ void JNICALL
       track_class(sname);
 
     }
-    if (profiler_predicate() && _hooks.is_hook_class(sname) ) {
+    if (profiler_predicate() && _hooks.is_signal_class(sname) ) {
       if(!loaded) {
         _fr.load_from_buffer(class_data);
         loaded = true;
@@ -588,7 +604,7 @@ void JNICALL
        memcpy(_origClass[sname]._class_data, class_data,class_data_len);
     }
 
-    if(!profiler_predicate() && _hooks.is_hook_class(sname) && _all_loadedClasses.count(sname) == 1) {
+    if(!profiler_predicate() && _hooks.is_signal_class(sname) && _all_loadedClasses.count(sname) == 1) {
       _fr.load_from_buffer(class_data);
       remove_hooks(sname, env, new_class_data_len, new_class_data);
     }

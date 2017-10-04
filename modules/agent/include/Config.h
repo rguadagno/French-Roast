@@ -21,7 +21,7 @@
 #define RPT_H
 #include <string>
 #include "OpCode.h"
-#include "Hooks.h"
+#include "fr_signals.h"
 
 namespace frenchroast { namespace agent {
 
@@ -49,7 +49,7 @@ command_descriptor     <server>
       
     public:
       Config();
-      bool load(std::string, frenchroast::OpCode&, Hooks&);
+      bool load(std::string, frenchroast::OpCode&, frenchroast::signal::Signals&);
       std::string get_opcode_file() const;
       std::string get_hooks_file() const;
       const std::string& get_server_ip() const;

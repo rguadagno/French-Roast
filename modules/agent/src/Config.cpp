@@ -107,7 +107,7 @@ template
       return _serverPort;
     }
     
-    bool Config::load(std::string descriptor, frenchroast::OpCode& opcodes, Hooks& hooks)
+    bool Config::load(std::string descriptor, frenchroast::OpCode& opcodes, frenchroast::signal::Signals& hooks)
       {
 
         if(descriptor.find("server:") != std::string::npos) {
@@ -120,7 +120,7 @@ template
           conn.blocked_listen(new LocalListener<OpCode>(opcodes, conn));
           conn.connect_to_server(_serverip, _serverPort);
           conn.send_message("transmit-hooks");
-          conn.blocked_listen(new LocalListener<Hooks>(hooks, conn));
+          conn.blocked_listen(new LocalListener<frenchroast::signal::Signals>(hooks, conn));
           _serverRequired = true;
           return true;
         }

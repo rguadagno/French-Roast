@@ -1,4 +1,4 @@
-// copyright (c) 2016 Richard Guadagno
+// copyright (c) 2017 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -16,56 +16,61 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
+#include <regex>
+#include "fr_signals.h"
+#include "Util.h"
 
-#include "Hooks.h"
-#include "FrenchRoast.h"
+namespace frenchroast { namespace signal {
 
-namespace frenchroast { namespace agent {
-
-    Hook::Hook(const std::string& name, int lineno) : _name(name), _line(lineno)
+    Signal::Signal(const std::string& name, int lineno) : _name(name), _line(lineno)
     {
     }
 
-    Hook::Hook(const std::string& name, std::bitset<4> flags) : _name(name), _flags(flags), _line(0)
+    Signal::Signal(const std::string& name, std::bitset<4> flags, bool artifacts) : _name(name), _flags(flags), _line(0), _includeArtifacts(artifacts)
     {
       if(_name == "*") {
         _all = true;
       }
     }
-    
-    int Hook::line_number() const
+
+    int Signal::line_number() const
     {
       return _line;
     }
 
-    std::string Hook::method_name() const
+    std::string Signal::method_name() const
     {
       return _name;
     }
 
-    std::bitset<4> Hook::flags() const
+    std::bitset<4> Signal::flags() const
     {
       return _flags;
     }
 
-    bool Hook::all() const
+    bool Signal::all() const
     {
       return _all;
+    }
+
+    bool Signal::artifacts() const
+    {
+      return _includeArtifacts;
     }
     // -------------------------
 
 
-    const std::vector<std::string>& Hooks::get_marker_fields(const std::string& className, const std::string& key) 
+    const std::vector<std::string>& Signals::get_marker_fields(const std::string& className, const std::string& key) 
     {
       return _markerFields[className + key];
     }
     
-    bool Hooks::is_hook_class(const std::string& name) const
+    bool Signals::is_signal_class(const std::string& name) const
     {
       return _hlist.count(name) > 0;
     }
 
-    std::vector<std::string> Hooks::classes() const
+    std::vector<std::string> Signals::classes() const
     {
       std::vector<std::string> rv;
       for(auto& x : _hlist) {
@@ -75,7 +80,7 @@ namespace frenchroast { namespace agent {
     }
 
     
-    std::unordered_map<std::string, std::string> Hooks::_type_map {  {"int","I"},
+    std::unordered_map<std::string, std::string> Signals::_type_map {  {"int","I"},
                                                                      {"bool","Z"},
                                                                      {"void","V"},
                                                                      {"long","J"},
@@ -89,7 +94,7 @@ namespace frenchroast { namespace agent {
 
 
 
-    std::vector<std::string> Hooks::parse_token_types(const std::string& pstr)
+    std::vector<std::string> Signals::parse_token_types(const std::string& pstr)
     {
       std::vector<std::string> rv;
       std::string tstr = pstr;
@@ -119,7 +124,7 @@ namespace frenchroast { namespace agent {
     }
 
     
-    std::string Hooks::convert_name(const std::string& name)
+    std::string Signals::convert_name(const std::string& name)
     {
       if(name.find("*") != std::string::npos) {
         return "*";
@@ -141,26 +146,26 @@ namespace frenchroast { namespace agent {
 
 
 
-    void parse_flags(std::bitset<4>& flags, std::string str)
+    void Signals::parse_flags(std::bitset<4>& flags, std::string str)
     {
       for(auto& x : split(str,"|")) {
-        if ( x == "ENTER") {
-          flags |= frenchroast::FrenchRoast::METHOD_ENTER;
+        if ( x == "<ENTER>") {
+          flags |= METHOD_ENTER;
         }
-        else if (x == "EXIT") {
-          flags |= frenchroast::FrenchRoast::METHOD_EXIT;
+        else if (x == "<EXIT>") {
+          flags |= METHOD_EXIT;
       }
-        else if (x == "TIMER") {
-          flags |= frenchroast::FrenchRoast::METHOD_TIMER;
+        else if (x == "<TIMER>") {
+          flags |= METHOD_TIMER;
       }
         else {
-          throw std::invalid_argument("BAD flag: " + x);
+          throw std::invalid_argument("signal point missing( e.g. <ENTER>");
         }
       }
     }
 
    
-   void Hooks::load_from_file(const std::string& filename)
+   void Signals::load_from_file(const std::string& filename)
    {
       std::ifstream infile;
       try {
@@ -181,24 +186,23 @@ namespace frenchroast { namespace agent {
    }
 
                    
-    void Hooks::load(const std::string& pline)
+    void Signals::load(const std::string& pline)
     {
       std::string line{pline};
-      frenchroast::replace(line, " ", "");
+      remove_blanks(line);
       if (line[0] == '#' || line == "") {
         return;
       }
-      validate(line);
-      std::string classname = split(line, "::")[0];
+      std::string classname;
+
+      std::string methName;
+      std::string flagStr;
+      std::string fieldStr;
+      validate(line,classname, methName,flagStr, fieldStr);
       replace(classname, '.', '/');
-      std::string methName = split(split(line, '<')[0],"::")[1];
-      remove_blanks(methName);
-      methName = convert_name(methName);
-      std::string flagStr = split(split(line, '<')[1],">")[0];
       std::bitset<4> flags;
       parse_flags(flags, flagStr);
-      std::string fieldStr = split(line, '>')[1];
-      remove_blanks(fieldStr);
+      methName = convert_name(methName);
       std::vector<std::string> fields;
       for(auto& x : split(fieldStr, "][")) {
         replace(x, '[');
@@ -207,31 +211,45 @@ namespace frenchroast { namespace agent {
           fields.push_back(x);
         }
       }
-      
       _markerFields["L" + classname + ";" + methName] = fields;
-      _hlist[classname].push_back(Hook{methName, flags});
+      
+      _hlist[classname].push_back(Signal{methName, flags, true});
     }
 
-    const std::vector<Hook>& Hooks::get(const std::string& name) 
+    const std::vector<Signal>& Signals::operator[](const std::string& name) 
     {
       return _hlist[name];
     }
     
-    void Hooks::validate(const std::string& method)
+    void Signals::validate(const std::string& method, std::string& classStr, std::string& methodStr, std::string& flagStr,std::string& fieldStr)
     {
-      if (method.find("::") == std::string::npos) {
-        throw std::invalid_argument{"bad method name: " + method};
+      std::smatch sm;
+      std::regex_match(method,sm,_fullRegex);
+      if(sm.size() < 4 ) {
+        std::regex_match(method,sm,_methodRegex);
+        if(sm.size() == 4) {
+          throw std::invalid_argument{"signal point bad/missing: " + sm[3].str()};
+        }
+        else {
+          throw std::invalid_argument{"bad method descriptor: " + method};
+        }
       }
-      
-      if (method.find(":(") == std::string::npos && method.find("::*") == std::string::npos) {
-        throw std::invalid_argument{"bad method name: " + method};
+      classStr = sm[1].str();
+      methodStr = sm[2].str();
+      flagStr = sm[3].str();
+      if(sm.size() == 5 && sm[4].str() != "") {
+        fieldStr = sm[4].str();
+        std::cout << "YES: "  << sm.size() << "  " << fieldStr << "-->" << method << std::endl;
       }
-      
-      if (method.find("<") == std::string::npos) {
-        throw std::invalid_argument{"bad method name: " + method};
-      }
-      
+      else
+        std::cout << "NO: "  << sm.size() << std::endl;
     }
+
+    
+    const std::bitset<4> frenchroast::signal::Signals::METHOD_ENTER{"0001"};
+    const std::bitset<4> frenchroast::signal::Signals::METHOD_EXIT {"0010"};
+    const std::bitset<4> frenchroast::signal::Signals::METHOD_TIMER{"0100"};
+
 
   }
 }
