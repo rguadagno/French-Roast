@@ -30,14 +30,12 @@
 
 int main(int argc, char* argv[]) {
 
-  QApplication app(argc,argv);
+
   if (argc != 3 && argc != 4) {
-    QMessageBox box;
-    box.setText("usage: roaster <ip> <port> [path to hooks file]\nexample: roaster 127.0.0.1 6060 /home/richg/code/hooks.txt");
-    box.exec();
+    std::cout << "usage: roaster <ip> <port> [path to hooks file]\nexample: roaster 127.0.0.1 6060 /home/richg/code/hooks.txt" << std::endl;
     exit(0);
   }
-
+  QApplication app(argc,argv);
   QSettings config{frenchroast::monitor::get_env_variable("INI_FULL_PATH","example /home/richg/French-Roast/modules/gui/config/fr.ini"), QSettings::IniFormat};
   std::string path_to_opcodes = frenchroast::monitor::get_env_variable("OPCODES_FULL_PATH","example /home/richg/French-Roast/modules/instrumentation/opcodes.txt");
   
