@@ -22,6 +22,7 @@ INCLUDEPATH += \
 ../../network/include \
 ../../agent/include \
 ../../instrumentation/include \
+../../signal/include \
 ../../monitor/include
 
 INCLUDEPATH += $(BOOST_ROOT)
@@ -30,8 +31,9 @@ QT += core gui widgets
 # Input
 SOURCES += \
 ../src/*.cpp \
-../../agent/src/HookValidator.cpp  \
 ../../instrumentation/src/Util.cpp \
+../../signal/src/fr_signals.cpp \
+../../signal/src/SignalValidator.cpp \
 ../../monitor/src/Monitor.cpp \
 ../../monitor/src/StackTrace.cpp \
 ../../monitor/src/MonitorUtil.cpp \

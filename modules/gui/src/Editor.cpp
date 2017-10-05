@@ -24,7 +24,7 @@
 #include "Editor.h"
 #include "CodeFont.h"
 #include "HooksSyntax.h"
-#include "HookValidator.h"
+#include "SignalValidator.h"
 #include "Util.h"
 
 namespace frenchroast {
@@ -96,7 +96,7 @@ namespace frenchroast {
     int xline = 0;
     int total = 0;
     for(auto& line : hooks) {
-      frenchroast::agent::HookValidatorStatus status = frenchroast::agent::validate_hook(line);
+      frenchroast::signal::SignalValidationStatus status = _validator.validate_no_throw(line);
       if(!status) {
         validated = false;
         MessageItem* item = new MessageItem(status.msg(), xline);

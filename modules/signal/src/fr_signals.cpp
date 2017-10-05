@@ -16,7 +16,7 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
-#include <regex>
+
 #include "fr_signals.h"
 #include "Util.h"
 
@@ -199,7 +199,7 @@ namespace frenchroast { namespace signal {
       std::string flagStr;
       std::string fieldStr;
       std::string artifactStr;
-      validate(line,classname, methName,flagStr, fieldStr, artifactStr);
+      _validator.validate(line,classname, methName,flagStr, fieldStr, artifactStr);
       replace(classname, '.', '/');
       std::bitset<4> flags;
       parse_flags(flags, flagStr);
@@ -222,30 +222,6 @@ namespace frenchroast { namespace signal {
       return _hlist[name];
     }
     
-    void Signals::validate(const std::string& method, std::string& classStr, std::string& methodStr, std::string& flagStr,std::string& fieldStr, std::string& artifactStr)
-    {
-      std::smatch sm;
-      std::regex_match(method,sm,_fullRegex);
-      if(sm.size() < 4 ) {
-        std::regex_match(method,sm,_methodRegex);
-        if(sm.size() == 4) {
-          throw std::invalid_argument{"signal point bad/missing: " + sm[3].str()};
-        }
-        else {
-          throw std::invalid_argument{"bad method descriptor: " + method};
-        }
-      }
-      classStr = sm[1].str();
-      methodStr = sm[2].str();
-      flagStr = sm[3].str();
-      if(sm.size() >= 5 && sm[4].str() != "") {
-        fieldStr = sm[4].str();
-      }
-      if(sm.size() == 6 && sm[5].str() != "") {
-        artifactStr = sm[5].str();
-      }
-
-    }
 
     
     const std::bitset<4> frenchroast::signal::Signals::METHOD_ENTER{"0001"};

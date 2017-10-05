@@ -17,29 +17,39 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef HOOKVALID_H
-#define HOOKVALID_H
+#ifndef SIGVALID_H
+#define SIGVALID_H
 
 #include <string>
+#include <regex>
 
-namespace frenchroast { namespace agent {
-
-  class HookValidatorStatus {
+namespace frenchroast { namespace signal {
+  class SignalValidationStatus {
     std::string _msg;
     bool _valid{true};
     bool _isComment{false};
   public:
-    explicit HookValidatorStatus(bool comment);
-    explicit HookValidatorStatus(const char*  errorMsg);
+    explicit SignalValidationStatus(bool comment);
+    explicit SignalValidationStatus(const char*  errorMsg);
     bool valid();
     bool is_comment();
     const std::string& msg();
     operator bool();
   };
 
-  HookValidatorStatus validate_hook(const std::string& line);
+    
+    class SignalValidator {
+      std::regex  _fullRegex{"((?:[A-Za-z0-9_]+\\.)+[A-Za-z0-9]+)::([A-Za-z0-9_\\*]+(?::\\([a-z]*\\):[a-z]+){0,})(<ENTER>|<EXIT>|<TIMER>){1}((?:\\[[A-Za-z0-9_]+\\]){0,})((?:<ARTIFACTS:OFF>){0,})"};
+      std::regex  _methodRegex{"((?:[A-Za-z0-9_]+\\.)+[A-Za-z0-9]+)::([A-Za-z0-9_]+:\\([a-z]*\\):[a-z]+)(.*)"};
 
-}
-}
 
+    public:
+      void validate(const std::string& line, std::string& classstr,std::string& methodstr,std::string& flagstr,std::string& fieldstr, std::string& artifactStr);
+      SignalValidationStatus validate_no_throw(const std::string& line);
+    };
+
+    
+  }
+}
 #endif
+    

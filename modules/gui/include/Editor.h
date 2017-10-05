@@ -25,7 +25,7 @@
 #include <QListWidget>
 #include <QSettings>
 #include "FViewer.h"
-
+#include "SignalValidator.h"
 
 
 namespace frenchroast {
@@ -45,6 +45,7 @@ namespace frenchroast {
     bool          _changesToSave{false};
     std::unordered_map<std::string, std::string> _signals;
     ActionButton* _bsave;
+    frenchroast::signal::SignalValidator _validator;
     void add(QString);
     
   public:

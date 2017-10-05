@@ -20,6 +20,7 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     ../../monitor/src/ClassDetail.cpp
     ../../network/src/FRSocket.cpp
     ../../signal/src/fr_signals.cpp
+    ../../signal/src/SignalValidator.cpp
     ../../network/src/Connector.cpp)	
     find_package(Threads)
     add_definitions("-std=c++14")
@@ -34,7 +35,8 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     ../../instrumentation/src/*.cpp
     ../../monitor/src/ClassDetail.cpp
     ../../network/src/FRSocket.cpp
-    ../../signal/src/fr_signals.cpp    
+    ../../signal/src/fr_signals.cpp
+    ../../signal/src/SignalValidator.cpp    
     ../../network/src/Connector.cpp)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
 #    add_definitions(${CMAKE_CXX_FLAGS})
