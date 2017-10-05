@@ -57,14 +57,14 @@ namespace frenchroast {
     std::vector<std::string> lines() const;
     
   signals:
-    void validated_hooks(std::vector<std::string>, const std::string& forIPPORT);
+    void validated_signals(std::vector<std::string>);
     void changed();
 
     private slots:
       void contents_changed();
       void goto_error_line(QListWidgetItem*);
   public slots:
-      void validate_hooks(const std::string& forIPPORT = "none");
+      void validate_signals();
       void load_from_file(const std::string&);
       void save();
       void save_as(const std::string&);

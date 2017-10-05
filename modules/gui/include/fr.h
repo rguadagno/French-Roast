@@ -21,6 +21,7 @@
 #define FRLIST_H
 
 #include <unordered_map>
+#include <vector>
 #include <string>
 #include <QApplication>
 #include <QLabel>
@@ -55,7 +56,7 @@ class FRListener : public QObject
     std::string _ip;
     int         _port;
     int         _trafficRate{-1};
-    bool        _hooks_request{false};
+    std::vector<std::string>     _signal_requests;
 
   public:
     FRListener(const std::string ip, int port, const std::string& opcodFile);
@@ -73,7 +74,7 @@ class FRListener : public QObject
     void init();
     void start_traffic(int);
     void stop_traffic();
-    void validated_hooks(std::vector<std::string>, const std::string& ipport);
+    void validated_signals(std::vector<std::string>);
     void start_watch_loading();
     void stop_watch_loading();
     void class_watch(const std::vector<frenchroast::monitor::ClassDetail>& details);
@@ -82,7 +83,7 @@ class FRListener : public QObject
     void reset();
     
   signals:
-    void send_hooks(const std::string& ipport);
+    void send_signals();
     void method_ranking(std::vector<frenchroast::monitor::MethodStats>);
     void thooked(const std::string& info,const std::string& tname, int count, const std::vector<std::string>&, const std::vector<std::string>&, const std::vector<frenchroast::monitor::MarkerField>&,  std::unordered_map<std::string, frenchroast::monitor::StackReport>);
     void timersignal(const std::string& info, const std::string& tname, long elapsed);

@@ -64,7 +64,7 @@ namespace frenchroast {
     }
     _bsave = new ActionButton("Save", false);
     QObject::connect(_actionBar->add(_bsave) ,     &ActionButton::request, this, &frenchroast::Editor::save);
-    QObject::connect(_actionBar->add(new ActionButton("Validate")) , &ActionButton::request, this, &frenchroast::Editor::validate_hooks);
+    QObject::connect(_actionBar->add(new ActionButton("Validate")) , &ActionButton::request, this, &frenchroast::Editor::validate_signals);
     QObject::connect(_edit->document(), &QTextDocument::contentsChange,  this,    [&]() {     _changesToSave = true; _bsave->enable(); });
     QObject::connect(_message,          &QListWidget::itemDoubleClicked, this,    &Editor::goto_error_line);
   }
@@ -87,15 +87,15 @@ namespace frenchroast {
   }
 
 
-  void Editor::validate_hooks(const std::string& forIPPORT)
+  void Editor::validate_signals()
   {
     _message->clear();
     bool validated = true;
     std::string outstr = _edit->document()->toPlainText().toStdString();
-    std::vector<std::string> hooks{frenchroast::split(outstr, "\n")};
+    std::vector<std::string> signals_from_editor{frenchroast::split(outstr, "\n")};
     int xline = 0;
     int total = 0;
-    for(auto& line : hooks) {
+    for(auto& line : signals_from_editor) {
       frenchroast::signal::SignalValidationStatus status = _validator.validate_no_throw(line);
       if(!status) {
         validated = false;
@@ -122,8 +122,8 @@ namespace frenchroast {
        item->setForeground(QColor("#443355"));
        item->setFont(CodeFont());
        _message->addItem(item);
-       validated_hooks(hooks, forIPPORT);
-    }
+       validated_signals(signals_from_editor);
+       }
   }
 
   void Editor::load_from_file(const std::string& filename)

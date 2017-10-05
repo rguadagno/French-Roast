@@ -41,15 +41,15 @@ FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settin
 }
 
 
-void FRMain::validate_hooks(const std::string& ipport)
+void FRMain::validate_signals()
 {
   if(Editor::up()) {
     Editor::instance(this)->bring_to_top();
   }
   else {
-    QObject::connect(Editor::instance(this), &frenchroast::Editor::validated_hooks,  this,    &FRMain::validated_hooks);
+    QObject::connect(Editor::instance(this), &frenchroast::Editor::validated_signals,  this,    &FRMain::validated_signals);
   }
-  Editor::instance(this)->validate_hooks(ipport);
+  Editor::instance(this)->validate_signals();
 }
 
 
@@ -180,7 +180,7 @@ void FRMain::view_hooks_editor()
     Editor::instance(this)->bring_to_top();
   }
   else {
-    QObject::connect(Editor::instance(this), &frenchroast::Editor::validated_hooks,  this,    &FRMain::validated_hooks);
+    QObject::connect(Editor::instance(this), &frenchroast::Editor::validated_signals,  this,    &FRMain::validated_signals);
     connect_common_listeners(Editor::instance(this));
   }
 }
