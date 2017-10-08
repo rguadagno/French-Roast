@@ -3,6 +3,10 @@ project(monitor)
 
 set(JAVA_INCLUDE_DIR "$ENV{JAVA_INCLUDE_DIR}")
 set(JAVA_INCLUDE_DIR2 "$ENV{JAVA_INCLUDE_DIR2}")
+set(BOOST_ROOT "$ENV{BOOST_ROOT}")
+if(NOT BOOST_ROOT)
+  message(FATAL_ERROR "env variables BOOST_ROOT must be defined.")
+endif()
 if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
   include(GenerateExportHeader)
   include_directories(
@@ -11,6 +15,7 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
   ../../network/include
   ../../monitor/include
   ../../signal/include
+  ${BOOST_ROOT}
   ${JAVA_INCLUDE_DIR}
   ${JAVA_INCLUDE_DIR2})
   if (UNIX)

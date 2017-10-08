@@ -30,15 +30,11 @@ namespace frenchroast { namespace agent {
     class Reporter {
       Transport* _ptr;
     public:
-      void traffic(const std::string& tag);
-      void loaded_classes(std::vector<frenchroast::monitor::ClassDetail> details);
       void ready();
       void setTransport(Transport* ptr);
       void signal(const std::string& tag);
-      void signal_timer(long long time, const std::string& direction, const std::string& tag, const std::string threadname);
       void close();
       void unloaded(const std::string& msg);
-      void jammed(const std::string& monitor, const std::string& waiter, const std::string& owner);
 
     };
 

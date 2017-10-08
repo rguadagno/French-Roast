@@ -28,6 +28,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <map>
+#include <boost/lockfree/queue.hpp>
 #include "jvmti.h"
 #include "Agent.h"
 #include "fr_signals.h"
@@ -42,7 +43,6 @@
 #include "Listener.h"
 #include "AgentUtil.h"
 #include "ClassDetail.h"
-#include "AsynchQueue.h"
 
 std::mutex _traffic_mutex;
 std::mutex _loading_mutex;
@@ -51,8 +51,7 @@ std::mutex _profiler_mutex;
 std::mutex _all_loaded_mutex;
 
 std::mutex _cache_mutex;
-
-frenchroast::AsynchQueue<std::string> _signalQueue;
+boost::lockfree::queue<std::string*> _signalQueue{10000};
 
 class ClassPtr {
 public:
@@ -187,8 +186,6 @@ std::unordered_map<std::string, bool>      _artifacts;
 frenchroast::agent::Config                 _config;
 frenchroast::agent::Reporter               _rptr;
 CommandBridge                              _commandListener;
-std::mutex                                 _sig_mutex;
-std::mutex                                 _sig_time_mutex;
 
 jvmtiEnv* genv;
 JavaVM*   g_java_vm;
@@ -225,9 +222,21 @@ JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass obj
       err = genv->GetClassSignature(theclass, &sig,&generic);
       std::string classinfo{sig};
 
-      _sig_time_mutex.lock();
-      _rptr.signal_timer(stime, std::string(ptr->GetStringUTFChars(tag,0)), classinfo +"::" + methodNameStr + ":" +sigStr, std::string(ptr->GetStringUTFChars(tname,0)));
-      _sig_time_mutex.unlock();
+      std::string* str = new std::string{};
+      str->append("signaltimer~");
+      str->append(std::to_string(stime));
+      str->append("~");
+      str->append(std::string(ptr->GetStringUTFChars(tag,0)));
+      str->append("~");
+      str->append(classinfo);
+      str->append("::");
+      str->append(methodNameStr);
+      str->append(":");
+      str->append(sigStr);
+      str->append("~");
+      str->append(std::string(ptr->GetStringUTFChars(tname,0)));
+      _signalQueue.push(str);
+
     }
   }
 }
@@ -406,7 +415,10 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
 
     //----------------------------------------------------------------          
       std::string stackstr = "";
-      std::string firstStr = stack[0].descriptor();
+      std::string* firstStr = new std::string{"signal~"};
+      firstStr->append(stack[0].descriptor());
+
+      
       for(auto& x : stack) {
          stackstr.append(x.descriptor());
          stackstr.append("%");
@@ -415,14 +427,14 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
          genv->Deallocate((unsigned char*)x._classSignature);
       }
       
-      firstStr.append("~");
-      firstStr.append(tname);
-      firstStr.append("~");
-      firstStr.append(fieldValues);
-      firstStr.append("~");
-      firstStr.append(params);
-      firstStr.append("~");
-      firstStr.append(stackstr);
+      firstStr->append("~");
+      firstStr->append(tname);
+      firstStr->append("~");
+      firstStr->append(fieldValues);
+      firstStr->append("~");
+      firstStr->append(params);
+      firstStr->append("~");
+      firstStr->append(stackstr);
 
       _signalQueue.push(firstStr);
   }
@@ -432,10 +444,13 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
 
 void signal_sender()
 {
-  std::string signal;
+  std::string* signal;
   while(1) {
-    _signalQueue.get(signal);
-     _rptr.signal(signal);
+    while(_signalQueue.pop(signal)) {
+      _rptr.signal(*signal);
+      delete signal;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
   }
 
   
@@ -629,9 +644,15 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   delete_refs(jni_env, monitorInfo.notify_waiters, monitorInfo.notify_waiter_count);
   env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.waiters));
   env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
-  _sig_mutex.lock();
-  _rptr.jammed(monitorStr, waiterStr, ownerStr);
-  _sig_mutex.unlock();
+
+  std::string* str = new std::string{"jammed~"};
+  str->append("~");
+  str->append(monitorStr);
+  str->append("~");
+  str->append(waiterStr);
+  str->append("~");
+  str->append(ownerStr);
+  _signalQueue.push(str);
 }
 
 
@@ -660,7 +681,7 @@ void traffic_monitor()
 
   int counter=0;
   int elapsed=0;
-  std::string rv = "";
+  std::string* rv;
   jthread thd;
 
   std::unordered_map<long long,struct jni_cache> cache;
@@ -685,7 +706,7 @@ void traffic_monitor()
 
     if(!ErrorHandler::check_jvmti_error(genv->GetAllThreads(&thread_count, &threads),"GetAllThreads")) continue;
 
-    rv = "";
+    rv = new std::string{"traffic~"};
     for(int idx = 0; idx < thread_count; idx++) {
       monmap.clear();
       thd = *(threads + idx);
@@ -728,8 +749,8 @@ void traffic_monitor()
         continue;
       }
       if (frame_count >= 1) {
-        rv.append(tname);
-        rv.append("^");
+        rv->append(tname);
+        rv->append("^");
         genv->Deallocate((unsigned char *)tname);
       }
       else {
@@ -758,30 +779,31 @@ void traffic_monitor()
           if(!get_class_name_fast(genv, theclass, &className)) continue;
           jni_env->DeleteLocalRef(theclass);
         }
-        rv.append((monmap.find(fidx) != monmap.end() ? "1!" : "0!"));
-        rv.append(className + 1);
-        rv.append( "::");
+        rv->append((monmap.find(fidx) != monmap.end() ? "1!" : "0!"));
+        rv->append(className + 1);
+        rv->append( "::");
 
-        rv.append(methodName);
-        rv.append(":");
-        rv.append(sig);
-        rv.append("#");
+        rv->append(methodName);
+        rv->append(":");
+        rv->append(sig);
+        rv->append("#");
      
         if(!found) {
           cache[cacheid] = {methodName, sig,className};
         }
         }
-      rv.erase(rv.end() -1);
-      rv += "%";
+      rv->erase(rv->end() -1);
+      rv->append("%");
       jni_env->DeleteLocalRef(thd);
     }
     genv->Deallocate((unsigned char *)threads);
      
-    if(rv.size() > 1) {
-      rv.erase(rv.end() -1);
-      _sig_mutex.lock();
-      _rptr.traffic(rv);
-      _sig_mutex.unlock();
+    if(rv->size() > 1) {
+      rv->erase(rv->end() -1);
+      _signalQueue.push(rv);
+    }
+    else {
+      delete rv;
     }
     
     if (!traffic_predicate()) {
@@ -822,10 +844,18 @@ void class_loading_monitor()
   }
 
   while(1) {
-    _sig_mutex.lock();
-    _rptr.loaded_classes(_loadedClasses);
-    _loadedClasses.clear();
-    _sig_mutex.unlock();
+    if(_loadedClasses.size() > 0 ) {
+      std::string* str = new std::string{"loaded~"};
+      for(auto& citem : _loadedClasses) {
+        str->append(citem.name() + "^[");
+        for(auto& meth : citem.methods()) {
+          str->append(meth + "%");
+        }
+        str->append("]^");
+      }
+      _signalQueue.push(str);
+      _loadedClasses.clear();
+    }
     
     if (!loading_watch_predicate()) {
       std::unique_lock<std::mutex> lck{_loading_mutex};

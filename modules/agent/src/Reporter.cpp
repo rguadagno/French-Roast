@@ -29,41 +29,9 @@ namespace frenchroast { namespace agent {
       _ptr = ptr;
     }
 
-
-    void Reporter::loaded_classes(std::vector<frenchroast::monitor::ClassDetail> details)
-    {
-      if(details.size() == 0) return;
-
-      std::string outstr = "";
-      for(auto& citem : details) {
-        outstr.append(citem.name() + "^[");
-        for(auto& meth : citem.methods()) {
-          outstr.append(meth + "%");
-        }
-        outstr.append("]^");
-      }
-      
-      _ptr->out("loaded~" + outstr);
-    }
-    
     void Reporter::signal(const std::string& tag)
     {
-      _ptr->out("signal~" + tag);
-    }
-
-    void Reporter::traffic(const std::string& tag)
-    {
-      _ptr->out("traffic~" + tag);
-    }
-    
-    void Reporter::jammed(const std::string& monitor, const std::string& waiter, const std::string& owner)
-    {
-      _ptr->out("jammed~" + monitor + "~" + waiter + "~" + owner);
-    }
-    
-    void Reporter::signal_timer(long long xtime, const std::string& direction, const std::string& tag, const std::string threadname)
-    {
-      _ptr->out("signaltimer~" + std::to_string(xtime) +"~" + direction + "~" + tag + "~" + threadname);
+      _ptr->out(tag);
     }
 
     void Reporter::unloaded(const std::string& msg)
