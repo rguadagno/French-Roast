@@ -13,8 +13,11 @@ isEmpty(BOOST_ROOT) {
  win32 {
  LIBS +=  ws2_32.lib
  CONFIG += c++11
+# QMAKE_CXXFLAGS += -O2
  }
 
+
+ 
 TEMPLATE = app
 TARGET = roaster
 INCLUDEPATH += \

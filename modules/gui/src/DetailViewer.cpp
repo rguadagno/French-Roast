@@ -39,7 +39,6 @@ DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FVi
   _actionBar = new ActionBar(ActionBar::Close);
   _argData = new QTableWidget;
   _argData->setStyleSheet(_settings->value("traffic_grid_style").toString());
-  _argData->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
   _argData->verticalHeader()->hide();
   _argData->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   QWidget* holder = new QWidget();
@@ -54,7 +53,6 @@ DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FVi
   vlayout->setSpacing(0);
   _stackData = new QTableWidget();
   _stackData->setStyleSheet(_settings->value("traffic_grid_style").toString());
-  _stackData->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
   _stackData->horizontalHeader()->setStyleSheet("QTableWidget::item {background: #202020;}");
   _stackData->verticalHeader()->hide();
   _stackData->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -79,12 +77,22 @@ DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FVi
   setup_dockwin(descriptor, tab, true);
 }
 
-void DetailViewer::update(const std::string& descriptor, const DetailHolder& holder)
-{
+  void DetailViewer::update(const std::string& descriptor, DetailHolder* holder, MarkerField mf)
+  {
   if(_descriptor != descriptor) return;
 
-  update_title(std::to_string(holder._count) + "  " + _descriptor);
-  for(auto& x : holder._stacks) {
+  std::unordered_map<std::string,MarkerField>* markers = holder->_markers;
+  std::unordered_map<std::string,MarkerField>  mapmarkers;
+  
+  
+  if(mf._count > -1) {
+    mapmarkers[mf._descriptor] = mf;
+    markers = &mapmarkers;
+  }
+
+  
+  update_title(std::to_string(holder->_count) + "  " + _descriptor);
+  for(auto& x : holder->_stacks) {
     if(_items.count(x.second.key()) == 1) {
       _items[x.second.key()]->setText(  QString::fromStdString(std::to_string(x.second.count())));
     }
@@ -104,14 +112,13 @@ void DetailViewer::update(const std::string& descriptor, const DetailHolder& hol
   }
   
   if(_argData->rowCount() == 0) {
-
     _argData->insertColumn(0);
     _argData->insertColumn(0);
     _argData->setHorizontalHeaderItem(0, createItem("invoked"));
     _argData->setHorizontalHeaderItem(1,createItem("("));
     
     int colidx = 2;
-    for(auto& x : holder._argHeaders) {
+    for(auto& x : holder->_argHeaders) {
       _argData->insertColumn(colidx);
       _argData->setHorizontalHeaderItem(colidx++,createItem(x));
     }
@@ -119,14 +126,15 @@ void DetailViewer::update(const std::string& descriptor, const DetailHolder& hol
     _argData->insertColumn(colidx);
     _argData->setHorizontalHeaderItem(colidx++,createItem(")"));
 
-    for(auto& x : holder._instanceHeaders) {
+    for(auto& x : holder->_instanceHeaders) {
       _argData->insertColumn(colidx);
       _argData->setHorizontalHeaderItem(colidx++,createItem(x));
     }
   }
 
 
-  for(auto& item : holder._markers) {
+  for(auto& xitem : *markers ) {
+    auto& item = xitem.second;
   if(_detailItems.count(item._descriptor) == 0 ) {
     if(item._count > 1) {
       int currRow = _argData->rowCount();

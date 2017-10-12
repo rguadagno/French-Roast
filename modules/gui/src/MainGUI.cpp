@@ -18,6 +18,7 @@
 //
 
 #include <string>
+#include <unordered_map>
 #include "fr.h"
 #include "FRMain.h"
 #include "MonitorUtil.h"
@@ -192,12 +193,11 @@ void FRMain::add_hook(QString txt)
 
 void FRMain::show_detail(const std::string& descriptor)
 {
-  std::cout << "SHOW DETAL" << std::endl;
   DetailViewer* dv = DetailViewer::instance(this, descriptor);
   QObject::connect(this, &FRMain::update_detail_list, dv, &DetailViewer::update);
   QDockWidget* dock = *frenchroast::FSignalViewer::instance(this);
   dv->move(dock->x() + 50, dock->y() + 50 ); 
-  update_detail_list(descriptor, _detailDescriptors[descriptor]);
+  update_detail_list(descriptor, &_detailDescriptors[descriptor], MarkerField{});
 }
 
 void FRMain::update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>& details)
@@ -231,7 +231,7 @@ void FRMain::method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks
 
 void FRMain::update_list(std::string  descriptor, std::string tname, int count,
                          const std::vector<std::string> argHeaders,  const std::vector<std::string> instanceHeaders, 
-                         const std::vector<frenchroast::monitor::MarkerField> markers, std::unordered_map<std::string, frenchroast::monitor::StackReport> stacks)
+                         const frenchroast::monitor::MarkerField marker, std::unordered_map<std::string, frenchroast::monitor::StackReport> stacks)
 {
   if(_exit) return;
 
@@ -240,9 +240,12 @@ void FRMain::update_list(std::string  descriptor, std::string tname, int count,
   frenchroast::monitor::pad(tname, 10);
 
   descriptor = tname + descriptor;
-  _detailDescriptors[descriptor] = DetailHolder{count, argHeaders, instanceHeaders, markers, stacks};
+   _markers[descriptor][marker._descriptor] = marker; 
+  
+   _detailDescriptors[descriptor] = DetailHolder{count, argHeaders, instanceHeaders,_markers[descriptor], stacks};
+
   frenchroast::FSignalViewer::instance(this)->update_count(descriptor, count);
-  update_detail_list(descriptor, _detailDescriptors[descriptor]);
+  update_detail_list(descriptor, &_detailDescriptors[descriptor],marker);
   
 }
 

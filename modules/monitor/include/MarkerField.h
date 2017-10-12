@@ -23,11 +23,13 @@
 namespace frenchroast { namespace monitor {
     class MarkerField {
     public:
-      MarkerField(std::string desc, int count) : _descriptor(desc), _count(count) {}
+      MarkerField(std::string desc, int count = 1) : _descriptor(desc), _count(count) {}
+    MarkerField() : _count(-1) {}
       std::string _descriptor;
       int         _count;
       std::vector<std::string> _arg_items;
       std::vector<std::string> _instance_items;
+      MarkerField& operator++() { ++_count; return *this; }
     };
   }
 }

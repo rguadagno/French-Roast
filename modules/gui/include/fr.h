@@ -40,7 +40,9 @@ Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::StackTrace>);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::MarkerField>);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::MethodStats>);
 using SRType =   std::unordered_map<std::string, frenchroast::monitor::StackReport>;
+
 Q_DECLARE_METATYPE(SRType);
+Q_DECLARE_METATYPE(MarkerField);
 Q_DECLARE_METATYPE(DetailHolder);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::ClassDetail>);
 Q_DECLARE_METATYPE(frenchroast::monitor::JammedReport);
@@ -61,7 +63,7 @@ class FRListener : public QObject
   public:
     FRListener(const std::string ip, int port, const std::string& opcodFile);
     int getCount(const std::string& item);
-    void signal(const std::string& tag, const std::string& tname, int count,  std::vector<std::string>,std::vector<std::string>, std::vector<frenchroast::monitor::MarkerField>, std::unordered_map<std::string, frenchroast::monitor::StackReport>);
+    void signal(const std::string& tag, const std::string& tname, int count,  std::vector<std::string>,std::vector<std::string>, frenchroast::monitor::MarkerField, std::unordered_map<std::string, frenchroast::monitor::StackReport>);
     void traffic(std::vector<frenchroast::monitor::StackTrace>);
     void signal_timed(const std::string& tag, const std::string& tname, long elapsed, int last);
     void connected(const std::string& host, const std::string& pid);
@@ -85,7 +87,7 @@ class FRListener : public QObject
   signals:
     void send_signals();
     void method_ranking(std::vector<frenchroast::monitor::MethodStats>);
-    void thooked(const std::string& info,const std::string& tname, int count, const std::vector<std::string>&, const std::vector<std::string>&, const std::vector<frenchroast::monitor::MarkerField>&,  std::unordered_map<std::string, frenchroast::monitor::StackReport>);
+    void thooked(const std::string& info,const std::string& tname, int count, const std::vector<std::string>&, const std::vector<std::string>&, const frenchroast::monitor::MarkerField&,  std::unordered_map<std::string, frenchroast::monitor::StackReport>);
     void timersignal(const std::string& info, const std::string& tname, long elapsed);
     void remoteconnected(const std::string& host, const std::string& pid);
     void remoteunloaded(const std::string& host, const std::string& pid);

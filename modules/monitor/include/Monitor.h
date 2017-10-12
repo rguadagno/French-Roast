@@ -60,12 +60,13 @@ namespace frenchroast { namespace monitor {
         std::unordered_map<std::string, int>                                          _signals;
         std::unordered_map<std::string, MethodStats>                                  _method_counters;
         std::unordered_map<std::string, JammedReport>                                 _jammedReports;
-        std::unordered_map<std::string, std::unordered_map<std::string, int>>         _markers;
+        std::unordered_map<std::string, std::unordered_map<std::string, MarkerField>> _markers;
+        std::unordered_map<std::string, std::vector<std::string>>                     _instanceHeaders;
         std::unordered_map<std::string, std::unordered_map<std::string, StackReport>> _stacks;
         std::string                                                                   _opcodeFile;
         std::unordered_map<std::string, std::string>                                  _clients;
-        boost::lockfree::spsc_queue<std::string, boost::lockfree::capacity<60000>>  _iq;
-        int ggtotal = 0;
+        boost::lockfree::spsc_queue<std::string, boost::lockfree::fixed_sized<true>>  _iq{15000};
+
        const int IP_PORT     = 0;
        
        const int HOST_NAME   = 2;
@@ -93,7 +94,34 @@ namespace frenchroast { namespace monitor {
         { 
         }
 
+        MarkerField build_marker( std::string str)
+        {
+          MarkerField mf{str};
 
+          for(auto& x: frenchroast::split(frenchroast::split(str, ")")[0].substr(1),",")) {
+            mf._arg_items.push_back(x);
+          }
+                  
+          for(auto& x: frenchroast::split(frenchroast::split(str, ")")[1],";")) {
+            if(x.find(":") != std::string::npos) {
+               mf._instance_items.push_back(frenchroast::split(x,":")[1]);
+            }
+          }
+
+          return mf;
+        }
+
+        std::vector<std::string> build_instance_headers(const std::string& subkey)
+        {
+          std::vector<std::string> rv;
+          for(auto& x: frenchroast::split(frenchroast::split(subkey, ")")[1],";")) {
+           if(x.find(":") != std::string::npos) {
+            rv.push_back(frenchroast::split(x,":")[0]);
+           }
+          }
+          return rv;
+        }
+        
         void message(const std::string& msg)
         {
           while(!_iq.push(msg));
@@ -101,8 +129,8 @@ namespace frenchroast { namespace monitor {
         
         void mhandler()
         {
-        std::string msg;
-        while(1) {
+          std::string msg;
+          while(1) {
           while(_iq.pop(msg)) {
             std::vector<std::string> items = frenchroast::split(msg,"~");
             if (items[MSG_TYPE] == "signaltimer") {
@@ -119,32 +147,29 @@ namespace frenchroast { namespace monitor {
             }
             if (items[MSG_TYPE] == "signal") {
               const std::string thread_name  = items[SIGNAL_THREAD_NAME];
-              std::vector<MarkerField> mfields;
-              ++((_markers[thread_name + items[MSG]])[ items[PARAMS] + items[MARKER]]);
-              std::vector<std::string> instanceHeaders;
-              for(auto& item : _markers[thread_name + items[MSG]]) {
-                MarkerField mf{item.first, item.second};
-                for(auto& x: frenchroast::split(frenchroast::split(item.first, ")")[0].substr(1),",")) {
-                  mf._arg_items.push_back(x);
-                }
-                
-                for(auto& x: frenchroast::split(frenchroast::split(item.first, ")")[1],";")) {
-                  if(x.find(":") != std::string::npos) {
-                    mf._instance_items.push_back(frenchroast::split(x,":")[1]);
-                    instanceHeaders.push_back(frenchroast::split(x,":")[0]);
-                  }
-                }
-                mfields.push_back(mf);
+              const std::string key = thread_name + items[MSG];
+              const std::string subkey = items[PARAMS] + items[MARKER];
+                if(_markers.count(key) == 0 || _markers[key].count(subkey) == 0) {
+                _markers[key][subkey] = build_marker(subkey);
               }
+              else {
+                ++_markers[key][subkey];
+              }
+
+              if(_instanceHeaders.count(key) == 0) {
+                _instanceHeaders[key] = build_instance_headers(subkey);
+              }
+
               std::vector<std::string> argHeaders;
               std::string desc = translate_descriptor(items[MSG].substr(1));
               for(auto& x : frenchroast::split(frenchroast::split(frenchroast::split(desc,")")[0], "(")[1], ",")) {
                 argHeaders.push_back(x);
               }
-
+              
               std::string skey = "";
               std::vector<std::string> sframes;
-              for(auto& x : frenchroast::split(items[STACK], "%")) {
+  
+                for(auto& x : frenchroast::split(items[STACK], "%")) {
                 if(x.find("::") != std::string::npos) {
                   skey.append(x);
                   sframes.push_back(translate_descriptor(x.substr(1)));
@@ -156,9 +181,10 @@ namespace frenchroast { namespace monitor {
               else {
                 ++_stacks[thread_name + desc][skey];
               }
-              
-              _handler.signal(desc , thread_name  , ++_signals[thread_name  + items[MSG]], argHeaders, instanceHeaders, mfields, _stacks[thread_name + desc]);
-            }
+  
+              _handler.signal(desc , thread_name  , ++_signals[thread_name  + items[MSG]], argHeaders, _instanceHeaders[key], _markers[key][subkey], _stacks[thread_name + desc]);
+
+              }
 
             if (items[MSG_TYPE] == "traffic") {
               _handler.traffic( construct_traffic(items[MSG], _method_counters));
@@ -189,9 +215,9 @@ namespace frenchroast { namespace monitor {
             if(items[MSG_TYPE] == "transmit-hooks") {
               _handler.request_hooks(items[IP_PORT]);
             }
-          }
-          std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        }
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            }
         }
 
         void send_hooks(const std::vector<std::string>& hooks, const std::string& ipport)

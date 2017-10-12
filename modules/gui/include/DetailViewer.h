@@ -37,7 +37,7 @@ class DetailViewer : public FViewer {
   QTableWidget*                                      _argData;
   QTableWidget*                                      _stackData;
   std::unordered_map<std::string, QTableWidgetItem*> _items;
-  std::unordered_map<std::string, int>               _detailItems;
+  std::map<std::string, int>               _detailItems;
   //@@  QListWidgetItem*                                   _titleWidget;
   //@@QString                                            _title;
   DetailViewer(QWidget*, const std::string& descriptor);
@@ -48,7 +48,7 @@ class DetailViewer : public FViewer {
   
   public slots:
     
-   void update(const std::string& descriptor, const DetailHolder& holder);
+    void update(const std::string& descriptor,  DetailHolder* holder, MarkerField);
 
 
 
