@@ -26,6 +26,7 @@ std::vector<ARG_TYPE> typeTokenizer(const std::string& sigStr)
   std::vector<ARG_TYPE> rv;
 
   size_t endidx = sigStr.find(")");
+  if(endidx == std::string::npos) throw std::invalid_argument("bad input: " + sigStr);
   int slot = 1;
 
   for(size_t idx = 1; idx < endidx; idx++) {
