@@ -1,4 +1,4 @@
-// copyright (c) 2016 Richard Guadagno
+// copyright (c) 2017 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -14,31 +14,8 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
+//    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef RRPT_H
-#define RRPT_H
-#include <string>
-#include <vector>
-#include "Transport.h"
-
-
-namespace frenchroast { namespace agent {
-
-        
-    class Reporter {
-      Transport* _ptr;
-    public:
-      void ready();
-      void setTransport(Transport* ptr);
-      void signal(const std::string& tag);
-      void close();
-      void unloaded(const std::string& msg);
-
-    };
-
-  }
-}
-
-#endif
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"

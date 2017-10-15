@@ -17,8 +17,6 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 #include "Reporter.h"
-#include "Util.h"
-#include "ClassDetail.h"
 #include "Connector.h"
 
 namespace frenchroast { namespace agent {
