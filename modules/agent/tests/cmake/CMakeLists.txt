@@ -12,11 +12,15 @@ include_directories(
 ${CATCH_LOCATION}
 ../include
 ../../include
+../../../network/include
 )
 
 FILE(GLOB src_files
 ../src/*.cpp
 ../../src/AgentUtil.cpp
+../../src/Reporter.cpp
+../../../network/src/Connector.cpp
+../../../network/src/FRSocket.cpp
 )
 
 if (UNIX)
@@ -24,3 +28,7 @@ if (UNIX)
 endif ()
 
 add_executable(runner ${src_files})
+
+  if (WIN32)
+      target_link_libraries(runner  ws2_32.lib)
+  endif()      
