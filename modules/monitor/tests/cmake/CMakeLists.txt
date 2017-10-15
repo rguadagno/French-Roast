@@ -18,9 +18,15 @@ ${CATCH_LOCATION}
 FILE(GLOB src_files
 ../src/*.cpp
 ../../src/MonitorUtil.cpp
+../../src/Monitor.cpp
 ../../src/StackFrame.cpp
 ../../src/StackTrace.cpp
+../../src/MethodStats.cpp
+../../src/ClassDetail.cpp
+../../src/JammedReport.cpp
 ../../../instrumentation/src/Util.cpp
+../../../network/src/Connector.cpp
+../../../network/src/FRSocket.cpp
 )
 
 if (UNIX)
