@@ -38,8 +38,6 @@ class DetailViewer : public FViewer {
   QTableWidget*                                      _stackData;
   std::unordered_map<std::string, QTableWidgetItem*> _items;
   std::map<std::string, int>               _detailItems;
-  //@@  QListWidgetItem*                                   _titleWidget;
-  //@@QString                                            _title;
   DetailViewer(QWidget*, const std::string& descriptor);
   
  public:

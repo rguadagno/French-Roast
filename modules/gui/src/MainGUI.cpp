@@ -194,6 +194,7 @@ void FRMain::add_hook(QString txt)
 void FRMain::show_detail(const std::string& descriptor)
 {
   DetailViewer* dv = DetailViewer::instance(this, descriptor);
+  connect_common_listeners(dv);
   QObject::connect(this, &FRMain::update_detail_list, dv, &DetailViewer::update);
   QDockWidget* dock = *frenchroast::FSignalViewer::instance(this);
   dv->move(dock->x() + 50, dock->y() + 50 ); 
