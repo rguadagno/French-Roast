@@ -44,7 +44,6 @@ SOURCES += \
 ../../monitor/src/StackReport.cpp \
 ../../monitor/src/ClassDetail.cpp \
 ../../monitor/src/JammedReport.cpp \
-../../network/src/Connector.cpp \
 ../../network/src/FRSocket.cpp \
 ../../monitor/src/StackFrame.cpp
 

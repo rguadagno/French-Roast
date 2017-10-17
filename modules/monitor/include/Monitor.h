@@ -25,6 +25,7 @@
 #include <boost/lockfree/spsc_queue.hpp>
 #include "MonitorUtil.h"
 #include "Connector.h"
+#include "FRSocket.h"
 #include "Listener.h"
 #include "Util.h"
 #include "StackTrace.h"
@@ -48,7 +49,7 @@ namespace frenchroast { namespace monitor {
     <typename T>
       class Monitor : public network::Listener {
 	T&                                                                             _handler;
-        network::Connector                                                            _conn;
+        network::Connector<frenchroast::network::FRSocket>                            _conn;
         std::unordered_map<std::string, time_holder>                                  _timed_signals;
         std::unordered_map<std::string, int>                                          _signals;
         std::unordered_map<std::string, MethodStats>                                  _method_counters;

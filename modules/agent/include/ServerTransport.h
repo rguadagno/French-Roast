@@ -23,13 +23,14 @@
 #include <string>
 #include "Transport.h"
 #include "Connector.h"
+#include "FRSocket.h"
 
 namespace frenchroast { namespace agent {
 
     class ServerTransport : public Transport {
-      network::Connector& _conn;
+      network::Connector<frenchroast::network::FRSocket>& _conn;
     public:
-      ServerTransport(network::Connector& conn);
+      ServerTransport(network::Connector<frenchroast::network::FRSocket>& conn);
       void out(const std::string& str);
 
     };

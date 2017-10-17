@@ -64,7 +64,7 @@ public:
 std::unordered_set<std::string>           _all_loadedClasses;
 std::unordered_map<std::string, ClassPtr> _origClass;
 
-frenchroast::network::Connector  _conn;
+frenchroast::network::Connector<frenchroast::network::FRSocket>  _conn;
 
 bool profiler_predicate();
 
