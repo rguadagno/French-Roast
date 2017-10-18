@@ -3,6 +3,13 @@
 
 #include <string>
 #include <bitset>
+#include <vector>
+#include <unordered_map>
+#include "StackTrace.h"
+#include "ClassDetail.h"
+#include "MethodStats.h"
+#include "JammedReport.h"
+#include "Connector.h"
 
 namespace frenchroast {  namespace monitor {
 
@@ -17,6 +24,14 @@ namespace frenchroast {  namespace monitor {
     void pad(std::string& str, int amount, char ch = ' ');
     std::string pad(const std::string& str, int amount, char ch = ' ');
     std::string pad_front(const std::string& str, int amount, const std::string point );
+
+    std::vector<std::string> parse_type_tokens(const std::string& tstr);
+    std::string              translate_descriptor(const std::string& name, int* = nullptr);
+    std::vector<StackTrace>  construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters);
+    JammedReport&            process_jammed(const std::string& monitor, const std::string& waiter, const std::string& owner, std::unordered_map<std::string, JammedReport>& jcount);
+    std::vector<ClassDetail> construct_class_details(const std::string& msg);
+    void transmit_lines(const std::string& fileName, const std::string& ipport, frenchroast::network::Connector<>&);
+    void transmit_lines(const std::vector<std::string>&, const std::string& ipport, frenchroast::network::Connector<>&);
 
 
 

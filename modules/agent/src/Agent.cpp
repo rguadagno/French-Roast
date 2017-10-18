@@ -64,7 +64,7 @@ public:
 std::unordered_set<std::string>           _all_loadedClasses;
 std::unordered_map<std::string, ClassPtr> _origClass;
 
-frenchroast::network::Connector  _conn;
+frenchroast::network::Connector<>  _conn;
 
 bool profiler_predicate();
 
@@ -444,16 +444,29 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
 
 void signal_sender()
 {
+  int buffercnt = 0;
+  std::string buffer;
   std::string* signal;
   while(1) {
     while(_signalQueue.pop(signal)) {
-      _rptr.signal(*signal);
+      buffer.append(*signal);
       delete signal;
+      if(++buffercnt == 9) {
+        _rptr.signal(buffer);
+        buffercnt = 0;
+        buffer.clear();
+      }
+      else {
+        buffer.append("#");
+      }
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    if(buffercnt > 0) {
+      _rptr.signal(buffer);
+      buffercnt = 0;
+      buffer.clear();
+    }
   }
-
-  
 }
 
 bool profiler_predicate() 

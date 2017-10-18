@@ -27,9 +27,9 @@
 namespace frenchroast { namespace agent {
 
     class ServerTransport : public Transport {
-      network::Connector& _conn;
+      network::Connector<>& _conn;
     public:
-      ServerTransport(network::Connector& conn);
+      ServerTransport(network::Connector<>& conn);
       void out(const std::string& str);
 
     };

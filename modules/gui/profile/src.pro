@@ -13,8 +13,11 @@ isEmpty(BOOST_ROOT) {
  win32 {
  LIBS +=  ws2_32.lib
  CONFIG += c++11
+# QMAKE_CXXFLAGS += -O2
  }
 
+
+ 
 TEMPLATE = app
 TARGET = roaster
 INCLUDEPATH += \
@@ -41,7 +44,6 @@ SOURCES += \
 ../../monitor/src/StackReport.cpp \
 ../../monitor/src/ClassDetail.cpp \
 ../../monitor/src/JammedReport.cpp \
-../../network/src/Connector.cpp \
 ../../network/src/FRSocket.cpp \
 ../../monitor/src/StackFrame.cpp
 

@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 #include "Transport.h"
-#include "ClassDetail.h"
+
 
 namespace frenchroast { namespace agent {
 

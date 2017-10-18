@@ -178,7 +178,7 @@ namespace frenchroast { namespace monitor {
     }
     
 
-    void transmit_lines(const std::string& fileName, const std::string& ipport, frenchroast::network::Connector& conn)
+    void transmit_lines(const std::string& fileName, const std::string& ipport, frenchroast::network::Connector<>& conn)
     {
       try {
         std::ifstream in;
@@ -196,7 +196,7 @@ namespace frenchroast { namespace monitor {
       
     }
 
-    void transmit_lines(const std::vector<std::string>& lines,  const std::string& ipport, frenchroast::network::Connector& conn)
+    void transmit_lines(const std::vector<std::string>& lines,  const std::string& ipport, frenchroast::network::Connector<>& conn)
     {
       for(auto& line : lines) {
         conn.send_message(ipport, line );

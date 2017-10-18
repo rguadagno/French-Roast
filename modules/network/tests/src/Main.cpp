@@ -14,25 +14,8 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
+//    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef MARKERFIELD_H
-#define MARKERFIELD_H
-
-namespace frenchroast { namespace monitor {
-    class MarkerField {
-    public:
-      MarkerField(std::string desc, int count = 1) : _descriptor(desc), _count(count) {}
-    MarkerField() : _count(-1) {}
-      std::string _descriptor;
-      int         _count;
-      std::vector<std::string> _arg_items;
-      std::vector<std::string> _instance_items;
-      MarkerField& operator++() { ++_count; return *this; }
-    };
-  }
-}
-
-
-#endif
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"

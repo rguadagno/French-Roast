@@ -77,10 +77,10 @@ template
 <typename LineLoadable>
     class LocalListener : public frenchroast::network::Listener {
       LineLoadable&             _dest;
-      frenchroast::network::Connector& _conn;
+  frenchroast::network::Connector<>& _conn;
       
     public:
-      LocalListener(LineLoadable& dest, frenchroast::network::Connector& conn) : _dest(dest), _conn(conn)
+      LocalListener(LineLoadable& dest, frenchroast::network::Connector<>& conn) : _dest(dest), _conn(conn)
       {
       }
       
@@ -114,7 +114,7 @@ template
           frenchroast::replace(descriptor, "server:", "");
           _serverip = frenchroast::split(descriptor,":")[0];
           _serverPort = atoi(frenchroast::split(descriptor,":")[1].c_str());
-          frenchroast::network::Connector conn;
+          frenchroast::network::Connector<> conn;
           conn.connect_to_server(_serverip, _serverPort);
           conn.send_message("transmit-opcodes");
           conn.blocked_listen(new LocalListener<OpCode>(opcodes, conn));
