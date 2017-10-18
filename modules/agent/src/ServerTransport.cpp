@@ -22,7 +22,7 @@
 namespace frenchroast { namespace agent {
 
 
-    ServerTransport::ServerTransport(network::Connector<frenchroast::network::FRSocket>& conn) : _conn(conn)
+    ServerTransport::ServerTransport(network::Connector<>& conn) : _conn(conn)
     {
     }
     

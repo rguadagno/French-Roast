@@ -23,7 +23,6 @@
 #include "StackTrace.h"
 #include "MarkerField.h"
 #include "Connector.h"
-#include "FRSocket.h"
 #include "MethodStats.h"
 #include "ClassDetail.h"
 #include "StackFrame.h"
@@ -179,7 +178,7 @@ namespace frenchroast { namespace monitor {
     }
     
 
-    void transmit_lines(const std::string& fileName, const std::string& ipport, frenchroast::network::Connector<frenchroast::network::FRSocket>& conn)
+    void transmit_lines(const std::string& fileName, const std::string& ipport, frenchroast::network::Connector<>& conn)
     {
       try {
         std::ifstream in;
@@ -197,7 +196,7 @@ namespace frenchroast { namespace monitor {
       
     }
 
-    void transmit_lines(const std::vector<std::string>& lines,  const std::string& ipport, frenchroast::network::Connector<frenchroast::network::FRSocket>& conn)
+    void transmit_lines(const std::vector<std::string>& lines,  const std::string& ipport, frenchroast::network::Connector<>& conn)
     {
       for(auto& line : lines) {
         conn.send_message(ipport, line );

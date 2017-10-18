@@ -81,7 +81,7 @@ namespace frenchroast { namespace network {
       }
 
     template
-      <typename SocketType>
+      <typename SocketType = FRSocket>
     class Connector {
       SocketType  _receiver_socket;
       std::unordered_map<std::string, SocketType> _ipport_sendersocket;
