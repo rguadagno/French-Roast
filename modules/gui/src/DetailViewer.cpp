@@ -60,6 +60,7 @@ DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FVi
   _stackData->insertColumn(0);
   _stackData->setHorizontalHeaderItem(0, createItem("count"));
   _stackData->setHorizontalHeaderItem(1,createItem("stack"));
+  _stackData->horizontalHeader()->setStretchLastSection(true);
   _stackData->setItemDelegateForColumn(1, new SignalDelegate(_stackData)); 
   
   vlayout->addWidget(_stackData);
