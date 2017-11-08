@@ -24,6 +24,7 @@
 #include <QSizeGrip>
 #include "FViewer.h"
 #include "SignalDelegate.h"
+#include "DoubleClickEater.h"
 
 namespace frenchroast {
 
@@ -101,7 +102,9 @@ namespace frenchroast {
   layout->setContentsMargins(5,4,2,2);
   titlebar->setLayout(layout);
   titlebar->setStyleSheet(_settings->value("dock_win_header_style").toString());
-
+  DoubleClickEater* tkeyListener = new DoubleClickEater;
+  titlebar->installEventFilter(tkeyListener);
+  _dock->installEventFilter(tkeyListener);
   _dock->setTitleBarWidget(titlebar);
   _dock->setAttribute(Qt::WA_DeleteOnClose);
   _dock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
