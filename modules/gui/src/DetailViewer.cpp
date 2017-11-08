@@ -23,6 +23,7 @@
 #include "QUtil.h"
 #include "SignalDelegate.h"
 #include "DetailViewer.h"
+#include "KeyListener.h"
 
 namespace frenchroast {
 
@@ -62,6 +63,11 @@ DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FVi
   _stackData->setHorizontalHeaderItem(1,createItem("stack"));
   _stackData->horizontalHeader()->setStretchLastSection(true);
   _stackData->setItemDelegateForColumn(1, new SignalDelegate(_stackData)); 
+
+  KeyListener* tkeyListener = new KeyListener;
+  _stackData->installEventFilter(tkeyListener);
+  QObject::connect(tkeyListener, &KeyListener::signalkey, this, [&](){if(_stackData->currentColumn() == 1) add_signal(_stackData->currentItem()->text());});
+
   
   vlayout->addWidget(_stackData);
   holderStacks->setLayout(vlayout);

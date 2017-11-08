@@ -196,6 +196,7 @@ void FRMain::show_detail(const std::string& descriptor)
   DetailViewer* dv = DetailViewer::instance(this, descriptor);
   connect_common_listeners(dv);
   QObject::connect(this, &FRMain::update_detail_list, dv, &DetailViewer::update);
+  QObject::connect(dv, &frenchroast::DetailViewer::add_signal,     this,  &FRMain::add_hook);
   QDockWidget* dock = *frenchroast::FSignalViewer::instance(this);
   dv->move(dock->x() + 50, dock->y() + 50 ); 
   update_detail_list(descriptor, &_detailDescriptors[descriptor], MarkerField{});

@@ -47,8 +47,9 @@ class DetailViewer : public FViewer {
   public slots:
     
     void update(const std::string& descriptor,  DetailHolder* holder, MarkerField);
-
-
+    
+ signals:
+    void add_signal(QString);
 
 
 };
