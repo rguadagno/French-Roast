@@ -457,7 +457,7 @@ void signal_sender()
         buffer.clear();
       }
       else {
-        buffer.append("#");
+        buffer.append("<end>");
       }
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(20));

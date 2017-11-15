@@ -119,7 +119,7 @@ namespace frenchroast { namespace monitor {
         {
           std::string nmsg = msg.substr(msg.find_first_of("~")+1);
           std::string ipport = msg.substr(0,msg.find_first_of("~")+1);
-          for(auto& mitem : frenchroast::split(nmsg,"#")) {
+          for(auto& mitem : frenchroast::split(nmsg,"<end>")) {
             while(!_iq.push(ipport + mitem));
            
             }
