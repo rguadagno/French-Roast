@@ -148,3 +148,4 @@ TEST_CASE("load good descriptor <ENTER> , turn off artifacts <ARTIFACTS:OFF>")
   REQUIRE( (sigs["mypackage/MyClass"][0].flags() &= Signals::METHOD_ENTER) == true);
 }
 
+

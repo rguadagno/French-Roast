@@ -21,6 +21,9 @@ FILE(GLOB src_files
 
 if (UNIX)
    add_definitions("-std=c++11")
+   add_definitions(-DCONNECTOR_UNIX)
+   find_package(Threads)
+
 endif ()
 
 add_executable(runner ${src_files})
@@ -28,3 +31,6 @@ add_executable(runner ${src_files})
 if (WIN32)
    target_link_libraries(runner  ws2_32.lib)
 endif()      
+if (UNIX)
+   target_link_libraries(runner ${CMAKE_THREAD_LIBS_INIT})
+endif ()
