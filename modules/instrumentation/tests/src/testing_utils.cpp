@@ -2,9 +2,10 @@
 #include <iostream>
 #include <fstream>
 
-std::unique_ptr<const unsigned char> fr_test_util::get_class_buf(const std::string& fileName)
+std::unique_ptr<const unsigned char> fr_test_util::get_class_buf(const std::string& fileName) 
 {
   std::ifstream klass{fileName, std::ios::binary};
+  if(!klass) throw std::invalid_argument("cannot open file: " + fileName);
   std::filebuf* buf = klass.rdbuf();
   std::size_t length = buf->pubseekoff(0,klass.end,klass.in);
   buf->pubseekpos(0,klass.in);

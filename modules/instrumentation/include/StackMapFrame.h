@@ -34,7 +34,7 @@ namespace frenchroast {
     virtual void load_from_buffer(BYTE* buf) = 0;
     virtual void load_to_buffer(BYTE* buf) = 0;
     virtual int  offset() const = 0;
-    virtual operator int() = 0;
+    virtual operator int() const = 0;
   };
 
   class SameFrameExtended : public StackMapFrame {
@@ -42,7 +42,7 @@ namespace frenchroast {
     int _size;
   public:
     SameFrameExtended();
-    operator int();
+    operator int() const;
     int size_in_bytes() const;
     bool adjust_offset(short offset);
     int offset() const;

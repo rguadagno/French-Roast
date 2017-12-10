@@ -21,16 +21,19 @@
 #define OP_H
 #include <unordered_map>
 #include <bitset>
+#include <regex>
 #include "ClassFileComponent.h"
 
 namespace frenchroast {
   class OpCode {
     BYTE           _code;
-    int            _size;
+    int            _size{0};;
     std::string    _name;
     std::bitset<4> _attributes;
     bool           _isDynamic;
-    static std::unordered_map<BYTE, OpCode> _op_codes;    
+    static std::unordered_map<BYTE, OpCode> _op_codes;
+    const static std::regex  _lineRegex;//{"[a-z0-9]+[\b]*<[0-9]*[\b]*[1]"};
+    //    std::regex  _fullRegex{"((?:[A-Za-z0-9_]+\\.)+[A-Za-z0-9]+)::([A-Za-z0-9_\\*]+(?::\\([a-z]*\\):[a-z]+){0,})(<ENTER>|<EXIT>|<TIMER>){1}((?:\\[[A-Za-z0-9_]+\\]){0,})((?:<ARTIFACTS:OFF>){0,})"};
   public:
     const static std::bitset<4> None;
     const static std::bitset<4> Branch;

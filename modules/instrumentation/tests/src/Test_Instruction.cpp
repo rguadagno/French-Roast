@@ -51,6 +51,7 @@ TEST_CASE ("load_iload0")
 {
   using namespace frenchroast;
   const int EXTRA_ROOM = 10;
+  OpCode::load_from_file( std::getenv("OPCODE_FILE"));
   BYTE buf[EXTRA_ROOM];
   buf[0] = opcode::iload_0;
   
@@ -108,11 +109,12 @@ TEST_CASE ("lookupswitch start at 1")
   
 }
 
+
 TEST_CASE ("lookupswitch start at 0")
 {
   using namespace frenchroast;
   const int EXTRA_ROOM = 10;
-
+  OpCode::load_from_file( std::getenv("OPCODE_FILE"));
   BYTE buf[100];
   memset(buf,0,sizeof(buf));
   
@@ -136,8 +138,9 @@ TEST_CASE ("lookupswitch start at 0")
   
   Instruction instr;
   int loaded;
-  REQUIRE(instr.load_from_buffer(buf,0,loaded) == 28);
 
+  REQUIRE(instr.load_from_buffer(buf,0,loaded) == 28);
+  
   REQUIRE(instr.size() == 28);
   REQUIRE(instr.is_branch() == true);
 
