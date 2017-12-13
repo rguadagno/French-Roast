@@ -31,6 +31,7 @@
 #include <boost/lockfree/queue.hpp>
 #include "jvmti.h"
 #include "Agent.h"
+#include "AgentHooks.h"
 #include "fr_signals.h"
 #include "FrenchRoast.h"
 #include "OpCode.h"
@@ -53,13 +54,6 @@ std::mutex _all_loaded_mutex;
 std::mutex _cache_mutex;
 boost::lockfree::queue<std::string*> _signalQueue{10000};
 
-class ClassPtr {
-public:
-  ClassPtr(jint size) : _size(size) {}
-  ClassPtr() {}
-  unsigned char* _class_data;
-   jint           _size;
-};
 
 std::unordered_set<std::string>           _all_loadedClasses;
 std::unordered_map<std::string, ClassPtr> _origClass;
@@ -535,52 +529,6 @@ void track_class(const std::string& name)
 
 
 
-void remove_hooks(const std::string& sname, jvmtiEnv *env,jint*& new_class_data_len, unsigned char** new_class_data)
-{
-  jvmtiError  err =    env->Allocate(_origClass[sname]._size, new_class_data);
-  *new_class_data_len = _origClass[sname]._size;
-  memcpy(*new_class_data, _origClass[sname]._class_data, _origClass[sname]._size);
-}
-
-
-
-
-void add_hooks(const std::string& sname, jvmtiEnv *env,jint*& new_class_data_len, unsigned char** new_class_data)
-{
-  for (auto& x : _hooks[sname]) {
-    _artifacts["L" + sname + ";::" + x.method_name()] = x.artifacts();
-    if (x.line_number() > 0) {
-      _fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
-    }
-    else {
-      if ((x.flags() & frenchroast::FrenchRoast::METHOD_TIMER) == frenchroast::FrenchRoast::METHOD_TIMER) {
-        _fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
-      }
-      else {
-        if(x.all()) {
-          for(auto methdesc : _fr.get_method_descriptors()) {
-            if(methdesc.find("main") == std::string::npos         ) {
-              if( methdesc.find("<init") == std::string::npos ) {
-                _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
-              }
-              else {
-                  _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", frenchroast::FrenchRoast::METHOD_EXIT);
-              }
-            }
-          }
-        }
-        else {
-          _fr.add_method_call(x.method_name(), "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
-        }
-      }
-    }
-    jint size = _fr.size_in_bytes();
-    jvmtiError  err =    env->Allocate(size,new_class_data);
-    *new_class_data_len = size;
-    _fr.load_to_buffer(*new_class_data);
-  }
-}
-
 
 void JNICALL
      ClassFileLoadHook(
@@ -596,21 +544,9 @@ void JNICALL
      unsigned char** new_class_data) {
   
   std::string sname{name};
-  if (sname == "java/lang/Package") {
-    _fr.load_from_buffer(class_data);
-    
-    _fr.add_name_to_pool("thook");
-    _fr.add_name_to_pool("(Ljava/lang/Object;)V");
-    _fr.add_native_method("thook", "(Ljava/lang/Object;)V");
-    
-    _fr.add_name_to_pool("timerhook");
-    _fr.add_name_to_pool("(JLjava/lang/String;Ljava/lang/String;)V");
-    _fr.add_native_method("timerhook", "(JLjava/lang/String;Ljava/lang/String;)V");
 
-    jint size = _fr.size_in_bytes();
-    jvmtiError  err =    env->Allocate(size,new_class_data);
-    *new_class_data_len = size;
-    _fr.load_to_buffer(*new_class_data);
+  if (sname == "java/lang/Package") {
+    add_thook_to_package(_fr, class_data, env, new_class_data_len, new_class_data);
     return;
   }
 
@@ -626,7 +562,7 @@ void JNICALL
         _fr.load_from_buffer(class_data);
         loaded = true;
       }
-      add_hooks(sname, env, new_class_data_len, new_class_data);
+      add_hooks(_fr,_hooks,_artifacts,sname, env, new_class_data_len, new_class_data);
       _origClass[sname] = ClassPtr{class_data_len};
        env->Allocate(class_data_len, &_origClass[sname]._class_data);
        memcpy(_origClass[sname]._class_data, class_data,class_data_len);
@@ -634,11 +570,12 @@ void JNICALL
 
     if(!profiler_predicate() && _hooks.is_signal_class(sname) && _all_loadedClasses.count(sname) == 1) {
       _fr.load_from_buffer(class_data);
-      remove_hooks(sname, env, new_class_data_len, new_class_data);
+      remove_hooks(_origClass,sname, env, new_class_data_len, new_class_data);
     }
     std::unique_lock<std::mutex> lck{_all_loaded_mutex};
     _all_loadedClasses.insert(sname);
 }
+
 
 
 void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread thread, jobject object)

@@ -81,7 +81,12 @@ namespace frenchroast {
       return _isDynamic;
     }
 
-
+   void OpCode::load_from_file(const char* fileName)
+   {
+     if(fileName == nullptr) throw std::invalid_argument("cannot open opcode file with nullptr for name");
+     load_from_file(std::string(fileName));
+   }
+  
    void OpCode::load_from_file(const std::string& fileName)
    {
      std::ifstream in{fileName};

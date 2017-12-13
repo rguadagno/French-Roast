@@ -19,10 +19,22 @@
 #include "catch.hpp"
 #include "OpCode.h"
 
+TEST_CASE ("missing env name")
+{
+  using namespace frenchroast;
+  REQUIRE_THROWS_WITH(OpCode::load_from_file(std::getenv("junk")), "cannot open opcode file with nullptr for name");
+}
+
 TEST_CASE ("bad file name")
 {
   using namespace frenchroast;
   REQUIRE_THROWS_WITH(OpCode::load_from_file("junk"), "cannot open file: junk");
+}
+
+TEST_CASE ("empty file name")
+{
+  using namespace frenchroast;
+  REQUIRE_THROWS_WITH(OpCode::load_from_file(""), "cannot open file: ");
 }
 
 TEST_CASE ("bad load line")

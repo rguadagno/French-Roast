@@ -51,6 +51,7 @@ namespace frenchroast {
     BYTE get_code() const;
     static void load(std::string);
     static void load_from_file(const std::string&);
+    static void load_from_file(const char*);
   };
 }
 
