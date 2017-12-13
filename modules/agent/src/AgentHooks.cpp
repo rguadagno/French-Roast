@@ -21,7 +21,7 @@
 #include "fr_signals.h"
 
 
-void add_thook_to_package(frenchroast::FrenchRoast& fr, const unsigned char* class_data, jvmtiEnv* env, jint*& new_class_data_len, unsigned char** new_class_data)
+void add_thook_to_package(frenchroast::FrenchRoast& fr, const unsigned char* class_data, jvmtiEnv* env, jint* new_class_data_len, unsigned char** new_class_data)
 {
   fr.load_from_buffer(class_data);
     
