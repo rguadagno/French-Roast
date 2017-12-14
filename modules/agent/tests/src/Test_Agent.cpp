@@ -36,9 +36,24 @@ std::string get_package_class_filename()
 #endif
 }
 
+std::string get_SomeClass_filename()
+{
+#ifdef CONNECTOR_UNIX
+  return "../data/SomeClass.class";
+#else
+  return "..\\data\\SomeClass.class";  
+#endif
+}
+
+
 std::unique_ptr<const unsigned char> get_package_class()
 {
   return fr_test_util::get_class_buf(get_package_class_filename());
+}
+
+std::unique_ptr<const unsigned char> get_SomeClass_class()
+{
+  return fr_test_util::get_class_buf(get_SomeClass_filename());
 }
 
 
@@ -107,5 +122,32 @@ TEST_CASE("add_hooks")
   add_hooks(mock, sigs, artifacts, "frpackage/AnotherClass", jvmtimock.env, &newlen, &newbuf);
   REQUIRE(mock._callFrom == "funcA:(I)V");
   REQUIRE(mock._callTo == "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V");
+  
+}
+
+
+TEST_CASE("remove_hooks")
+{
+  MockJVMTI jvmtimock;
+  frenchroast::OpCode::load_from_file( std::getenv("OPCODE_FILE"));
+  
+  frenchroast::OpCode                        opcodes;
+  frenchroast::FrenchRoast                   fr{opcodes};
+  fr.load_from_buffer(get_SomeClass_class().get());
+  int size = fr.size_in_bytes();
+  REQUIRE(size == 256);
+  frenchroast::signal::Signals sigs;
+  std::unordered_map<std::string, bool>      artifacts;  
+  sigs.load("frpackage.SomeClass::func1:(int):void <ENTER>");
+  jint newlen;
+  unsigned char* newbuf;
+  add_hooks(fr, sigs, artifacts, "frpackage/SomeClass", jvmtimock.env, &newlen, &newbuf);
+  REQUIRE(fr.size_in_bytes() > size);
+  jint restored_len;
+  unsigned char* restored_buf;
+  remove_hooks(get_SomeClass_class().get(), size, jvmtimock.env, &restored_len, &restored_buf);
+  REQUIRE(size == restored_len);
+  REQUIRE(memcmp(get_SomeClass_class().get(), restored_buf, size) == 0);
+
   
 }

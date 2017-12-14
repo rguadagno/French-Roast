@@ -34,9 +34,9 @@ public:
 
 void add_thook_to_package(frenchroast::FrenchRoast& fr, const unsigned char* class_data, jvmtiEnv* env, jint* new_class_data_len, unsigned char** new_class_data);
 
-void remove_hooks(std::unordered_map<std::string, ClassPtr>& origClass, const std::string& sname, jvmtiEnv *env,jint*& new_class_data_len, unsigned char** new_class_data);
-template
-<typename FRType = frenchroast::FrenchRoast>
+void remove_hooks(const unsigned char* orig_class_data, jint orig_size, jvmtiEnv *env,jint* new_class_data_len, unsigned char** new_class_data);
+
+template <typename FRType = frenchroast::FrenchRoast>
 void add_hooks(FRType& fr, frenchroast::signal::Signals& hooks, std::unordered_map<std::string, bool>& artifacts, const std::string& sname, jvmtiEnv *env,jint* new_class_data_len, unsigned char** new_class_data)
 {
     for (auto& x : hooks[sname]) {

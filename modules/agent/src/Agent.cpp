@@ -569,7 +569,7 @@ void JNICALL
   
   if(!profiler_predicate() && _hooks.is_signal_class(sname) && _all_loadedClasses.count(sname) == 1) {
     _fr.load_from_buffer(class_data);
-    remove_hooks(_origClass,sname, env, new_class_data_len, new_class_data);
+    remove_hooks(_origClass[sname]._class_data,_origClass[sname]._size, env, new_class_data_len, new_class_data);
   }
   std::unique_lock<std::mutex> lck{_all_loaded_mutex};
   _all_loadedClasses.insert(sname);

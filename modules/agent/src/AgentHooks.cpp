@@ -41,11 +41,11 @@ void add_thook_to_package(frenchroast::FrenchRoast& fr, const unsigned char* cla
 }
 
 
-void remove_hooks(std::unordered_map<std::string, ClassPtr>& origClass, const std::string& sname, jvmtiEnv *env,jint*& new_class_data_len, unsigned char** new_class_data)
+void remove_hooks(const unsigned char* orig_class_data, jint orig_size, jvmtiEnv *env,jint* new_class_data_len, unsigned char** new_class_data)
 {
-  jvmtiError  err =    env->Allocate(origClass[sname]._size, new_class_data);
-  *new_class_data_len = origClass[sname]._size;
-  memcpy(*new_class_data, origClass[sname]._class_data, origClass[sname]._size);
+  jvmtiError  err =    env->Allocate(orig_size, new_class_data);
+  *new_class_data_len = orig_size;
+  memcpy(*new_class_data, orig_class_data, orig_size);
 }
 
 
