@@ -44,6 +44,7 @@
 #include "Listener.h"
 #include "AgentUtil.h"
 #include "ClassDetail.h"
+#include "AgentSignalReporting.h"
 
 std::mutex _traffic_mutex;
 std::mutex _loading_mutex;
@@ -155,21 +156,6 @@ struct jni_cache {
 
 };
 
-class FieldInfo {
-public:
-  std::string _name{};
-  std::string _type{};
-  jfieldID    _id;
-  
-  FieldInfo(std::string name, std::string typ, jfieldID id) : _name(name), _type(typ), _id(id)
-  {
-  }
-  
-  FieldInfo()
-  {
-  }
-  
-};
 
 std::vector<frenchroast::monitor::ClassDetail>                  _loadedClasses;
 std::unordered_map<std::string, FieldInfo> _reportingFields;
@@ -236,14 +222,6 @@ JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass obj
 }
 
 
-std::string get_value(JNIEnv* ptr, jobject obj, FieldInfo& field)
-{
-  if(field._type == "I") return field._name + ":" + std::to_string(ptr->GetIntField(obj, field._id)) + ";";
-  if(field._type == "J") return field._name + ":" + std::to_string(ptr->GetLongField(obj, field._id)) + ";";
-  if(field._type == "Ljava/lang/String;") return field._name + ":" +  ptr->GetStringUTFChars(jstring(ptr->GetObjectField(obj, field._id)),0);
-
-  return "none for type = " + field._type;
-}
 
 
 void populate_class_fields_info(char* classDescriptor, jclass theclass, std::unordered_map<std::string, FieldInfo>& gfieldinfo)
@@ -279,54 +257,9 @@ void populate_class_fields_info(char* classDescriptor, jclass theclass, std::uno
 
 
 
-class DescriptorVO {
-public:
-  char* _classSignature;
-  char* _methodName;
-  char* _methodSignature;
-  DescriptorVO(char* cSig, char* mname, char* mSig) : _classSignature(cSig), _methodName(mname), _methodSignature(mSig)
-  {
-  }
-
-  std::string descriptor() const
-  {
-    std::string rv = _classSignature;
-    rv.append("::");
-    rv.append(_methodName);
-    rv.append(":");
-    rv.append(_methodSignature);
-    return rv;
-  }
-};
 
 
 
-
-void populate_stack( JNIEnv * jni_env, jvmtiFrameInfo* frames, int count, std::vector<DescriptorVO>& rv,
-                     std::unordered_map<std::string, bool>& artifacts )
-{
-  void* cacheid;
-  char *methodName;
-  char *sig;
-  char *generic;
-  char* className;
-  jclass theclass;
-
-  rv.reserve(count);
-
-  for(int idx = 1; idx < count; idx++) {
-    ++frames;
-    if(!ErrorHandler::check_jvmti_error(genv->GetMethodName(frames->method, &methodName,&sig,&generic), "GetMethodName")) continue;
-    if(!ErrorHandler::check_jvmti_error(genv->Deallocate((unsigned char *)generic ), "Deallocate")) continue;
-    if(!ErrorHandler::check_jvmti_error(genv->GetMethodDeclaringClass(frames->method, &theclass), "GetMethodDeclaringClass")) continue;
-    if(!get_class_name_fast(genv, theclass, &className)) continue;
-    jni_env->DeleteLocalRef(theclass);
-    rv.emplace_back(className, methodName, sig);
-    if(idx == 1 && !artifacts[rv[0].descriptor()]) {
-      return;
-    }
-  }
-}
 
 
 void populate_artifacts(JNIEnv * ptr,   jvmtiFrameInfo* frames, jobject& obj, std::string& params, std::string& fieldValues, std::vector<DescriptorVO>& stack, jthread& aThread)
@@ -395,7 +328,7 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
   if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(aThread, 0, sizeof(frames), frames, &count),"GetStackTrace")) return;
   if (count >= 1) {
     std::vector<DescriptorVO>  stack;
-    populate_stack(ptr, frames, count, stack, _artifacts );
+    populate_stack(ptr, genv, frames, count, stack, _artifacts );
 
     std::string params = "(";
     std::string fieldValues = "";

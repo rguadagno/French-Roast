@@ -30,10 +30,13 @@ ${JAVA_INCLUDE_DIR2}
 FILE(GLOB src_files
 ../src/Main.cpp
 ../src/Test_Agent.cpp
+../src/Test_AgentSignalReporting.cpp
 ../src/test_reporter.cpp
 ../src/MockJVMTI.cpp
+../src/MockJNI.cpp
 ../../src/AgentHooks.cpp
 ../../src/AgentUtil.cpp
+../../src/AgentSignalReporting.cpp
 ../../src/Agent.cpp
 ../../src/Config.cpp
 ../../src/ServerTransport.cpp
