@@ -24,7 +24,7 @@
 #include "FrenchRoast.h"
 #include "testing_utils.h"
 #include "MockJVMTI.h"
-
+#include "fr_signals.h"
 
 
 std::string get_package_class_filename()
@@ -63,5 +63,49 @@ TEST_CASE("update java.lang.Package with thook")
   std::vector<std::string> vafter = fr.get_method_descriptors();
   REQUIRE((std::find(vafter.begin(), vafter.end(), "thook:(Ljava/lang/Object;)V") != vafter.end()));
   REQUIRE((std::find(vafter.begin(), vafter.end(), "timerhook:(JLjava/lang/String;Ljava/lang/String;)V") != vafter.end()));
+  
+}
+
+TEST_CASE("add_hooks")
+{
+  MockJVMTI jvmtimock;
+
+  class FRMock {
+    
+  public:
+    std::string _callFrom;
+    std::string _callTo;
+    void add_method_call(const std::string& callFrom, const std::string& callTo, std::bitset<4> flags)
+    {
+      _callFrom = callFrom;
+      _callTo = callTo;
+    }
+    
+    std::vector<std::string> get_method_descriptors()
+    {
+      std::vector<std::string> rv;
+      rv.push_back("funcA:(I):V");
+      return rv;
+    }
+    int size_in_bytes() { return 100; }
+    void load_to_buffer(unsigned char* buf) { }
+    
+    
+  };
+  
+  FRMock mock;
+  frenchroast::signal::Signals sigs;
+  std::unordered_map<std::string, bool>      artifacts;  
+  sigs.load("frpackage.SomeClass::funcA:(int):void <ENTER>");
+  jint newlen;
+  unsigned char* newbuf;
+  add_hooks(mock, sigs, artifacts, "frpackage/SomeClass", jvmtimock.env, &newlen, &newbuf);
+  REQUIRE(mock._callFrom == "funcA:(I)V");
+  REQUIRE(mock._callTo == "java/lang/Package.thook:(Ljava/lang/Object;)V");
+
+  sigs.load("frpackage.AnotherClass::funcA:(int):void <TIMER>");
+  add_hooks(mock, sigs, artifacts, "frpackage/AnotherClass", jvmtimock.env, &newlen, &newbuf);
+  REQUIRE(mock._callFrom == "funcA:(I)V");
+  REQUIRE(mock._callTo == "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V");
   
 }

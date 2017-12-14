@@ -34,6 +34,7 @@ jvmtiError JNICALL myAllocate(jvmtiEnv* env, jlong size, unsigned char** mem_ptr
   {
     for(auto ptr : _buffers)
       delete ptr;
+    _buffers.clear();
   }
   
 jvmtiError JNICALL myAllocate(jvmtiEnv* env, jlong size, unsigned char** mem_ptr)

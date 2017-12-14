@@ -550,30 +550,29 @@ void JNICALL
     return;
   }
 
-      bool loaded = false;
-      if(profiler_predicate() && ok_to_track(sname)) { // for now this means when not profiling we miss classes ok  for now
+  bool loaded = false;
+  if(profiler_predicate() && ok_to_track(sname)) { // for now this means when not profiling we miss classes ok  for now
+    _fr.load_from_buffer(class_data);
+    loaded = true;
+    track_class(sname);
+  }
+  if (profiler_predicate() && _hooks.is_signal_class(sname) ) {
+    if(!loaded) {
       _fr.load_from_buffer(class_data);
       loaded = true;
-      track_class(sname);
-
     }
-    if (profiler_predicate() && _hooks.is_signal_class(sname) ) {
-      if(!loaded) {
-        _fr.load_from_buffer(class_data);
-        loaded = true;
-      }
-      add_hooks(_fr,_hooks,_artifacts,sname, env, new_class_data_len, new_class_data);
-      _origClass[sname] = ClassPtr{class_data_len};
-       env->Allocate(class_data_len, &_origClass[sname]._class_data);
-       memcpy(_origClass[sname]._class_data, class_data,class_data_len);
-    }
-
-    if(!profiler_predicate() && _hooks.is_signal_class(sname) && _all_loadedClasses.count(sname) == 1) {
-      _fr.load_from_buffer(class_data);
-      remove_hooks(_origClass,sname, env, new_class_data_len, new_class_data);
-    }
-    std::unique_lock<std::mutex> lck{_all_loaded_mutex};
-    _all_loadedClasses.insert(sname);
+    add_hooks(_fr,_hooks,_artifacts,sname, env, new_class_data_len, new_class_data);
+    _origClass[sname] = ClassPtr{class_data_len};
+    env->Allocate(class_data_len, &_origClass[sname]._class_data);
+    memcpy(_origClass[sname]._class_data, class_data,class_data_len);
+  }
+  
+  if(!profiler_predicate() && _hooks.is_signal_class(sname) && _all_loadedClasses.count(sname) == 1) {
+    _fr.load_from_buffer(class_data);
+    remove_hooks(_origClass,sname, env, new_class_data_len, new_class_data);
+  }
+  std::unique_lock<std::mutex> lck{_all_loaded_mutex};
+  _all_loadedClasses.insert(sname);
 }
 
 
