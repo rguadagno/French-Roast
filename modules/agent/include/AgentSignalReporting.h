@@ -66,4 +66,7 @@ std::string get_value(JNIEnv* ptr, jobject obj, FieldInfo& field);
 void populate_stack( JNIEnv * jni_env, jvmtiEnv* genv, jvmtiFrameInfo* frames, int count, std::vector<DescriptorVO>& rv,
                      std::unordered_map<std::string, bool>& artifacts );
 
+void populate_class_fields_info(jvmtiEnv* env,char* classDescriptor, jclass theclass, std::unordered_map<std::string, FieldInfo>& gfieldinfo);
+void populate_artifacts(JNIEnv * ptr,  jvmtiEnv* env, jvmtiFrameInfo* frames, jobject& obj, std::string& params, std::string& fieldValues, std::vector<DescriptorVO>& stack, jthread& aThread);
+
 #endif

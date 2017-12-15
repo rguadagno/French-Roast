@@ -21,18 +21,6 @@
 #include "AgentSignalReporting.h"
 #include "MockJNI.h"
 
-/*
-#include <vector>
-#include "jvmti.h"
-
-#include "OpCode.h"
-#include "AgentHooks.h"
-#include "FrenchRoast.h"
-#include "testing_utils.h"
-
-#include "fr_signals.h"
-*/
-
 
 
 TEST_CASE("get_value")

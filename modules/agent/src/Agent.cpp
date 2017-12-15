@@ -52,7 +52,7 @@ std::mutex _loading_data_mutex;
 std::mutex _profiler_mutex;
 std::mutex _all_loaded_mutex;
 
-std::mutex _cache_mutex;
+
 boost::lockfree::queue<std::string*> _signalQueue{10000};
 
 
@@ -158,7 +158,6 @@ struct jni_cache {
 
 
 std::vector<frenchroast::monitor::ClassDetail>                  _loadedClasses;
-std::unordered_map<std::string, FieldInfo> _reportingFields;
 frenchroast::OpCode                        _opcodes;
 frenchroast::FrenchRoast                   _fr{_opcodes};
 frenchroast::signal::Signals               _hooks;
@@ -221,99 +220,6 @@ JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass obj
   }
 }
 
-
-
-
-void populate_class_fields_info(char* classDescriptor, jclass theclass, std::unordered_map<std::string, FieldInfo>& gfieldinfo)
-{
-
-  static std::unordered_map<void*, int> _cache;
-  
-  jint fieldcount=0;
-  jfieldID* idPtr;
-  genv->GetClassFields(theclass, &fieldcount, &idPtr);
-
-  char* fieldname;
-  char* sigptr;
-  char* genericptr;
-
-   _cache_mutex.lock();
-   if(_cache.find(idPtr) != _cache.end()) {
-     _cache_mutex.unlock();
-  return;
-  }
-  for(int idx = 0; idx < fieldcount; idx++) {
-    
-    genv->GetFieldName(theclass,  *(idPtr + idx), &fieldname, &sigptr, &genericptr);
-    std::string desc = classDescriptor;
-    desc.append(">");
-    desc.append(fieldname);
-    gfieldinfo[desc] = FieldInfo{fieldname, sigptr, *(idPtr + idx)};
-    _cache[(idPtr + idx)] = 1;
-  }
-  _cache_mutex.unlock();
-}
-
-
-
-
-
-
-
-
-
-void populate_artifacts(JNIEnv * ptr,   jvmtiFrameInfo* frames, jobject& obj, std::string& params, std::string& fieldValues, std::vector<DescriptorVO>& stack, jthread& aThread)
-{
-      int slot = 0;
-    jstring jsvalue;
-      for(auto& argtype : typeTokenizer(stack[0]._methodSignature)) {
-        ++slot;
-        switch(argtype) {
-        case INT_TYPE:
-          jint ivalue;
-          if(!ErrorHandler::check_jvmti_error(genv->GetLocalInt(aThread, 1,slot, &ivalue), "GetLocalInt")) return;
-          params.append(std::to_string(ivalue) + ",");
-
-          break;
-        case STRING_TYPE:
-          jobject ovalue;
-          if(!ErrorHandler::check_jvmti_error(genv->GetLocalObject(aThread, 1,slot, &ovalue), "GetLocalObject")) return;
-          jsvalue = jstring(ovalue);
-          params.append(  std::string(ptr->GetStringUTFChars(jsvalue,0)) + ",");
-          ptr->DeleteLocalRef(ovalue);
-          break;
-        case ARRAY_TYPE:
-          params.append( "[],");
-          break;
-        }
-      }
-    
-      if(params.length() > 1) {
-        params.erase(params.length() -1 ,1);
-      }
-    
-      
-      if(_hooks.get_marker_fields(stack[0]._classSignature, std::string{stack[0]._methodName} + ":" + stack[0]._methodSignature).size() > 0) {
-        jclass theclass;
-        if(!ErrorHandler::check_jvmti_error(genv->GetMethodDeclaringClass(frames[1].method, &theclass), "GetMethodDeclaringClass")) return;
-       
-        std::string classStr = std::string{stack[0]._classSignature};
-        std::string key;
-
-        for(auto& fieldname : _hooks.get_marker_fields(stack[0]._classSignature, std::string{stack[0]._methodName} + ":" + stack[0]._methodSignature)) {
-          key = classStr + ">" + fieldname;
-          if(_reportingFields.find(key) == _reportingFields.end()) {
-            populate_class_fields_info(stack[0]._classSignature, theclass, _reportingFields);          
-          }
-          fieldValues.append(get_value(ptr, obj, _reportingFields[ key]));       
-        }
-        
-        ptr->DeleteLocalRef(theclass);
-      }
-
-}
-
-
 JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass, jobject obj)
 {
   
@@ -333,37 +239,33 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
     std::string params = "(";
     std::string fieldValues = "";
     if(_artifacts[stack[0].descriptor()]) {
-      populate_artifacts(ptr, frames, obj, params, fieldValues, stack, aThread);
+      populate_artifacts(ptr, genv, frames, obj, params, fieldValues, stack, aThread);
     }
 
     params.append(")");
-    //----------------------------------------------------------------    
-
-
-    //----------------------------------------------------------------          
-      std::string stackstr = "";
-      std::string* firstStr = new std::string{"signal~"};
-      firstStr->append(stack[0].descriptor());
+    std::string stackstr = "";
+    std::string* firstStr = new std::string{"signal~"};
+    firstStr->append(stack[0].descriptor());
 
       
-      for(auto& x : stack) {
-         stackstr.append(x.descriptor());
-         stackstr.append("%");
-         genv->Deallocate((unsigned char*)x._methodName);
-         genv->Deallocate((unsigned char*)x._methodSignature);
-         genv->Deallocate((unsigned char*)x._classSignature);
-      }
+    for(auto& x : stack) {
+      stackstr.append(x.descriptor());
+      stackstr.append("%");
+      genv->Deallocate((unsigned char*)x._methodName);
+      genv->Deallocate((unsigned char*)x._methodSignature);
+      genv->Deallocate((unsigned char*)x._classSignature);
+    }
       
-      firstStr->append("~");
-      firstStr->append(tname);
-      firstStr->append("~");
-      firstStr->append(fieldValues);
-      firstStr->append("~");
-      firstStr->append(params);
-      firstStr->append("~");
-      firstStr->append(stackstr);
-
-      _signalQueue.push(firstStr);
+    firstStr->append("~");
+    firstStr->append(tname);
+    firstStr->append("~");
+    firstStr->append(fieldValues);
+    firstStr->append("~");
+    firstStr->append(params);
+    firstStr->append("~");
+    firstStr->append(stackstr);
+    
+    _signalQueue.push(firstStr);
   }
 }
 

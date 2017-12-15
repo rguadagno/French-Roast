@@ -18,8 +18,14 @@
 //
 
 #include <string>
+#include <mutex>
 #include "AgentSignalReporting.h"
 #include "AgentUtil.h"
+#include "fr_signals.h"
+
+extern frenchroast::signal::Signals  _hooks;
+std::mutex _cache_mutex;
+std::unordered_map<std::string, FieldInfo> _reportingFields;
 
 std::string get_value(JNIEnv* ptr, jobject obj, FieldInfo& field)
 {
@@ -55,4 +61,85 @@ void populate_stack( JNIEnv * jni_env, jvmtiEnv* env, jvmtiFrameInfo* frames, in
       return;
     }
   }
+}
+
+void populate_class_fields_info(jvmtiEnv* env, char* classDescriptor, jclass theclass, std::unordered_map<std::string, FieldInfo>& gfieldinfo)
+{
+
+  static std::unordered_map<void*, int> _cache;
+  
+  jint fieldcount=0;
+  jfieldID* idPtr;
+  env->GetClassFields(theclass, &fieldcount, &idPtr);
+
+  char* fieldname;
+  char* sigptr;
+  char* genericptr;
+
+   _cache_mutex.lock();
+   if(_cache.find(idPtr) != _cache.end()) {
+     _cache_mutex.unlock();
+  return;
+  }
+  for(int idx = 0; idx < fieldcount; idx++) {
+    
+    env->GetFieldName(theclass,  *(idPtr + idx), &fieldname, &sigptr, &genericptr);
+    std::string desc = classDescriptor;
+    desc.append(">");
+    desc.append(fieldname);
+    gfieldinfo[desc] = FieldInfo{fieldname, sigptr, *(idPtr + idx)};
+    _cache[(idPtr + idx)] = 1;
+  }
+  _cache_mutex.unlock();
+}
+
+void populate_artifacts(JNIEnv * ptr, jvmtiEnv* env,  jvmtiFrameInfo* frames, jobject& obj, std::string& params, std::string& fieldValues, std::vector<DescriptorVO>& stack, jthread& aThread)
+{
+      int slot = 0;
+    jstring jsvalue;
+      for(auto& argtype : typeTokenizer(stack[0]._methodSignature)) {
+        ++slot;
+        switch(argtype) {
+        case INT_TYPE:
+          jint ivalue;
+          if(!ErrorHandler::check_jvmti_error(env->GetLocalInt(aThread, 1,slot, &ivalue), "GetLocalInt")) return;
+          params.append(std::to_string(ivalue) + ",");
+
+          break;
+        case STRING_TYPE:
+          jobject ovalue;
+          if(!ErrorHandler::check_jvmti_error(env->GetLocalObject(aThread, 1,slot, &ovalue), "GetLocalObject")) return;
+          jsvalue = jstring(ovalue);
+          params.append(  std::string(ptr->GetStringUTFChars(jsvalue,0)) + ",");
+          ptr->DeleteLocalRef(ovalue);
+          break;
+        case ARRAY_TYPE:
+          params.append( "[],");
+          break;
+        }
+      }
+    
+      if(params.length() > 1) {
+        params.erase(params.length() -1 ,1);
+      }
+    
+      
+      if(_hooks.get_marker_fields(stack[0]._classSignature, std::string{stack[0]._methodName} + ":" + stack[0]._methodSignature).size() > 0) {
+        jclass theclass;
+        if(!ErrorHandler::check_jvmti_error(env->GetMethodDeclaringClass(frames[1].method, &theclass), "GetMethodDeclaringClass")) return;
+       
+        std::string classStr = std::string{stack[0]._classSignature};
+        std::string key;
+
+        for(auto& fieldname : _hooks.get_marker_fields(stack[0]._classSignature, std::string{stack[0]._methodName} + ":" + stack[0]._methodSignature)) {
+          key = classStr + ">" + fieldname;
+          if(_reportingFields.find(key) == _reportingFields.end()) {
+            populate_class_fields_info(env, stack[0]._classSignature, theclass, _reportingFields);          
+          }
+          fieldValues.append(get_value(ptr, obj, _reportingFields[ key]));       
+        }
+        
+        ptr->DeleteLocalRef(theclass);
+      }
+
 }
