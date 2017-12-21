@@ -21,36 +21,28 @@
 
 namespace frenchroast { namespace agent {
 
-    void Reporter::setTransport(Transport* ptr)
-    {
-      if(ptr == nullptr) throw std::invalid_argument("Transport is nullptr");
-      _ptr = ptr;
-    }
 
+    Reporter::Reporter(network::Connector<>& conn) : _conn(conn)
+    {
+    }
+    
     void Reporter::signal(const std::string& tag)
     {
-      _ptr->out(tag);
+      _conn.send_message(tag);
     }
 
     void Reporter::unloaded(const std::string& msg)
     {
       using  namespace frenchroast::network;
-      _ptr->out("unloaded~" + Connector<>::get_hostname() + "~" +       std::to_string(Connector<>::get_pid()));
+      _conn.send_message("unloaded~" + Connector<>::get_hostname() + "~" +       std::to_string(Connector<>::get_pid()));
     }
 
     void Reporter::ready()
     {
       using  frenchroast::network::Connector;
       using  namespace frenchroast::network;
-      _ptr->out("ready~" + Connector<>::get_hostname() + "~" +       std::to_string(Connector<>::get_pid()));
+      _conn.send_message("ready~" + Connector<>::get_hostname() + "~" +       std::to_string(Connector<>::get_pid()));
     }
-
-    
-    //    void Reporter::close()
-    //{
-    //_impPtr->close();
-    //}
-
   }
 }
 

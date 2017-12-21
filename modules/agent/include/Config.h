@@ -45,7 +45,6 @@ command_descriptor     <server>
       std::string _server{""};
       std::string _serverip{""};
       int          _serverPort{6060};
-      bool        _serverRequired{false};
       
     public:
       Config();
@@ -55,10 +54,6 @@ command_descriptor     <server>
       const std::string& get_server_ip() const;
       int get_server_port() const;
       std::string get_report_filename() const;
-      bool is_server_required() const;
-      bool is_cout_reporter() const;
-      bool is_file_reporter() const;
-      bool is_server_reporter() const;
     };
   }
 }

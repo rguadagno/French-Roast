@@ -28,7 +28,7 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     ../../signal/src/SignalValidator.cpp
     )	
     find_package(Threads)
-    add_definitions("-std=c++14")
+    add_definitions("-std=c++17")
     add_definitions(-DCONNECTOR_UNIX)
 #   target_link_libraries(client ${CMAKE_THREAD_LIBS_INIT})   
 

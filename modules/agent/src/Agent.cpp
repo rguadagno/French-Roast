@@ -38,9 +38,6 @@
 #include "Reporter.h"
 #include "Config.h"
 #include "CommandListener.h"
-#include "CoutTransport.h"
-#include "FileTransport.h"
-#include "ServerTransport.h"
 #include "Listener.h"
 #include "AgentUtil.h"
 #include "ClassDetail.h"
@@ -163,7 +160,7 @@ frenchroast::FrenchRoast                   _fr{_opcodes};
 frenchroast::signal::Signals               _hooks;
 std::unordered_map<std::string, bool>      _artifacts;
 frenchroast::agent::Config                 _config;
-frenchroast::agent::Reporter               _rptr;
+frenchroast::agent::Reporter               _rptr{_conn};
 CommandBridge                              _commandListener;
 
 jvmtiEnv* genv;
@@ -707,29 +704,8 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     exit(0);
   }
 
+  _conn.connect_to_server(_config.get_server_ip(), _config.get_server_port(), &_commandListener);
   
-  if(_config.is_server_required()) {
-    _conn.connect_to_server(_config.get_server_ip(), _config.get_server_port(), &_commandListener);
-  }
-
-    
-  frenchroast::agent::Transport* tptr{nullptr};
-
-  /*
-   if(_config.is_cout_reporter()) {
-    tptr = new frenchroast::agent::CoutTransport{};
-  }
-
-  if(_config.is_file_reporter()) {
-    tptr = new frenchroast::agent::FileTransport{_config.get_report_filename()};
-  }
-
-  if(_config.is_server_reporter()) {
-    tptr = new frenchroast::agent::ServerTransport{_conn};
-  }
-  */
-  tptr = new frenchroast::agent::ServerTransport{_conn};
-  _rptr.setTransport(tptr);
   jvmtiEnv* env;
   vm->GetEnv((void**)&env, JVMTI_VERSION);
 

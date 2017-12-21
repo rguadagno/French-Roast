@@ -48,26 +48,6 @@ namespace frenchroast { namespace agent {
       return _hooksFile;
     }
 
-    bool Config::is_server_required() const
-    {
-      return _serverRequired;
-    }
-
-    bool Config::is_cout_reporter() const
-    {
-      return _reporterDescriptor.find("cout") != std::string::npos;;
-    }
-
-    bool Config::is_file_reporter() const
-    {
-      return _reporterDescriptor.find("file:") != std::string::npos;;
-    }
-
-    bool Config::is_server_reporter() const
-    {
-      return _reporterDescriptor.find("server") != std::string::npos;;
-    }
-
     std::string Config::get_report_filename() const
     {
       return _reporterDescriptor.substr(std::string{"file:"}.size());
@@ -121,7 +101,6 @@ template
           conn.connect_to_server(_serverip, _serverPort);
           conn.send_message("transmit-hooks");
           conn.blocked_listen(new LocalListener<frenchroast::signal::Signals>(hooks, conn));
-          _serverRequired = true;
           return true;
         }
 
