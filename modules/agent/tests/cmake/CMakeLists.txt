@@ -12,7 +12,10 @@ if(NOT JAVA_INCLUDE_DIR)
    message(FATAL_ERROR "env variable JAVA_INCLUDE_DIR must be defined, the dir where the jvmti.h exists.")
 endif()
 
+set(hello "herbert" CACHE STRING "")
+message(STATUS ${hello})
 
+set(some_type "" CACHE STRING "")
 
 include_directories(
 ${CATCH_LOCATION}
@@ -50,9 +53,14 @@ FILE(GLOB src_files
 ../../../signal/src/SignalValidator.cpp
 )
 
+
+
+
 if (UNIX)
    add_definitions("-std=c++14")
    add_definitions(-DCONNECTOR_UNIX)
+   add_definitions(-DOKOK=${hello})
+    add_definitions(-DSOME_TYPE=${some_type})  
    find_package(Threads)
 endif ()
 

@@ -21,11 +21,20 @@
 #include "AgentSignalReporting.h"
 #include "MockJNI.h"
 
+#include <iostream>
 
+TEST_CASE("huh")
+{
+  std::vector<SOME_TYPE> data;
+  
+  
+  std::cout << "OPT: " << OKOK << std::endl;
+}
 
 TEST_CASE("get_value")
 {
 
+  
   FieldInfo field_info;
   jobject obj;
   MockJNI jnimock;

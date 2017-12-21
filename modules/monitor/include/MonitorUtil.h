@@ -10,6 +10,7 @@
 #include "MethodStats.h"
 #include "JammedReport.h"
 #include "Connector.h"
+#include "MarkerField.h"
 
 namespace frenchroast {  namespace monitor {
 
@@ -32,8 +33,8 @@ namespace frenchroast {  namespace monitor {
     std::vector<ClassDetail> construct_class_details(const std::string& msg);
     void transmit_lines(const std::string& fileName, const std::string& ipport, frenchroast::network::Connector<>&);
     void transmit_lines(const std::vector<std::string>&, const std::string& ipport, frenchroast::network::Connector<>&);
-
-
+    MarkerField build_marker( std::string str);
+    std::vector<std::string> build_instance_headers(const std::string& subkey);
 
   }};
 

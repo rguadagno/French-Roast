@@ -43,10 +43,34 @@ namespace frenchroast { namespace monitor {
                                                              {'S',"short"}
                 
                                                            };
+    MarkerField build_marker( std::string str)
+    {
+      MarkerField mf{str};
+      
+      for(auto& x: frenchroast::split(frenchroast::split(str, ")")[0].substr(1),",")) {
+        mf._arg_items.push_back(x);
+      }
+      
+      for(auto& x: frenchroast::split(frenchroast::split(str, ")")[1],";")) {
+        if(x.find(":") != std::string::npos) {
+          mf._instance_items.push_back(frenchroast::split(x,":")[1]);
+        }
+      }
+      
+      return mf;
+    }
     
-
-
-
+    std::vector<std::string> build_instance_headers(const std::string& subkey)
+    {
+      std::vector<std::string> rv;
+      for(auto& x: frenchroast::split(frenchroast::split(subkey, ")")[1],";")) {
+        if(x.find(":") != std::string::npos) {
+          rv.push_back(frenchroast::split(x,":")[0]);
+        }
+      }
+      return rv;
+    }
+    
     std::vector<std::string> parse_type_tokens(const std::string& tstr)
     {
       std::vector<std::string> rv;

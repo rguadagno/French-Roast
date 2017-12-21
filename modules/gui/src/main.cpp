@@ -25,7 +25,6 @@
 #include "fr.h"
 #include "FRMain.h"
 #include "Editor.h"
-#include "MonitorUtil.h"
 
 
 int main(int argc, char* argv[]) {
