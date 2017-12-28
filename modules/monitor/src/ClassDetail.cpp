@@ -18,27 +18,56 @@
 //
 
 #include "ClassDetail.h"
+#include "Util.h"
 
 namespace frenchroast { namespace monitor {
 
 
-      ClassDetail::ClassDetail(const std::string& name, std::vector<std::string>& methods) : _name(name), _methods(methods)
-      {
-      }
+    ClassDetail::ClassDetail(const std::string& name, std::vector<std::string>& methods) : _name(name), _methods(methods)
+    {
+    }
+    
+    ClassDetail::ClassDetail()
+    {
+    }
       
-      ClassDetail::ClassDetail()
-      {
-      }
+    const std::string& ClassDetail::name() const
+    {
+      return _name;
+    }
       
-      const std::string& ClassDetail::name() const
-      {
-        return _name;
-      }
+    const std::vector<std::string>& ClassDetail::methods() const
+    {
+      return _methods;
+    }
+
+    bool ClassDetail::operator==(const ClassDetail& ref)
+    {
+      if(_name != ref._name) return false;
+      if(_methods.size() != ref._methods.size()) return false;
       
-      const std::vector<std::string>& ClassDetail::methods() const
-      {
-        return _methods;
+      for(std::size_t idx = 0;idx < _methods.size(); idx++) {
+        if(_methods[idx] != ref._methods[idx]) return false;
       }
+      return true;
+    }
+
+    bool ClassDetail::operator!=(const ClassDetail& ref)
+    {
+      return !(*this == ref);
+    }
+    
+    ClassDetail& operator>>(const std::string& serial, ClassDetail& ref)
+    {
+      ref._name = frenchroast::split(serial, "<end-name>")[0];
+      for(auto& method : frenchroast::split(frenchroast::split(serial, "<end-name>")[1],"<end-method>")) {
+        if(method != "") {
+          ref._methods.push_back(method);
+        }
+      }
+      return ref;
+    }
+    
   }
 }
 

@@ -24,6 +24,7 @@
 
 namespace frenchroast { namespace monitor {
     class ClassDetail {
+      friend     ClassDetail& operator>>(const std::string&, ClassDetail& ref);
       std::string              _name;
       std::vector<std::string> _methods;
 
@@ -32,7 +33,22 @@ namespace frenchroast { namespace monitor {
       ClassDetail();
       const std::string& name() const;
       const std::vector<std::string>& methods() const;
+      bool operator==(const ClassDetail&);
+      bool operator!=(const ClassDetail&);
+
     };
+
+    ClassDetail& operator>>(const std::string&, ClassDetail& ref);
+
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const ClassDetail& ref)
+      {
+        out << ref.name() << "<end-name>";
+        for(auto& x : ref.methods()) {
+          out << x << "<end-method>";
+        }
+        return out;
+      }
   }
 }
 
