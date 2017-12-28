@@ -30,7 +30,13 @@ namespace frenchroast { namespace monitor {
     ClassDetail::ClassDetail()
     {
     }
-      
+
+    ClassDetail::ClassDetail(const ClassDetail& ref)
+    {
+      _name = ref._name;
+      _methods = ref._methods;
+    }
+    
     const std::string& ClassDetail::name() const
     {
       return _name;
@@ -41,7 +47,7 @@ namespace frenchroast { namespace monitor {
       return _methods;
     }
 
-    bool ClassDetail::operator==(const ClassDetail& ref)
+    bool ClassDetail::operator==(const ClassDetail& ref) const
     {
       if(_name != ref._name) return false;
       if(_methods.size() != ref._methods.size()) return false;
@@ -52,10 +58,11 @@ namespace frenchroast { namespace monitor {
       return true;
     }
 
-    bool ClassDetail::operator!=(const ClassDetail& ref)
+    bool ClassDetail::operator!=(const ClassDetail& ref) const
     {
       return !(*this == ref);
     }
+
     
     ClassDetail& operator>>(const std::string& serial, ClassDetail& ref)
     {
@@ -66,6 +73,15 @@ namespace frenchroast { namespace monitor {
         }
       }
       return ref;
+    }
+
+    bool operator==(const std::vector<ClassDetail>& listA, const std::vector<ClassDetail>& listB)
+    {
+      if(listA.size() != listB.size()) return false;
+      for(std::size_t idx = 0; idx < listA.size(); idx++) {
+        if(listA[idx] != listB[idx]) return false;
+      }
+      return true;
     }
     
   }

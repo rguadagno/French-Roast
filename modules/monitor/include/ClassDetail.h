@@ -31,15 +31,17 @@ namespace frenchroast { namespace monitor {
     public:
       ClassDetail(const std::string& name, std::vector<std::string>& descriptors);
       ClassDetail();
+      ClassDetail(const ClassDetail&);
       const std::string& name() const;
       const std::vector<std::string>& methods() const;
-      bool operator==(const ClassDetail&);
-      bool operator!=(const ClassDetail&);
+      bool operator==(const ClassDetail&) const;
+      bool operator!=(const ClassDetail&) const;
 
     };
 
     ClassDetail& operator>>(const std::string&, ClassDetail& ref);
-
+    bool operator==(const std::vector<ClassDetail>& listA, const std::vector<ClassDetail>& listB);
+    
     template <typename OutType>
       OutType& operator<<(OutType& out, const ClassDetail& ref)
       {
