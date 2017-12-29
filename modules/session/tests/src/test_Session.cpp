@@ -120,7 +120,7 @@ TEST_CASE("load() with no Persistor")
 
 
 
-TEST_CASE("store() / load ()")
+TEST_CASE("store(fileName) / load (fileName)")
 {
   std::vector<ClassDetail> details;
   std::vector<std::string> methods;
@@ -137,3 +137,58 @@ TEST_CASE("store() / load ()")
   s2.load("/tmp/session_test.txt");
   REQUIRE(s1 == s2);
 }
+
+TEST_CASE("store(fileName) / load (fileName) : empty details")
+{
+  std::vector<ClassDetail> details;
+  Session s1{new PersistorFile{}};
+  s1.update_class_viewer(details);
+  s1.store("/tmp/session_test.txt");
+  Session s2{new PersistorFile{}};
+  s2.load("/tmp/session_test.txt");
+  REQUIRE(s1 == s2);
+}
+
+
+
+
+TEST_CASE("store() no Persistor")
+{
+  Session s1{};
+  REQUIRE_THROWS_WITH( s1.store(), "no storage descriptor available");
+}
+
+TEST_CASE("store() with Persistor")
+{
+  Session s1{new PersistorFile{}};
+  REQUIRE_THROWS_WITH( s1.store(), "no storage descriptor available");
+}
+
+
+
+TEST_CASE("store(fileName), store()")
+{
+
+  std::vector<ClassDetail> details;
+  std::vector<std::string> methods;
+  methods.push_back("funcA");
+  methods.push_back("funcB");
+  ClassDetail cd1{"SomeClass", methods};
+  ClassDetail cd2{"SomeClassMore", methods};
+  details.push_back(cd1);
+  details.push_back(cd2);
+  Session s1{new PersistorFile{}};
+  s1.update_class_viewer(details);
+  s1.store("/tmp/session_test.txt");
+  details.clear();
+  ClassDetail cd3{"SomeClassAgain", methods};
+  details.push_back(cd3);
+  s1.update_class_viewer(details);
+  s1.store();
+  Session s2{new PersistorFile{}};
+  s2.load("/tmp/session_test.txt");
+  REQUIRE(s1 == s2);
+}
+
+  
+

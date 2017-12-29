@@ -56,9 +56,16 @@ namespace frenchroast { namespace session {
       if(_persistor == nullptr) {
         throw std::invalid_argument("no Persistor set");
       }
+      _descriptor = fileName;
       _persistor->store(fileName, _loaded_classes);
     }
 
+    void Session::store()
+    {
+      if(_descriptor == "") throw std::invalid_argument("no storage descriptor available");
+      store(_descriptor);
+    }
+    
     void Session::load(const std::string& fileName)
     {
       if(_persistor == nullptr) {
