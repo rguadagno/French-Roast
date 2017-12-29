@@ -41,7 +41,7 @@ namespace frenchroast { namespace session {
       return !(*this == ref);
     }
 
-    void Session::update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>& details)
+    void Session::update(const std::vector<frenchroast::monitor::ClassDetail>& details)
     {
       _loaded_classes.insert(_loaded_classes.end(), details.begin(), details.end());
     }
@@ -62,7 +62,7 @@ namespace frenchroast { namespace session {
 
     void Session::store()
     {
-      if(_descriptor == "") throw std::invalid_argument("no storage descriptor available");
+      if(!has_descriptor()) throw std::invalid_argument("no storage descriptor available");
       store(_descriptor);
     }
     
@@ -73,6 +73,11 @@ namespace frenchroast { namespace session {
       }
 
       _persistor->load(fileName, _loaded_classes);
+    }
+
+    bool Session::has_descriptor() const
+    {
+      return _descriptor != "";
     }
     
     Session::~Session()

@@ -38,13 +38,14 @@ namespace frenchroast { namespace session {
       Session(Persistor*, const std::string& descriptor, std::size_t seconds);
       Session(const Session&);
       ~Session();
-      void update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>& details);
+      void update(const std::vector<frenchroast::monitor::ClassDetail>& details);
       std::vector<frenchroast::monitor::ClassDetail> get_class_viewer() const;
       void store(const std::string&);
       void store();
       void load(const std::string&);     
       bool operator==(const Session& ref) const;
       bool operator!=(const Session& ref) const;
+      bool has_descriptor() const;
     };
     
   }

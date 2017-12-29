@@ -45,7 +45,7 @@ TEST_CASE("operator== and Copy consstructor,  objects are equal and not empty")
   methods.push_back("funcB");
   ClassDetail cd1{"SomeClass", methods};
 
-  s1.update_class_viewer(details);
+  s1.update(details);
   
   Session s2= s1;
   REQUIRE((s1 == s2));
@@ -62,7 +62,7 @@ TEST_CASE("update_class_viewer, once")
   ClassDetail cd1{"SomeClass", methods};
 
   details.push_back(cd1);
-  s1.update_class_viewer(details);
+  s1.update(details);
   
   REQUIRE(details == s1.get_class_viewer());
 }
@@ -77,11 +77,11 @@ TEST_CASE("update_class_viewer, append")
   ClassDetail cd1{"SomeClass", methods};
 
   details.push_back(cd1);
-  s1.update_class_viewer(details);
+  s1.update(details);
   ClassDetail cd2{"SomeClassMore", methods};
   details.clear();
   details.push_back(cd2);
-  s1.update_class_viewer(details);
+  s1.update(details);
   details.clear();
   details.push_back(cd1);
   details.push_back(cd2);
@@ -98,7 +98,7 @@ TEST_CASE("operator== and Copy consstructor,  objects are not equal and not empt
   methods.push_back("funcB");
   ClassDetail cd1{"SomeClass", methods};
   details.push_back(cd1);
-  s1.update_class_viewer(details);
+  s1.update(details);
   
   Session s2;
   REQUIRE((s1 != s2));
@@ -131,7 +131,7 @@ TEST_CASE("store(fileName) / load (fileName)")
   details.push_back(cd1);
   details.push_back(cd2);
   Session s1{new PersistorFile{}};
-  s1.update_class_viewer(details);
+  s1.update(details);
   s1.store("/tmp/session_test.txt");
   Session s2{new PersistorFile{}};
   s2.load("/tmp/session_test.txt");
@@ -142,7 +142,7 @@ TEST_CASE("store(fileName) / load (fileName) : empty details")
 {
   std::vector<ClassDetail> details;
   Session s1{new PersistorFile{}};
-  s1.update_class_viewer(details);
+  s1.update(details);
   s1.store("/tmp/session_test.txt");
   Session s2{new PersistorFile{}};
   s2.load("/tmp/session_test.txt");
@@ -164,6 +164,21 @@ TEST_CASE("store() with Persistor")
   REQUIRE_THROWS_WITH( s1.store(), "no storage descriptor available");
 }
 
+TEST_CASE("has_descriptor() no")
+{
+  Session s1{};
+  REQUIRE(s1.has_descriptor() == false);
+}
+
+TEST_CASE("has_descriptor() yes")
+{
+  std::vector<ClassDetail> details;
+  Session s1{new PersistorFile{}};
+  s1.update(details);
+  s1.store("/tmp/session_test.txt");
+  REQUIRE(s1.has_descriptor());
+}
+
 
 
 TEST_CASE("store(fileName), store()")
@@ -178,12 +193,12 @@ TEST_CASE("store(fileName), store()")
   details.push_back(cd1);
   details.push_back(cd2);
   Session s1{new PersistorFile{}};
-  s1.update_class_viewer(details);
+  s1.update(details);
   s1.store("/tmp/session_test.txt");
   details.clear();
   ClassDetail cd3{"SomeClassAgain", methods};
   details.push_back(cd3);
-  s1.update_class_viewer(details);
+  s1.update(details);
   s1.store();
   Session s2{new PersistorFile{}};
   s2.load("/tmp/session_test.txt");
