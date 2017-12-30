@@ -40,6 +40,7 @@ namespace frenchroast { namespace monitor {
     };
 
     ClassDetail& operator>>(const std::string&, ClassDetail& ref);
+    std::vector<ClassDetail>& operator>>(const std::string&, std::vector<ClassDetail>& ref);
     bool operator==(const std::vector<ClassDetail>& listA, const std::vector<ClassDetail>& listB);
     
     template <typename OutType>
@@ -51,6 +52,16 @@ namespace frenchroast { namespace monitor {
         }
         return out;
       }
+
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const std::vector<ClassDetail>& ref)
+      {
+        for(auto& x : ref) {
+          out << x << "<end-item>";
+        }
+        return out;
+      }
+
   }
 }
 

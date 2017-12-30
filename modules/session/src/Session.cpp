@@ -46,7 +46,7 @@ namespace frenchroast { namespace session {
       _loaded_classes.insert(_loaded_classes.end(), details.begin(), details.end());
     }
     
-    std::vector<frenchroast::monitor::ClassDetail> Session::get_class_viewer() const
+    std::vector<frenchroast::monitor::ClassDetail> Session::get_loaded_classes() const
     {
       return _loaded_classes;
     }

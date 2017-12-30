@@ -39,7 +39,7 @@ namespace frenchroast { namespace session {
       Session(const Session&);
       ~Session();
       void update(const std::vector<frenchroast::monitor::ClassDetail>& details);
-      std::vector<frenchroast::monitor::ClassDetail> get_class_viewer() const;
+      std::vector<frenchroast::monitor::ClassDetail> get_loaded_classes() const;
       void store(const std::string&);
       void store();
       void load(const std::string&);

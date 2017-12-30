@@ -63,16 +63,58 @@ TEST_CASE("operator<<")
 }
 
 
+TEST_CASE("operator<< vector<ClassDetail>")
+{
+  std::vector<std::string> methods;
+  methods.push_back("funcA");
+  methods.push_back("funcB");
+  
+  std::vector<ClassDetail> classes;
+  classes.emplace_back("SomeClass",methods);
+  classes.emplace_back("SomeClassMore",methods);
+  std::stringstream ss;
+  ss << classes;
+  std::string line = ss.str();
+  REQUIRE(line == "SomeClass<end-name>funcA<end-method>funcB<end-method><end-item>SomeClassMore<end-name>funcA<end-method>funcB<end-method><end-item>");
+}
+
+
+TEST_CASE("operator>> vector<ClassDetail>")
+{
+  std::vector<std::string> methods;
+  methods.push_back("funcA");
+  methods.push_back("funcB");
+  
+  std::vector<ClassDetail> classes;
+  classes.emplace_back("SomeClass",methods);
+  classes.emplace_back("SomeClassMore",methods);
+  std::vector<ClassDetail> classes2;
+  "SomeClass<end-name>funcA<end-method>funcB<end-method><end-item>SomeClassMore<end-name>funcA<end-method>funcB<end-method><end-item>" >> classes2;
+
+  REQUIRE(classes == classes2);
+  
+}
+
 TEST_CASE("operator>>")
 {
   std::vector<std::string> methods;
   methods.push_back("funcA");
   methods.push_back("funcB");
   ClassDetail cd{"SomeClass", methods};
-  std::stringstream line;
-  line << cd;
   ClassDetail cd2{};
-  line.str() >> cd2;
+  "SomeClass<end-name>funcA<end-method>funcB<end-method>" >> cd2;
+  REQUIRE((cd == cd2));
+}
+
+
+TEST_CASE("operator>> from agent")
+{
+  std::vector<std::string> methods;
+  methods.push_back("funcA:(int):void");
+  methods.push_back("funcB:(int):void");
+  ClassDetail cd{"mypackage.SomeClass", methods};
+  ClassDetail cd2{};
+  "<agent>mypackage/SomeClass<end-name>funcA:(I)V<end-method>funcB:(I)V<end-method>" >> cd2;
   REQUIRE((cd == cd2));
 }
 

@@ -171,37 +171,6 @@ namespace frenchroast { namespace monitor {
       return rv;
     }
 
-
-
-    std::string translate_method(const std::string& pname)
-    {
-      std::string name = pname;
-      replace(name,'/','.');
-      std::string methodname = split(name, ":")[0];
-      std::string rvstr = translate_return_type(split(split(name,")")[1],":")[0]);
-      std::string parms = translate_param_types(split(split(name,"(")[1],")")[0]);
-      return methodname + ":(" + parms + "):" + rvstr;
-    }
-    
-    std::vector<ClassDetail> construct_class_details(const std::string& msg)
-    {
-      std::vector<ClassDetail> rv;
-      for(auto& citem : split(msg, "]^")) {
-        if(citem == "") break;
-        std::string name = split(citem, "^[")[0];
-        replace(name, "/", ".");
-        std::vector<std::string> methods;
-        for(auto& mitem : split(split(citem,"^[")[1],"%")) {
-          if(mitem == "") break;
-          methods.push_back(translate_method(mitem));
-        }
-        rv.emplace_back(name, methods);
-      }
-      
-      return rv;
-    }
-    
-
     void transmit_lines(const std::string& fileName, const std::string& ipport, frenchroast::network::Connector<>& conn)
     {
       try {

@@ -626,14 +626,10 @@ void class_loading_monitor()
 
   while(1) {
     if(_loadedClasses.size() > 0 ) {
-      std::string* str = new std::string{"loaded~"};
-      for(auto& citem : _loadedClasses) {
-        str->append(citem.name() + "^[");
-        for(auto& meth : citem.methods()) {
-          str->append(meth + "%");
-        }
-        str->append("]^");
-      }
+      std::string* str = new std::string{"loaded~<agent>"};
+      std::stringstream ss;
+      ss << _loadedClasses;
+      str->append(ss.str());
       _signalQueue.push(str);
       _loadedClasses.clear();
     }
