@@ -42,7 +42,8 @@ namespace frenchroast { namespace session {
       std::vector<frenchroast::monitor::ClassDetail> get_class_viewer() const;
       void store(const std::string&);
       void store();
-      void load(const std::string&);     
+      void load(const std::string&);
+      void reset();
       bool operator==(const Session& ref) const;
       bool operator!=(const Session& ref) const;
       bool has_descriptor() const;

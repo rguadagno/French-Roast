@@ -205,5 +205,49 @@ TEST_CASE("store(fileName), store()")
   REQUIRE(s1 == s2);
 }
 
+
+TEST_CASE("reset()")
+{
+  std::vector<ClassDetail> details;
+  std::vector<std::string> methods;
+  methods.push_back("funcA");
+  methods.push_back("funcB");
+  ClassDetail cd1{"SomeClass", methods};
+
+  details.push_back(cd1);
+
+  Session s1{};
+  s1.update(details);
+  Session s2{};
+  REQUIRE(s1 != s2);
+  s1.reset();
+  REQUIRE(s1 == s2);  
+}
+
+
+TEST_CASE("load 2 times in row - make sure not duplicated")
+{
+  std::vector<ClassDetail> details;
+  std::vector<std::string> methods;
+  methods.push_back("funcA");
+  methods.push_back("funcB");
+  ClassDetail cd1{"SomeClass", methods};
+
+  details.push_back(cd1);
+
+  Session s1{new PersistorFile{}};
+  s1.update(details);
+  s1.store("/tmp/session_test.txt");
+
+  Session s2{new PersistorFile{}};
+  s2.load("/tmp/session_test.txt");
+  s2.load("/tmp/session_test.txt");
+  
+  Session s3{new PersistorFile{}};
+  s3.load("/tmp/session_test.txt");
+
+  REQUIRE(s3 == s2);
+}
+
   
 

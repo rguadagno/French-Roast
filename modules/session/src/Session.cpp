@@ -71,10 +71,15 @@ namespace frenchroast { namespace session {
       if(_persistor == nullptr) {
         throw std::invalid_argument("no Persistor set");
       }
-
+      reset();
       _persistor->load(fileName, _loaded_classes);
     }
 
+    void Session::reset()
+    {
+      _loaded_classes.clear();
+    }
+    
     bool Session::has_descriptor() const
     {
       return _descriptor != "";
