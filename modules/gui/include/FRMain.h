@@ -38,15 +38,19 @@
 #include "DetailViewer.h"
 #include "DetailHolder.h"
 #include "FViewer.h"
+#include "Session.h"
 
+
+using namespace frenchroast::session;
 class FRMain : public QMainWindow {
-  Q_OBJECT
+    Q_OBJECT
 
  public:
-  FRMain(QSettings&, const std::string&);
+    FRMain(QSettings&, const std::string&, Session&, const std::string& session_dir);
 
  private:
-
+  Session&                                                      _session;
+  std::string                                                   _session_default_dir;
   QSettings&                                                    _settings;
   bool                                                          _exit{false};
   bool                                                          _ok_to_send_hooks{false};
@@ -72,9 +76,11 @@ class FRMain : public QMainWindow {
   void turn_on_profiler(const std::string& hostname_pid);
   void turn_off_profiler(const std::string& hostname_pid);
   void reset();
+
   
  public slots:
    void update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>&);
+   void update_class_viewer_session(const std::vector<frenchroast::monitor::ClassDetail>&);
    void update_jammed(const frenchroast::monitor::JammedReport&);
    void start_watch_loading();
    void stop_watch_loading();
@@ -100,8 +106,11 @@ class FRMain : public QMainWindow {
    void stop_watching_traffic();
    void handshake(const std::string& host, const std::string& ip);
    void reset_viewers();
+   void session_save();
+   void session_save_as();
+   void session_load();
+   
 };
-
 
 
 #endif

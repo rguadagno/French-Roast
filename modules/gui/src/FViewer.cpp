@@ -91,6 +91,11 @@ namespace frenchroast {
   QObject::connect(menu->addAction("Jammed Stacks"),         &QAction::triggered, this, &FViewer::jammed_viewer);
   QObject::connect(menu->addAction("Class loading watcher"), &QAction::triggered, this, &FViewer::classload_viewer);
   menu->addSeparator();
+  QMenu* session_menu = new QMenu("Session");
+  QObject::connect(session_menu->addAction("Save"),          &QAction::triggered, this, &FViewer::session_save);
+  QObject::connect(session_menu->addAction("Save As"),       &QAction::triggered, this, &FViewer::session_save_as);
+  QObject::connect(session_menu->addAction("Load"),          &QAction::triggered, this, &FViewer::session_load);
+  menu->addMenu(session_menu);
   QObject::connect(menu->addAction("Reset"),                 &QAction::triggered, this, &FViewer::reset);
   menu->addSeparator();
   QObject::connect(menu->addAction("Exit French-Roast"),     &QAction::triggered, this, &FViewer::exit_fr);

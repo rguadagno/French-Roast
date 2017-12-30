@@ -19,6 +19,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <QFileDialog>
 #include "fr.h"
 #include "FRMain.h"
 #include "MonitorUtil.h"
@@ -35,7 +36,9 @@ using namespace frenchroast;
 
 QSettings* FViewer::_settings = nullptr;
 
-FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settings(settings), _hooksfile(path_to_hooks)
+
+
+FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks, Session& session, const std::string& session_dir) : _settings(settings), _hooksfile(path_to_hooks), _session(session), _session_default_dir(session_dir)
 {
   FViewer::setSettings(&settings);
   restore();
@@ -138,8 +141,39 @@ void FRMain::connect_common_listeners(FViewer* instance)
   QObject::connect(instance, &frenchroast::FViewer::classload_viewer, this,  &FRMain::view_classviewer);
   QObject::connect(instance, &frenchroast::FViewer::about_viewer,     this,  &FRMain::view_about);
   QObject::connect(instance, &frenchroast::FViewer::reset,            this,  &FRMain::reset_viewers);
+  QObject::connect(instance, &frenchroast::FViewer::session_save,     this,  &FRMain::session_save);
+  QObject::connect(instance, &frenchroast::FViewer::session_save_as,  this,  &FRMain::session_save_as);
+  QObject::connect(instance, &frenchroast::FViewer::session_load,     this,  &FRMain::session_load);
   QObject::connect(instance, &frenchroast::FViewer::exit_fr,          this,  &FRMain::exit_fr);
 }
+
+void FRMain::session_save()
+{
+  if(_session.has_descriptor()) {
+    _session.store();
+  }
+  else {
+    session_save_as();
+  }
+}
+
+void FRMain::session_save_as()
+{
+  QString fileName = QFileDialog::getSaveFileName(this, "Choose sesion file", QString{_session_default_dir.c_str()});
+  if(fileName == "") return;
+  _session.store(fileName.toStdString());
+}
+
+void FRMain::session_load()
+{
+  QString fileName = QFileDialog::getOpenFileName(this, "Choose sesion file", QString{_session_default_dir.c_str()});
+  if(fileName == "") return;
+  _session.load(fileName.toStdString());
+
+  reset();
+  FClassViewer::instance(this)->update(_session.get_loaded_classes());
+}
+
 
 void FRMain::view_about()
 {
@@ -202,10 +236,18 @@ void FRMain::show_detail(const std::string& descriptor)
   update_detail_list(descriptor, &_detailDescriptors[descriptor], MarkerField{});
 }
 
+
+
 void FRMain::update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>& details)
 {
   FClassViewer::instance(this)->update(details);
 }
+
+void FRMain::update_class_viewer_session(const std::vector<frenchroast::monitor::ClassDetail>& details)
+{
+  _session.update(details);
+}
+
 
 void FRMain::update_jammed(const frenchroast::monitor::JammedReport& rpt)
 {

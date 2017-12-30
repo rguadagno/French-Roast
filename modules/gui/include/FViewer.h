@@ -59,6 +59,9 @@ namespace frenchroast {
      void about_viewer();
      void exit_fr();
      void reset();
+     void session_save();
+     void session_save_as();
+     void session_load();
      
      
   protected:

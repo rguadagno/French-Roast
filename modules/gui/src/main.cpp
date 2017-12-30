@@ -25,11 +25,12 @@
 #include "fr.h"
 #include "FRMain.h"
 #include "Editor.h"
+#include "PersistorFile.h"
+#include "Session.h"
 
 
-int main(int argc, char* argv[]) {
-
-
+int main(int argc, char* argv[])
+{
   if (argc != 3 && argc != 4) {
     std::cout << "usage: roaster <ip> <port> [path to hooks file]\nexample: roaster 127.0.0.1 6060 /home/richg/code/hooks.txt" << std::endl;
     exit(0);
@@ -37,6 +38,8 @@ int main(int argc, char* argv[]) {
   QApplication app(argc,argv);
   QSettings config{frenchroast::monitor::get_env_variable("INI_FULL_PATH","example /home/richg/French-Roast/modules/gui/config/fr.ini"), QSettings::IniFormat};
   std::string path_to_opcodes = frenchroast::monitor::get_env_variable("OPCODES_FULL_PATH","example /home/richg/French-Roast/modules/instrumentation/opcodes.txt");
+  char* sdir = std::getenv("SESSION_DIR");
+  std::string session_dir = (sdir == nullptr ? "" : sdir);
   
   qRegisterMetaType<std::string>();
   qRegisterMetaType<std::vector<frenchroast::monitor::StackTrace>>();
@@ -53,14 +56,16 @@ int main(int argc, char* argv[]) {
   FRListener roaster{std::string{argv[1]}, atoi(argv[2]), path_to_opcodes};
   QThread* tt = new QThread(&roaster);
   roaster.moveToThread(tt);
-
-  FRMain main(config, argc == 4 ? argv[3] : "");  
+  PersistorFile* ptr = new PersistorFile{};
+  Session session{ptr};
+  FRMain main(config, argc == 4 ? argv[3] : "", session, session_dir);  
 
   QObject::connect(&roaster, &FRListener::thooked,         &main,    &FRMain::update_list);
   QObject::connect(&roaster, &FRListener::timersignal,     &main,    &FRMain::update_timed_list);
   QObject::connect(&roaster, &FRListener::traffic_signal,  &main,    &FRMain::update_traffic);
   QObject::connect(&roaster, &FRListener::stack_jammed,    &main,    &FRMain::update_jammed);
   QObject::connect(&roaster, &FRListener::class_loaded,    &main,    &FRMain::update_class_viewer);
+  QObject::connect(&roaster, &FRListener::class_loaded,    &main,    &FRMain::update_class_viewer_session);
   QObject::connect(tt,       &QThread::started,            &roaster, &FRListener::init);
   QObject::connect(&app,     &QApplication::aboutToQuit,   &main,    &FRMain::handle_exit);
   QObject::connect(&roaster, &FRListener::remoteconnected, &main,    &FRMain::remote_connected);
