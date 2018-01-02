@@ -116,8 +116,7 @@ namespace frenchroast { namespace monitor {
 
             if (items[MSG_TYPE] == "loaded") {
               std::vector<ClassDetail> details;
-              items[MSG] >> details;
-              _handler.class_watch( details);
+              _handler.class_watch( items[MSG] >> details);
             }
 
             if (items[MSG_TYPE] == "ready") {
