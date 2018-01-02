@@ -23,19 +23,9 @@
 
 namespace frenchroast { namespace monitor {
 
-    std::string translate_method(const std::string& pname)
+    ClassDetail::ClassDetail(const std::string& name, std::vector<Descriptor>& methods) : _name(name), _methods(methods)
     {
-      std::string name = pname;
-      replace(name,'/','.');
-      std::string methodname = split(name, ":")[0];
-      std::string rvstr = translate_return_type(split(split(name,")")[1],":")[0]);
-      std::string parms = translate_param_types(split(split(name,"(")[1],")")[0]);
-      return methodname + ":(" + parms + "):" + rvstr;
-    }
-
-
-    ClassDetail::ClassDetail(const std::string& name, std::vector<std::string>& methods) : _name(name), _methods(methods)
-    {
+      replace(_name,'/','.');
     }
     
     ClassDetail::ClassDetail()
@@ -53,7 +43,7 @@ namespace frenchroast { namespace monitor {
       return _name;
     }
       
-    const std::vector<std::string>& ClassDetail::methods() const
+    const std::vector<Descriptor>& ClassDetail::methods() const
     {
       return _methods;
     }
@@ -78,23 +68,11 @@ namespace frenchroast { namespace monitor {
     ClassDetail& operator>>(const std::string& serial, ClassDetail& ref)
     {
       ref._name = frenchroast::split(serial, "<end-name>")[0];
-      bool translateRequired = false;
-      if(serial.find("<agent>") != std::string::npos) {
-        translateRequired = true;
-        replace(ref._name,"<agent>","");
-      }
-
-      if(translateRequired) {
-        replace(ref._name, "/", ".");
-      }
       for(auto& method : frenchroast::split(frenchroast::split(serial, "<end-name>")[1],"<end-method>")) {
         if(method != "") {
-          if(translateRequired) {
-            ref._methods.push_back(translate_method(method));
-          }
-          else {
-            ref._methods.push_back(method);
-          }
+          Descriptor dsc{};
+          method >> dsc;
+          ref._methods.push_back(dsc);
         }
       }
       return ref;
@@ -109,6 +87,7 @@ namespace frenchroast { namespace monitor {
           ref.push_back(item);
         }
       }
+      return ref;
     }
     
     bool operator==(const std::vector<ClassDetail>& listA, const std::vector<ClassDetail>& listB)

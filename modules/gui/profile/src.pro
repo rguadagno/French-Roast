@@ -45,6 +45,7 @@ SOURCES += \
 ../../monitor/src/MethodStats.cpp \
 ../../monitor/src/StackReport.cpp \
 ../../monitor/src/ClassDetail.cpp \
+../../monitor/src/Descriptor.cpp \
 ../../monitor/src/JammedReport.cpp \
 ../../session/src/PersistorFile.cpp \
 ../../session/src/Session.cpp \

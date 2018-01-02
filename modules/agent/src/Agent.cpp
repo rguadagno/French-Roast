@@ -348,10 +348,10 @@ bool ok_to_track(const std::string& name)
 void track_class(const std::string& name)
 {
 
-  std::vector<std::string> descriptors;
+  std::vector<frenchroast::monitor::Descriptor> descriptors;
   for(auto methdesc : _fr.get_method_descriptors()) {
     if(methdesc.find("main") == std::string::npos ) {
-      descriptors.push_back(methdesc);
+      descriptors.emplace_back(methdesc);
     }
   }
   _loading_data_mutex.lock();
@@ -626,7 +626,7 @@ void class_loading_monitor()
 
   while(1) {
     if(_loadedClasses.size() > 0 ) {
-      std::string* str = new std::string{"loaded~<agent>"};
+      std::string* str = new std::string{"loaded~"};
       std::stringstream ss;
       ss << _loadedClasses;
       str->append(ss.str());

@@ -21,19 +21,20 @@
 #define CLASSDETAIL_H
 #include <string>
 #include <vector>
+#include "Descriptor.h"
 
 namespace frenchroast { namespace monitor {
     class ClassDetail {
       friend     ClassDetail& operator>>(const std::string&, ClassDetail& ref);
       std::string              _name;
-      std::vector<std::string> _methods;
+      std::vector<Descriptor> _methods;
 
     public:
-      ClassDetail(const std::string& name, std::vector<std::string>& descriptors);
+      ClassDetail(const std::string& name, std::vector<Descriptor>& descriptors);
       ClassDetail();
       ClassDetail(const ClassDetail&);
       const std::string& name() const;
-      const std::vector<std::string>& methods() const;
+      const std::vector<Descriptor>& methods() const;
       bool operator==(const ClassDetail&) const;
       bool operator!=(const ClassDetail&) const;
 

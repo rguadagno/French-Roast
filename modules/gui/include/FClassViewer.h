@@ -33,7 +33,7 @@ namespace frenchroast {
 
     
   QTableWidget*                                             _data;
-  std::unordered_map<std::string, std::vector<std::string>> _methods;
+  std::unordered_map<std::string, std::vector<frenchroast::monitor::Descriptor>> _methods;
   std::unordered_map<std::string, int>                      _loadCount;
   std::unordered_map<std::string, QTableWidgetItem*>        _classes;
   std::unordered_map<std::string, int>                      _ind;

@@ -24,7 +24,6 @@
 #include "MarkerField.h"
 #include "Connector.h"
 #include "MethodStats.h"
-#include "ClassDetail.h"
 #include "StackFrame.h"
 #include "JammedReport.h"
 

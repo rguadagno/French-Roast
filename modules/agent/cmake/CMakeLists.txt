@@ -23,6 +23,8 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     ../src/*.cpp
     ../../instrumentation/src/*.cpp
     ../../monitor/src/ClassDetail.cpp
+    ../../monitor/src/Descriptor.cpp
+    ../../monitor/src/Monitor.cpp
     ../../network/src/FRSocket.cpp
     ../../signal/src/fr_signals.cpp
     ../../signal/src/SignalValidator.cpp
@@ -39,6 +41,8 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     ../src/*.cpp
     ../../instrumentation/src/*.cpp
     ../../monitor/src/ClassDetail.cpp
+    ../../monitor/src/Descriptor.cpp
+    ../../monitor/src/Monitor.cpp    
     ../../network/src/FRSocket.cpp
     ../../signal/src/fr_signals.cpp
     ../../signal/src/SignalValidator.cpp    

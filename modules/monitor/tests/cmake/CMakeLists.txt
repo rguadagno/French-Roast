@@ -18,6 +18,7 @@ ${CATCH_LOCATION}
 FILE(GLOB src_files
 ../src/*.cpp
 ../../src/MonitorUtil.cpp
+../../src/Descriptor.cpp
 ../../src/Monitor.cpp
 ../../src/StackFrame.cpp
 ../../src/StackTrace.cpp
