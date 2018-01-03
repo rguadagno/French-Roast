@@ -40,11 +40,7 @@ TEST_CASE("operator== and Copy consstructor,  objects are equal and not empty")
 {
   Session s1{};
   std::vector<ClassDetail> details;
-  std::vector<std::string> methods;
-  methods.push_back("funcA");
-  methods.push_back("funcB");
-  ClassDetail cd1{"SomeClass", methods};
-
+  "SomeClass<end-name>funcA:(int):void<end-method><end-item>" >> details;
   s1.update(details);
   
   Session s2= s1;
@@ -56,36 +52,25 @@ TEST_CASE("update_class_viewer, once")
 {
   Session s1{};
   std::vector<ClassDetail> details;
-  std::vector<std::string> methods;
-  methods.push_back("funcA");
-  methods.push_back("funcB");
-  ClassDetail cd1{"SomeClass", methods};
-
-  details.push_back(cd1);
+  "SomeClass<end-name>funcA:(int):void<end-method><end-item>" >> details;
   s1.update(details);
-  
-  REQUIRE(details == s1.get_class_viewer());
+  REQUIRE(details == s1.get_loaded_classes());
 }
+
 
 TEST_CASE("update_class_viewer, append")
 {
   Session s1{};
   std::vector<ClassDetail> details;
-  std::vector<std::string> methods;
-  methods.push_back("funcA");
-  methods.push_back("funcB");
-  ClassDetail cd1{"SomeClass", methods};
+  "SomeClass<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>" >> details;
+  s1.update(details);
+  details.clear();
+  "SomeClassMore<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>" >> details;
+  s1.update(details);
+  details.clear();
+  "SomeClass<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>SomeClassMore<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>" >> details;
 
-  details.push_back(cd1);
-  s1.update(details);
-  ClassDetail cd2{"SomeClassMore", methods};
-  details.clear();
-  details.push_back(cd2);
-  s1.update(details);
-  details.clear();
-  details.push_back(cd1);
-  details.push_back(cd2);
-  REQUIRE(details == s1.get_class_viewer());
+  REQUIRE(details == s1.get_loaded_classes());
 }
 
 
@@ -93,13 +78,8 @@ TEST_CASE("operator== and Copy consstructor,  objects are not equal and not empt
 {
   Session s1{};
   std::vector<ClassDetail> details;
-  std::vector<std::string> methods;
-  methods.push_back("funcA");
-  methods.push_back("funcB");
-  ClassDetail cd1{"SomeClass", methods};
-  details.push_back(cd1);
+  "SomeClass<end-name>funcA:(int):void<end-method><end-item>" >> details;
   s1.update(details);
-  
   Session s2;
   REQUIRE((s1 != s2));
   Session s3 = s1;
@@ -123,13 +103,7 @@ TEST_CASE("load() with no Persistor")
 TEST_CASE("store(fileName) / load (fileName)")
 {
   std::vector<ClassDetail> details;
-  std::vector<std::string> methods;
-  methods.push_back("funcA");
-  methods.push_back("funcB");
-  ClassDetail cd1{"SomeClass", methods};
-  ClassDetail cd2{"SomeClassMore", methods};
-  details.push_back(cd1);
-  details.push_back(cd2);
+  "SomeClass<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>SomeClassMore<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>" >> details;
   Session s1{new PersistorFile{}};
   s1.update(details);
   s1.store("/tmp/session_test.txt");
@@ -185,19 +159,12 @@ TEST_CASE("store(fileName), store()")
 {
 
   std::vector<ClassDetail> details;
-  std::vector<std::string> methods;
-  methods.push_back("funcA");
-  methods.push_back("funcB");
-  ClassDetail cd1{"SomeClass", methods};
-  ClassDetail cd2{"SomeClassMore", methods};
-  details.push_back(cd1);
-  details.push_back(cd2);
+  "SomeClass<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>SomeClassMore<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>" >> details;
   Session s1{new PersistorFile{}};
   s1.update(details);
   s1.store("/tmp/session_test.txt");
   details.clear();
-  ClassDetail cd3{"SomeClassAgain", methods};
-  details.push_back(cd3);
+"SomeClassAgain<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>" >> details;
   s1.update(details);
   s1.store();
   Session s2{new PersistorFile{}};
@@ -209,13 +176,7 @@ TEST_CASE("store(fileName), store()")
 TEST_CASE("reset()")
 {
   std::vector<ClassDetail> details;
-  std::vector<std::string> methods;
-  methods.push_back("funcA");
-  methods.push_back("funcB");
-  ClassDetail cd1{"SomeClass", methods};
-
-  details.push_back(cd1);
-
+  "SomeClass<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>SomeClassMore<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>" >> details;
   Session s1{};
   s1.update(details);
   Session s2{};
@@ -228,13 +189,7 @@ TEST_CASE("reset()")
 TEST_CASE("load 2 times in row - make sure not duplicated")
 {
   std::vector<ClassDetail> details;
-  std::vector<std::string> methods;
-  methods.push_back("funcA");
-  methods.push_back("funcB");
-  ClassDetail cd1{"SomeClass", methods};
-
-  details.push_back(cd1);
-
+  "SomeClass<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>SomeClassMore<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>" >> details;
   Session s1{new PersistorFile{}};
   s1.update(details);
   s1.store("/tmp/session_test.txt");
@@ -249,5 +204,4 @@ TEST_CASE("load 2 times in row - make sure not duplicated")
   REQUIRE(s3 == s2);
 }
 
-  
-
+ 

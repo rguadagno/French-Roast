@@ -13,6 +13,7 @@ ${CATCH_LOCATION}
 ../../include
 ../../../monitor/include
 ../../../instrumentation/include
+../../../network/include
 )
 
 FILE(GLOB src_files
@@ -20,7 +21,14 @@ FILE(GLOB src_files
 ../../src/Session.cpp
 ../../src/PersistorFile.cpp
 ../../../monitor/src/ClassDetail.cpp
+../../../monitor/src/Descriptor.cpp
+../../../monitor/src/Monitor.cpp
+../../../monitor/src/StackTrace.cpp
+../../../monitor/src/StackFrame.cpp
+../../../monitor/src/MethodStats.cpp
+../../../monitor/src/JammedReport.cpp
 ../../../instrumentation/src/Util.cpp
+../../../network/src/FRSocket.cpp
 )
 
 if (UNIX)
