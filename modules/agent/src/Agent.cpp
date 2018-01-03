@@ -427,7 +427,6 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
 
   std::string* str = new std::string{"jammed~"};
-  str->append("~");
   str->append(monitorStr);
   str->append("~");
   str->append(waiterStr);
