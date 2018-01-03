@@ -52,7 +52,12 @@ namespace frenchroast { namespace monitor {
     {
       return _method_name;
     }
-    
+
+    std::string Descriptor::full_name() const
+    {
+      return _class_name + "::" + _method_name;
+    }
+
     bool Descriptor::operator==(const Descriptor& ref) const
     {
       return _class_name == ref._class_name && _method_name == ref._method_name;
@@ -63,6 +68,11 @@ namespace frenchroast { namespace monitor {
       return !(*this == ref);
     }
     
+    Descriptor& Descriptor::operator=(const Descriptor& ref)
+    {
+      _class_name = ref._class_name;
+      _method_name = ref._method_name;
+    }
     
     Descriptor& operator>>(const std::string& rep, Descriptor& ref)
     {

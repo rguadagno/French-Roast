@@ -22,19 +22,29 @@
 
 #include <vector>
 #include <string>
+#include "Descriptor.h"
 
 namespace frenchroast { namespace monitor {
 
     class StackFrame {
-      std::string _name;
-      int         _monitorCount;
+      friend StackFrame& operator>>(const std::string& rep, StackFrame& ref);
+      Descriptor  _name;
+      int         _monitorCount{0};
       
     public:
-      StackFrame(const std::string& name, int count);
-      StackFrame(const std::string& name);
+      StackFrame(Descriptor name, int count);
+      StackFrame(Descriptor name);
+      StackFrame() = default;
       std::string get_name()  const; 
-      int  get_monitor_count()  const;
+      int         get_monitor_count()  const;
     };
+
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const StackFrame& ref)
+      {
+        out << ref.get_name() << "<end-method>" << ref.get_monitor_count();
+        return out;
+      }
 
   }
 }

@@ -203,7 +203,7 @@ namespace frenchroast { namespace monitor {
       StackTrace rv{};
       std::vector<std::string> funcs = split(str, "#");
       for(int idx = static_cast<int>(funcs.size())-2;idx >= 0; idx--) {
-        rv.addFrame(StackFrame{translate_descriptor(funcs[idx])});
+        rv.addFrame(StackFrame{Descriptor{funcs[idx]}});
       }
       return rv;
     }
@@ -211,7 +211,7 @@ namespace frenchroast { namespace monitor {
     JammedReport& process_jammed(const std::string& monitor, const std::string& waiter, const std::string& owner, std::unordered_map<std::string, JammedReport>& reports)
     {
       if(reports.count(waiter + owner) == 0) {
-        reports[waiter + owner] = JammedReport{build_trace(waiter), build_trace(owner)};
+          reports[waiter + owner] = JammedReport{build_trace(waiter), build_trace(owner)};
       }
       std::string mon = monitor;
       if(mon != "") {

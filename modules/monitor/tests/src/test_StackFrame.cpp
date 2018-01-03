@@ -27,21 +27,42 @@
 using namespace frenchroast::monitor;
 
 
-TEST_CASE("operator>> StackFrame")
+TEST_CASE("StackFrame(Descriptor)")
 {
-  //  StackFrame sf{};
-  //  std::string line = "<agent>mypackage/SomeClass<end-name>funcA:(I)V<end-method>";
-  //line >> sf;
-  //REQUIRE(sf.get_name() == "mypackage.SomeClass::funcA(int):void");
-  
+  Descriptor dsc{"mypackage/SomeClass::funcA:(I)V"};
+  StackFrame sf{dsc};
+  REQUIRE(sf.get_name() == "mypackage.SomeClass::funcA:(int):void");
 }
 
-/*TEST_CASE("StackFrame(funcA,2)")
+TEST_CASE("StackFrame(Descriptor) move")
 {
-  StackFrame sf{"funcA",2};
-  REQUIRE(sf.get_name() == "funcA");
-  REQUIRE(sf.get_monitor_count() == 2);
+  StackFrame sf{Descriptor{"mypackage/SomeClass::funcA:(I)V"}};
+  REQUIRE(sf.get_name() == "mypackage.SomeClass::funcA:(int):void");
+  REQUIRE(sf.get_monitor_count() == 0);
 }
-*/
 
+TEST_CASE("StackFrame(Descriptor,1) ")
+{
+  StackFrame sf{Descriptor{"mypackage/SomeClass::funcA:(I)V"}, 1};
+  REQUIRE(sf.get_name() == "mypackage.SomeClass::funcA:(int):void");
+  REQUIRE(sf.get_monitor_count() == 1);  
+}
+
+
+TEST_CASE("StackFrame(Descriptor,1) operator <<")
+{
+  StackFrame sf{Descriptor{"mypackage/SomeClass::funcA:(I)V"}, 1};
+  std::stringstream ss;
+  ss << sf;
+  REQUIRE( ss.str() == "mypackage.SomeClass::funcA:(int):void<end-method>1");
+}
+
+TEST_CASE("StackFrame(Descriptor,1) operator >>")
+{
+  StackFrame sf{};
+  std::string line = "mypackage.SomeClass::funcA:(int):void<end-method>1";
+  line >> sf;
+  REQUIRE(sf.get_name() == "mypackage.SomeClass::funcA:(int):void");
+  REQUIRE(sf.get_monitor_count() == 1);  
+}
 

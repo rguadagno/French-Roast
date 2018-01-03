@@ -20,6 +20,7 @@
 #ifndef DESCRIPTOR_H
 #define DESCRIPTOR_H
 #include <string>
+#include <iostream>
 
 namespace frenchroast { namespace monitor {
     class Descriptor {
@@ -31,10 +32,14 @@ namespace frenchroast { namespace monitor {
     public:
       Descriptor()=default;
       Descriptor(const std::string& agentRep);
+      Descriptor(Descriptor&& agentRep) = default;
+      Descriptor(const Descriptor& agentRep) =default;
       std::string class_name() const;
       std::string method_name() const;
+      std::string full_name() const;
       bool operator==(const Descriptor&) const;
       bool operator!=(const Descriptor&) const;
+      Descriptor& operator=(const Descriptor&);
 
     };
 
