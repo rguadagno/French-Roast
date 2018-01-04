@@ -442,7 +442,9 @@ bool traffic_predicate()
 }
 
 
-
+//
+// highly optimized for speed, variables outside loop, etc... 
+//
 void traffic_monitor() 
 {
   jvmtiEnv* env;
