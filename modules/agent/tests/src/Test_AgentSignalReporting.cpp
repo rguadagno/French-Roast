@@ -23,13 +23,6 @@
 
 #include <iostream>
 
-TEST_CASE("huh")
-{
-  std::vector<SOME_TYPE> data;
-  
-  
-  std::cout << "OPT: " << OKOK << std::endl;
-}
 
 TEST_CASE("get_value")
 {

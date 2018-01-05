@@ -49,6 +49,12 @@ FILE(GLOB src_files
 ../../..//instrumentation/src/*.cpp
 ../../..//instrumentation/tests/src/testing_utils.cpp
 ../../../monitor/src/ClassDetail.cpp
+../../../monitor/src/Descriptor.cpp
+../../../monitor/src/Monitor.cpp
+../../../monitor/src/StackTrace.cpp
+../../../monitor/src/StackFrame.cpp
+../../../monitor/src/MethodStats.cpp
+../../../monitor/src/JammedReport.cpp
 ../../../signal/src/fr_signals.cpp
 ../../../signal/src/SignalValidator.cpp
 )
