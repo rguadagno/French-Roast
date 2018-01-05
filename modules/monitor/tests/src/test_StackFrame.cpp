@@ -66,3 +66,32 @@ TEST_CASE("StackFrame(Descriptor,1) operator >>")
   REQUIRE(sf.get_monitor_count() == 1);  
 }
 
+TEST_CASE("StackFrame(Descriptor) operator ==")
+{
+  Descriptor dsc{"mypackage/SomeClass::funcA:(I)V"};
+  StackFrame sf1{dsc,1};
+  StackFrame sf2{dsc,1};
+  REQUIRE(sf1 == sf2);
+  StackFrame sf3{dsc,2};
+  REQUIRE(sf1 == sf3);
+
+  
+}
+
+TEST_CASE("StackFrame(Descriptor) operator !=")
+{
+  Descriptor dsc{"mypackage/SomeClass::funcA:(I)V"};
+  StackFrame sf1{dsc};
+  Descriptor dsc2{"mypackage/SomeClass::funcB:(I)V"};
+  StackFrame sf2{dsc2};
+  REQUIRE(sf1 != sf2);
+}
+
+TEST_CASE("StackFrame(Descriptor,1) string conversion operator")
+{
+  StackFrame sf{};
+  std::string line = "mypackage.SomeClass::funcA:(int):void<end-method>1";
+  line >> sf;
+  std::string sout = sf;
+  REQUIRE(sout  == "mypackage.SomeClass::funcA:(int):void");
+}

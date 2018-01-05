@@ -48,6 +48,21 @@ namespace frenchroast { namespace monitor {
     {
       return _monitorCount;
     }
-      
+    
+    bool StackFrame::operator==(const StackFrame& ref) const
+    {
+      return _name == ref._name;
+    }
+    
+    bool StackFrame::operator!=(const StackFrame& ref) const
+    {
+      return _name != ref._name;      
+    }
+
+    StackFrame::operator std::string() const
+    {
+      return get_name();
+    }
+    
   }
 }

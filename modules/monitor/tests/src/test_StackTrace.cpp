@@ -33,3 +33,136 @@ TEST_CASE("StackTrace(thread name) ")
   REQUIRE(st.thread_name() == "some thread");
 }
 
+
+TEST_CASE("StackTrace, addFrame, descriptor_frames(), monitor = true ")
+{
+  StackFrame sf{};
+  std::string line = "mypackage.SomeClass::funcA:(int):void<end-method>1";
+  line >> sf;
+  StackTrace st{};
+  st.addFrame(sf);
+  REQUIRE(st.monitor_frames().size() == 1);
+  REQUIRE(st.monitor_frames()[0] == 1);
+  std::vector<StackFrame> frames = st.descriptor_frames();
+  REQUIRE(frames.size() == 1);
+}
+
+TEST_CASE("StackTrace, addFrame, descriptor_frames(), monitor = false ")
+{
+  StackFrame sf{};
+  std::string line = "mypackage.SomeClass::funcA:(int):void<end-method>0";
+  line >> sf;
+  StackTrace st{};
+  st.addFrame(sf);
+  REQUIRE(st.monitor_frames().size() == 1);
+  REQUIRE(st.monitor_frames()[0] == 0);
+  std::vector<StackFrame> frames = st.descriptor_frames();
+  REQUIRE(frames.size() == 1);
+}
+
+
+TEST_CASE("StackTrace, key() ")
+{
+  StackFrame sf{};
+  std::string line = "mypackage.SomeClass::funcA:(int):void<end-method>1";
+  line >> sf;
+  StackTrace st{};
+  st.addFrame(sf);
+  REQUIRE(st.key() == "mypackage.SomeClass::funcA:(int):void");
+}
+
+
+
+TEST_CASE("StackTrace, update_monitors() - no update required ")
+{
+  StackFrame sf{};
+  std::string line = "mypackage.SomeClass::funcA:(int):void<end-method>0";
+  line >> sf;
+  StackTrace st{};
+  st.addFrame(sf);
+  REQUIRE(st.monitor_frames().size() == 1);
+  REQUIRE(st.monitor_frames()[0] == 0);
+  line = "mypackage.SomeClass::funcA:(int):void<end-method>0";
+  StackFrame sf2{};
+  line >> sf2;
+  StackTrace st2{};
+  st2.addFrame(sf2);
+  REQUIRE(st.update_monitors(st2) == false);
+  REQUIRE(st.monitor_frames().size() == 1);
+  REQUIRE(st.monitor_frames()[0] == 0);
+}
+
+TEST_CASE("StackTrace, update_monitors() - update required ")
+{
+  StackFrame sf{};
+  std::string line = "mypackage.SomeClass::funcA:(int):void<end-method>0";
+  line >> sf;
+  StackTrace st{};
+  st.addFrame(sf);
+  REQUIRE(st.monitor_frames().size() == 1);
+  REQUIRE(st.monitor_frames()[0] == 0);
+  line = "mypackage.SomeClass::funcA:(int):void<end-method>1";
+  StackFrame sf2{};
+  line >> sf2;
+  StackTrace st2{};
+  st2.addFrame(sf2);
+  REQUIRE(st.update_monitors(st2));
+  REQUIRE(st.monitor_frames().size() == 1);
+  REQUIRE(st.monitor_frames()[0] == 1);
+}
+
+TEST_CASE("StackTrace, update_monitors() - update required - subset frame ")
+{
+  StackFrame sf{};
+  std::string line = "mypackage.SomeClass::funcA:(int):void<end-method>0";
+  std::string line2 = "mypackage.SomeClass::funcB:(int):void<end-method>0";
+  line >> sf;
+  StackTrace st{};
+  st.addFrame(sf);
+  line2 >> sf;
+  st.addFrame(sf);
+  REQUIRE(st.descriptor_frames().size() == 2);
+  REQUIRE(st.monitor_frames().size() == 2);
+  REQUIRE(st.monitor_frames()[0] == 0);
+  REQUIRE(st.monitor_frames()[1] == 0);
+  line = "mypackage.SomeClass::funcB:(int):void<end-method>1";
+  StackFrame sf2{};
+  line >> sf2;
+  StackTrace st2{};
+  st2.addFrame(sf2);
+  REQUIRE(st2.monitor_frames().size() == 1);
+  REQUIRE(st2.monitor_frames()[0] == 1);
+  REQUIRE(st.update_monitors(st2));
+  REQUIRE(st.monitor_frames().size() == 2);
+  REQUIRE(st.monitor_frames()[0] == 0);
+  REQUIRE(st.monitor_frames()[1] == 1);
+}
+
+TEST_CASE("StackTrace, update_monitors() - no update required sub set")
+{
+  StackFrame sf{};
+  std::string line = "mypackage.SomeClass::funcA:(int):void<end-method>0";
+  std::string line2 = "mypackage.SomeClass::funcB:(int):void<end-method>0";
+  line >> sf;
+  StackTrace st{};
+  st.addFrame(sf);
+  line2 >> sf;
+  st.addFrame(sf);
+  REQUIRE(st.descriptor_frames().size() == 2);
+  REQUIRE(st.monitor_frames().size() == 2);
+  REQUIRE(st.monitor_frames()[0] == 0);
+  REQUIRE(st.monitor_frames()[1] == 0);
+  line = "mypackage.SomeClass::funcB:(int):void<end-method>0";
+  StackFrame sf2{};
+  line >> sf2;
+  StackTrace st2{};
+  st2.addFrame(sf2);
+  REQUIRE(st2.monitor_frames().size() == 1);
+  REQUIRE(st2.monitor_frames()[0] == 0);
+  REQUIRE(st.update_monitors(st2) == false);
+  REQUIRE(st.monitor_frames().size() == 2);
+  REQUIRE(st.monitor_frames()[0] == 0);
+  REQUIRE(st.monitor_frames()[1] == 0);
+}
+
+

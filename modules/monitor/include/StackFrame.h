@@ -37,6 +37,9 @@ namespace frenchroast { namespace monitor {
       StackFrame() = default;
       std::string get_name()  const; 
       int         get_monitor_count()  const;
+      bool operator==(const StackFrame&) const;
+      bool operator!=(const StackFrame&) const;
+      operator std::string() const;
     };
 
     template <typename OutType>

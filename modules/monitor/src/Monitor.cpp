@@ -162,7 +162,8 @@ namespace frenchroast { namespace monitor {
                 first = false;
               }
             }
-            st.addFrame(StackFrame{descriptor,moncount});
+            std::cout << "fitems[idx]=" << fitems[idx] << std::endl;
+            st.addFrame(StackFrame{fitems[idx],moncount});
           }
         }
         rv.push_back(st);

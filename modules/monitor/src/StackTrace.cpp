@@ -105,7 +105,7 @@ namespace frenchroast { namespace monitor {
     }
 
 
-    std::vector<std::string> StackTrace::descriptor_frames() const
+    std::vector<StackFrame> StackTrace::descriptor_frames() const
     {
       return _frames;
     }
@@ -120,7 +120,7 @@ namespace frenchroast { namespace monitor {
       _key += frame.get_name();
       _monitorkey += frame.get_monitor_count() > 0 ? "X" : "0";
       
-      _frames.push_back(frame.get_name());
+      _frames.push_back(frame);
       _monitors.push_back(frame.get_monitor_count());
     }
 
