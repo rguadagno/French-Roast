@@ -63,6 +63,18 @@ namespace frenchroast { namespace monitor {
     {
       return get_name();
     }
+
+
+    std::vector<StackFrame>& operator>>(const std::string& line, std::vector<StackFrame>& frames)
+    {
+      for(auto& x : frenchroast::split(line,"<end-frame>")) {
+        if(x == "") continue;
+        StackFrame sf{};
+        x >> sf;
+        frames.push_back(sf);
+      }
+      return frames;
+    }
     
   }
 }

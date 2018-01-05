@@ -44,14 +44,30 @@ namespace frenchroast { namespace monitor {
       void                      addFrame(const StackFrame& frame);
       int size() const;
       const std::string& key() const;
-      bool operator==(const StackTrace&);
+      bool operator==(const StackTrace&) const;
       void operator=(const StackTrace&);
-      bool operator>(const StackTrace&);
-      bool operator<(const StackTrace&);
+      bool operator>(const StackTrace&) const;
+      bool operator<(const StackTrace&) const;
       bool update_monitors(const StackTrace&);      
       
     };
+    
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const StackTrace& ref)
+      {
 
+        out << ref.thread_name() << "<end-thread-name>";
+        for(auto x : ref.monitor_frames()) {
+          out << x << "<end-monitor>";
+        }
+        out  << "<end-monitors>";
+        out << ref.descriptor_frames();
+        out << "<end-trace>";
+        
+        return out;
+      }
+    
+    
   }
 }
 

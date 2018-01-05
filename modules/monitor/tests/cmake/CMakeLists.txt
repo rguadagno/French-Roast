@@ -10,6 +10,7 @@ endif()
 
 include_directories(
 ${CATCH_LOCATION}
+../include
 ../../include
 ../../../instrumentation/include
 ../../../network/include

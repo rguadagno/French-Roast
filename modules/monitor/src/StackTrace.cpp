@@ -53,13 +53,13 @@ namespace frenchroast { namespace monitor {
       return static_cast<int>(_frames.size());
     }
 
-    bool StackTrace::operator==(const StackTrace& ref)
+    bool StackTrace::operator==(const StackTrace& ref) const
     {
       return _key == ref._key;
     }
 
 
-    bool StackTrace::operator>(const StackTrace& ref)
+    bool StackTrace::operator>(const StackTrace& ref) const
     {
       if(_key == ref._key) return false;
       if(_frames.size() < ref._frames.size()) return false;
@@ -70,7 +70,7 @@ namespace frenchroast { namespace monitor {
       return true;
     }
 
-    bool StackTrace::operator<(const StackTrace& ref)
+    bool StackTrace::operator<(const StackTrace& ref) const
     {
       return const_cast<StackTrace&>(ref) > *this;
     }

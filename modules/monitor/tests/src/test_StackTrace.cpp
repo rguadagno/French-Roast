@@ -22,7 +22,7 @@
 #include <sstream>
 #include "catch.hpp"
 #include "StackTrace.h"
-
+#include "helper.h"
 
 using namespace frenchroast::monitor;
 
@@ -36,11 +36,7 @@ TEST_CASE("StackTrace(thread name) ")
 
 TEST_CASE("StackTrace, addFrame, descriptor_frames(), monitor = true ")
 {
-  StackFrame sf{};
-  std::string line = "mypackage.SomeClass::funcA:(int):void<end-method>1";
-  line >> sf;
-  StackTrace st{};
-  st.addFrame(sf);
+  StackTrace st = frenchroast::testing::build_trace({"mypackage.SomeClass::funcA:(int):void<end-method>1"});
   REQUIRE(st.monitor_frames().size() == 1);
   REQUIRE(st.monitor_frames()[0] == 1);
   std::vector<StackFrame> frames = st.descriptor_frames();
@@ -148,6 +144,7 @@ TEST_CASE("StackTrace, update_monitors() - no update required sub set")
   st.addFrame(sf);
   line2 >> sf;
   st.addFrame(sf);
+
   REQUIRE(st.descriptor_frames().size() == 2);
   REQUIRE(st.monitor_frames().size() == 2);
   REQUIRE(st.monitor_frames()[0] == 0);
@@ -165,4 +162,30 @@ TEST_CASE("StackTrace, update_monitors() - no update required sub set")
   REQUIRE(st.monitor_frames()[1] == 0);
 }
 
+
+TEST_CASE("operator ==")
+{
+  StackTrace s1 = frenchroast::testing::build_trace({"mypackage.SomeClass::funcA:(int):void<end-method>1"});
+  StackTrace s2 = frenchroast::testing::build_trace({"mypackage.SomeClass::funcA:(int):void<end-method>1"});
+  REQUIRE(s1 == s2);
+}
+
+TEST_CASE("StackTrace copy constructor")
+{
+  StackTrace s1 = frenchroast::testing::build_trace({"mypackage.SomeClass::funcA:(int):void<end-method>1"});
+  StackTrace s2 = s1;
+  REQUIRE(s1 == s2);
+}
+
+
+
+TEST_CASE("StackTrace operator <<")
+{
+  StackTrace s1 = frenchroast::testing::build_trace({"mypackage.SomeClass::funcA:(int):void<end-method>1",
+                                                     "mypackage.SomeClass::funcB:(int):void<end-method>1"});
+  std::stringstream ss;
+  ss << s1;
+  REQUIRE(ss.str() == "<end-thread-name>1<end-monitor>1<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame>mypackage.SomeClass::funcB:(int):void<end-method>1<end-frame><end-trace>");
+  
+}
 

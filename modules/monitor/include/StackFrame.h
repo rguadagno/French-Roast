@@ -49,6 +49,16 @@ namespace frenchroast { namespace monitor {
         return out;
       }
 
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const std::vector<StackFrame>& ref)
+      {
+        for(auto& x : ref) {
+          out << x << "<end-frame>";
+        }
+        return out;
+      }
+    std::vector<StackFrame>& operator>>(const std::string& line, std::vector<StackFrame>& frames);
+    
   }
 }
 

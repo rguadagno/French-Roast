@@ -95,3 +95,31 @@ TEST_CASE("StackFrame(Descriptor,1) string conversion operator")
   std::string sout = sf;
   REQUIRE(sout  == "mypackage.SomeClass::funcA:(int):void");
 }
+
+TEST_CASE("StackFrame operator << vector")
+{
+  StackFrame sf1{Descriptor{"mypackage/SomeClass::funcA:(I)V"}, 1};
+  StackFrame sf2{Descriptor{"mypackage/SomeClass::funcB:(I)V"}, 0};
+
+  std::vector<StackFrame> frames{sf1,sf2};
+  
+  std::stringstream ss;
+  ss << frames;
+  REQUIRE( ss.str() == "mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame>mypackage.SomeClass::funcB:(int):void<end-method>0<end-frame>");
+}
+
+TEST_CASE("StackFrame operator >> vector")
+{
+  StackFrame sf1{Descriptor{"mypackage/SomeClass::funcA:(I)V"}, 1};
+  StackFrame sf2{Descriptor{"mypackage/SomeClass::funcB:(I)V"}, 0};
+
+  std::vector<StackFrame> frames;
+  "mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame>mypackage.SomeClass::funcB:(int):void<end-method>0<end-frame>" >> frames;
+
+  REQUIRE(frames.size() == 2);
+  REQUIRE(frames[0] == sf1);
+  REQUIRE(frames[1] == sf2);
+
+}
+
+
