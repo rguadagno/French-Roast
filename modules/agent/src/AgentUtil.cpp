@@ -57,7 +57,7 @@ std::vector<ARG_TYPE> typeTokenizer(const std::string& sigStr)
 }
 
 
-bool format_stack_trace(jvmtiEnv* env, jthread& thread, std::string& trace)
+bool format_stack_trace(jvmtiEnv* env, jthread& thread, frenchroast::monitor::StackTrace& trace)
 {
   jint frame_count;
   jvmtiFrameInfo frame_info[20];
@@ -74,7 +74,7 @@ bool format_stack_trace(jvmtiEnv* env, jthread& thread, std::string& trace)
     
     std::string classinfo;
     if(!get_class_name(env, theclass, classinfo)) return false;
-    trace +=  classinfo.substr(1) + "::" + std::string{methodName} + ":" + std::string{sig} + "#";
+    trace.addFrame({classinfo.substr(1) + "::" + std::string{methodName} + ":" + std::string{sig}});
   }
   return true;;
 }

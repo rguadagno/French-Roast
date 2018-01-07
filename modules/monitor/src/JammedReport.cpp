@@ -45,8 +45,9 @@ namespace frenchroast { namespace monitor {
     
     JammedReport& JammedReport::add_monitor(const std::string& mon)
     {
-      _monitors.insert(mon);
-      ++_count;
+      std::string str = mon.substr(1);
+      replace(str,"/",".");
+      _monitors.insert(str);
       return *this;
     }
 
@@ -84,7 +85,13 @@ namespace frenchroast { namespace monitor {
       ref._key = ref._waiter.key() + ref._owner.key();
       return ref;
     }
-    
+
+    JammedReport& JammedReport::operator+=(const JammedReport& ref)
+    {
+      for(auto& mon : ref.monitors()) {
+        add_monitor(mon);
+      }
+    }
     
   }
 }

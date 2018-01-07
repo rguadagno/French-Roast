@@ -209,18 +209,15 @@ namespace frenchroast { namespace monitor {
       return rv;
     }
     
-    JammedReport& process_jammed(const std::string& monitor, const std::string& waiter, const std::string& owner, std::unordered_map<std::string, JammedReport>& reports)
+    JammedReport& process_jammed(const std::string& rep, std::unordered_map<std::string, JammedReport>& reports)
     {
-      if(reports.count(waiter + owner) == 0) {
-          reports[waiter + owner] = JammedReport{build_trace(waiter), build_trace(owner)};
+      JammedReport rpt{};
+      rep >> rpt;
+      if(reports.count(rep) == 0) {
+        reports[rep] = rpt;
+        return reports[rep];
       }
-      std::string mon = monitor;
-      if(mon != "") {
-        mon = mon.substr(1);
-        replace(mon,'/','.');
-        replace(mon,';');
-      }
-      return reports[waiter + owner].add_monitor(mon);
+      return reports[rep] += rpt;
     }
 
 

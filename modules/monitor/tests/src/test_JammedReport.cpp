@@ -20,6 +20,7 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 #include "catch.hpp"
 #include "JammedReport.h"
 #include "StackTrace.h"
@@ -33,13 +34,35 @@ TEST_CASE("jammedRpeort: construction")
   StackTrace waiter = frenchroast::testing::build_trace({"mypackage.SomeClass::funcB:(int):void<end-method>0"});
 
   JammedReport jr{waiter,owner};
-  jr.add_monitor("java/lang/Object");  
   REQUIRE(jr.key() == waiter.key() + owner.key());
   
   REQUIRE((jr.owner() == owner));
   REQUIRE((jr.waiter() == waiter));
+}
+
+TEST_CASE("jammedRpeort: add_monitor")
+{
+  StackTrace owner = frenchroast::testing::build_trace({"mypackage.SomeClass::funcA:(int):void<end-method>1"});
+  StackTrace waiter = frenchroast::testing::build_trace({"mypackage.SomeClass::funcB:(int):void<end-method>0"});
+
+  JammedReport jr{waiter,owner};
+  jr.add_monitor("java/lang/Object");  
+
   REQUIRE(jr.monitors().size() == 1);
-  REQUIRE(jr.monitors()[0]  == "java/lang/Object");
+  REQUIRE(jr.monitors()[0]  == "java.lang.Object");
+
+  jr.add_monitor("java/lang/Object");  
+  REQUIRE(jr.monitors().size() == 1);
+  REQUIRE(jr.monitors()[0]  == "java.lang.Object");
+  jr.add_monitor("SomeClass");
+  auto mons = jr.monitors();
+  REQUIRE(mons.size() == 2);
+  std::sort(mons.begin(), mons.end());
+  REQUIRE(jr.monitors().size() == 2);
+  REQUIRE(jr.monitors()[0]  == "SomeClass");
+  REQUIRE(jr.monitors()[1]  == "java.lang.Object");
+  
+  
 }
 
 
@@ -54,7 +77,7 @@ TEST_CASE("jammedRpeort: operator <<")
 
   std::stringstream ss;
   ss << jr;
-  REQUIRE(ss.str() == "SomeOtherClass<end-monitor>java/lang/Object<end-monitor><end-jmonitors><end-thread-name>1<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame><end-owner><end-thread-name>0<end-monitor><end-monitors>mypackage.SomeClass::funcB:(int):void<end-method>0<end-frame>");
+  REQUIRE(ss.str() == "SomeOtherClass<end-monitor>java.lang.Object<end-monitor><end-jmonitors><end-thread-name>1<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame><end-owner><end-thread-name>0<end-monitor><end-monitors>mypackage.SomeClass::funcB:(int):void<end-method>0<end-frame>");
 }
 
 TEST_CASE("jammedRpeort: operator ==")
@@ -86,9 +109,33 @@ TEST_CASE("jammedRpeort: operator >>")
   std::stringstream ss;
   ss << jr;
   JammedReport rpt{};
-  //  "SomeOtherClass<end-monitor>java/lang/Object<end-monitor><end-jmonitors><end-thread-name>1<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame><end-owner><end-thread-name>0<end-monitor><end-monitors>mypackage.SomeClass::funcB:(int):void<end-method>0<end-frame>" >> rpt;
   ss.str() >> rpt;
 
   REQUIRE(rpt == jr);
 }
 
+
+TEST_CASE("jammedRpeort: operator +=")
+{
+  StackTrace owner = frenchroast::testing::build_trace({"mypackage.SomeClass::funcA:(int):void<end-method>1"});
+  StackTrace waiter = frenchroast::testing::build_trace({"mypackage.SomeClass::funcB:(int):void<end-method>0"});
+
+  JammedReport jam1{waiter,owner};
+  jam1.add_monitor("SomeOtherClass");
+
+  JammedReport jam2{waiter,owner};
+
+  jam2.add_monitor("java/lang/Object");
+  jam2.add_monitor("mypackage/SomeClass");
+  jam1.add_monitor("SomeOtherClass");
+
+  jam1 += jam2;
+  auto mons = jam1.monitors();
+  REQUIRE(mons.size() == 3);
+  std::sort(mons.begin(), mons.end());
+  REQUIRE(mons[0] == "SomeOtherClass");
+  REQUIRE(mons[1] == "java.lang.Object");
+  REQUIRE(mons[2] == "mypackage.SomeClass");
+
+
+}

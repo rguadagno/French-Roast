@@ -26,7 +26,6 @@
 namespace frenchroast { namespace monitor {
     class JammedReport {
       friend JammedReport& operator>>(const std::string& rep, JammedReport& ref);
-      int                      _count{0};
       std::string              _key;
       StackTrace               _waiter;
       StackTrace               _owner;
@@ -41,6 +40,7 @@ namespace frenchroast { namespace monitor {
       const StackTrace& waiter() const;
       const StackTrace& owner() const;
       bool operator==(const JammedReport&) const;
+      JammedReport& operator+=(const JammedReport&);
     };
 
     template <typename OutType>

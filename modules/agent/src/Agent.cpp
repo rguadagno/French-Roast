@@ -41,6 +41,8 @@
 #include "Listener.h"
 #include "AgentUtil.h"
 #include "ClassDetail.h"
+#include "StackTrace.h"
+#include "JammedReport.h"
 #include "AgentSignalReporting.h"
 
 std::mutex _traffic_mutex;
@@ -413,12 +415,12 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
 {
   std::string monitorStr;
   if(!get_class_name(env, jni_env->GetObjectClass(object), monitorStr)) return;
-  std::string waiterStr;
-  if(!format_stack_trace(env, thread, waiterStr)) return;
+  frenchroast::monitor::StackTrace waiterStack{};
+  if(!format_stack_trace(env, thread, waiterStack)) return;
   jvmtiMonitorUsage monitorInfo;
   if(!ErrorHandler::check_jvmti_error(env->GetObjectMonitorUsage(object, &monitorInfo), "GetObjectMonitorUsage")) return;
-  std::string ownerStr;
-  if(!format_stack_trace(env, monitorInfo.owner, ownerStr)) return;
+  frenchroast::monitor::StackTrace ownerStack{};
+  if(!format_stack_trace(env, monitorInfo.owner, ownerStack)) return;
   jthread owner = monitorInfo.owner;
   jni_env->DeleteLocalRef(owner);
   delete_refs(jni_env, monitorInfo.waiters, monitorInfo.waiter_count);
@@ -426,12 +428,14 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.waiters));
   env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
 
+
+
   std::string* str = new std::string{"jammed~"};
-  str->append(monitorStr);
-  str->append("~");
-  str->append(waiterStr);
-  str->append("~");
-  str->append(ownerStr);
+  std::stringstream ss;
+  frenchroast::monitor::JammedReport report{ownerStack, waiterStack};
+  report.add_monitor(monitorStr);
+  ss << report;
+  str->append(ss.str());
   _signalQueue.push(str);
 }
 

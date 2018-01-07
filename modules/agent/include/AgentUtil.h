@@ -24,12 +24,12 @@
 #include <string>
 #include <unordered_map>
 #include "jvmti.h"
-
+#include "StackTrace.h"
 
 enum ARG_TYPE {INT_TYPE, STRING_TYPE, ARRAY_TYPE};
 
 std::vector<ARG_TYPE> typeTokenizer(const std::string& line);
-bool format_stack_trace(jvmtiEnv* env, jthread&, std::string&);
+bool format_stack_trace(jvmtiEnv* env, jthread&, frenchroast::monitor::StackTrace&);
 
 class ErrorHandler {
  public:
