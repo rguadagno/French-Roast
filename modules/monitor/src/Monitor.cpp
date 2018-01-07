@@ -26,11 +26,10 @@
 #include "MethodStats.h"
 #include "StackFrame.h"
 #include "JammedReport.h"
+#include "Descriptor.h"
 
 namespace frenchroast { namespace monitor {
 
-    std::string translate_descriptor(const std::string& name, int* = nullptr);
-    
             std::unordered_map<char, std::string> _type_map { {'I',"int"},
                                                              {'Z',"bool"},
                                                              {'V',"void"},
@@ -115,29 +114,6 @@ namespace frenchroast { namespace monitor {
       return parse_type_tokens(name)[0];
     }
     
-    std::string translate_descriptor(const std::string& name, int* moncount)
-    {
-      std::string rv = name;
-      replace(rv,'/','.');
-      std::string classname;
-      if(moncount != nullptr) {
-        classname = split(rv,"::")[0];
-        *moncount = atoi(  split(classname, "!")[0].c_str());
-        classname = split(classname, "!")[1];
-      }
-      else {
-         classname = split(rv,"::")[0];
-      }
-      
-      replace(classname,';');
-      std::string methodname = split(split(rv,"::")[1],":")[0];
-      std::string pstr = split(split(rv,"(")[1],")")[0];
-      std::string rvstr = translate_return_type(split(split(rv,")")[1],":")[0]);
-      std::string parms = translate_param_types(pstr);
-      rv = classname + "::" + methodname + ":(" + parms + "):" + rvstr;
-      return rv;
-    }
-
     std::vector<StackTrace> construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters)
     {
       std::vector<StackTrace> rv;
@@ -149,9 +125,9 @@ namespace frenchroast { namespace monitor {
         bool first=true;
         for(int idx = static_cast<int>(fitems.size())-1;idx >= 0; idx--) {
           if(fitems[idx].find("thook") == std::string::npos ) {
-            std::string descriptor;
-            int moncount=0;
-            descriptor = translate_descriptor(fitems[idx], &moncount);
+            Descriptor dsc{frenchroast::split(fitems[idx], "!")[1]};
+            std::string descriptor = dsc.full_name();
+            int moncount = atoi(frenchroast::split(fitems[idx], "!")[0].c_str());
             if(fitems[idx].find("java") == std::string::npos && fitems[idx].find("sun") == std::string::npos)  {
               if(counters.count(descriptor) == 0 ) {
                 counters[descriptor] = MethodStats(descriptor);
@@ -162,8 +138,7 @@ namespace frenchroast { namespace monitor {
                 first = false;
               }
             }
-            std::cout << "fitems[idx]=" << fitems[idx] << std::endl;
-            st.addFrame(StackFrame{fitems[idx],moncount});
+            st.addFrame(StackFrame{dsc,moncount});
           }
         }
         rv.push_back(st);
