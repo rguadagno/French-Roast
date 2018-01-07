@@ -25,6 +25,7 @@
 
 namespace frenchroast { namespace monitor {
     class JammedReport {
+      friend JammedReport& operator>>(const std::string& rep, JammedReport& ref);
       int                      _count{0};
       std::string              _key;
       StackTrace               _waiter;
@@ -39,8 +40,22 @@ namespace frenchroast { namespace monitor {
       const std::string& key() const;
       const StackTrace& waiter() const;
       const StackTrace& owner() const;
+      bool operator==(const JammedReport&) const;
     };
 
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const JammedReport& ref)
+      {
+
+        for(auto x : ref.monitors()) {
+          out << x << "<end-monitor>";
+        }
+        out  << "<end-jmonitors>";
+        out << ref.owner() << "<end-owner>" << ref.waiter(); 
+        return out;
+      }
+
+    JammedReport& operator>>(const std::string& rep, JammedReport& ref);
 
   }
 }

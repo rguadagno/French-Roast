@@ -28,6 +28,7 @@
 namespace frenchroast { namespace monitor {
 
     class StackTrace {
+      friend StackTrace& operator>>(const std::string& rep, StackTrace& ref);
       std::string              _key;
       std::string              _monitorkey;
       std::string              _thread_name;
@@ -42,6 +43,7 @@ namespace frenchroast { namespace monitor {
       std::vector<StackFrame>   descriptor_frames() const;
       std::vector<int>          monitor_frames() const;
       void                      addFrame(const StackFrame& frame);
+      void                      clear();
       int size() const;
       const std::string& key() const;
       bool operator==(const StackTrace&) const;
@@ -62,8 +64,6 @@ namespace frenchroast { namespace monitor {
         }
         out  << "<end-monitors>";
         out << ref.descriptor_frames();
-        out << "<end-trace>";
-        
         return out;
       }
     

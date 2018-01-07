@@ -20,6 +20,7 @@
 #include <vector>
 #include <iostream>
 #include "StackTrace.h"
+#include "Util.h"
 
 namespace frenchroast { namespace monitor {
 
@@ -104,7 +105,15 @@ namespace frenchroast { namespace monitor {
       return rv;
     }
 
-
+    void StackTrace::clear()
+    {
+      _key = "";
+      _monitorkey = "";
+      _thread_name = "";
+      _frames.clear();
+      _monitors.clear();
+    }
+    
     std::vector<StackFrame> StackTrace::descriptor_frames() const
     {
       return _frames;
@@ -132,6 +141,25 @@ namespace frenchroast { namespace monitor {
     const std::string& StackTrace::key()  const 
     {
       return _key;
+    }
+
+
+    StackTrace& operator>>(const std::string& rep, StackTrace& ref)
+    {
+      ref.clear();
+      std::vector<std::string> parts = frenchroast::split(rep,"<end-thread-name>");
+      ref._thread_name = parts[0];
+      parts = frenchroast::split(parts[1], "<end-monitors>");
+      for(auto& mon : frenchroast::split(parts[0], "<end-monitor>")) {
+        ref._monitors.push_back(atoi(mon.c_str()));
+      }
+      for(auto& framestr : frenchroast::split(parts[1],"<end-frame>")) {
+        if(framestr == "") continue;
+        StackFrame frame{};
+        ref.addFrame(framestr >> frame);
+      }
+      
+      return ref;
     }
     
   }

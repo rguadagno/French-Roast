@@ -20,6 +20,7 @@
 
 #include <iostream>
 #include "JammedReport.h"
+#include "Util.h"
 
 namespace frenchroast { namespace monitor {
 
@@ -63,7 +64,27 @@ namespace frenchroast { namespace monitor {
     {
       return _owner;
     }
-
+    bool JammedReport::operator==(const JammedReport& ref) const
+    {
+      if(_monitors != ref._monitors) return false;
+      if(_key != ref._key) return false;
+      return true;;
+    }
+    
+    JammedReport& operator>>(const std::string& rep, JammedReport& ref)
+    {
+      auto parts = frenchroast::split(rep,"<end-jmonitors>");
+      for(auto& mon : frenchroast::split(parts[0],"<end-monitor>")) {
+        if(mon == "") continue;
+        ref.add_monitor(mon);
+      }
+            
+      frenchroast::split(parts[1],"<end-owner>")[0] >> ref._owner;
+      frenchroast::split(parts[1],"<end-owner>")[1] >> ref._waiter;
+      ref._key = ref._waiter.key() + ref._owner.key();
+      return ref;
+    }
+    
     
   }
 }

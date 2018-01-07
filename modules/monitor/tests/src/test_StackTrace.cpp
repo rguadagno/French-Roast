@@ -185,7 +185,29 @@ TEST_CASE("StackTrace operator <<")
                                                      "mypackage.SomeClass::funcB:(int):void<end-method>1"});
   std::stringstream ss;
   ss << s1;
-  REQUIRE(ss.str() == "<end-thread-name>1<end-monitor>1<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame>mypackage.SomeClass::funcB:(int):void<end-method>1<end-frame><end-trace>");
+  REQUIRE(ss.str() == "<end-thread-name>1<end-monitor>1<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame>mypackage.SomeClass::funcB:(int):void<end-method>1<end-frame>");
+}
+
+TEST_CASE("StackTrace operator >>")
+{
+  StackTrace st{};
+  "<end-thread-name>1<end-monitor>1<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame>mypackage.SomeClass::funcB:(int):void<end-method>1<end-frame>" >> st;
+
+  StackTrace st2 = frenchroast::testing::build_trace({"mypackage.SomeClass::funcA:(int):void<end-method>1",
+                                                     "mypackage.SomeClass::funcB:(int):void<end-method>1"});
+  REQUIRE(st == st2);
+  
+  
+}
+
+TEST_CASE("StackTrace operator >> only one")
+{
+  StackTrace st{};
+  "<end-thread-name>1<end-monitor>1<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame>" >> st;
+  "<end-thread-name>1<end-monitor>1<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame>" >> st;
+  StackTrace st2 = frenchroast::testing::build_trace({"mypackage.SomeClass::funcA:(int):void<end-method>1"});
+  REQUIRE(st == st2);
+  
   
 }
 
