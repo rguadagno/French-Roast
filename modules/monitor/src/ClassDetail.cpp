@@ -80,7 +80,7 @@ namespace frenchroast { namespace monitor {
 
     std::vector<ClassDetail>& operator>>(const std::string& line, std::vector<ClassDetail>& ref)
     {
-      for(auto& cd : frenchroast::split(line, "<end-item>")) {
+      for(auto& cd : frenchroast::split(line, ClassDetail::TAG_END)) {
         if(cd != "") {
           ClassDetail item;
           cd >> item;
@@ -98,6 +98,8 @@ namespace frenchroast { namespace monitor {
       }
       return true;
     }
+
+    const std::string ClassDetail::TAG_END = "<end-item>";
     
   }
 }

@@ -35,12 +35,14 @@ namespace frenchroast { namespace monitor {
       JammedReport(StackTrace waiter, StackTrace owner);
       JammedReport();
       std::vector<std::string> monitors() const;
-      JammedReport& add_monitor(const std::string&);
+      JammedReport& add_monitor(const std::string&, bool xform=true);
       const std::string& key() const;
       const StackTrace& waiter() const;
       const StackTrace& owner() const;
       bool operator==(const JammedReport&) const;
       JammedReport& operator+=(const JammedReport&);
+      
+      const static std::string TAG_END;
     };
 
     template <typename OutType>

@@ -29,11 +29,12 @@ namespace frenchroast { namespace session {
     Session::Session(const Session& ref)
     {
       _loaded_classes = ref._loaded_classes;
+      _jammed = ref._jammed;
     }
     
     bool Session::operator==(const Session& ref) const
     {
-      return (_loaded_classes == ref._loaded_classes );
+      return (_loaded_classes == ref._loaded_classes && _jammed == ref._jammed);
     }
     
     bool Session::operator!=(const Session& ref) const
@@ -45,19 +46,35 @@ namespace frenchroast { namespace session {
     {
       _loaded_classes.insert(_loaded_classes.end(), details.begin(), details.end());
     }
+
+    void Session::update(const frenchroast::monitor::JammedReport& rpt)
+    {
+      if(_jammed.count(rpt.key()) == 0) {
+        _jammed[rpt.key()] = rpt;
+      }
+      else {
+        _jammed[rpt.key()] += rpt;
+      }
+    }
     
     std::vector<frenchroast::monitor::ClassDetail> Session::get_loaded_classes() const
     {
       return _loaded_classes;
     }
 
+    std::unordered_map<std::string, frenchroast::monitor::JammedReport> Session::get_jammed_reports() const
+    {
+      return _jammed;
+    }
+    
     void Session::store(const std::string& fileName)
     {
       if(_persistor == nullptr) {
         throw std::invalid_argument("no Persistor set");
       }
       _descriptor = fileName;
-      _persistor->store(fileName, _loaded_classes);
+      _persistor->store(fileName, _loaded_classes, _jammed);
+      
     }
 
     void Session::store()
@@ -72,7 +89,7 @@ namespace frenchroast { namespace session {
         throw std::invalid_argument("no Persistor set");
       }
       reset();
-      _persistor->load(fileName, _loaded_classes);
+      _persistor->load(fileName, _loaded_classes, _jammed);
     }
 
     void Session::reset()

@@ -22,14 +22,18 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include "ClassDetail.h"
+#include "JammedReport.h"
 
 namespace frenchroast { namespace session {
     class Persistor  {
 
     public:
-      virtual void store(const std::string&, const std::vector<frenchroast::monitor::ClassDetail>&) = 0;
-      virtual void load(const std::string&, std::vector<frenchroast::monitor::ClassDetail>&) = 0;
+      virtual void store(const std::string&, const std::vector<frenchroast::monitor::ClassDetail>&,
+                         const std::unordered_map<std::string, frenchroast::monitor::JammedReport>&) = 0;
+      virtual void load(const std::string&, std::vector<frenchroast::monitor::ClassDetail>&,
+                          std::unordered_map<std::string, frenchroast::monitor::JammedReport>&) = 0;
       virtual void store() = 0;
       virtual ~Persistor(){};
     };

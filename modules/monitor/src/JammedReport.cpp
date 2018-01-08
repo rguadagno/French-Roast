@@ -43,10 +43,13 @@ namespace frenchroast { namespace monitor {
       return rv;
     }
     
-    JammedReport& JammedReport::add_monitor(const std::string& mon)
+    JammedReport& JammedReport::add_monitor(const std::string& mon, bool xform)
     {
-      std::string str = mon.substr(1);
-      replace(str,"/",".");
+      std::string str = mon;
+      if(xform) {
+        str = str .substr(1);
+        replace(str,"/",".");
+      }
       _monitors.insert(str);
       return *this;
     }
@@ -77,7 +80,7 @@ namespace frenchroast { namespace monitor {
       auto parts = frenchroast::split(rep,"<end-jmonitors>");
       for(auto& mon : frenchroast::split(parts[0],"<end-monitor>")) {
         if(mon == "") continue;
-        ref.add_monitor(mon);
+        ref.add_monitor(mon,false);
       }
             
       frenchroast::split(parts[1],"<end-owner>")[0] >> ref._owner;
@@ -89,10 +92,11 @@ namespace frenchroast { namespace monitor {
     JammedReport& JammedReport::operator+=(const JammedReport& ref)
     {
       for(auto& mon : ref.monitors()) {
-        add_monitor(mon);
+        add_monitor(mon,false);
       }
     }
-    
+
+    const  std::string JammedReport::TAG_END = "<end-jammed>";
   }
 }
 

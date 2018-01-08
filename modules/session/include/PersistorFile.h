@@ -27,17 +27,25 @@ namespace frenchroast { namespace session {
 
     class PersistorFile : public Persistor {
       std::string generate_name();
+      const static std::string TAG_LOADED_CLASSES;
+      const static std::string TAG_JAMMED;
+      const static std::string TAG_VIEW;
+      void get_all_views(const std::string& fileName, std::unordered_map<std::string, std::string>& views);
+      void load_loaded_classes(const std::string&, std::vector<frenchroast::monitor::ClassDetail>&);
+      void load_jammed(const std::string&, std::unordered_map<std::string,frenchroast::monitor::JammedReport>&);
     public:
       // use generated file name
       PersistorFile(const std::string& dirName);
       // full path and file name will be provied in store(std::string)
       PersistorFile() {}
       // user selected full path to file
-      void store(const std::string&, const std::vector<frenchroast::monitor::ClassDetail>&);
+      void store(const std::string&, const std::vector<frenchroast::monitor::ClassDetail>&,
+                                     const std::unordered_map<std::string, frenchroast::monitor::JammedReport>&);
       // will use generated name, called periodically when in headless mode
       void store();
       
-      void load(const std::string& fileName, std::vector<frenchroast::monitor::ClassDetail>& loaded_classes);
+      void load(const std::string& fileName, std::vector<frenchroast::monitor::ClassDetail>& loaded_classes,
+                                             std::unordered_map<std::string, frenchroast::monitor::JammedReport>&);
       ~PersistorFile() {}
 };
 

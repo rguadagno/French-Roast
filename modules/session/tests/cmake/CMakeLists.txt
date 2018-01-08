@@ -11,12 +11,14 @@ endif()
 include_directories(
 ${CATCH_LOCATION}
 ../../include
+../../../monitor/tests/include
 ../../../monitor/include
 ../../../instrumentation/include
 ../../../network/include
 )
 
 FILE(GLOB src_files
+../../../monitor/tests/src/helper.cpp
 ../src/*.cpp
 ../../src/Session.cpp
 ../../src/PersistorFile.cpp

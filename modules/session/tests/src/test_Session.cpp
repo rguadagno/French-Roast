@@ -23,6 +23,8 @@
 #include "catch.hpp"
 #include "Session.h"
 #include "PersistorFile.h"
+#include "StackTrace.h"
+#include "helper.h"
 
 
 using namespace frenchroast::monitor;
@@ -42,9 +44,24 @@ TEST_CASE("operator== and Copy consstructor,  objects are equal and not empty")
   std::vector<ClassDetail> details;
   "SomeClass<end-name>funcA:(int):void<end-method><end-item>" >> details;
   s1.update(details);
+
+  StackTrace owner = frenchroast::testing::build_trace({"mypackage.SomeClass::funcA:(int):void<end-method>1"});
+  StackTrace waiter = frenchroast::testing::build_trace({"mypackage.SomeClass::funcB:(int):void<end-method>0"});
+
+  JammedReport jr{waiter,owner};
+  jr.add_monitor("java/lang/Object");  
+  s1.update(jr);
+
   
   Session s2= s1;
   REQUIRE((s1 == s2));
+
+  Session s3{};
+  s3.update(details);  
+  REQUIRE((s1 != s3));
+  REQUIRE(( s1.get_jammed_reports()[jr.key()] == jr ));
+  
+  
 }
 
 
@@ -80,6 +97,14 @@ TEST_CASE("operator== and Copy consstructor,  objects are not equal and not empt
   std::vector<ClassDetail> details;
   "SomeClass<end-name>funcA:(int):void<end-method><end-item>" >> details;
   s1.update(details);
+  StackTrace owner = frenchroast::testing::build_trace({"mypackage.SomeClass::funcA:(int):void<end-method>1"});
+  StackTrace waiter = frenchroast::testing::build_trace({"mypackage.SomeClass::funcB:(int):void<end-method>0"});
+
+  JammedReport jr{waiter,owner};
+  jr.add_monitor("java/lang/Object");  
+  s1.update(jr);
+
+
   Session s2;
   REQUIRE((s1 != s2));
   Session s3 = s1;
@@ -106,9 +131,16 @@ TEST_CASE("store(fileName) / load (fileName)")
   "SomeClass<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>SomeClassMore<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>" >> details;
   Session s1{new PersistorFile{}};
   s1.update(details);
-  s1.store("/tmp/session_test.txt");
+  StackTrace owner = frenchroast::testing::build_trace({"mypackage.SomeClass::funcA:(int):void<end-method>1"});
+  StackTrace waiter = frenchroast::testing::build_trace({"mypackage.SomeClass::funcB:(int):void<end-method>0"});
+
+  JammedReport jr{waiter,owner};
+  jr.add_monitor("Ljava/lang/Object");  
+  s1.update(jr);
+  s1.store("/tmp/session_test2.txt");
   Session s2{new PersistorFile{}};
-  s2.load("/tmp/session_test.txt");
+  s2.load("/tmp/session_test2.txt");
+  s2.store("/tmp/session_test3.txt");
   REQUIRE(s1 == s2);
 }
 
@@ -166,6 +198,14 @@ TEST_CASE("store(fileName), store()")
   details.clear();
 "SomeClassAgain<end-name>funcA:(int):void<end-method>funcB:(int):void<end-method><end-item>" >> details;
   s1.update(details);
+  StackTrace owner = frenchroast::testing::build_trace({"mypackage.SomeClass::funcA:(int):void<end-method>1"});
+  StackTrace waiter = frenchroast::testing::build_trace({"mypackage.SomeClass::funcB:(int):void<end-method>0"});
+
+  JammedReport jr{waiter,owner};
+  jr.add_monitor("java/lang/Object");  
+  s1.update(jr);
+
+
   s1.store();
   Session s2{new PersistorFile{}};
   s2.load("/tmp/session_test.txt");
