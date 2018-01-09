@@ -143,7 +143,7 @@ TEST_CASE("store(fileName) / load (fileName)")
   s2.store("/tmp/session_test3.txt");
   REQUIRE(s1 == s2);
 }
-
+/*
 TEST_CASE("store(fileName) / load (fileName) : empty details")
 {
   std::vector<ClassDetail> details;
@@ -245,3 +245,4 @@ TEST_CASE("load 2 times in row - make sure not duplicated")
 }
 
  
+*/

@@ -18,6 +18,7 @@
 //
 
 #include <stdexcept>
+#include <sstream>
 #include "Session.h"
 
 namespace frenchroast { namespace session {
@@ -72,9 +73,14 @@ namespace frenchroast { namespace session {
       if(_persistor == nullptr) {
         throw std::invalid_argument("no Persistor set");
       }
+
       _descriptor = fileName;
-      _persistor->store(fileName, _loaded_classes, _jammed);
-      
+      std::vector<std::string> items;
+      std::stringstream serial;
+      items.push_back((serial << _jammed).str());
+      serial.str("");
+      items.push_back((serial << _loaded_classes).str());
+      _persistor->store(fileName, items);
     }
 
     void Session::store()
@@ -89,7 +95,14 @@ namespace frenchroast { namespace session {
         throw std::invalid_argument("no Persistor set");
       }
       reset();
-      _persistor->load(fileName, _loaded_classes, _jammed);
+      std::vector<frenchroast::monitor::JammedReport> jams;
+      _persistor->load(fileName);
+      _persistor->load(frenchroast::monitor::ClassDetail::TAG, _loaded_classes);
+      _persistor->load(frenchroast::monitor::JammedReport::TAG, jams);
+      for(auto& jam : jams) {
+       _jammed[jam.key()] = jam;
+      }
+      
     }
 
     void Session::reset()

@@ -99,6 +99,7 @@ namespace frenchroast { namespace monitor {
       return true;
     }
 
+    const std::string ClassDetail::TAG = "<loaded-classes>";
     const std::string ClassDetail::TAG_END = "<end-item>";
     
   }

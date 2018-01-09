@@ -29,11 +29,14 @@
 namespace frenchroast { namespace session {
     class Persistor  {
 
+      virtual const std::string& get_serial(const std::string tag)=0;
     public:
-      virtual void store(const std::string&, const std::vector<frenchroast::monitor::ClassDetail>&,
-                         const std::unordered_map<std::string, frenchroast::monitor::JammedReport>&) = 0;
-      virtual void load(const std::string&, std::vector<frenchroast::monitor::ClassDetail>&,
-                          std::unordered_map<std::string, frenchroast::monitor::JammedReport>&) = 0;
+      virtual void store(const std::string& descritpor, std::vector<std::string> items) = 0;
+      virtual void load(const std::string& descriptor) = 0;
+      template <typename T>
+        void load(const std::string& tag, std::vector<T>& items)  {
+        get_serial(tag) >> items;
+      }
       virtual void store() = 0;
       virtual ~Persistor(){};
     };

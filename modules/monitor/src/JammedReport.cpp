@@ -96,6 +96,21 @@ namespace frenchroast { namespace monitor {
       }
     }
 
+
+    std::vector<JammedReport>& operator>>(const std::string& line, std::vector<JammedReport>& ref)
+    {
+      for(auto& cd : frenchroast::split(line, JammedReport::TAG_END)) {
+        if(cd != "") {
+          JammedReport item;
+          cd >> item;
+          ref.push_back(item);
+        }
+      }
+      return ref;
+    }
+
+    
+    const  std::string JammedReport::TAG     = "<jammed>";
     const  std::string JammedReport::TAG_END = "<end-jammed>";
   }
 }

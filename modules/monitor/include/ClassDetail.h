@@ -38,6 +38,7 @@ namespace frenchroast { namespace monitor {
       bool operator==(const ClassDetail&) const;
       bool operator!=(const ClassDetail&) const;
 
+      const static std::string TAG;
       const static std::string TAG_END;
     };
 
@@ -58,6 +59,8 @@ namespace frenchroast { namespace monitor {
     template <typename OutType>
       OutType& operator<<(OutType& out, const std::vector<ClassDetail>& ref)
       {
+        if(ref.size() == 0) return out;
+        out << ClassDetail::TAG << "<view>";
         for(auto& x : ref) {
           out << x << ClassDetail::TAG_END;
         }

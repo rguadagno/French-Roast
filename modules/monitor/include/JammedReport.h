@@ -21,10 +21,12 @@
 #define JAMMEDH_H
 
 #include <unordered_set>
+#include <unordered_map>
 #include "StackTrace.h"
+#include "Serializable.h"
 
 namespace frenchroast { namespace monitor {
-    class JammedReport {
+    class JammedReport  {
       friend JammedReport& operator>>(const std::string& rep, JammedReport& ref);
       std::string              _key;
       StackTrace               _waiter;
@@ -41,8 +43,8 @@ namespace frenchroast { namespace monitor {
       const StackTrace& owner() const;
       bool operator==(const JammedReport&) const;
       JammedReport& operator+=(const JammedReport&);
-      
       const static std::string TAG_END;
+      const static std::string TAG;
     };
 
     template <typename OutType>
@@ -57,7 +59,20 @@ namespace frenchroast { namespace monitor {
         return out;
       }
 
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const std::unordered_map<std::string,JammedReport>& ref)
+      {
+        if(ref.size() == 0) return out;
+        out << JammedReport::TAG << "<view>";        
+        for(auto x : ref) {
+          out << x.second << JammedReport::TAG_END;
+        }
+        return out;
+      }
+
+    
     JammedReport& operator>>(const std::string& rep, JammedReport& ref);
+    std::vector<JammedReport>& operator>>(const std::string&, std::vector<JammedReport>& ref);
 
   }
 }
