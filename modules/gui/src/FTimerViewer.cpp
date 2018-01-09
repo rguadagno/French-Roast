@@ -30,12 +30,13 @@ namespace frenchroast {
   {
     _data = new QTableWidget{};
     _data->setStyleSheet(_settings->value("traffic_grid_style").toString());
-    _data->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    _data->insertColumn(0);
+    _data->insertColumn(0);
+    _data->setColumnWidth(0,140);
+    _data->horizontalHeader()->setSectionResizeMode(1,QHeaderView::ResizeToContents);
     _data->horizontalHeader()->hide();
     _data->verticalHeader()->hide();
     _data->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    _data->insertColumn(0);
-    _data->insertColumn(0);
     _data->setItemDelegateForColumn(1, new SignalDelegate(_data));
 
     setup_dockwin("Timers", _data, false);
