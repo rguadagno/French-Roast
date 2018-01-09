@@ -22,6 +22,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <thread>
+#include <sstream>
 #include <boost/lockfree/spsc_queue.hpp>
 #include "MonitorUtil.h"
 #include "Listener.h"
@@ -148,7 +149,7 @@ namespace frenchroast { namespace monitor {
             std::string key = descriptor + thread_name;
             int elapsed = std::stoll(time) - _timed_signals[key]._last;
             _timed_signals[key]._elapsed += elapsed;
-            _handler.signal_timed( translate_descriptor(descriptor.substr(1)), thread_name , _timed_signals[key]._elapsed, elapsed);
+            _handler.signal_timed( descriptor_to_string(descriptor.substr(1)), thread_name , _timed_signals[key]._elapsed, elapsed);
           }
             if (direction == "enter") {
               std::string key = descriptor + thread_name;
@@ -172,7 +173,7 @@ namespace frenchroast { namespace monitor {
           }
 
           std::vector<std::string> argHeaders;
-          std::string desc = translate_descriptor(msg.substr(1));
+          std::string desc = descriptor_to_string(msg.substr(1));
           for(auto& x : frenchroast::split(frenchroast::split(frenchroast::split(desc,")")[0], "(")[1], ",")) {
             argHeaders.push_back(x);
           }
@@ -183,7 +184,7 @@ namespace frenchroast { namespace monitor {
           for(auto& x : frenchroast::split(stack, "%")) {
             if(x.find("::") != std::string::npos) {
               skey.append(x);
-              sframes.push_back(translate_descriptor(x.substr(1)));
+              sframes.push_back(descriptor_to_string(x.substr(1)));
             }
           }
           if(_stacks[thread_name + desc].count(skey) == 0) {

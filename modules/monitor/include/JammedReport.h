@@ -23,7 +23,6 @@
 #include <unordered_set>
 #include <unordered_map>
 #include "StackTrace.h"
-#include "Serializable.h"
 
 namespace frenchroast { namespace monitor {
     class JammedReport  {

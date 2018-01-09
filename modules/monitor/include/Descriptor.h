@@ -51,6 +51,8 @@ namespace frenchroast { namespace monitor {
         return out;
       }
 
+
+    std::string descriptor_to_string(const std::string& str);
     
   }
 }

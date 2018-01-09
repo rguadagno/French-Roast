@@ -17,6 +17,7 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <sstream>
 #include "Util.h"
 #include "Descriptor.h"
 #include "MonitorUtil.h"
@@ -84,6 +85,14 @@ namespace frenchroast { namespace monitor {
       }
       return ref;
     }    
+
+    std::string descriptor_to_string(const std::string& str)
+    {
+      Descriptor dsc{str};
+      std::stringstream ss;
+      ss << dsc;
+      return ss.str();
+    }
     
   }
 }
