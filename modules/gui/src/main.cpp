@@ -65,7 +65,6 @@ int main(int argc, char* argv[])
   QObject::connect(&roaster, &FRListener::traffic_signal,  &main,    &FRMain::update_traffic);
   QObject::connect(&roaster, &FRListener::stack_jammed,    &main,    &FRMain::update_jammed);
   QObject::connect(&roaster, &FRListener::class_loaded,    &main,    &FRMain::update_class_viewer);
-  QObject::connect(&roaster, &FRListener::class_loaded,    &main,    &FRMain::update_class_viewer_session);
   QObject::connect(tt,       &QThread::started,            &roaster, &FRListener::init);
   QObject::connect(&app,     &QApplication::aboutToQuit,   &main,    &FRMain::handle_exit);
   QObject::connect(&roaster, &FRListener::remoteconnected, &main,    &FRMain::remote_connected);

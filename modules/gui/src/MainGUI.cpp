@@ -172,6 +172,9 @@ void FRMain::session_load()
 
   reset();
   FClassViewer::instance(this)->update(_session.get_loaded_classes());
+  for(auto& rpt : _session.get_jammed_reports()) {
+    JammedViewer::instance(this)->update(rpt.second);
+  }
 }
 
 
@@ -241,17 +244,13 @@ void FRMain::show_detail(const std::string& descriptor)
 void FRMain::update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>& details)
 {
   FClassViewer::instance(this)->update(details);
-}
-
-void FRMain::update_class_viewer_session(const std::vector<frenchroast::monitor::ClassDetail>& details)
-{
   _session.update(details);
 }
-
 
 void FRMain::update_jammed(const frenchroast::monitor::JammedReport& rpt)
 {
   JammedViewer::instance(this)->update(rpt);
+  _session.update(rpt);
 }
 
 void FRMain::start_watching_traffic(int rate)
