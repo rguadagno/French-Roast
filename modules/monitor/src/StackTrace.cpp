@@ -161,7 +161,21 @@ namespace frenchroast { namespace monitor {
       
       return ref;
     }
+
+    std::vector<StackTrace>& operator>>(const std::string& line, std::vector<StackTrace>& ref)
+    {
+      for(auto& cd : frenchroast::split(line, StackTrace::TAG_END)) {
+        if(cd != "") {
+          StackTrace item;
+          cd >> item;
+          ref.push_back(item);
+        }
+      }
+      return ref;
+    }
+
     
+    const std::string StackTrace::TAG_END = "<end-trace>";    
   }
 }
 

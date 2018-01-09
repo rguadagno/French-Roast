@@ -36,6 +36,7 @@ namespace frenchroast { namespace monitor {
       std::vector<int>         _monitors;
 
     public:
+      const static std::string TAG_END;
       StackTrace(const std::string tname);
       StackTrace(const StackTrace&);
       StackTrace();
@@ -66,7 +67,18 @@ namespace frenchroast { namespace monitor {
         out << ref.descriptor_frames();
         return out;
       }
-    
+
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const std::vector<StackTrace>& ref)
+      {
+        if(ref.size() == 0) return out;
+        
+        for(auto& x : ref) {
+          out << x << StackTrace::TAG_END;
+        }
+        return out;
+      }
+    std::vector<StackTrace>& operator>>(const std::string& line, std::vector<StackTrace>& ref);
     
   }
 }

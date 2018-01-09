@@ -100,9 +100,16 @@ namespace frenchroast { namespace session {
       items.push_back((serial << _jammed).str());
       serial.str("");
       items.push_back((serial << _loaded_classes).str());
+      serial.str("");
+      serial << "<traffic><view>";
+      items.push_back((serial << _traffic).str());
+      serial.str("");
+      items.push_back((serial << _method_rankings).str());
       _persistor->store(fileName, items);
     }
 
+
+    
     void Session::store()
     {
       if(!has_descriptor()) throw std::invalid_argument("no storage descriptor available");
@@ -119,6 +126,8 @@ namespace frenchroast { namespace session {
       _persistor->load(fileName);
       _persistor->load(frenchroast::monitor::ClassDetail::TAG, _loaded_classes);
       _persistor->load(frenchroast::monitor::JammedReport::TAG, jams);
+      _persistor->load("<traffic>", _traffic);
+      _persistor->load(frenchroast::monitor::MethodStats::TAG, _method_rankings);
       for(auto& jam : jams) {
        _jammed[jam.key()] = jam;
       }
