@@ -175,6 +175,8 @@ void FRMain::session_load()
   for(auto& rpt : _session.get_jammed_reports()) {
     JammedViewer::instance(this)->update(rpt.second);
   }
+  TrafficViewer::instance(this)->update_traffic(_session.get_traffic());
+  TrafficViewer::instance(this)->update_ranking(_session.get_rankings());
 }
 
 
@@ -270,6 +272,7 @@ void FRMain::stop_watching_traffic()
 void FRMain::method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks)
 {
   TrafficViewer::instance(this)->update_ranking(ranks);
+  _session.update(ranks);
 }
 
 void FRMain::update_list(std::string  descriptor, std::string tname, int count,
@@ -296,6 +299,7 @@ void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>&
 {
   if(!_exit) {
     TrafficViewer::instance(this)->update_traffic(stacks);
+    _session.update(stacks);
   }
 }
 

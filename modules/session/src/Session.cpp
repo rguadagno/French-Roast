@@ -57,10 +57,30 @@ namespace frenchroast { namespace session {
         _jammed[rpt.key()] += rpt;
       }
     }
+
+    void Session::update(const std::vector<frenchroast::monitor::StackTrace>& traffic)
+    {
+      _traffic.insert(_traffic.end(),traffic.begin(),traffic.end());
+    }
+
+    void Session::update(const std::vector<frenchroast::monitor::MethodStats>& methods)
+    {
+      _method_rankings = methods;
+    }
+
+    std::vector<frenchroast::monitor::StackTrace> Session::get_traffic() const
+    {
+      return _traffic;
+    }
     
     std::vector<frenchroast::monitor::ClassDetail> Session::get_loaded_classes() const
     {
       return _loaded_classes;
+    }
+
+    std::vector<frenchroast::monitor::MethodStats> Session::get_rankings() const
+    {
+      return _method_rankings;
     }
 
     std::unordered_map<std::string, frenchroast::monitor::JammedReport> Session::get_jammed_reports() const

@@ -143,7 +143,25 @@ TEST_CASE("store(fileName) / load (fileName)")
   s2.store("/tmp/session_test3.txt");
   REQUIRE(s1 == s2);
 }
-/*
+
+TEST_CASE("session traffic")
+{
+  StackFrame sf{};
+  std::string line = "mypackage.SomeClass::funcA:(int):void<end-method>0";
+  line >> sf;
+  StackTrace st{};
+  st.addFrame(sf);
+  Session s1{};
+  std::vector<StackTrace> traffic;
+  traffic.push_back(st);
+  s1.update(traffic);
+  REQUIRE(s1.get_traffic().size() ==1);
+  s1.update(traffic);
+  REQUIRE(s1.get_traffic().size() ==2);
+  
+}
+
+
 TEST_CASE("store(fileName) / load (fileName) : empty details")
 {
   std::vector<ClassDetail> details;
@@ -244,5 +262,3 @@ TEST_CASE("load 2 times in row - make sure not duplicated")
   REQUIRE(s3 == s2);
 }
 
- 
-*/
