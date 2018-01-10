@@ -71,6 +71,7 @@ namespace frenchroast { namespace monitor {
 
     
     JammedReport& operator>>(const std::string& rep, JammedReport& ref);
+    JammedReport& operator>>(const std::string& rep, JammedReport&& ref);
     std::vector<JammedReport>& operator>>(const std::string&, std::vector<JammedReport>& ref);
 
   }

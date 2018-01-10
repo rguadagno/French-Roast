@@ -112,7 +112,7 @@ namespace frenchroast { namespace monitor {
             }
             
             if (items[MSG_TYPE] == "jammed") {
-              _handler.jammed( process_jammed(items[MSG], _jammedReports));
+              _handler.jammed( _jammedReports[items[MSG]] += (items[MSG] >> JammedReport{}) );
             }
 
             if (items[MSG_TYPE] == "loaded") {

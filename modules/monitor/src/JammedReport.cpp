@@ -74,6 +74,11 @@ namespace frenchroast { namespace monitor {
       if(_key != ref._key) return false;
       return true;;
     }
+
+    JammedReport& operator>>(const std::string& rep, JammedReport&& ref)
+    {
+      return rep >> ref;
+    }
     
     JammedReport& operator>>(const std::string& rep, JammedReport& ref)
     {
@@ -91,9 +96,13 @@ namespace frenchroast { namespace monitor {
 
     JammedReport& JammedReport::operator+=(const JammedReport& ref)
     {
+      _key = ref._key;
+      _waiter = ref._waiter;
+      _owner = ref._owner;
       for(auto& mon : ref.monitors()) {
         add_monitor(mon,false);
       }
+      return *this;
     }
 
 
