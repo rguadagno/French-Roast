@@ -28,7 +28,6 @@ namespace frenchroast {  namespace monitor {
 
     std::vector<std::string> parse_type_tokens(const std::string& tstr);
     std::vector<StackTrace>  construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters);
-    JammedReport&            process_jammed(const std::string&, std::unordered_map<std::string, JammedReport>& jcount);
     void transmit_lines(const std::string& fileName, const std::string& ipport, frenchroast::network::Connector<>&);
     void transmit_lines(const std::vector<std::string>&, const std::string& ipport, frenchroast::network::Connector<>&);
     MarkerField build_marker( std::string str);

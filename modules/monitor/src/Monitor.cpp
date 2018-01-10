@@ -171,32 +171,5 @@ namespace frenchroast { namespace monitor {
       }
       conn.send_message(ipport, "<end>");
     }
-
-
-
-    StackTrace build_trace(const std::string& str)
-    {
-      StackTrace rv{};
-      std::vector<std::string> funcs = split(str, "#");
-      for(int idx = static_cast<int>(funcs.size())-2;idx >= 0; idx--) {
-        rv.addFrame(StackFrame{Descriptor{funcs[idx]}});
-      }
-      return rv;
-    }
-    
-    JammedReport& process_jammed(const std::string& rep, std::unordered_map<std::string, JammedReport>& reports)
-    {
-      JammedReport rpt{};
-      rep >> rpt;
-      if(reports.count(rep) == 0) {
-        reports[rep] = rpt;
-        return reports[rep];
-      }
-      return reports[rep] += rpt;
-    }
-
-
-
-
-    
-  }}
+  }
+}
