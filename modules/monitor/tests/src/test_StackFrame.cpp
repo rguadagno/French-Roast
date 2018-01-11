@@ -29,21 +29,21 @@ using namespace frenchroast::monitor;
 
 TEST_CASE("StackFrame(Descriptor)")
 {
-  Descriptor dsc{"mypackage/SomeClass::funcA:(I)V"};
+  Descriptor dsc{"Lmypackage/SomeClass;::funcA:(I)V"};
   StackFrame sf{dsc};
   REQUIRE(sf.get_name() == "mypackage.SomeClass::funcA:(int):void");
 }
 
 TEST_CASE("StackFrame(Descriptor) move")
 {
-  StackFrame sf{Descriptor{"mypackage/SomeClass::funcA:(I)V"}};
+  StackFrame sf{Descriptor{"Lmypackage/SomeClass;::funcA:(I)V"}};
   REQUIRE(sf.get_name() == "mypackage.SomeClass::funcA:(int):void");
   REQUIRE(sf.get_monitor_count() == 0);
 }
 
 TEST_CASE("StackFrame(Descriptor,1) ")
 {
-  StackFrame sf{Descriptor{"mypackage/SomeClass::funcA:(I)V"}, 1};
+  StackFrame sf{Descriptor{"Lmypackage/SomeClass;::funcA:(I)V"}, 1};
   REQUIRE(sf.get_name() == "mypackage.SomeClass::funcA:(int):void");
   REQUIRE(sf.get_monitor_count() == 1);  
 }
@@ -51,7 +51,7 @@ TEST_CASE("StackFrame(Descriptor,1) ")
 
 TEST_CASE("StackFrame(Descriptor,1) operator <<")
 {
-  StackFrame sf{Descriptor{"mypackage/SomeClass::funcA:(I)V"}, 1};
+  StackFrame sf{Descriptor{"Lmypackage/SomeClass;::funcA:(I)V"}, 1};
   std::stringstream ss;
   ss << sf;
   REQUIRE( ss.str() == "mypackage.SomeClass::funcA:(int):void<end-method>1");
@@ -80,9 +80,9 @@ TEST_CASE("StackFrame(Descriptor) operator ==")
 
 TEST_CASE("StackFrame(Descriptor) operator !=")
 {
-  Descriptor dsc{"mypackage/SomeClass::funcA:(I)V"};
+  Descriptor dsc{"Lmypackage/SomeClass;::funcA:(I)V"};
   StackFrame sf1{dsc};
-  Descriptor dsc2{"mypackage/SomeClass::funcB:(I)V"};
+  Descriptor dsc2{"Lmypackage/SomeClass::funcB:(I)V"};
   StackFrame sf2{dsc2};
   REQUIRE(sf1 != sf2);
 }
@@ -98,8 +98,8 @@ TEST_CASE("StackFrame(Descriptor,1) string conversion operator")
 
 TEST_CASE("StackFrame operator << vector")
 {
-  StackFrame sf1{Descriptor{"mypackage/SomeClass::funcA:(I)V"}, 1};
-  StackFrame sf2{Descriptor{"mypackage/SomeClass::funcB:(I)V"}, 0};
+  StackFrame sf1{Descriptor{"Lmypackage/SomeClass;::funcA:(I)V"}, 1};
+  StackFrame sf2{Descriptor{"Lmypackage/SomeClass;::funcB:(I)V"}, 0};
 
   std::vector<StackFrame> frames{sf1,sf2};
   
@@ -110,8 +110,8 @@ TEST_CASE("StackFrame operator << vector")
 
 TEST_CASE("StackFrame operator >> vector")
 {
-  StackFrame sf1{Descriptor{"mypackage/SomeClass::funcA:(I)V"}, 1};
-  StackFrame sf2{Descriptor{"mypackage/SomeClass::funcB:(I)V"}, 0};
+  StackFrame sf1{Descriptor{"Lmypackage/SomeClass;::funcA:(I)V"}, 1};
+  StackFrame sf2{Descriptor{"Lmypackage/SomeClass;::funcB:(I)V"}, 0};
 
   std::vector<StackFrame> frames;
   "mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame>mypackage.SomeClass::funcB:(int):void<end-method>0<end-frame>" >> frames;

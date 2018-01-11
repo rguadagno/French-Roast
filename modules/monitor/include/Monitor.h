@@ -173,7 +173,7 @@ namespace frenchroast { namespace monitor {
           }
 
           std::vector<std::string> argHeaders;
-          std::string desc = descriptor_to_string(msg.substr(1));
+          std::string desc = descriptor_to_string(msg);
           for(auto& x : frenchroast::split(frenchroast::split(frenchroast::split(desc,")")[0], "(")[1], ",")) {
             argHeaders.push_back(x);
           }

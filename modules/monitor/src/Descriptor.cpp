@@ -33,8 +33,9 @@ namespace frenchroast { namespace monitor {
     {
       std::string name = rep;
       if(rep.find("::") != std::string::npos) {    
-        _class_name = split(rep,"::")[0];
+        _class_name = split(rep,"::")[0].substr(1);
         replace(_class_name,'/','.');
+        replace(_class_name,';');
         name = split(rep,"::")[1];
       }
       

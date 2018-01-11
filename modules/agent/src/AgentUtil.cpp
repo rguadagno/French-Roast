@@ -74,7 +74,7 @@ bool format_stack_trace(jvmtiEnv* env, jthread& thread, frenchroast::monitor::St
     
     std::string classinfo;
     if(!get_class_name(env, theclass, classinfo)) return false;
-    trace.addFrame({classinfo.substr(1) + "::" + std::string{methodName} + ":" + std::string{sig}});
+    trace.addFrame({classinfo + "::" + std::string{methodName} + ":" + std::string{sig}});
   }
   return true;;
 }

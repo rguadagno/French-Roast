@@ -39,7 +39,7 @@ TEST_CASE("Descriptor method only")
 
 TEST_CASE("operator<<,  Descriptor")
 {
-  Descriptor dsc{"mypackage/SomeClass::funcA:(I)V"};
+  Descriptor dsc{"Lmypackage/SomeClass;::funcA:(I)V"};
   std::stringstream ss;
   ss << dsc;
   REQUIRE(ss.str() == "mypackage.SomeClass::funcA:(int):void");
@@ -66,15 +66,15 @@ TEST_CASE("operator>>,  Descriptor")
 TEST_CASE("operator==,  Descriptor")
 {
 
-  Descriptor dsc1{"mypackage/SomeClass::funcA:(I)V"};
-  Descriptor dsc2{"mypackage/SomeClass::funcA:(I)V"};
+  Descriptor dsc1{"mypackage/SomeClass;::funcA:(I)V"};
+  Descriptor dsc2{"mypackage/SomeClass;::funcA:(I)V"};
   REQUIRE(dsc1 == dsc2);
 }
 
 TEST_CASE("operator=,  Descriptor")
 {
 
-  Descriptor dsc1{"mypackage/SomeClass::funcA:(I)V"};
+  Descriptor dsc1{"Lmypackage/SomeClass;::funcA:(I)V"};
   Descriptor dsc2{};
   dsc2 = dsc1;
   REQUIRE(dsc1 == dsc2);

@@ -30,8 +30,8 @@ using namespace frenchroast::monitor;
 TEST_CASE("operator==,  objects are Equal")
 {
   std::vector<Descriptor> methods;
-  methods.emplace_back("mypackage.SomeClass::funcA:(I)V");
-  methods.emplace_back("mypackage.SomeClass::funcB:(I)V");
+  methods.emplace_back("mypackage.SomeClass;::funcA:(I)V");
+  methods.emplace_back("mypackage.SomeClass;::funcB:(I)V");
   ClassDetail cd{"SomeClass", methods};
   ClassDetail cd2{"SomeClass", methods};
   REQUIRE((cd == cd2));
@@ -40,10 +40,10 @@ TEST_CASE("operator==,  objects are Equal")
 TEST_CASE("operator!=,  objects are Not Equal")
 {
   std::vector<Descriptor> methods;
-  methods.emplace_back("mypackage.SomeClass::funcA:(I)V");
-  methods.emplace_back("mypackage.SomeClass::funcB:(I)V");
+  methods.emplace_back("Lmypackage/SomeClass;::funcA:(I)V");
+  methods.emplace_back("Lmypackage/SomeClass;::funcB:(I)V");
   ClassDetail cd{"SomeClass", methods};
-  methods.emplace_back("mypackage.SomeClass::funcC:(I)V");
+  methods.emplace_back("Lmypackage/SomeClass;::funcC:(I)V");
   ClassDetail cd2{"SomeClass", methods};
   REQUIRE((cd != cd2));
 }
@@ -53,8 +53,8 @@ TEST_CASE("operator!=,  objects are Not Equal")
 TEST_CASE("operator<<")
 {
   std::vector<Descriptor> methods;
-  methods.emplace_back("SomeClass::funcA:(I)V");
-  methods.emplace_back("SomeClass::funcB:(I)V");
+  methods.emplace_back("LSomeClass::funcA:(I)V");
+  methods.emplace_back("LSomeClass::funcB:(I)V");
  
   ClassDetail cd{"SomeClass", methods};
   std::stringstream ss;
@@ -67,8 +67,8 @@ TEST_CASE("operator<<")
 TEST_CASE("operator<< vector<ClassDetail>")
 {
   std::vector<Descriptor> methods;
-  methods.emplace_back("mypackage/SomeClass::funcA:(I)V");
-  methods.emplace_back("mypackage/SomeClass::funcB:(I)V");
+  methods.emplace_back("Lmypackage/SomeClass::funcA:(I)V");
+  methods.emplace_back("Lmypackage/SomeClass::funcB:(I)V");
   
   std::vector<ClassDetail> classes;
   classes.emplace_back("mypackage/SomeClass",methods);
@@ -76,15 +76,15 @@ TEST_CASE("operator<< vector<ClassDetail>")
   std::stringstream ss;
   ss << classes;
   std::string line = ss.str();
-  REQUIRE(line == "mypackage.SomeClass<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>mypackage.SomeClassMore<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>");
+  REQUIRE(line == "<loaded-classes><view>mypackage.SomeClass<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>mypackage.SomeClassMore<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>");
 }
 
 
 TEST_CASE("operator>> vector<ClassDetail>")
 {
   std::vector<Descriptor> methods;
-  methods.emplace_back("mypackage/SomeClass::funcA:(I)V");
-  methods.emplace_back("mypackage/SomeClass::funcB:(I)V");
+  methods.emplace_back("Lmypackage/SomeClass::funcA:(I)V");
+  methods.emplace_back("Lmypackage/SomeClass::funcB:(I)V");
   
   std::vector<ClassDetail> classes;
   classes.emplace_back("mypackage/SomeClass",methods);
@@ -96,10 +96,10 @@ TEST_CASE("operator>> vector<ClassDetail>")
 
   std::vector<ClassDetail> classes3;
   methods.clear();
-  methods.emplace_back("funcA:(I)V");
+  methods.emplace_back("Lmypackage/SomeClass::funcA:(I)V");
   classes3.emplace_back("mypackage/SomeClass",methods);
   std::vector<ClassDetail> classes4;
-  "mypackage.SomeClass<end-name>funcA:(int):void<end-method><end-item>" >> classes4;
+  "mypackage.SomeClass<end-name>mypackage.SomeClass::funcA:(int):void<end-method><end-item>" >> classes4;
 
   REQUIRE(classes3 == classes4);
   
@@ -108,8 +108,8 @@ TEST_CASE("operator>> vector<ClassDetail>")
 TEST_CASE("operator>>")
 {
   std::vector<Descriptor> methods;
-  methods.emplace_back("mypackage/SomeClass::funcA:(I)V");
-  methods.emplace_back("mypackage/SomeClass::funcB:(I)V");
+  methods.emplace_back("Lmypackage/SomeClass::funcA:(I)V");
+  methods.emplace_back("Lmypackage/SomeClass::funcB:(I)V");
   
   ClassDetail cd{"mypackage/SomeClass", methods};
   ClassDetail cd2{};
