@@ -23,9 +23,13 @@ FILE(GLOB src_files
 ../../src/Monitor.cpp
 ../../src/StackFrame.cpp
 ../../src/StackTrace.cpp
+../../src/StackReport.cpp
 ../../src/MethodStats.cpp
 ../../src/ClassDetail.cpp
 ../../src/JammedReport.cpp
+../../src/Signal.cpp
+../../src/SignalParams.cpp
+../../src/SignalMarkers.cpp
 ../../../instrumentation/src/Util.cpp
 ../../../network/src/Connector.cpp
 ../../../network/src/FRSocket.cpp
