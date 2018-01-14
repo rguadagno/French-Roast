@@ -31,38 +31,48 @@ namespace frenchroast { namespace monitor {
       }
     }
     
-
-    //const std::vector<std::string>& SignalParams::items() const
-    // {
-    // return _items;
-    //}
+    Marker SignalMarkers::operator[](std::size_t idx) const
+    {
+     return Marker{_items[idx]};
+    }
     
     const std::size_t  SignalMarkers::size() const
     {
       return _items.size();
     }
 
-    /*
-    SignalParams& SignalParams::operator+=(const std::string& param)
+    SignalMarkers& SignalMarkers::operator+=(const Marker& mark) 
     {
-      _items.push_back(param);
+      _items.push_back(mark);
       return *this;
     }
+    
 
-    bool SignalParams::operator==(const SignalParams& p) const
+    bool SignalMarkers::operator==(const SignalMarkers& ref) const
     {
-      return _items == p._items;
+      return _items == ref._items;
+    }
+
+    decltype(SignalMarkers::_items.cbegin()) SignalMarkers::begin() const
+    {
+      return _items.cbegin();
+       
     }
     
-    SignalParams& operator>>(const std::string& rep, SignalParams& ref)
+    decltype(SignalMarkers::_items.cend()) SignalMarkers::end() const
     {
-      for(auto& param : frenchroast::split(rep, "<end-param>")) {
-        if(param != "") {
-          ref += param;
-        }
+      return _items.cend();
+    }
+
+    
+    SignalMarkers& operator>>(const std::string& rep, SignalMarkers& ref)
+    {
+      for(auto& mark : frenchroast::split(rep, "<end-mark>")) {
+        if(mark == "") continue;
+        ref._items.emplace_back(frenchroast::split(mark,"<end-label>")[0], frenchroast::split(mark,"<end-label>")[1]);
       }
       return ref;
     }
-    */    
+    
   }
 }

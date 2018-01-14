@@ -29,12 +29,12 @@ namespace frenchroast { namespace monitor {
     public:
       SignalParams(const std::vector<std::string>&);
       SignalParams() = default;
-      const std::string& operator[](std::size_t idx) const;
-      const std::size_t  size() const;
-      SignalParams& operator+=(const std::string&);
-      bool operator==(const SignalParams&) const;
+      const std::string&        operator[](std::size_t idx) const;
+      const std::size_t         size() const;
+      SignalParams&             operator+=(const std::string&);
+      bool                      operator==(const SignalParams&) const;
       decltype(_items.cbegin()) begin() const;
-      decltype(_items.cend()) end() const;
+      decltype(_items.cend())   end() const;
     };
 
     template <typename OutType>

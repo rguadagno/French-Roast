@@ -23,44 +23,42 @@
 #include <vector>
 
 namespace frenchroast { namespace monitor {
-    class SignalMarkers  {
-      friend     SignalMarkers& operator>>(const std::string&, SignalMarkers& ref);      
-      std::vector<std::tuple<std::string,std::string>> _items;
-    public:
-
-      
-      SignalMarkers(const std::vector<std::string>&);
-      SignalMarkers() = default;
-      const std::size_t  size() const;
-      const std::string& operator[](std::size_t idx) const;      
-      //      const std::vector<std::string>& items() const;
-      //SignalMarkers& operator+=(const std::string&);
-      //bool operator==(const SignalParams&) const;
-
-      class Marker {
+    class Marker {
       public:
+    Marker(const std::string& l, const std::string& v) : label(l), value(v){}
         std::string label;
         std::string value;
+        bool operator==(const Marker& ref) const {  return label == ref.label && value == ref.value; }
       };
+
+    class SignalMarkers  {
+      friend     SignalMarkers& operator>>(const std::string&, SignalMarkers& ref);
+
+      std::vector<Marker> _items;
+
+    public:
+      SignalMarkers(const std::vector<std::string>&);
+      SignalMarkers() = default;
+      const std::size_t         size() const;
+      Marker                    operator[](std::size_t idx) const;      
+      SignalMarkers&            operator+=(const Marker&);
+      bool                      operator==(const SignalMarkers&) const;
+      decltype(_items.cbegin()) begin() const;
+      decltype(_items.cend())   end() const;
+
     };
 
-    /*
+    
     template <typename OutType>
-      OutType& operator<<(OutType& out, const SignalParams& ref)
+      OutType& operator<<(OutType& out, const SignalMarkers& ref)
       {
-        for(auto& x : ref.items()) {
-          out << x << "<end-param>";
+        for(auto& item : ref) {
+          out << item.label << "<end-label>" << item.value << "<end-mark>";
         }
         return out;
       }
 
-      SignalParams& operator>>(const std::string&, SignalParams& ref);      
-    */
-
-
-      
-
-    
+      SignalMarkers& operator>>(const std::string&, SignalMarkers& ref);      
     }
   }
 
