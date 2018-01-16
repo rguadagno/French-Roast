@@ -177,6 +177,9 @@ void FRMain::session_load()
   }
   TrafficViewer::instance(this)->update_traffic(_session.get_traffic());
   TrafficViewer::instance(this)->update_ranking(_session.get_rankings());
+  for(auto& sig : _session.get_signals()) {
+    FSignalViewer::instance(this)->update_count(sig.first, sig.second);
+  }
 }
 
 
@@ -286,11 +289,12 @@ void FRMain::update_list(std::string  descriptor, std::string tname, int count,
   frenchroast::monitor::pad(tname, 10);
 
   descriptor = tname + descriptor;
-   _markers[descriptor][marker._descriptor] = marker; 
+  _markers[descriptor][marker._descriptor] = marker; 
   
-   _detailDescriptors[descriptor] = DetailHolder{count, argHeaders, instanceHeaders,_markers[descriptor], stacks};
+  _detailDescriptors[descriptor] = DetailHolder{count, argHeaders, instanceHeaders,_markers[descriptor], stacks};
 
   frenchroast::FSignalViewer::instance(this)->update_count(descriptor, count);
+  _session.update(descriptor, count);
   update_detail_list(descriptor, &_detailDescriptors[descriptor],marker);
   
 }

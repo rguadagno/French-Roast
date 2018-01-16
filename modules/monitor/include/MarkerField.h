@@ -20,15 +20,19 @@
 #ifndef MARKERFIELD_H
 #define MARKERFIELD_H
 
+#include "SignalParams.h"
+#include "SignalMarkers.h"
+
 namespace frenchroast { namespace monitor {
     class MarkerField {
     public:
       MarkerField(std::string desc, int count = 1) : _descriptor(desc), _count(count) {}
-    MarkerField() : _count(-1) {}
+    MarkerField(const std::string& skey,const SignalParams& params, const SignalMarkers& markers) : _descriptor(skey),_count(1),_arg_items(params), _instance_items(markers) {}
+    MarkerField() {}
       std::string _descriptor;
-      int         _count;
-      std::vector<std::string> _arg_items;
-      std::vector<std::string> _instance_items;
+      int         _count{-1};
+      SignalParams _arg_items;
+      SignalMarkers _instance_items;
       MarkerField& operator++() { ++_count; return *this; }
     };
   }

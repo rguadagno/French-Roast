@@ -27,6 +27,7 @@ namespace frenchroast { namespace monitor {
       friend     Descriptor& operator>>(const std::string&, Descriptor& ref);
       std::string _class_name;
       std::string _method_name;
+      std::string _raw_param_types;
       void translate(const std::string& pname);
 
     public:
@@ -37,8 +38,9 @@ namespace frenchroast { namespace monitor {
       std::string class_name() const;
       std::string method_name() const;
       std::string full_name() const;
-      bool operator==(const Descriptor&) const;
-      bool operator!=(const Descriptor&) const;
+      std::string raw_param_types() const;
+      bool        operator==(const Descriptor&) const;
+      bool        operator!=(const Descriptor&) const;
       Descriptor& operator=(const Descriptor&);
 
     };

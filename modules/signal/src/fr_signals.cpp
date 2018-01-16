@@ -200,10 +200,10 @@ namespace frenchroast { namespace signal {
       std::string fieldStr;
       std::string artifactStr;
       _validator.validate(line,classname, methName,flagStr, fieldStr, artifactStr);
-      replace(classname, '.', '/');
+
       std::bitset<4> flags;
       parse_flags(flags, flagStr);
-      methName = convert_name(methName);
+
       std::vector<std::string> fields;
       for(auto& x : split(fieldStr, "][")) {
         replace(x, '[');
@@ -212,8 +212,9 @@ namespace frenchroast { namespace signal {
           fields.push_back(x);
         }
       }
-      _markerFields["L" + classname + ";" + methName] = fields;
-      
+      _markerFields[classname + methName] = fields;
+      replace(classname, '.', '/');
+      methName = convert_name(methName);
       _hlist[classname].push_back(Signal{methName, flags, artifactStr.find("OFF") != std::string::npos ? false : true});
     }
 

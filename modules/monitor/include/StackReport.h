@@ -20,24 +20,33 @@
 #ifndef STACKREPORT_H
 #define STACKREPORT_H
 #include <string>
-#include <vector>
+#include "StackTrace.h"
 
 namespace frenchroast { namespace monitor {
     class StackReport {
-      std::string              _key;
-      int                      _count;
-      std::vector<std::string> _descriptors;
+      friend     StackReport& operator>>(const std::string&, StackReport& ref);
+      std::size_t          _count{1};
+      StackTrace           _trace;
 
     public:
-      StackReport(std::vector<std::string> descriptors);
+      StackReport(const StackTrace&);
       StackReport();
-      StackReport&  operator++();
-      int count() const;
-      const std::string& key() const;
-      const std::vector<std::string>& descriptors() const;
-
-      
+      StackReport&             operator++();
+      int                      count() const;
+      const std::string&       key() const;
+      const StackTrace&        trace() const;
+      std::vector<StackFrame>  descriptors() const;
+      bool                     operator==(const StackReport&) const;
     };
+    
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const StackReport& ref)
+      {
+        out << ref.count() << "<end-count>" << ref.trace();
+        return out;
+      }
+
+    StackReport& operator>>(const std::string&, StackReport& ref);    
   }
 }
 

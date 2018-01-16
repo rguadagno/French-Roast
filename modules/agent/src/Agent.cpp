@@ -43,6 +43,10 @@
 #include "ClassDetail.h"
 #include "StackTrace.h"
 #include "JammedReport.h"
+#include "Signal.h"
+#include "StackTrace.h"
+#include "SignalParams.h"
+#include "SignalMarkers.h"
 #include "AgentSignalReporting.h"
 
 std::mutex _traffic_mutex;
@@ -221,7 +225,6 @@ JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass obj
 
 JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass, jobject obj)
 {
-  
   jvmtiFrameInfo frames[10];
   jint count;
   jthread aThread;
@@ -229,42 +232,34 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
   memset(frames, 0, sizeof(frames));         
   if(!ErrorHandler::check_jvmti_error(genv->GetCurrentThread(&aThread),"GetCurrentThread")) return;
   std::string tname;
-  if(!get_thread_name(ptr, genv, aThread, tname)) return;; 
+  if(!get_thread_name(ptr, genv, aThread, tname)) return;;
+  frenchroast::monitor::StackTrace trace{tname};
   if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(aThread, 0, sizeof(frames), frames, &count),"GetStackTrace")) return;
   if (count >= 1) {
-    std::vector<DescriptorVO>  stack;
-    populate_stack(ptr, genv, frames, count, stack, _artifacts );
+    //@@    std::vector<DescriptorVO>  stack;
+    populate_stack(ptr, genv, frames, count, trace, _artifacts );
 
-    std::string params = "(";
     std::string fieldValues = "";
-    if(_artifacts[stack[0].descriptor()]) {
-      populate_artifacts(ptr, genv, frames, obj, params, fieldValues, stack, aThread);
+
+    std::vector<std::string> params;
+    std::vector<std::string> markers;
+    if(_artifacts[trace.descriptor_frames()[0].get_name()]) {
+      populate_artifacts(ptr, genv, frames, obj, params, markers, trace, aThread);
     }
 
-    params.append(")");
-    std::string stackstr = "";
-    std::string* firstStr = new std::string{"signal~"};
-    firstStr->append(stack[0].descriptor());
 
-      
-    for(auto& x : stack) {
-      stackstr.append(x.descriptor());
-      stackstr.append("%");
-      genv->Deallocate((unsigned char*)x._methodName);
-      genv->Deallocate((unsigned char*)x._methodSignature);
-      genv->Deallocate((unsigned char*)x._classSignature);
-    }
-      
-    firstStr->append("~");
-    firstStr->append(tname);
-    firstStr->append("~");
-    firstStr->append(fieldValues);
-    firstStr->append("~");
-    firstStr->append(params);
-    firstStr->append("~");
-    firstStr->append(stackstr);
     
-    _signalQueue.push(firstStr);
+    frenchroast::monitor::StackReport sig_rpt{trace};
+    frenchroast::monitor::SignalParams sig_params{params};
+    frenchroast::monitor::SignalMarkers sig_markers{markers};
+
+
+    frenchroast::monitor::Signal sig{sig_rpt,sig_params,sig_markers};
+    std::stringstream ss;
+    ss << "signal~" << sig;
+    std::string* str = new std::string;
+    *str = ss.str();
+    _signalQueue.push(str);
   }
 }
 

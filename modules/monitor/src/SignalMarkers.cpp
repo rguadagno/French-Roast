@@ -29,6 +29,9 @@ namespace frenchroast { namespace monitor {
       for(auto& x : items) {
         _items.emplace_back(frenchroast::split(x,":")[0], frenchroast::split(x,":")[1]);
       }
+      for(auto& x : _items) {
+        _key += x.label + x.value;
+      }
     }
     
     Marker SignalMarkers::operator[](std::size_t idx) const
@@ -44,15 +47,21 @@ namespace frenchroast { namespace monitor {
     SignalMarkers& SignalMarkers::operator+=(const Marker& mark) 
     {
       _items.push_back(mark);
+      _key += mark.label + mark.value;
       return *this;
     }
     
 
     bool SignalMarkers::operator==(const SignalMarkers& ref) const
     {
-      return _items == ref._items;
+      return _key == ref._key;
     }
 
+    const std::string SignalMarkers::key() const
+    {
+      return _key;
+    }
+    
     decltype(SignalMarkers::_items.cbegin()) SignalMarkers::begin() const
     {
       return _items.cbegin();

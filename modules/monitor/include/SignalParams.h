@@ -26,6 +26,7 @@ namespace frenchroast { namespace monitor {
     class SignalParams  {
       friend     SignalParams& operator>>(const std::string&, SignalParams& ref);      
       std::vector<std::string> _items;
+      std::string              _key;
     public:
       SignalParams(const std::vector<std::string>&);
       SignalParams() = default;
@@ -33,8 +34,10 @@ namespace frenchroast { namespace monitor {
       const std::size_t         size() const;
       SignalParams&             operator+=(const std::string&);
       bool                      operator==(const SignalParams&) const;
+      const std::string         key() const;
       decltype(_items.cbegin()) begin() const;
       decltype(_items.cend())   end() const;
+      operator std::vector<std::string>();
     };
 
     template <typename OutType>

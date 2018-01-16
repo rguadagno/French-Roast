@@ -24,6 +24,7 @@
 #include <vector>
 #include "jni.h"
 #include "jvmti.h"
+#include "StackTrace.h"
 
 class FieldInfo {
  public:
@@ -41,32 +42,12 @@ class FieldInfo {
   
 };
 
-class DescriptorVO {
-public:
-  char* _classSignature;
-  char* _methodName;
-  char* _methodSignature;
-  DescriptorVO(char* cSig, char* mname, char* mSig) : _classSignature(cSig), _methodName(mname), _methodSignature(mSig)
-  {
-  }
-
-  std::string descriptor() const
-  {
-    std::string rv = _classSignature;
-    rv.append("::");
-    rv.append(_methodName);
-    rv.append(":");
-    rv.append(_methodSignature);
-    return rv;
-  }
-};
-
 
 std::string get_value(JNIEnv* ptr, jobject obj, FieldInfo& field);
-void populate_stack( JNIEnv * jni_env, jvmtiEnv* genv, jvmtiFrameInfo* frames, int count, std::vector<DescriptorVO>& rv,
+void populate_stack( JNIEnv * jni_env, jvmtiEnv* genv, jvmtiFrameInfo* frames, int count, frenchroast::monitor::StackTrace& rv,
                      std::unordered_map<std::string, bool>& artifacts );
 
 void populate_class_fields_info(jvmtiEnv* env,char* classDescriptor, jclass theclass, std::unordered_map<std::string, FieldInfo>& gfieldinfo);
-void populate_artifacts(JNIEnv * ptr,  jvmtiEnv* env, jvmtiFrameInfo* frames, jobject& obj, std::string& params, std::string& fieldValues, std::vector<DescriptorVO>& stack, jthread& aThread);
+void populate_artifacts(JNIEnv * ptr,  jvmtiEnv* env, jvmtiFrameInfo* frames, jobject& obj, std::vector<std::string>& params, std::vector<std::string>& fieldValues, frenchroast::monitor::StackTrace& stack, jthread& aThread);
 
 #endif

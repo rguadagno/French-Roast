@@ -44,6 +44,11 @@ namespace frenchroast { namespace monitor {
       return _name.full_name();
     }
 
+    const Descriptor& StackFrame::descriptor() const
+    {
+      return _name;
+    }
+    
     int  StackFrame::get_monitor_count()  const
     {
       return _monitorCount;

@@ -50,6 +50,36 @@ namespace frenchroast { namespace monitor {
       return _report.trace().descriptor_frames()[0].get_name();
     }
 
+    const SignalParams& Signal::params() const
+    {
+      return _params;
+    }
+    
+    const SignalMarkers& Signal::markers() const
+    {
+      return _markers;
+    }
+
+    const StackReport& Signal::report() const
+    {
+      return _report;
+    }
+    
+    bool Signal::operator==(const Signal& ref) const
+    {
+      return _report == ref._report && _params == ref._params && _markers == ref._markers;
+    }
+
+    Signal& operator>>(const std::string& rep, Signal& ref)
+    {
+      auto parts = frenchroast::split(rep, "<end-report>");
+      parts[0] >> ref._report;
+      auto parts2 = frenchroast::split(parts[1], "<end-params>");
+      parts2[0] >> ref._params;
+      parts2[1] >> ref._markers;
+      return ref;
+    }
+    
 
   }
 }

@@ -23,6 +23,7 @@
 #include "jvmti.h"
 #include "FrenchRoast.h"
 #include "fr_signals.h"
+#include "Descriptor.h"
 
 class ClassPtr {
 public:
@@ -40,7 +41,10 @@ template <typename FRType = frenchroast::FrenchRoast>
 void add_hooks(FRType& fr, frenchroast::signal::Signals& hooks, std::unordered_map<std::string, bool>& artifacts, const std::string& sname, jvmtiEnv *env,jint* new_class_data_len, unsigned char** new_class_data)
 {
     for (auto& x : hooks[sname]) {
-    artifacts["L" + sname + ";::" + x.method_name()] = x.artifacts();
+      std::string rawDesc = "L" + sname + ";::" + x.method_name();
+      frenchroast::monitor::Descriptor dsc{rawDesc};
+      artifacts[rawDesc] = x.artifacts();
+      artifacts[dsc.full_name()] = x.artifacts();
     if (x.line_number() > 0) {
       fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
     }

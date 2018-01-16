@@ -33,6 +33,7 @@
 #include "StackReport.h"
 #include "ClassDetail.h"
 #include "JammedReport.h"
+#include "Signal.h"
 
 namespace frenchroast { namespace monitor {
 
@@ -104,7 +105,7 @@ namespace frenchroast { namespace monitor {
               service_timer(items[DIRECTION], items[DESCRIPTOR], items[THREAD_NAME], items[TIME]);
             }
             if (items[MSG_TYPE] == "signal") {
-              service_signal(items[MSG], items[SIGNAL_THREAD_NAME], items[PARAMS], items[MARKER], items[STACK]);
+              service_signal(items[MSG]);
             }
 
             if (items[MSG_TYPE] == "traffic") {
@@ -157,44 +158,37 @@ namespace frenchroast { namespace monitor {
             }
         }
         
-        void service_signal(const std::string& msg, const std::string& thread_name, const std::string& params, const std::string& marker, const std::string& stack)
+        void service_signal(const std::string& msg)
         {
-          const std::string key = thread_name + msg;
-          const std::string subkey = params + marker;
+          Signal sig{};
+          msg >> sig;
+          const std::string key = sig.key();
+          const std::string subkey = sig.params().key() + sig.markers().key();
           if(_markers.count(key) == 0 || _markers[key].count(subkey) == 0) {
-            _markers[key][subkey] = build_marker(subkey);
+            _markers[key][subkey] = MarkerField{subkey,sig.params(),sig.markers()};
           }
           else {
             ++_markers[key][subkey];
           }
           
           if(_instanceHeaders.count(key) == 0) {
-            _instanceHeaders[key] = build_instance_headers(subkey);
+            _instanceHeaders[key] = build_instance_headers(sig.markers());
           }
 
+
           std::vector<std::string> argHeaders;
-          std::string desc = descriptor_to_string(msg);
+          std::string desc = sig.descriptor();
           for(auto& x : frenchroast::split(frenchroast::split(frenchroast::split(desc,")")[0], "(")[1], ",")) {
             argHeaders.push_back(x);
           }
-              
-          std::string skey = "";
-          std::vector<std::string> sframes;
-  
-          for(auto& x : frenchroast::split(stack, "%")) {
-            if(x.find("::") != std::string::npos) {
-              skey.append(x);
-              sframes.push_back(descriptor_to_string(x.substr(1)));
-            }
-          }
-          if(_stacks[thread_name + desc].count(skey) == 0) {
-            _stacks[thread_name + desc][skey] = StackReport(sframes);
+
+          if(_stacks[key].count(sig.report().key()) == 0) {
+            _stacks[key][sig.report().key()] = sig.report();
           }
           else {
-            ++_stacks[thread_name + desc][skey];
+            ++_stacks[key][sig.report().key()];
           }
-  
-          _handler.signal(desc , thread_name  , ++_signals[thread_name  + msg], argHeaders, _instanceHeaders[key], _markers[key][subkey], _stacks[thread_name + desc]);
+          _handler.signal(sig.descriptor() , sig.thread_name(), ++_signals[key], argHeaders, _instanceHeaders[key], _markers[key][subkey], _stacks[key]);
          
         }
 

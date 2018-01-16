@@ -41,12 +41,13 @@ namespace frenchroast { namespace monitor {
     SignalParams& SignalParams::operator+=(const std::string& param)
     {
       _items.push_back(param);
+      _key += param;
       return *this;
     }
 
     bool SignalParams::operator==(const SignalParams& p) const
     {
-      return _items == p._items;
+      return _key == p._key;
     }
 
     decltype(SignalParams::_items.cbegin()) SignalParams::begin() const
@@ -60,7 +61,15 @@ namespace frenchroast { namespace monitor {
       return _items.cend();
     }
 
-    
+    SignalParams::operator std::vector<std::string>()
+    {
+      return _items;
+    }
+
+    const std::string SignalParams::key() const
+    {
+      return _key;
+    }
     SignalParams& operator>>(const std::string& rep, SignalParams& ref)
     {
       for(auto& param : frenchroast::split(rep, "<end-param>")) {

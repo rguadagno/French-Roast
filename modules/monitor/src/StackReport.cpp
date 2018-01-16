@@ -18,16 +18,12 @@
 //
 
 #include "StackReport.h"
-
+#include "Util.h"
 
 namespace frenchroast { namespace monitor {
 
-    StackReport::StackReport(std::vector<std::string> descriptors) : _descriptors(descriptors), _count(1)
+    StackReport::StackReport(const StackTrace& trace) : _trace(trace)
     {
-      _key = "";
-      for(auto& x : _descriptors) {
-        _key.append(x);
-      }
     }
 
     StackReport::StackReport()
@@ -45,12 +41,32 @@ namespace frenchroast { namespace monitor {
 
     const std::string& StackReport::key() const
     {
-      return _key;
+      return _trace.key();
     }
 
-    const std::vector<std::string>& StackReport::descriptors() const
+    const StackTrace& StackReport::trace() const
     {
-      return _descriptors;
+      return _trace;
     }
+
+    bool StackReport::operator==(const StackReport& ref) const
+    {
+      return _count == ref._count && _trace == ref._trace;
+    }
+
+    std::vector<StackFrame> StackReport::descriptors() const
+    {
+      return _trace.descriptor_frames();
+    }
+    
+    StackReport& operator>>(const std::string& rep, StackReport& ref)
+    {
+      auto parts = frenchroast::split(rep, "<end-count>");
+      ref._count = atoi(parts[0].c_str());
+      parts[1] >> ref._trace;
+      return ref;
+    }
+  
+    
   }
 }

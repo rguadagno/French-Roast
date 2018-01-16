@@ -47,6 +47,9 @@ SOURCES += \
 ../../monitor/src/ClassDetail.cpp \
 ../../monitor/src/Descriptor.cpp \
 ../../monitor/src/JammedReport.cpp \
+../../monitor/src/SignalParams.cpp \
+../../monitor/src/SignalMarkers.cpp \
+../../monitor/src/Signal.cpp \
 ../../session/src/PersistorFile.cpp \
 ../../session/src/Session.cpp \
 ../../network/src/FRSocket.cpp \

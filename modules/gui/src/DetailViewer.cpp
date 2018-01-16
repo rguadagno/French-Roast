@@ -141,47 +141,47 @@ DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FVi
 
 
   for(auto& xitem : *markers ) {
-    auto& item = xitem.second;
-  if(_detailItems.count(item._descriptor) == 0 ) {
-    if(item._count > 1) {
-      int currRow = _argData->rowCount();
-      _argData->insertRow(currRow);
-      _detailItems[item._descriptor] = currRow;
-      _argData->setItem(currRow, 0, createItem(item._count));
-      _argData->setItem(currRow, 1, createItem("("));
-      
-      int colidx = 2;
-      int idx=1;
-      auto totalargs = item._arg_items.size();
-      for(auto& x : item._arg_items) {
-        std::string xx = x;
-        if(idx < totalargs) {
-          xx.append(",");
-          ++idx;
-        }
-        _argData->setItem(currRow, colidx++, createItem(xx));
-      }
-      
-      _argData->setItem(currRow, colidx, createItem(")"));
-      ++colidx;
-      for(auto& x : item._instance_items) {
-        _argData->setItem(currRow, colidx++,createItem(x));
-      }
-    }
-    else {
-      _detailItems[item._descriptor] = -1;
-      int currRow = _argData->rowCount();
-      if( _detailItems.count("*") == 0) {
+     auto& item = xitem.second;
+    if(_detailItems.count(item._descriptor) == 0 ) {
+       if(item._count > 1) {
+         int currRow = _argData->rowCount();
         _argData->insertRow(currRow);
-        _detailItems["*"] = currRow;
-        _argData->setItem(currRow, 0, createItem(1));
-        _argData->setItem(currRow, 1, createItem("*"));
+        _detailItems[item._descriptor] = currRow;
+        _argData->setItem(currRow, 0, createItem(item._count));
+        _argData->setItem(currRow, 1, createItem("("));
+      
+        int colidx = 2;
+        int idx=1;
+        auto totalargs = item._arg_items.size();
+        for(auto& x : item._arg_items) {
+          std::string xx = x;
+          if(idx < totalargs) {
+            xx.append(",");
+            ++idx;
+          }
+          _argData->setItem(currRow, colidx++, createItem(xx));
+        }
+        
+        _argData->setItem(currRow, colidx, createItem(")"));
+        ++colidx;
+        for(auto& x : item._instance_items) {
+          _argData->setItem(currRow, colidx++,createItem(x));
+        }
       }
       else {
-        _argData->setItem(_detailItems["*"], 0, createItem(  _argData->item(_detailItems["*"],0)->text().toInt() + 1   ));
+         _detailItems[item._descriptor] = -1;
+        int currRow = _argData->rowCount();
+        if( _detailItems.count("*") == 0) {
+          _argData->insertRow(currRow);
+          _detailItems["*"] = currRow;
+          _argData->setItem(currRow, 0, createItem(1));
+          _argData->setItem(currRow, 1, createItem("*"));
+        }
+        else {
+           _argData->setItem(_detailItems["*"], 0, createItem(  _argData->item(_detailItems["*"],0)->text().toInt() + 1   ));
+        }
       }
     }
-  }
   else {
     if(_detailItems[item._descriptor] == -1  ) {
       if(item._count == 1) continue;

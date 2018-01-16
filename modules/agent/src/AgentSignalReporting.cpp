@@ -37,7 +37,7 @@ std::string get_value(JNIEnv* ptr, jobject obj, FieldInfo& field)
 }
 
 
-void populate_stack( JNIEnv * jni_env, jvmtiEnv* env, jvmtiFrameInfo* frames, int count, std::vector<DescriptorVO>& rv,
+void populate_stack( JNIEnv * jni_env, jvmtiEnv* env, jvmtiFrameInfo* frames, int count, frenchroast::monitor::StackTrace& rv,
                      std::unordered_map<std::string, bool>& artifacts )
 {
   void* cacheid;
@@ -47,7 +47,6 @@ void populate_stack( JNIEnv * jni_env, jvmtiEnv* env, jvmtiFrameInfo* frames, in
   char* className;
   jclass theclass;
 
-  rv.reserve(count);
 
   for(int idx = 1; idx < count; idx++) {
     ++frames;
@@ -56,14 +55,15 @@ void populate_stack( JNIEnv * jni_env, jvmtiEnv* env, jvmtiFrameInfo* frames, in
     if(!ErrorHandler::check_jvmti_error(env->GetMethodDeclaringClass(frames->method, &theclass), "GetMethodDeclaringClass")) continue;
     if(!get_class_name_fast(env, theclass, &className)) continue;
     jni_env->DeleteLocalRef(theclass);
-    rv.emplace_back(className, methodName, sig);
-    if(idx == 1 && !artifacts[rv[0].descriptor()]) {
+    std::string rawDesc = std::string{className} + "::" + std::string{methodName} + ":" + std::string{sig};
+    rv.addFrame({rawDesc});
+    if(idx == 1 && !artifacts[rawDesc]) {
       return;
     }
   }
 }
 
-void populate_class_fields_info(jvmtiEnv* env, char* classDescriptor, jclass theclass, std::unordered_map<std::string, FieldInfo>& gfieldinfo)
+void populate_class_fields_info(jvmtiEnv* env, const std::string& classDescriptor, jclass theclass, std::unordered_map<std::string, FieldInfo>& gfieldinfo)
 {
 
   static std::unordered_map<void*, int> _cache;
@@ -93,53 +93,47 @@ void populate_class_fields_info(jvmtiEnv* env, char* classDescriptor, jclass the
   _cache_mutex.unlock();
 }
 
-void populate_artifacts(JNIEnv * ptr, jvmtiEnv* env,  jvmtiFrameInfo* frames, jobject& obj, std::string& params, std::string& fieldValues, std::vector<DescriptorVO>& stack, jthread& aThread)
+void populate_artifacts(JNIEnv * ptr, jvmtiEnv* env,  jvmtiFrameInfo* frames, jobject& obj, std::vector<std::string>& params, std::vector<std::string>& fieldValues, frenchroast::monitor::StackTrace& stack, jthread& aThread)
 {
       int slot = 0;
     jstring jsvalue;
-      for(auto& argtype : typeTokenizer(stack[0]._methodSignature)) {
+    for(auto& argtype : typeTokenizer(stack.descriptor_frames()[0].descriptor().raw_param_types()    )) {
         ++slot;
         switch(argtype) {
         case INT_TYPE:
           jint ivalue;
           if(!ErrorHandler::check_jvmti_error(env->GetLocalInt(aThread, 1,slot, &ivalue), "GetLocalInt")) return;
-          params.append(std::to_string(ivalue) + ",");
+          params.push_back(std::to_string(ivalue));
 
           break;
         case STRING_TYPE:
           jobject ovalue;
           if(!ErrorHandler::check_jvmti_error(env->GetLocalObject(aThread, 1,slot, &ovalue), "GetLocalObject")) return;
           jsvalue = jstring(ovalue);
-          params.append(  std::string(ptr->GetStringUTFChars(jsvalue,0)) + ",");
+          params.push_back(  std::string(ptr->GetStringUTFChars(jsvalue,0)));
           ptr->DeleteLocalRef(ovalue);
           break;
         case ARRAY_TYPE:
-          params.append( "[],");
+          params.push_back( "[]");
           break;
         }
       }
-    
-      if(params.length() > 1) {
-        params.erase(params.length() -1 ,1);
-      }
-    
-      
-      if(_hooks.get_marker_fields(stack[0]._classSignature, std::string{stack[0]._methodName} + ":" + stack[0]._methodSignature).size() > 0) {
+
+    std::string class_name = stack.descriptor_frames()[0].descriptor().class_name();
+    std::string method_name = stack.descriptor_frames()[0].descriptor().method_name();
+    std::cout << "====>: " << class_name << "   " << method_name << std::endl;
+    if(_hooks.get_marker_fields(class_name,method_name).size() > 0) {
         jclass theclass;
         if(!ErrorHandler::check_jvmti_error(env->GetMethodDeclaringClass(frames[1].method, &theclass), "GetMethodDeclaringClass")) return;
        
-        std::string classStr = std::string{stack[0]._classSignature};
         std::string key;
-
-        for(auto& fieldname : _hooks.get_marker_fields(stack[0]._classSignature, std::string{stack[0]._methodName} + ":" + stack[0]._methodSignature)) {
-          key = classStr + ">" + fieldname;
+        for(auto& fieldname : _hooks.get_marker_fields(class_name, method_name)) {
+          key = class_name + ">" + fieldname;
           if(_reportingFields.find(key) == _reportingFields.end()) {
-            populate_class_fields_info(env, stack[0]._classSignature, theclass, _reportingFields);          
+            populate_class_fields_info(env, class_name, theclass, _reportingFields);          
           }
-          fieldValues.append(get_value(ptr, obj, _reportingFields[ key]));       
+          fieldValues.push_back(get_value(ptr, obj, _reportingFields[ key]));       
         }
-        
         ptr->DeleteLocalRef(theclass);
       }
-
 }

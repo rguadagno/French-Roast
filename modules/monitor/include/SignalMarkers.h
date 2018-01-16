@@ -29,12 +29,14 @@ namespace frenchroast { namespace monitor {
         std::string label;
         std::string value;
         bool operator==(const Marker& ref) const {  return label == ref.label && value == ref.value; }
+        operator std::string() const  { return value; }
       };
 
     class SignalMarkers  {
       friend     SignalMarkers& operator>>(const std::string&, SignalMarkers& ref);
 
       std::vector<Marker> _items;
+      std::string         _key;
 
     public:
       SignalMarkers(const std::vector<std::string>&);
@@ -43,6 +45,7 @@ namespace frenchroast { namespace monitor {
       Marker                    operator[](std::size_t idx) const;      
       SignalMarkers&            operator+=(const Marker&);
       bool                      operator==(const SignalMarkers&) const;
+      const std::string         key() const;
       decltype(_items.cbegin()) begin() const;
       decltype(_items.cend())   end() const;
 

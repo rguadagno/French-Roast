@@ -41,10 +41,17 @@ namespace frenchroast { namespace monitor {
       
       std::string methodname = split(name, ":")[0];
       std::string rvstr = translate_return_type(split(split(name,")")[1],":")[0]);
-      std::string parms = translate_param_types(split(split(name,"(")[1],")")[0]);
+      _raw_param_types = split(split(name,"(")[1],")")[0];
+      std::string parms = translate_param_types(_raw_param_types);
+      _raw_param_types = "(" + _raw_param_types + ")";
       _method_name = methodname + ":(" + parms + "):" + rvstr;
     }
 
+    std::string Descriptor::raw_param_types() const
+    {
+      return _raw_param_types;
+    }
+    
     std::string Descriptor::class_name() const
     {
       return _class_name;

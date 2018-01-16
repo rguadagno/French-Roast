@@ -40,6 +40,7 @@ namespace frenchroast { namespace monitor {
       bool operator==(const StackFrame&) const;
       bool operator!=(const StackFrame&) const;
       operator std::string() const;
+      const Descriptor& descriptor() const;
     };
 
     template <typename OutType>

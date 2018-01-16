@@ -29,51 +29,35 @@
 
 namespace frenchroast { namespace monitor {
     class Signal  {
-
+      friend     Signal& operator>>(const std::string&, Signal& ref);
+      
       StackReport    _report;
-      SignalParams    _params;
-      SignalMarkers   _markers;            
+      SignalParams   _params;
+      SignalMarkers  _markers;            
         
     public:
       Signal(const StackReport&, const SignalParams&, const SignalMarkers);
-
-      const std::string thread_name() const;
-      const std::string key() const;
-      const std::size_t count() const;
-      const std::string descriptor() const;
-      const SignalParams& params() const;
-      const SignalMarkers& markers() const;
+      Signal()=default;
+      const std::string        thread_name() const;
+      const std::string        key() const;
+      const std::size_t        count() const;
+      const std::string        descriptor() const;
+      const StackReport&       report() const;
+      const SignalParams&      params() const;
+      const SignalMarkers&     markers() const;
+      bool                     operator==(const Signal&) const;
       //      const static std::string TAG_END;
       //const static std::string TAG;
     };
-    /*
-    template <typename OutType>
-      OutType& operator<<(OutType& out, const JammedReport& ref)
-      {
-
-        for(auto x : ref.monitors()) {
-          out << x << "<end-monitor>";
-        }
-        out  << "<end-jmonitors>";
-        out << ref.owner() << "<end-owner>" << ref.waiter(); 
-        return out;
-      }
 
     template <typename OutType>
-      OutType& operator<<(OutType& out, const std::unordered_map<std::string,JammedReport>& ref)
+      OutType& operator<<(OutType& out, const Signal& ref)
       {
-        if(ref.size() == 0) return out;
-        out << JammedReport::TAG << "<view>";        
-        for(auto x : ref) {
-          out << x.second << JammedReport::TAG_END;
-        }
+        out << ref.report() << "<end-report>" << ref.params() << "<end-params>" << ref.markers();
         return out;
       }
-
+      Signal& operator>>(const std::string&, Signal& ref);
     
-    JammedReport& operator>>(const std::string& rep, JammedReport& ref);
-    std::vector<JammedReport>& operator>>(const std::string&, std::vector<JammedReport>& ref);
-    */
   }
 }
 #endif

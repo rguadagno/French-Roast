@@ -25,7 +25,11 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     ../../monitor/src/Descriptor.cpp
     ../../monitor/src/Monitor.cpp
     ../../monitor/src/StackTrace.cpp
-    ../../monitor/src/StackFrame.cpp    
+    ../../monitor/src/StackFrame.cpp
+    ../../monitor/src/StackReport.cpp
+    ../../monitor/src/SignalParams.cpp
+    ../../monitor/src/SignalMarkers.cpp
+    ../../monitor/src/Signal.cpp            
     ../../monitor/src/JammedReport.cpp    
     ../../network/src/FRSocket.cpp
     ../../signal/src/fr_signals.cpp
