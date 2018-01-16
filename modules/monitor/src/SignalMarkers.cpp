@@ -76,9 +76,11 @@ namespace frenchroast { namespace monitor {
     
     SignalMarkers& operator>>(const std::string& rep, SignalMarkers& ref)
     {
+      ref._items.clear();
+      ref._key = "";
       for(auto& mark : frenchroast::split(rep, "<end-mark>")) {
         if(mark == "") continue;
-        ref._items.emplace_back(frenchroast::split(mark,"<end-label>")[0], frenchroast::split(mark,"<end-label>")[1]);
+        ref += {frenchroast::split(mark,"<end-label>")[0], frenchroast::split(mark,"<end-label>")[1]};
       }
       return ref;
     }

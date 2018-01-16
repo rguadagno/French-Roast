@@ -26,6 +26,9 @@ namespace frenchroast { namespace monitor {
 
     SignalParams::SignalParams(const std::vector<std::string>& items) : _items(items)
     {
+      for(auto& item : _items) {
+        _key += item;
+      }
     }
     
     const std::string& SignalParams::operator[](std::size_t idx) const
@@ -70,8 +73,11 @@ namespace frenchroast { namespace monitor {
     {
       return _key;
     }
+    
     SignalParams& operator>>(const std::string& rep, SignalParams& ref)
     {
+      ref._items.clear();
+      ref._key = "";
       for(auto& param : frenchroast::split(rep, "<end-param>")) {
         if(param != "") {
           ref += param;
