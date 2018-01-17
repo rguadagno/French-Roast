@@ -31,23 +31,20 @@ namespace frenchroast { namespace monitor {
     class Signal  {
       friend     Signal& operator>>(const std::string&, Signal& ref);
       
-      StackReport    _report;
-      SignalParams   _params;
-      SignalMarkers  _markers;            
-        
+      StackReport              _report;
+      SignalParams             _params;
+      SignalMarkers            _markers;            
+
     public:
       Signal(const StackReport&, const SignalParams&, const SignalMarkers);
       Signal()=default;
       const std::string        thread_name() const;
       const std::string        key() const;
-      const std::size_t        count() const;
       const std::string        descriptor() const;
       const StackReport&       report() const;
       const SignalParams&      params() const;
       const SignalMarkers&     markers() const;
       bool                     operator==(const Signal&) const;
-      //      const static std::string TAG_END;
-      //const static std::string TAG;
     };
 
     template <typename OutType>

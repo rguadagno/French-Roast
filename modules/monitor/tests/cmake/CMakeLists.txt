@@ -17,7 +17,6 @@ ${CATCH_LOCATION}
 )
 
 FILE(GLOB src_files
-../src/*.cpp
 ../../src/MonitorUtil.cpp
 ../../src/Descriptor.cpp
 ../../src/Monitor.cpp
@@ -30,13 +29,15 @@ FILE(GLOB src_files
 ../../src/Signal.cpp
 ../../src/SignalParams.cpp
 ../../src/SignalMarkers.cpp
+../../src/SignalReport.cpp
 ../../../instrumentation/src/Util.cpp
 ../../../network/src/Connector.cpp
 ../../../network/src/FRSocket.cpp
+../src/*.cpp
 )
 
 if (UNIX)
-   add_definitions("-std=c++11")
+   add_definitions("-std=c++17")
    add_definitions(-DCONNECTOR_UNIX)
    find_package(Threads)
 endif ()

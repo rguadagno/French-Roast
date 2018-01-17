@@ -30,11 +30,11 @@ class DetailHolder {
  DetailHolder( int count,
                std::vector<std::string> ah,
                std::vector<std::string> ih,
-               std::unordered_map<std::string, MarkerField>& fields,
-               std::unordered_map<std::string, StackReport> stacks) : _count(count),
+               const std::unordered_map<std::string, MarkerField>& fields,
+               const std::unordered_map<std::string, StackReport>& stacks) : _count(count),
                                                                       _argHeaders(ah),
                                                                       _instanceHeaders(ih),
-                                                                       _markers(&fields),
+                                                                       _markers(fields),
                                                                       _stacks(stacks)
     {
     }
@@ -46,7 +46,7 @@ class DetailHolder {
   int                                          _count;
   std::vector<std::string>                     _argHeaders;
   std::vector<std::string>                     _instanceHeaders;
-  std::unordered_map<std::string, MarkerField>* _markers;
+  std::unordered_map<std::string, MarkerField> _markers;
   std::unordered_map<std::string, StackReport> _stacks;
 };
 

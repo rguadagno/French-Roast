@@ -36,7 +36,7 @@ namespace frenchroast { namespace monitor {
       return _items[idx];
     }
     
-    const std::size_t  SignalParams::size() const
+    std::size_t  SignalParams::size() const
     {
       return _items.size();
     }

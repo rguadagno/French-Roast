@@ -40,11 +40,6 @@ namespace frenchroast { namespace monitor {
       return thread_name() + descriptor();
     }
     
-    const std::size_t Signal::count() const
-    {
-      return _report.count();
-    }
-    
     const std::string Signal::descriptor() const
     {
       return _report.trace().descriptor_frames()[0].get_name();
@@ -64,7 +59,7 @@ namespace frenchroast { namespace monitor {
     {
       return _report;
     }
-    
+
     bool Signal::operator==(const Signal& ref) const
     {
       return _report == ref._report && _params == ref._params && _markers == ref._markers;

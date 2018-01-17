@@ -25,13 +25,14 @@
 namespace frenchroast { namespace monitor {
     class StackReport {
       friend     StackReport& operator>>(const std::string&, StackReport& ref);
-      std::size_t          _count{1};
+      std::size_t          _count{0};
       StackTrace           _trace;
 
     public:
       StackReport(const StackTrace&);
       StackReport();
       StackReport&             operator++();
+      StackReport&             operator+=(const StackReport&);
       int                      count() const;
       const std::string&       key() const;
       const StackTrace&        trace() const;

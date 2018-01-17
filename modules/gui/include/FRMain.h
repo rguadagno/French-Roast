@@ -59,7 +59,6 @@ class FRMain : public QMainWindow {
   bool                                                          _watchTraffic{false};
   bool                                                          _watchLoading{false};
   int                                                           _trafficRate{100};
-  std::unordered_map<std::string, std::unordered_map<std::string, MarkerField>>                  _markers;
   void restore();
   void connect_common_listeners(frenchroast::FViewer* instance);
   void restore_if_required(const bool required, void (FRMain::* func)(), bool& result);
@@ -72,7 +71,7 @@ class FRMain : public QMainWindow {
   void start_traffic(int);
   void stop_traffic();
   void validated_signals(std::vector<std::string>);
-  void update_detail_list(std::string,   DetailHolder* detailholder, MarkerField);
+  void update_detail_list(std::string,   DetailHolder* detailholder);
   void turn_on_profiler(const std::string& hostname_pid);
   void turn_off_profiler(const std::string& hostname_pid);
   void reset();
@@ -98,7 +97,7 @@ class FRMain : public QMainWindow {
    void add_hook(QString);
    void show_detail(const std::string& descriptor);
    void handle_exit();
-   void update_list(std::string, std::string, int, const std::vector<std::string> ,  const std::vector<std::string>, const frenchroast::monitor::MarkerField, std::unordered_map<std::string, frenchroast::monitor::StackReport>);
+   void update_list(const frenchroast::monitor::SignalReport&);
    void update_timed_list(std::string  descriptor, std::string, long elapsed);
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void start_watching_traffic(int);

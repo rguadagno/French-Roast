@@ -22,9 +22,33 @@
 #include <sstream>
 #include "catch.hpp"
 #include "Signal.h"
+#include "SignalReport.h"
 #include "helper.h"
 
 using namespace frenchroast::monitor;
+
+
+
+Signal build_signal(const std::string& tname,
+                    const std::vector<std::string>& frames,
+                    const std::vector<std::string>& items,
+                    const std::vector<std::string>& markers
+                    )
+{
+  StackTrace st{tname};
+
+  for(auto& line : frames) {
+    StackFrame sf{};
+    line >> sf;
+    st.addFrame(sf);
+  }
+
+  SignalParams params{items};
+  Signal sig{StackReport{st},params,SignalMarkers{markers}};
+  return sig;
+}
+
+
 
 TEST_CASE("StackReport ")
 {
@@ -48,6 +72,10 @@ TEST_CASE("StackReport ")
   StackReport rpt2{};
   "2<end-count>t1<end-thread-name>0<end-monitor>0<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>0<end-frame>mypackage.SomeClass::funcB:(int):void<end-method>0<end-frame>" >> rpt2;
   REQUIRE(rpt == rpt2);
+
+  StackReport rpt3{};
+  rpt3 += rpt;
+  REQUIRE(rpt2 == rpt);
   
 }
 
@@ -106,10 +134,7 @@ TEST_CASE("SignalMarkers ")
 }
 
 
-
-
-
-TEST_CASE("Signal, construction, empty params, empty markers ")
+TEST_CASE("Signal, construction, ")
 {
   Descriptor dsc{"Lmypackage/SomeClass;::funcA:(I)V"};
 
@@ -122,7 +147,7 @@ TEST_CASE("Signal, construction, empty params, empty markers ")
   st.addFrame(sf);
   Signal sig{StackReport{st},SignalParams{},SignalMarkers{}};
   REQUIRE(sig.key() == "t1" + dsc.full_name());
-  REQUIRE(sig.count() == 1);
+
   REQUIRE(sig.descriptor() == "mypackage.SomeClass::funcA:(int):void");
 
   REQUIRE(sig.params().size() == 0);
@@ -145,3 +170,116 @@ TEST_CASE("Signal, construction, empty params, empty markers ")
 }
 
 
+Signal build_sig1()
+{
+  return build_signal("t1", {"mypackage.SomeClass::funcA:(int):void<end-method>",
+                             "mypackage.SomeClass::funcB:(int):void<end-method>"},
+                            {"100", "some text"},
+                            {"_total:200", "_cost:none"});    
+}
+
+Signal build_sig2()
+{
+  return build_signal("t1", {"mypackage.SomeClass::funcD:(int):void<end-method>"},
+                            {"300"},
+                            {});    
+}
+
+Signal build_sig3()
+{
+  return build_signal("t1", {"mypackage.SomeClass::funcA:(int):void<end-method>",
+                             "mypackage.SomeClass::funcD:(int):void<end-method>"},
+                            {"100", "some text"},
+                            {"_total:200;_cost:none"});    
+
+}
+
+
+TEST_CASE("Signal, copy cons ")
+{
+  Signal sig1 = build_sig1();
+  Signal sig2 = sig1;
+  REQUIRE(sig1 == sig2);
+  
+}
+
+TEST_CASE("SignalReport, += operator ")
+{
+  Signal sig1 = build_sig1();
+  Signal sig2 = build_sig2();
+
+  SignalReport rpt{};
+  REQUIRE(rpt.count() == 0);
+  REQUIRE(rpt.stacks().size() == 0);
+  rpt += sig1;
+  REQUIRE(rpt.count() == 1);
+
+  REQUIRE(rpt.stacks().size() == 1);
+  REQUIRE(rpt.stacks().count(sig1.report().key()) == 1);
+  REQUIRE(rpt.markers().size() == 1);
+  REQUIRE(rpt.markers().count(sig1.params().key() + sig1.markers().key()) == 1);
+
+  REQUIRE(rpt.key() == sig1.key());
+  
+  auto xs = rpt.stacks();
+  REQUIRE(xs[sig1.report().key()].count() == 1);
+  auto xm = rpt.markers();
+  REQUIRE(xm[sig1.params().key() + sig1.markers().key()]._count == 1);
+
+  rpt += sig1;
+  REQUIRE(rpt.count() == 2);
+  REQUIRE(rpt.stacks().size() == 1);
+  REQUIRE(rpt.stacks().count(sig1.report().key()) == 1);
+  auto x = rpt.stacks();
+  REQUIRE(x[sig1.report().key()].count() == 2);
+  auto xm2 = rpt.markers();
+  REQUIRE(xm2[sig1.params().key() + sig1.markers().key()]._count == 2);
+  
+  rpt += sig2;
+  REQUIRE(rpt.count() == 2);
+
+  Signal sig3 = build_sig3();
+  rpt += sig3;
+  REQUIRE(rpt.count() == 3);
+  REQUIRE(rpt.stacks().size() == 2);
+  REQUIRE(rpt.stacks().count(sig1.report().key()) == 1);
+  REQUIRE(rpt.stacks().count(sig3.report().key()) == 1);
+}
+
+
+TEST_CASE("SignalReport, arg headers ")
+{
+  Signal sig1 = build_sig1();
+  SignalReport rpt{};
+  rpt += sig1;
+  auto x = rpt.arg_headers(); 
+  REQUIRE(x.size() == 1);
+  REQUIRE(x[0] == "int");
+}
+
+TEST_CASE("SignalReport, instance headers ")
+{
+  Signal sig1 = build_sig1();
+  SignalReport rpt{};
+  rpt += sig1;
+  auto x = rpt.instance_headers(); 
+  REQUIRE(x.size() == 2);
+  REQUIRE(x[0] == "_total");
+  REQUIRE(x[1] == "_cost");
+}
+
+TEST_CASE("SignalReport, thread_name() ")
+{
+  Signal sig1 = build_sig1();
+  SignalReport rpt{};
+  rpt += sig1;
+  REQUIRE(rpt.thread_name() == "t1");
+}
+
+TEST_CASE("SignalReport, descriptor_name() ")
+{
+  Signal sig1 = build_sig1();
+  SignalReport rpt{};
+  rpt += sig1;
+  REQUIRE(rpt.descriptor_name() == "mypackage.SomeClass::funcA:(int):void");
+}

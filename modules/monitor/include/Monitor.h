@@ -28,12 +28,12 @@
 #include "Listener.h"
 #include "Util.h"
 #include "StackTrace.h"
-#include "MarkerField.h"
 #include "MethodStats.h"
 #include "StackReport.h"
 #include "ClassDetail.h"
 #include "JammedReport.h"
 #include "Signal.h"
+#include "SignalReport.h"
 
 namespace frenchroast { namespace monitor {
 
@@ -48,12 +48,9 @@ namespace frenchroast { namespace monitor {
 	T&                                                                             _handler;
         network::Connector<>                                                          _conn;
         std::unordered_map<std::string, time_holder>                                  _timed_signals;
-        std::unordered_map<std::string, int>                                          _signals;
+        std::unordered_map<std::string, SignalReport>                                 _signals;
         std::unordered_map<std::string, MethodStats>                                  _method_counters;
         std::unordered_map<std::string, JammedReport>                                 _jammedReports;
-        std::unordered_map<std::string, std::unordered_map<std::string, MarkerField>> _markers;
-        std::unordered_map<std::string, std::vector<std::string>>                     _instanceHeaders;
-        std::unordered_map<std::string, std::unordered_map<std::string, StackReport>> _stacks;
         std::string                                                                   _opcodeFile;
         std::unordered_map<std::string, std::string>                                  _clients;
         boost::lockfree::spsc_queue<std::string, boost::lockfree::fixed_sized<true>>  _iq{15000};
@@ -162,34 +159,7 @@ namespace frenchroast { namespace monitor {
         {
           Signal sig{};
           msg >> sig;
-          const std::string key = sig.key();
-          const std::string subkey = sig.params().key() + sig.markers().key();
-          if(_markers.count(key) == 0 || _markers[key].count(subkey) == 0) {
-            _markers[key][subkey] = MarkerField{subkey,sig.params(),sig.markers()};
-          }
-          else {
-            ++_markers[key][subkey];
-          }
-          
-          if(_instanceHeaders.count(key) == 0) {
-            _instanceHeaders[key] = build_instance_headers(sig.markers());
-          }
-
-
-          std::vector<std::string> argHeaders;
-          std::string desc = sig.descriptor();
-          for(auto& x : frenchroast::split(frenchroast::split(frenchroast::split(desc,")")[0], "(")[1], ",")) {
-            argHeaders.push_back(x);
-          }
-
-          if(_stacks[key].count(sig.report().key()) == 0) {
-            _stacks[key][sig.report().key()] = sig.report();
-          }
-          else {
-            ++_stacks[key][sig.report().key()];
-          }
-          _handler.signal(sig.descriptor() , sig.thread_name(), ++_signals[key], argHeaders, _instanceHeaders[key], _markers[key][subkey], _stacks[key]);
-         
+          _handler.signal(_signals[sig.key()] += sig);
         }
 
         
@@ -251,8 +221,6 @@ namespace frenchroast { namespace monitor {
           _signals.clear();
           _method_counters.clear();
           _jammedReports.clear();
-          _markers.clear();
-          _stacks.clear();
         }
         
     };

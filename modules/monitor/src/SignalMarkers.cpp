@@ -39,7 +39,7 @@ namespace frenchroast { namespace monitor {
      return Marker{_items[idx]};
     }
     
-    const std::size_t  SignalMarkers::size() const
+    std::size_t  SignalMarkers::size() const
     {
       return _items.size();
     }

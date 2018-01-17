@@ -34,6 +34,18 @@ namespace frenchroast { namespace monitor {
       SignalParams _arg_items;
       SignalMarkers _instance_items;
       MarkerField& operator++() { ++_count; return *this; }
+      MarkerField& operator+=(const MarkerField& ref)
+        {
+          if(_count == -1) {
+            _count = 1;
+            _arg_items = ref._arg_items;
+            _instance_items = ref._instance_items;            
+          }
+          else {
+            ++_count;
+          }
+          return *this;
+        }
     };
   }
 }

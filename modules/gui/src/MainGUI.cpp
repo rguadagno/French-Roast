@@ -241,7 +241,7 @@ void FRMain::show_detail(const std::string& descriptor)
   QObject::connect(dv, &frenchroast::DetailViewer::add_signal,     this,  &FRMain::add_hook);
   QDockWidget* dock = *frenchroast::FSignalViewer::instance(this);
   dv->move(dock->x() + 50, dock->y() + 50 ); 
-  update_detail_list(descriptor, &_detailDescriptors[descriptor], MarkerField{});
+  update_detail_list(descriptor, &_detailDescriptors[descriptor]);
 }
 
 
@@ -278,25 +278,21 @@ void FRMain::method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks
   _session.update(ranks);
 }
 
-void FRMain::update_list(std::string  descriptor, std::string tname, int count,
-                         const std::vector<std::string> argHeaders,  const std::vector<std::string> instanceHeaders, 
-                         const frenchroast::monitor::MarkerField marker, std::unordered_map<std::string, frenchroast::monitor::StackReport> stacks)
+void FRMain::update_list(const frenchroast::monitor::SignalReport& rpt)
 {
   if(_exit) return;
 
-  tname = "[ " + tname + " ] ";
+  std::string tname = "[ " + rpt.thread_name() + " ] ";
+  std::string descriptor = rpt.descriptor_name();
   frenchroast::monitor::pad(descriptor, 50);
   frenchroast::monitor::pad(tname, 10);
 
   descriptor = tname + descriptor;
-  _markers[descriptor][marker._descriptor] = marker; 
-  
-  _detailDescriptors[descriptor] = DetailHolder{count, argHeaders, instanceHeaders,_markers[descriptor], stacks};
+  _detailDescriptors[descriptor] = DetailHolder{rpt.count(), rpt.arg_headers(), rpt.instance_headers(),
+                                                rpt.markers(), rpt.stacks()};
 
-  frenchroast::FSignalViewer::instance(this)->update_count(descriptor, count);
-  _session.update(descriptor, count);
-  update_detail_list(descriptor, &_detailDescriptors[descriptor],marker);
-  
+  frenchroast::FSignalViewer::instance(this)->update_count(descriptor, rpt.count());
+  update_detail_list(descriptor, &_detailDescriptors[descriptor]);
 }
 
 void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks)

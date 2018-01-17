@@ -41,7 +41,7 @@ namespace frenchroast { namespace monitor {
     public:
       SignalMarkers(const std::vector<std::string>&);
       SignalMarkers() = default;
-      const std::size_t         size() const;
+      std::size_t               size() const;
       Marker                    operator[](std::size_t idx) const;      
       SignalMarkers&            operator+=(const Marker&);
       bool                      operator==(const SignalMarkers&) const;

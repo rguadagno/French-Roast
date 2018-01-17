@@ -42,14 +42,6 @@ namespace frenchroast { namespace monitor {
                 
                                                            };
 
-    std::vector<std::string> build_instance_headers(const SignalMarkers& markers)
-    {
-      std::vector<std::string> rv;
-      for(auto& item : markers) {
-        rv.push_back(item.label);
-      }
-      return rv;
-    }
     
     std::vector<std::string> parse_type_tokens(const std::string& tstr)
     {

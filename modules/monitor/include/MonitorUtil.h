@@ -30,7 +30,6 @@ namespace frenchroast {  namespace monitor {
     std::vector<StackTrace>  construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters);
     void transmit_lines(const std::string& fileName, const std::string& ipport, frenchroast::network::Connector<>&);
     void transmit_lines(const std::vector<std::string>&, const std::string& ipport, frenchroast::network::Connector<>&);
-    std::vector<std::string> build_instance_headers(const SignalMarkers& markers);
     std::string translate_param_types(const std::string& pstr);
     std::string translate_return_type(const std::string& name);
   }};

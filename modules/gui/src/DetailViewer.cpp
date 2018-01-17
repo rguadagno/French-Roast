@@ -84,20 +84,9 @@ DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FVi
   setup_dockwin(descriptor, tab, true);
 }
 
-  void DetailViewer::update(const std::string& descriptor, DetailHolder* holder, MarkerField mf)
+  void DetailViewer::update(const std::string& descriptor, DetailHolder* holder)
   {
   if(_descriptor != descriptor) return;
-
-  std::unordered_map<std::string,MarkerField>* markers = holder->_markers;
-  std::unordered_map<std::string,MarkerField>  mapmarkers;
-  
-  
-  if(mf._count > -1) {
-    mapmarkers[mf._descriptor] = mf;
-    markers = &mapmarkers;
-  }
-
-  
   update_title(std::to_string(holder->_count) + "  " + _descriptor);
   for(auto& x : holder->_stacks) {
     if(_items.count(x.second.key()) == 1) {
@@ -139,19 +128,18 @@ DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FVi
     }
   }
 
-
-  for(auto& xitem : *markers ) {
-     auto& item = xitem.second;
-    if(_detailItems.count(item._descriptor) == 0 ) {
+  for(auto& xitem : holder->_markers ) {
+    auto& item = xitem.second;
+    if(_detailItems.count(xitem.first) == 0 ) {
        if(item._count > 1) {
          int currRow = _argData->rowCount();
         _argData->insertRow(currRow);
-        _detailItems[item._descriptor] = currRow;
+        _detailItems[xitem.first] = currRow;
         _argData->setItem(currRow, 0, createItem(item._count));
         _argData->setItem(currRow, 1, createItem("("));
       
         int colidx = 2;
-        int idx=1;
+        std::size_t idx=1;
         auto totalargs = item._arg_items.size();
         for(auto& x : item._arg_items) {
           std::string xx = x;
@@ -169,7 +157,7 @@ DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FVi
         }
       }
       else {
-         _detailItems[item._descriptor] = -1;
+        _detailItems[xitem.first] = -1;
         int currRow = _argData->rowCount();
         if( _detailItems.count("*") == 0) {
           _argData->insertRow(currRow);
@@ -183,18 +171,18 @@ DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FVi
       }
     }
   else {
-    if(_detailItems[item._descriptor] == -1  ) {
+    if(_detailItems[xitem.first] == -1  ) {
       if(item._count == 1) continue;
       QTableWidgetItem* titem = _argData->item(_detailItems["*"], 0);
       int total = titem->text().toInt() - 1;
       titem->setText( QString::number(total));
       int currRow = _argData->rowCount();
       _argData->insertRow(currRow);
-      _detailItems[item._descriptor] = currRow;
+      _detailItems[xitem.first] = currRow;
       _argData->setItem(currRow, 0, createItem(item._count));
       _argData->setItem(currRow, 1, createItem("("));
       int colidx = 2;
-      int idx=1;
+      std::size_t idx=1;
       auto totalargs = item._arg_items.size();
       for(auto& x : item._arg_items) {
         std::string xx = x;
@@ -212,7 +200,7 @@ DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FVi
       }
     }
     else {
-      _argData->item(_detailItems[item._descriptor],0)->setText(  QString::fromStdString(std::to_string(item._count)) );
+      _argData->item(_detailItems[xitem.first],0)->setText(  QString::fromStdString(std::to_string(item._count)) );
     }
   }
   }

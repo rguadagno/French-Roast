@@ -22,7 +22,7 @@
 
 namespace frenchroast { namespace monitor {
 
-    StackReport::StackReport(const StackTrace& trace) : _trace(trace)
+    StackReport::StackReport(const StackTrace& trace) : _trace(trace), _count(1)
     {
     }
 
@@ -34,6 +34,16 @@ namespace frenchroast { namespace monitor {
       ++_count;
       return *this;
     }
+
+    StackReport& StackReport::operator+=(const StackReport& ref)
+    {
+      if(_count == 0) {
+        _trace = ref._trace;
+      }
+      ++_count;      
+      return *this;
+    }
+    
     int StackReport::count() const
     {
       return _count;
