@@ -60,7 +60,6 @@ namespace frenchroast { namespace monitor {
       OutType& operator<<(OutType& out, const std::vector<ClassDetail>& ref)
       {
         if(ref.size() == 0) return out;
-        out << ClassDetail::TAG << "<view>";
         for(auto& x : ref) {
           out << x << ClassDetail::TAG_END;
         }
