@@ -53,8 +53,10 @@ namespace frenchroast { namespace monitor {
         out << ref.report() << "<end-report>" << ref.params() << "<end-params>" << ref.markers();
         return out;
       }
+
       Signal& operator>>(const std::string&, Signal& ref);
-    
+      Signal& operator>>(const std::string&, Signal&& ref);
+      std::vector<Signal>& operator>>(const std::string& rep, std::vector<Signal>& ref);    
   }
 }
 #endif

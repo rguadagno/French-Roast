@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include "ClassDetail.h"
 #include "JammedReport.h"
+#include "SignalReport.h"
 #include "MethodStats.h"
 #include "Persistor.h"
 
@@ -34,6 +35,7 @@ namespace frenchroast { namespace session {
       std::unordered_map<std::string, frenchroast::monitor::JammedReport> _jammed;
       std::vector<frenchroast::monitor::StackTrace>                       _traffic;
       std::vector<frenchroast::monitor::MethodStats>                      _method_rankings;
+      std::unordered_map<std::string, frenchroast::monitor::SignalReport> _signals;
       std::string              _descriptor{""};
       std::size_t              _seconds{0};
       Persistor*               _persistor{nullptr};
@@ -48,10 +50,12 @@ namespace frenchroast { namespace session {
       void update(const frenchroast::monitor::JammedReport& );
       void update(const std::vector<frenchroast::monitor::StackTrace>& traffic);
       void update(const std::vector<frenchroast::monitor::MethodStats>& methods);
-      std::vector<frenchroast::monitor::ClassDetail> get_loaded_classes() const;
+      void update(const frenchroast::monitor::SignalReport&);
+      std::vector<frenchroast::monitor::ClassDetail>                      get_loaded_classes() const;
       std::unordered_map<std::string, frenchroast::monitor::JammedReport> get_jammed_reports() const;
-      std::vector<frenchroast::monitor::StackTrace> get_traffic() const;
-      std::vector<frenchroast::monitor::MethodStats> get_rankings() const;
+      std::vector<frenchroast::monitor::StackTrace>                       get_traffic() const;
+      std::vector<frenchroast::monitor::MethodStats>                      get_rankings() const;
+      std::unordered_map<std::string, frenchroast::monitor::SignalReport> get_signal_reports() const;
       void store(const std::string&);
       void store();
       void load(const std::string&);

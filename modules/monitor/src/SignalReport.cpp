@@ -27,6 +27,7 @@ namespace frenchroast { namespace monitor {
     {
       if(_key != "" && _key != ref.key()) return *this;
       ++_count;
+      _signals.push_back(ref);
       if(_key == "") {
         _key = ref.key();
         _thread_name = ref.thread_name();
@@ -85,7 +86,12 @@ namespace frenchroast { namespace monitor {
     {
       return _descriptor.full_name();
     }
-    
+
+    const std::vector<Signal>& SignalReport::xsignals() const
+    {
+      return _signals;
+    }
+      
     std::vector<std::string> SignalReport::build_instance_headers(const SignalMarkers& markers)
     {
       std::vector<std::string> rv;
@@ -95,5 +101,30 @@ namespace frenchroast { namespace monitor {
       return rv;
     }
 
+    SignalReport& operator>>(const std::string& rep, SignalReport&& ref)
+    {
+      return rep >> ref;
+    }
+
+    SignalReport& operator>>(const std::string& rep, SignalReport& ref)
+    {
+      std::vector<Signal> sigs;
+      rep >> sigs;
+      for(auto& sig : sigs) {
+        ref += sig;
+      }
+      return ref;
+    }
+    
+    std::vector<SignalReport>& operator>>(const std::string& line, std::vector<SignalReport>& ref)
+    {
+      for(auto& rpt : frenchroast::split(line, "<end-signal-report>")) {
+        if(rpt == "") continue;
+        ref.push_back( rpt >> SignalReport{});
+      }
+      return ref;
+    }
+
+    
   }
 }

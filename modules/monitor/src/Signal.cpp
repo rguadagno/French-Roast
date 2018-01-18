@@ -65,6 +65,11 @@ namespace frenchroast { namespace monitor {
       return _report == ref._report && _params == ref._params && _markers == ref._markers;
     }
 
+    Signal& operator>>(const std::string& rep, Signal&& ref)
+    {
+      return rep >> ref;
+    }
+    
     Signal& operator>>(const std::string& rep, Signal& ref)
     {
       auto parts = frenchroast::split(rep, "<end-report>");
@@ -72,6 +77,16 @@ namespace frenchroast { namespace monitor {
       auto parts2 = frenchroast::split(parts[1], "<end-params>");
       parts2[0] >> ref._params;
       parts2[1] >> ref._markers;
+      return ref;
+    }
+
+    std::vector<Signal>& operator>>(const std::string& rep, std::vector<Signal>& ref)
+    {
+
+      for(auto& sig : frenchroast::split(rep, "<end-signal>")) {
+        if(sig == "") continue;
+        ref.push_back( sig >> Signal{});
+      }
       return ref;
     }
     

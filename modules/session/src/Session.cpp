@@ -67,7 +67,12 @@ namespace frenchroast { namespace session {
     {
       _method_rankings = methods;
     }
-
+    
+    void Session::update(const frenchroast::monitor::SignalReport& rpt)
+    {
+      _signals[rpt.key()] = rpt;
+    }
+    
     std::vector<frenchroast::monitor::StackTrace> Session::get_traffic() const
     {
       return _traffic;
@@ -87,7 +92,12 @@ namespace frenchroast { namespace session {
     {
       return _jammed;
     }
-    
+
+    std::unordered_map<std::string, frenchroast::monitor::SignalReport> Session::get_signal_reports() const
+    {
+      return _signals;
+    }
+
     void Session::store(const std::string& fileName)
     {
       if(_persistor == nullptr) {
@@ -105,6 +115,9 @@ namespace frenchroast { namespace session {
       items.push_back((serial << _traffic).str());
       serial.str("");
       items.push_back((serial << _method_rankings).str());
+      serial.str("");
+      serial << "<signal-reports><view>";
+      items.push_back((serial << _signals).str());      
       _persistor->store(fileName, items);
     }
 
@@ -123,15 +136,19 @@ namespace frenchroast { namespace session {
       }
       reset();
       std::vector<frenchroast::monitor::JammedReport> jams;
+      std::vector<frenchroast::monitor::SignalReport> sigs;
       _persistor->load(fileName);
       _persistor->load(frenchroast::monitor::ClassDetail::TAG, _loaded_classes);
       _persistor->load(frenchroast::monitor::JammedReport::TAG, jams);
       _persistor->load("<traffic>", _traffic);
       _persistor->load(frenchroast::monitor::MethodStats::TAG, _method_rankings);
+      _persistor->load("<signal-reports>", sigs);
       for(auto& jam : jams) {
        _jammed[jam.key()] = jam;
       }
-      
+      for(auto& sig : sigs) {
+        _signals[sig.key()] = sig;
+      }
     }
 
     void Session::reset()

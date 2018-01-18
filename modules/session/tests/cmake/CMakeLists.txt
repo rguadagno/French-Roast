@@ -19,18 +19,23 @@ ${CATCH_LOCATION}
 
 FILE(GLOB src_files
 ../../../monitor/tests/src/helper.cpp
-../src/*.cpp
-../../src/Session.cpp
-../../src/PersistorFile.cpp
 ../../../monitor/src/ClassDetail.cpp
 ../../../monitor/src/Descriptor.cpp
 ../../../monitor/src/Monitor.cpp
 ../../../monitor/src/StackTrace.cpp
+../../../monitor/src/Signal.cpp
 ../../../monitor/src/StackFrame.cpp
+../../../monitor/src/StackReport.cpp
+../../../monitor/src/SignalParams.cpp
+../../../monitor/src/SignalMarkers.cpp
 ../../../monitor/src/MethodStats.cpp
 ../../../monitor/src/JammedReport.cpp
+../../../monitor/src/SignalReport.cpp
 ../../../instrumentation/src/Util.cpp
 ../../../network/src/FRSocket.cpp
+../../src/Session.cpp
+../../src/PersistorFile.cpp
+../src/*.cpp
 )
 
 if (UNIX)

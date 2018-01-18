@@ -35,7 +35,7 @@ namespace frenchroast { namespace monitor {
       std::unordered_map<std::string, MarkerField>   _markers;
       std::vector<std::string>                       _arg_headers;
       std::vector<std::string>                       _instance_headers;
-      
+      std::vector<Signal>                            _signals;
       std::vector<std::string>                        build_instance_headers(const SignalMarkers& markers);
 
     public:
@@ -49,8 +49,33 @@ namespace frenchroast { namespace monitor {
       const std::vector<std::string>&                     instance_headers() const;
       const std::string&                                  thread_name() const;
       std::string                                         descriptor_name() const;
+      const std::vector<Signal>&                          xsignals() const;
     };
 
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const SignalReport& ref)
+      {
+        for(auto& sig : ref.xsignals()) {
+          out << sig << "<end-signal>";
+        }
+        return out;
+      }
+
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const std::unordered_map<std::string,SignalReport>& ref)
+      {
+        if(ref.size() == 0) return out;
+        for(auto x : ref) {
+          out << x.second <<  "<end-signal-report>";
+        }
+        return out;
+      }
+
+    SignalReport& operator>>(const std::string& rep, SignalReport& ref);
+    SignalReport& operator>>(const std::string& rep, SignalReport&& ref);
+    std::vector<SignalReport>& operator>>(const std::string&, std::vector<SignalReport>& ref);
+    
+    
   }
 }
 #endif

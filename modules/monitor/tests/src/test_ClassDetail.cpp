@@ -76,7 +76,7 @@ TEST_CASE("operator<< vector<ClassDetail>")
   std::stringstream ss;
   ss << classes;
   std::string line = ss.str();
-  REQUIRE(line == "<loaded-classes><view>mypackage.SomeClass<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>mypackage.SomeClassMore<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>");
+  REQUIRE(line == "mypackage.SomeClass<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>mypackage.SomeClassMore<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>");
 }
 
 

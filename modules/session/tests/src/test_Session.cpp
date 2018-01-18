@@ -25,6 +25,8 @@
 #include "PersistorFile.h"
 #include "StackTrace.h"
 #include "helper.h"
+#include "SignalReport.h"
+#include "Signal.h"
 
 
 using namespace frenchroast::monitor;
@@ -262,3 +264,50 @@ TEST_CASE("load 2 times in row - make sure not duplicated")
   REQUIRE(s3 == s2);
 }
 
+Signal build_signal(const std::string& tname,
+                    const std::vector<std::string>& frames,
+                    const std::vector<std::string>& items,
+                    const std::vector<std::string>& markers
+                    )
+{
+  StackTrace st{tname};
+
+  for(auto& line : frames) {
+    StackFrame sf{};
+    line >> sf;
+    st.addFrame(sf);
+  }
+
+  SignalParams params{items};
+  Signal sig{StackReport{st},params,SignalMarkers{markers}};
+  return sig;
+}
+
+Signal build_sig1()
+{
+  return build_signal("t1", {"mypackage.SomeClass::funcA:(int):void<end-method>",
+                             "mypackage.SomeClass::funcB:(int):void<end-method>"},
+                            {"100", "some text"},
+                            {"_total:200", "_cost:none"});    
+}
+
+
+TEST_CASE("SignalReport, update/load SignalReport ")
+{
+  Signal sig1 = build_sig1();
+  frenchroast::monitor::SignalReport rpt{};
+  rpt += sig1;
+
+  
+  std::unordered_map<std::string,frenchroast::monitor::SignalReport> rpts;
+  Session s1{new PersistorFile{}};
+  s1.update(rpt);
+  s1.store("/tmp/session_test.txt");
+
+  Session s2{new PersistorFile{}};
+  s2.load("/tmp/session_test.txt");
+
+  REQUIRE(s1.get_signal_reports().size() == s2.get_signal_reports().size());
+  
+  
+}
