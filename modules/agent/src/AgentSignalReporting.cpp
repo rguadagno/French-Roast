@@ -121,7 +121,6 @@ void populate_artifacts(JNIEnv * ptr, jvmtiEnv* env,  jvmtiFrameInfo* frames, jo
 
     std::string class_name = stack.descriptor_frames()[0].descriptor().class_name();
     std::string method_name = stack.descriptor_frames()[0].descriptor().method_name();
-    std::cout << "====>: " << class_name << "   " << method_name << std::endl;
     if(_hooks.get_marker_fields(class_name,method_name).size() > 0) {
         jclass theclass;
         if(!ErrorHandler::check_jvmti_error(env->GetMethodDeclaringClass(frames[1].method, &theclass), "GetMethodDeclaringClass")) return;
