@@ -31,12 +31,6 @@ ${JAVA_INCLUDE_DIR2}
 )
 
 FILE(GLOB src_files
-../src/Main.cpp
-../src/Test_Agent.cpp
-../src/Test_AgentSignalReporting.cpp
-../src/test_reporter.cpp
-../src/MockJVMTI.cpp
-../src/MockJNI.cpp
 ../../src/AgentHooks.cpp
 ../../src/AgentUtil.cpp
 ../../src/AgentSignalReporting.cpp
@@ -53,10 +47,22 @@ FILE(GLOB src_files
 ../../../monitor/src/Monitor.cpp
 ../../../monitor/src/StackTrace.cpp
 ../../../monitor/src/StackFrame.cpp
+../../../monitor/src/StackReport.cpp
 ../../../monitor/src/MethodStats.cpp
 ../../../monitor/src/JammedReport.cpp
+../../../monitor/src/SignalReport.cpp
+../../../monitor/src/Signal.cpp
+../../../monitor/src/SignalParams.cpp
+../../../monitor/src/SignalMarkers.cpp
 ../../../signal/src/fr_signals.cpp
 ../../../signal/src/SignalValidator.cpp
+../src/Main.cpp
+../src/Test_Agent.cpp
+../src/Test_AgentSignalReporting.cpp
+../src/test_reporter.cpp
+../src/MockJVMTI.cpp
+../src/MockJNI.cpp
+
 )
 
 
