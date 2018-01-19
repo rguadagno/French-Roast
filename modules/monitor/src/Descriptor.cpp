@@ -82,6 +82,11 @@ namespace frenchroast { namespace monitor {
       _class_name = ref._class_name;
       _method_name = ref._method_name;
     }
+
+    Descriptor::operator std::string() const
+    {
+      return full_name();
+    }
     
     Descriptor& operator>>(const std::string& rep, Descriptor& ref)
     {

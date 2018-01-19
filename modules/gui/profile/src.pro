@@ -51,6 +51,7 @@ SOURCES += \
 ../../monitor/src/SignalMarkers.cpp \
 ../../monitor/src/Signal.cpp \
 ../../monitor/src/SignalReport.cpp \
+../../monitor/src/TimerReport.cpp \
 ../../session/src/PersistorFile.cpp \
 ../../session/src/Session.cpp \
 ../../network/src/FRSocket.cpp \

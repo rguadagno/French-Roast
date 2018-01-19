@@ -34,6 +34,7 @@
 #include "JammedReport.h"
 #include "Signal.h"
 #include "SignalReport.h"
+#include "TimerReport.h"
 
 namespace frenchroast { namespace monitor {
 
@@ -47,7 +48,7 @@ namespace frenchroast { namespace monitor {
       class Monitor : public network::Listener {
 	T&                                                                             _handler;
         network::Connector<>                                                          _conn;
-        std::unordered_map<std::string, time_holder>                                  _timed_signals;
+        std::unordered_map<std::string, TimerReport>                                  _timers;
         std::unordered_map<std::string, SignalReport>                                 _signals;
         std::unordered_map<std::string, MethodStats>                                  _method_counters;
         std::unordered_map<std::string, JammedReport>                                 _jammedReports;
@@ -60,23 +61,9 @@ namespace frenchroast { namespace monitor {
        const int HOST_NAME   = 2;
        const int PID         = 3;
         
-	const int MSG_TYPE    = 1;
-	const int MSG         = 2;
-       const int SIGNAL_THREAD_NAME = 3;
+       const int MSG_TYPE    = 1;
+       const int MSG         = 2;
 
-       const int MARKER      = 4;
-       const int PARAMS      = 5;
-       const int STACK       = 6;
-
-	const int TIME        = 2;
-	const int DIRECTION   = 3;
-	const int DESCRIPTOR  = 4;
-	const int THREAD_NAME = 5;
-
-        const int MONITOR         = 2;
-        const int WAITER          = 3;
-        const int OWNER           = 4;
-        
     public:
         Monitor(T& handler, const std::string& opcodeFile) : _handler(handler), _opcodeFile(opcodeFile)
         { 
@@ -99,7 +86,7 @@ namespace frenchroast { namespace monitor {
           while(_iq.pop(msg)) {
             std::vector<std::string> items = frenchroast::split(msg,"~");
             if (items[MSG_TYPE] == "signaltimer") {
-              service_timer(items[DIRECTION], items[DESCRIPTOR], items[THREAD_NAME], items[TIME]);
+              service_timer(items[MSG]);
             }
             if (items[MSG_TYPE] == "signal") {
               service_signal(items[MSG]);
@@ -141,18 +128,17 @@ namespace frenchroast { namespace monitor {
           }
         }
 
-        void service_timer(const std::string& direction, const std::string& descriptor, const std::string& thread_name, const std::string& time)
+        void service_timer(const std::string& msg)
         {
-          if (direction == "exit") {
-            std::string key = descriptor + thread_name;
-            int elapsed = std::stoll(time) - _timed_signals[key]._last;
-            _timed_signals[key]._elapsed += elapsed;
-            _handler.signal_timed( descriptor_to_string(descriptor.substr(1)), thread_name , _timed_signals[key]._elapsed, elapsed);
+          TimerReport rpt{};
+          msg >> rpt;
+
+          if (rpt.direction() == TimerReport::Direction::Exit) {
+            _handler.signal_timed(_timers[rpt.key()] += rpt);
           }
-            if (direction == "enter") {
-              std::string key = descriptor + thread_name;
-              _timed_signals[key]._last = std::stoll(time);
-            }
+          if (rpt.direction() == TimerReport::Direction::Enter) {
+            _timers[rpt.key()] = rpt;
+          }
         }
         
         void service_signal(const std::string& msg)
@@ -217,7 +203,7 @@ namespace frenchroast { namespace monitor {
 
         void reset()
         {
-          _timed_signals.clear();
+          _timers.clear();
           _signals.clear();
           _method_counters.clear();
           _jammedReports.clear();

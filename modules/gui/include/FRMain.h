@@ -39,7 +39,7 @@
 #include "DetailHolder.h"
 #include "FViewer.h"
 #include "Session.h"
-
+#include "TimerReport.h"
 
 using namespace frenchroast::session;
 class FRMain : public QMainWindow {
@@ -98,7 +98,7 @@ class FRMain : public QMainWindow {
    void show_detail(const std::string& descriptor);
    void handle_exit();
    void update_list(const frenchroast::monitor::SignalReport&);
-   void update_timed_list(std::string  descriptor, std::string, long elapsed);
+   void update_timed_list(const frenchroast::monitor::TimerReport& rpt);
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void start_watching_traffic(int);
    void stop_watching_traffic();

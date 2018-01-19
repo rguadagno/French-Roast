@@ -42,7 +42,7 @@ namespace frenchroast { namespace monitor {
       bool        operator==(const Descriptor&) const;
       bool        operator!=(const Descriptor&) const;
       Descriptor& operator=(const Descriptor&);
-
+      operator std::string() const;
     };
 
     Descriptor& operator>>(const std::string&, Descriptor& ref);

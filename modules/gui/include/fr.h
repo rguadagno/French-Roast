@@ -35,6 +35,7 @@
 #include "ClassDetail.h"
 #include "JammedReport.h"
 #include "SignalReport.h"
+#include "TimerReport.h"
 
 Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::StackTrace>);
@@ -48,6 +49,7 @@ Q_DECLARE_METATYPE(DetailHolder);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::ClassDetail>);
 Q_DECLARE_METATYPE(frenchroast::monitor::JammedReport);
 Q_DECLARE_METATYPE(frenchroast::monitor::SignalReport);
+Q_DECLARE_METATYPE(frenchroast::monitor::TimerReport);
 Q_DECLARE_METATYPE(frenchroast::monitor::StackReport);
 Q_DECLARE_METATYPE(frenchroast::monitor::SignalParams);
 Q_DECLARE_METATYPE(frenchroast::monitor::SignalMarkers);
@@ -71,7 +73,7 @@ class FRListener : public QObject
     int getCount(const std::string& item);
     void signal(const frenchroast::monitor::SignalReport&);
     void traffic(std::vector<frenchroast::monitor::StackTrace>);
-    void signal_timed(const std::string& tag, const std::string& tname, long elapsed, int last);
+    void signal_timed(const frenchroast::monitor::TimerReport&);
     void connected(const std::string& host, const std::string& pid);
     void unloaded(const std::string& host, const std::string& pid);
     void ready(const std::string& host, const std::string& pid);
@@ -94,7 +96,7 @@ class FRListener : public QObject
     void send_signals();
     void method_ranking(std::vector<frenchroast::monitor::MethodStats>);
     void thooked(const frenchroast::monitor::SignalReport&);
-    void timersignal(const std::string& info, const std::string& tname, long elapsed);
+    void timersignal(const frenchroast::monitor::TimerReport&);
     void remoteconnected(const std::string& host, const std::string& pid);
     void remoteunloaded(const std::string& host, const std::string& pid);
     void traffic_signal(const std::vector<frenchroast::monitor::StackTrace>&);

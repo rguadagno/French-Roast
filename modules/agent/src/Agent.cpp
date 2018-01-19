@@ -48,6 +48,7 @@
 #include "SignalParams.h"
 #include "SignalMarkers.h"
 #include "AgentSignalReporting.h"
+#include "TimerReport.h"
 
 std::mutex _traffic_mutex;
 std::mutex _loading_mutex;
@@ -205,20 +206,15 @@ JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass obj
       std::string classinfo{sig};
 
       std::string* str = new std::string{};
-      str->append("signaltimer~");
-      str->append(std::to_string(stime));
-      str->append("~");
-      str->append(std::string(ptr->GetStringUTFChars(tag,0)));
-      str->append("~");
-      str->append(classinfo);
-      str->append("::");
-      str->append(methodNameStr);
-      str->append(":");
-      str->append(sigStr);
-      str->append("~");
-      str->append(std::string(ptr->GetStringUTFChars(tname,0)));
-      _signalQueue.push(str);
+      frenchroast::monitor::TimerReport rpt{std::string(ptr->GetStringUTFChars(tname,0)),
+                                            {classinfo + "::" + methodNameStr + ":" + sigStr},
+                                            long(stime),
+                                            std::string(ptr->GetStringUTFChars(tag,0))};
 
+      std::stringstream ss;
+      ss << "signaltimer~" << rpt;
+      *str = ss.str();
+      _signalQueue.push(str);
     }
   }
 }
@@ -236,7 +232,6 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
   frenchroast::monitor::StackTrace trace{tname};
   if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(aThread, 0, sizeof(frames), frames, &count),"GetStackTrace")) return;
   if (count >= 1) {
-    //@@    std::vector<DescriptorVO>  stack;
     populate_stack(ptr, genv, frames, count, trace, _artifacts );
 
     std::string fieldValues = "";
@@ -246,14 +241,9 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
     if(_artifacts[trace.descriptor_frames()[0].get_name()]) {
       populate_artifacts(ptr, genv, frames, obj, params, markers, trace, aThread);
     }
-
-
-    
     frenchroast::monitor::StackReport sig_rpt{trace};
     frenchroast::monitor::SignalParams sig_params{params};
     frenchroast::monitor::SignalMarkers sig_markers{markers};
-
-
     frenchroast::monitor::Signal sig{sig_rpt,sig_params,sig_markers};
     std::stringstream ss;
     ss << "signal~" << sig;

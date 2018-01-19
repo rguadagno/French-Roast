@@ -30,6 +30,8 @@
 #include "TrafficViewer.h"
 #include "JammedViewer.h"
 #include "AboutHelpViewer.h"
+#include "SignalReport.h"
+#include "TimerReport.h"
 
 using namespace frenchroast;
 
@@ -303,15 +305,14 @@ void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>&
     _session.update(stacks);
   }
 }
-
-void FRMain::update_timed_list(std::string  descriptor, std::string tname, long elapsed)
+void FRMain::update_timed_list(const frenchroast::monitor::TimerReport& rpt)
 {
-  std::string desc{descriptor};
-  tname = "[ " + tname + " ]";
-  frenchroast::monitor::pad(desc, 50);
+  std::string descriptor = rpt.descriptor_name();
+  std::string tname = "[ " + rpt.thread_name() + " ]";
+  frenchroast::monitor::pad(descriptor, 50);
   frenchroast::monitor::pad(tname, 10);
-  desc = tname + desc;
-  FTimerViewer::instance(this)->update_time(desc, elapsed);
+  descriptor = tname + descriptor;
+  FTimerViewer::instance(this)->update_time(descriptor, rpt.elapsed());
 }
 
 void FRMain::exit_fr()

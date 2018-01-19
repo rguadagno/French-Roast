@@ -34,6 +34,7 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     ../../network/src/FRSocket.cpp
     ../../signal/src/fr_signals.cpp
     ../../signal/src/SignalValidator.cpp
+    ../../monitor/src/TimerReport.cpp
     )	
 
 if (UNIX)

@@ -31,9 +31,9 @@ int FRListener::getCount(const std::string& item)
    return _items[item];
 }
 
-void FRListener::signal_timed(const std::string& tag, const std::string& tname, long elapsed, int last)
+void FRListener::signal_timed(const frenchroast::monitor::TimerReport& rpt)
 {
-  timersignal(tag,tname,elapsed);
+  timersignal(rpt);
 }
 
 void FRListener::signal(const frenchroast::monitor::SignalReport& rpt)
