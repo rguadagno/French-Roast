@@ -35,7 +35,9 @@ namespace frenchroast {
     return rv;
   }
   
-DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FViewer(parent), _descriptor(descriptor)
+  DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FViewer(parent), _descriptor(descriptor),
+                                                                               _stackData(new QTableWidget()),
+                                                                               _model(_stackData, _items)
 {
   _actionBar = new ActionBar(ActionBar::Close);
   _argData = new QTableWidget;
@@ -52,7 +54,6 @@ DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FVi
    QWidget* holderStacks = new QWidget();
   vlayout = new QVBoxLayout();
   vlayout->setSpacing(0);
-  _stackData = new QTableWidget();
   _stackData->setStyleSheet(_settings->value("traffic_grid_style").toString());
   _stackData->horizontalHeader()->setStyleSheet("QTableWidget::item {background: #202020;}");
   _stackData->verticalHeader()->hide();
@@ -88,25 +89,8 @@ DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FVi
   {
   if(_descriptor != descriptor) return;
   update_title(std::to_string(holder->_count) + "  " + _descriptor);
-  for(auto& x : holder->_stacks) {
-    if(_items.count(x.second.key()) == 1) {
-      _items[x.second.key()]->setText(  QString::fromStdString(std::to_string(x.second.count())));
-    }
-    else {
-      int row = _stackData->rowCount();
-      _stackData->insertRow(row);
-      QTableWidgetItem* item = createItem(x.second.count());
-      _items[x.second.key()] = item;
-      _stackData->setItem(row, 0, item);
-      for(auto& frame : x.second.descriptors()) {
-        QTableWidgetItem* item = createItem(frame, Qt::AlignLeft|Qt::AlignVCenter);
-        _stackData->setItem(row,1, item);
-        ++row;
-        _stackData->insertRow(row);
-      }
-    }
-  }
-  
+
+  _model.update_stack_view(holder->_stacks);
   if(_argData->rowCount() == 0) {
     _argData->insertColumn(0);
     _argData->insertColumn(0);

@@ -182,6 +182,10 @@ void FRMain::session_load()
   for(auto& sig : _session.get_signal_reports()) {
     update_list(sig.second);
   }
+  for(auto& timer : _session.get_timer_reports()) {
+    update_timed_list(timer.second);
+  }
+
 }
 
 
@@ -305,8 +309,10 @@ void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>&
     _session.update(stacks);
   }
 }
+
 void FRMain::update_timed_list(const frenchroast::monitor::TimerReport& rpt)
 {
+  _session.update(rpt);
   std::string descriptor = rpt.descriptor_name();
   std::string tname = "[ " + rpt.thread_name() + " ]";
   frenchroast::monitor::pad(descriptor, 50);

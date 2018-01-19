@@ -25,6 +25,7 @@
 #include <QListWidget>
 #include <QSettings>
 #include "DetailHolder.h"
+#include "DetailViewerModel.h"
 #include "FViewer.h"
 
 namespace frenchroast {
@@ -37,7 +38,8 @@ class DetailViewer : public FViewer {
   QTableWidget*                                      _argData;
   QTableWidget*                                      _stackData;
   std::unordered_map<std::string, QTableWidgetItem*> _items;
-  std::map<std::string, int>               _detailItems;
+  std::map<std::string, int>                         _detailItems;
+  DetailViewerModel                                  _model;
   DetailViewer(QWidget*, const std::string& descriptor);
   
  public:
