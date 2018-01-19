@@ -59,12 +59,6 @@ namespace frenchroast { namespace monitor {
       return _descriptor.full_name();
     }
 
-    TimerReport& TimerReport::operator+=(const TimerReport& ref)
-    {
-      _elapsed += ref._time_in_millis - _time_in_millis;
-      return *this;
-    }
-
     long long TimerReport::time_in_millis() const
     {
       return _time_in_millis;
@@ -80,8 +74,22 @@ namespace frenchroast { namespace monitor {
       _time_in_millis = ref._time_in_millis;
       _thread_name = ref._thread_name;
       _descriptor = ref._descriptor;
-     
+      if(ref._elapsed > _elapsed) {
+        _elapsed = ref._elapsed;
+      }
       return *this;
+    }
+
+    TimerReport& TimerReport::operator+=(const TimerReport& ref)
+    {
+      _elapsed += ref._time_in_millis - _time_in_millis;
+      return *this;
+    }
+
+    
+    TimerReport& operator>>(const std::string& rep, TimerReport&& ref)
+    {
+      return rep >> ref;
     }
     
     TimerReport& operator>>(const std::string& rep, TimerReport& ref)
@@ -94,6 +102,16 @@ namespace frenchroast { namespace monitor {
       std::string dir = frenchroast::split(rep, "<end-time>")[1];
       ref._direction = (dir == "enter" ? TimerReport::Direction::Enter : TimerReport::Direction::Exit);
       return ref;
+    }
+
+    std::vector<TimerReport>& operator>>(const std::string& line, std::vector<TimerReport>& ref)
+    {
+      for(auto& rpt : frenchroast::split(line, "<end-timer-report>")) {
+        if(rpt == "") continue;
+        ref.push_back( rpt >> TimerReport{});
+      }
+      return ref;
+
     }
     
   }

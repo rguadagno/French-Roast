@@ -56,7 +56,19 @@ namespace frenchroast { namespace monitor {
         return out;
       }
 
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const std::unordered_map<std::string, TimerReport>& timers)
+      {
+        if(timers.size() == 0) return out;
+        for(auto& rpt : timers) {
+          out << rpt.second <<  "<end-timer-report>";
+        }
+        return out;
+      }
+
+  
    TimerReport& operator>>(const std::string&, TimerReport& ref);
+   std::vector<TimerReport>& operator>>(const std::string&, std::vector<TimerReport>& ref);
 
     
     

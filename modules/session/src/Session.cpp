@@ -72,6 +72,11 @@ namespace frenchroast { namespace session {
     {
       _signals[rpt.key()] = rpt;
     }
+
+    void Session::update(const frenchroast::monitor::TimerReport& rpt)
+    {
+      _timers[rpt.key()] = rpt;
+    }
     
     std::vector<frenchroast::monitor::StackTrace> Session::get_traffic() const
     {
@@ -98,6 +103,11 @@ namespace frenchroast { namespace session {
       return _signals;
     }
 
+    std::unordered_map<std::string, frenchroast::monitor::TimerReport>  Session::get_timer_reports() const
+    {
+      return _timers;
+    }
+    
     void Session::store(const std::string& fileName)
     {
       if(_persistor == nullptr) {
@@ -117,7 +127,10 @@ namespace frenchroast { namespace session {
       items.push_back((serial << _method_rankings).str());
       serial.str("");
       serial << "<signal-reports><view>";
-      items.push_back((serial << _signals).str());      
+      items.push_back((serial << _signals).str());
+      serial.str("");
+      serial << "<timer-reports><view>";
+      items.push_back((serial << _timers).str());
       _persistor->store(fileName, items);
     }
 
@@ -137,18 +150,24 @@ namespace frenchroast { namespace session {
       reset();
       std::vector<frenchroast::monitor::JammedReport> jams;
       std::vector<frenchroast::monitor::SignalReport> sigs;
+      std::vector<frenchroast::monitor::TimerReport> timers;
       _persistor->load(fileName);
       _persistor->load(frenchroast::monitor::ClassDetail::TAG, _loaded_classes);
       _persistor->load(frenchroast::monitor::JammedReport::TAG, jams);
       _persistor->load("<traffic>", _traffic);
       _persistor->load(frenchroast::monitor::MethodStats::TAG, _method_rankings);
       _persistor->load("<signal-reports>", sigs);
+      _persistor->load("<timer-reports>", timers);
       for(auto& jam : jams) {
        _jammed[jam.key()] = jam;
       }
       for(auto& sig : sigs) {
         _signals[sig.key()] = sig;
       }
+      for(auto& timer : timers) {
+        _timers[timer.key()] = timer;
+      }
+      
     }
 
     void Session::reset()
