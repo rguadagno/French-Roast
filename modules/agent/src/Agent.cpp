@@ -551,7 +551,7 @@ void traffic_monitor()
           jni_env->DeleteLocalRef(theclass);
         }
         rv->append((monmap.find(fidx) != monmap.end() ? "1!" : "0!"));
-        rv->append(className + 1);
+        rv->append(className);
         rv->append( "::");
 
         rv->append(methodName);
