@@ -119,6 +119,7 @@ namespace frenchroast { namespace session {
       std::stringstream serial;
       items.push_back((serial << _jammed).str());
       serial.str("");
+      serial << "<loaded-classes><view>";
       items.push_back((serial << _loaded_classes).str());
       serial.str("");
       serial << "<traffic><view>";
