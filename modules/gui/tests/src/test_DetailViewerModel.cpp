@@ -22,7 +22,6 @@
 #include <sstream>
 #include <unordered_map>
 #include "catch.hpp"
-#include "DetailViewerModelBase.h"
 #include "DetailViewerModel.h"
 #include "StackReport.h"
 #include "qapplication.h"
@@ -40,10 +39,11 @@ TEST_CASE("DetailViewerModel -  stacks update")
   std::unordered_map<std::string, QTableWidgetItem*>  items;
   
   QTableWidget* ptr = new QTableWidget{};
+  QTableWidget* argptr = new QTableWidget{};
   ptr->insertColumn(0);
   ptr->insertColumn(0);
   
-  DetailViewerModel model{ptr,items};
+  DetailViewerModel model{ptr,argptr,items};
 
   model.update_stack_view(stacks);
 
@@ -62,4 +62,77 @@ TEST_CASE("DetailViewerModel -  stacks update")
   REQUIRE(ptr->item(0,0)->text() == "1");
   REQUIRE(ptr->item(0,1)->text() == "mypackage.SomeClass::funcA:(int):void");
   REQUIRE(ptr->item(1,1)->text() == "mypackage.SomeClass::funcB:(int):void");
+}
+
+
+TEST_CASE("DetailViewerModel: args, initial cols, no instance markers")
+{
+  char* args[] = {""};
+  int argc =1;
+  QApplication qapp{argc,args};
+  std::unordered_map<std::string, StackReport>        stacks;
+  std::unordered_map<std::string, QTableWidgetItem*>  items;
+  
+  QTableWidget* stackptr = new QTableWidget{};
+  QTableWidget* argptr = new QTableWidget{};
+
+  DetailViewerModel model{stackptr,argptr,items};
+
+  model.init_arg_instance_headers({"int"},{});
+  REQUIRE(argptr->columnCount()  == 4);
+  REQUIRE(argptr->rowCount()  == 0);
+  REQUIRE(argptr->rowCount()  == 0);
+  REQUIRE(argptr->horizontalHeaderItem(0)->text()  == "invoked");
+  REQUIRE(argptr->horizontalHeaderItem(1)->text()  == "(");
+  REQUIRE(argptr->horizontalHeaderItem(2)->text()  == "int");
+  REQUIRE(argptr->horizontalHeaderItem(3)->text()  == ")"); 
+}
+
+TEST_CASE("DetailViewerModel: args, initial cols, instance markers")
+{
+  char* args[] = {""};
+  int argc =1;
+  QApplication qapp{argc,args};
+  std::unordered_map<std::string, StackReport>        stacks;
+  std::unordered_map<std::string, QTableWidgetItem*>  items;
+  
+  QTableWidget* stackptr = new QTableWidget{};
+  QTableWidget* argptr = new QTableWidget{};
+
+  DetailViewerModel model{stackptr,argptr,items};
+
+  model.init_arg_instance_headers({"int"},{"_total"});
+  REQUIRE(argptr->columnCount()  == 5);
+  REQUIRE(argptr->rowCount()  == 0);
+  REQUIRE(argptr->horizontalHeaderItem(0)->text()  == "invoked");
+  REQUIRE(argptr->horizontalHeaderItem(1)->text()  == "(");
+  REQUIRE(argptr->horizontalHeaderItem(2)->text()  == "int");
+  REQUIRE(argptr->horizontalHeaderItem(3)->text()  == ")");
+  REQUIRE(argptr->horizontalHeaderItem(4)->text()  == "_total"); 
+  
+}
+
+TEST_CASE("DetailViewerModel: two args, initial cols, no instance markers")
+{
+  char* args[] = {""};
+  int argc =1;
+  QApplication qapp{argc,args};
+  std::unordered_map<std::string, StackReport>        stacks;
+  std::unordered_map<std::string, QTableWidgetItem*>  items;
+  
+  QTableWidget* stackptr = new QTableWidget{};
+  QTableWidget* argptr = new QTableWidget{};
+
+  DetailViewerModel model{stackptr,argptr,items};
+
+  model.init_arg_instance_headers({"int","int"},{});
+  REQUIRE(argptr->columnCount()  == 5);
+  REQUIRE(argptr->rowCount()  == 0);
+  REQUIRE(argptr->horizontalHeaderItem(0)->text()  == "invoked");
+  REQUIRE(argptr->horizontalHeaderItem(1)->text()  == "(");
+  REQUIRE(argptr->horizontalHeaderItem(2)->text()  == "int");
+  REQUIRE(argptr->horizontalHeaderItem(3)->text()  == "int");
+  REQUIRE(argptr->horizontalHeaderItem(4)->text()  == ")");
+
+  
 }

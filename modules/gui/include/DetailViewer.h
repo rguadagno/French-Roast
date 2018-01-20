@@ -35,8 +35,8 @@ class DetailViewer : public FViewer {
   Q_OBJECT
   
   std::string                                        _descriptor;
-  QTableWidget*                                      _argData;
   QTableWidget*                                      _stackData;
+  QTableWidget*                                      _argData;
   std::unordered_map<std::string, QTableWidgetItem*> _items;
   std::map<std::string, int>                         _detailItems;
   DetailViewerModel                                  _model;

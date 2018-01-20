@@ -37,10 +37,10 @@ namespace frenchroast {
   
   DetailViewer::DetailViewer(QWidget* parent, const std::string& descriptor) : FViewer(parent), _descriptor(descriptor),
                                                                                _stackData(new QTableWidget()),
-                                                                               _model(_stackData, _items)
+                                                                               _argData(new QTableWidget()),
+                                                                               _model(_stackData, _argData,_items)
 {
   _actionBar = new ActionBar(ActionBar::Close);
-  _argData = new QTableWidget;
   _argData->setStyleSheet(_settings->value("traffic_grid_style").toString());
   _argData->verticalHeader()->hide();
   _argData->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -91,26 +91,7 @@ namespace frenchroast {
   update_title(std::to_string(holder->_count) + "  " + _descriptor);
 
   _model.update_stack_view(holder->_stacks);
-  if(_argData->rowCount() == 0) {
-    _argData->insertColumn(0);
-    _argData->insertColumn(0);
-    _argData->setHorizontalHeaderItem(0, createItem("invoked"));
-    _argData->setHorizontalHeaderItem(1,createItem("("));
-    
-    int colidx = 2;
-    for(auto& x : holder->_argHeaders) {
-      _argData->insertColumn(colidx);
-      _argData->setHorizontalHeaderItem(colidx++,createItem(x));
-    }
-
-    _argData->insertColumn(colidx);
-    _argData->setHorizontalHeaderItem(colidx++,createItem(")"));
-
-    for(auto& x : holder->_instanceHeaders) {
-      _argData->insertColumn(colidx);
-      _argData->setHorizontalHeaderItem(colidx++,createItem(x));
-    }
-  }
+  _model.init_arg_instance_headers(holder->_argHeaders,holder->_instanceHeaders);
 
   for(auto& xitem : holder->_markers ) {
     auto& item = xitem.second;

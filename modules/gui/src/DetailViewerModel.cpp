@@ -22,15 +22,14 @@
 
 namespace frenchroast {
 
-  DetailViewerModel::DetailViewerModel(QTableWidget* stackData, std::unordered_map<std::string, QTableWidgetItem*>&  items)
-    : _stackData(stackData), _items(items)
+  DetailViewerModel::DetailViewerModel(QTableWidget* stackData, QTableWidget* argData, std::unordered_map<std::string, QTableWidgetItem*>&  items)
+    : _stackData(stackData), _argData(argData),_items(items)
   {
   }
   
   void DetailViewerModel::update_stack_view(const std::unordered_map<std::string,frenchroast::monitor::StackReport>& stacks)
   {
     for(auto& x : stacks) {
-      
       if(_items.count(x.second.key()) == 1) {
         _items[x.second.key()]->setText(  QString::fromStdString(std::to_string(x.second.count())));
       }
@@ -48,8 +47,31 @@ namespace frenchroast {
         }
         _stackData->removeRow(row);
       }
-      
     }
-  
   }
+
+  void DetailViewerModel::init_arg_instance_headers(const std::vector<std::string>& argHeaders, const std::vector<std::string>& instanceHeaders)
+  {
+    if(_argData->rowCount() > 0) return;
+    
+    _argData->insertColumn(0);
+    _argData->insertColumn(0);
+    _argData->setHorizontalHeaderItem(0, createItem("invoked"));
+    _argData->setHorizontalHeaderItem(1,createItem("("));
+    
+    int colidx = 2;
+    for(auto& x : argHeaders) {
+      _argData->insertColumn(colidx);
+      _argData->setHorizontalHeaderItem(colidx++,createItem(x));
+    }
+
+    _argData->insertColumn(colidx);
+    _argData->setHorizontalHeaderItem(colidx++,createItem(")"));
+    
+    for(auto& x : instanceHeaders) {
+      _argData->insertColumn(colidx);
+      _argData->setHorizontalHeaderItem(colidx++,createItem(x));
+    }
+  }
+  
 }
