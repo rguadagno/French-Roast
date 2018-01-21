@@ -27,7 +27,7 @@
 using namespace frenchroast::monitor;
 class DetailHolder {
  public:
- DetailHolder( int count,
+ DetailHolder( std::size_t count,
                std::vector<std::string> ah,
                std::vector<std::string> ih,
                const std::unordered_map<std::string, MarkerField>& fields,
@@ -43,7 +43,7 @@ class DetailHolder {
     {
     }
   
-  int                                          _count;
+  std::size_t                                  _count;
   std::vector<std::string>                     _argHeaders;
   std::vector<std::string>                     _instanceHeaders;
   std::unordered_map<std::string, MarkerField> _markers;

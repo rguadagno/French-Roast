@@ -29,9 +29,9 @@ namespace frenchroast { namespace monitor {
 
     class StackTrace {
       friend StackTrace& operator>>(const std::string& rep, StackTrace& ref);
+      std::string              _thread_name;
       std::string              _key;
       std::string              _monitorkey;
-      std::string              _thread_name;
       std::vector<StackFrame>  _frames;
       std::vector<int>         _monitors;
 

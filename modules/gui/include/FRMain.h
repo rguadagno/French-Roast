@@ -49,13 +49,13 @@ class FRMain : public QMainWindow {
     FRMain(QSettings&, const std::string&, Session&, const std::string& session_dir);
 
  private:
+  QSettings&                                                    _settings;
+  std::string                                                   _hooksfile;  
   Session&                                                      _session;
   std::string                                                   _session_default_dir;
-  QSettings&                                                    _settings;
   bool                                                          _exit{false};
   bool                                                          _ok_to_send_hooks{false};
   std::unordered_map<std::string, DetailHolder>                 _detailDescriptors;
-  std::string                                                   _hooksfile;
   bool                                                          _watchTraffic{false};
   bool                                                          _watchLoading{false};
   int                                                           _trafficRate{100};

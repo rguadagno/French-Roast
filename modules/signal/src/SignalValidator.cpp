@@ -26,7 +26,7 @@ namespace frenchroast { namespace signal {
     {
     }
     
-    SignalValidationStatus::SignalValidationStatus(const char* errorMsg) : _valid(false), _msg(errorMsg)
+    SignalValidationStatus::SignalValidationStatus(const char* errorMsg) : _msg(errorMsg), _valid(false)
     {
     }
 

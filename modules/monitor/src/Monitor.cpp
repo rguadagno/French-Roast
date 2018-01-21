@@ -46,7 +46,7 @@ namespace frenchroast { namespace monitor {
     std::vector<std::string> parse_type_tokens(const std::string& tstr)
     {
       std::vector<std::string> rv;
-      int pos = 0;
+      std::size_t pos = 0;
 
       while(pos < tstr.length() ) {
         std::string suffix = "";
