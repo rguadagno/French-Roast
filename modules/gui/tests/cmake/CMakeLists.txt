@@ -30,6 +30,8 @@ FILE(GLOB src_files
 ../../../monitor/src/Descriptor.cpp
 ../../../monitor/src/Monitor.cpp
 ../../../monitor/src/MethodStats.cpp
+../../../monitor/src/SignalParams.cpp
+../../../monitor/src/SignalMarkers.cpp
 ../../../network/src/FRSocket.cpp
 ../../../instrumentation/src/Util.cpp
 ../src/test_DetailViewerModel.cpp

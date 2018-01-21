@@ -87,88 +87,12 @@ namespace frenchroast {
 
   void DetailViewer::update(const std::string& descriptor, DetailHolder* holder)
   {
-  if(_descriptor != descriptor) return;
-  update_title(std::to_string(holder->_count) + "  " + _descriptor);
+    if(_descriptor != descriptor) return;
+    update_title(std::to_string(holder->_count) + "  " + _descriptor);
 
-  _model.update_stack_view(holder->_stacks);
-  _model.init_arg_instance_headers(holder->_argHeaders,holder->_instanceHeaders);
-
-  for(auto& xitem : holder->_markers ) {
-    auto& item = xitem.second;
-    if(_detailItems.count(xitem.first) == 0 ) {
-       if(item._count > 1) {
-         int currRow = _argData->rowCount();
-        _argData->insertRow(currRow);
-        _detailItems[xitem.first] = currRow;
-        _argData->setItem(currRow, 0, createItem(item._count));
-        _argData->setItem(currRow, 1, createItem("("));
-      
-        int colidx = 2;
-        std::size_t idx=1;
-        auto totalargs = item._arg_items.size();
-        for(auto& x : item._arg_items) {
-          std::string xx = x;
-          if(idx < totalargs) {
-            xx.append(",");
-            ++idx;
-          }
-          _argData->setItem(currRow, colidx++, createItem(xx));
-        }
-        
-        _argData->setItem(currRow, colidx, createItem(")"));
-        ++colidx;
-        for(auto& x : item._instance_items) {
-          _argData->setItem(currRow, colidx++,createItem(x));
-        }
-      }
-      else {
-        _detailItems[xitem.first] = -1;
-        int currRow = _argData->rowCount();
-        if( _detailItems.count("*") == 0) {
-          _argData->insertRow(currRow);
-          _detailItems["*"] = currRow;
-          _argData->setItem(currRow, 0, createItem(1));
-          _argData->setItem(currRow, 1, createItem("*"));
-        }
-        else {
-           _argData->setItem(_detailItems["*"], 0, createItem(  _argData->item(_detailItems["*"],0)->text().toInt() + 1   ));
-        }
-      }
-    }
-  else {
-    if(_detailItems[xitem.first] == -1  ) {
-      if(item._count == 1) continue;
-      QTableWidgetItem* titem = _argData->item(_detailItems["*"], 0);
-      int total = titem->text().toInt() - 1;
-      titem->setText( QString::number(total));
-      int currRow = _argData->rowCount();
-      _argData->insertRow(currRow);
-      _detailItems[xitem.first] = currRow;
-      _argData->setItem(currRow, 0, createItem(item._count));
-      _argData->setItem(currRow, 1, createItem("("));
-      int colidx = 2;
-      std::size_t idx=1;
-      auto totalargs = item._arg_items.size();
-      for(auto& x : item._arg_items) {
-        std::string xx = x;
-        if(idx < totalargs) {
-          xx.append(",");
-          ++idx;
-        }
-        _argData->setItem(currRow, colidx++, createItem(xx));
-      }
-      
-      _argData->setItem(currRow, colidx, createItem(")"));
-      ++colidx;
-      for(auto& x : item._instance_items) {
-        _argData->setItem(currRow, colidx++,createItem(x));
-      }
-    }
-    else {
-      _argData->item(_detailItems[xitem.first],0)->setText(  QString::fromStdString(std::to_string(item._count)) );
-    }
+    _model.update_stack_view(holder->_stacks);
+    _model.init_arg_instance_headers(holder->_argHeaders,holder->_instanceHeaders);
+    _model.update_args_markers(holder->_markers);
   }
-  }
-}
 
 }

@@ -23,16 +23,19 @@
 #include <unordered_map>
 #include "qtablewidget.h"
 #include "StackReport.h"
+#include "MarkerField.h"
 
 namespace frenchroast {
   class DetailViewerModel  {
   QTableWidget*                                        _stackData;
   QTableWidget*                                        _argData;
   std::unordered_map<std::string, QTableWidgetItem*>&  _items;
+  std::map<std::string, int>                           _detailItems;
   public:
   DetailViewerModel(QTableWidget* stackData, QTableWidget* argData, std::unordered_map<std::string, QTableWidgetItem*>&  items);
     void update_stack_view(const std::unordered_map<std::string,frenchroast::monitor::StackReport>& stacks);
     void init_arg_instance_headers(const std::vector<std::string>& argHeades, const std::vector<std::string>& instanceHeaders );
+    void update_args_markers(const std::unordered_map<std::string,frenchroast::monitor::MarkerField>&);
   };
 }
 #endif

@@ -25,6 +25,8 @@
 #include "DetailViewerModel.h"
 #include "StackReport.h"
 #include "qapplication.h"
+#include "SignalParams.h"
+#include "MarkerField.h"
 
 using namespace frenchroast;
 using namespace frenchroast::monitor;
@@ -32,9 +34,11 @@ using namespace frenchroast::monitor;
 
 TEST_CASE("DetailViewerModel -  stacks update")
 {
-  char* args[] = {""};
+  char name[] = "";
+  char* argv[1] = {name};
   int argc =1;
-  QApplication qapp{argc,args};
+  QApplication* qapp = new QApplication {argc,argv};
+ 
   std::unordered_map<std::string, StackReport> stacks;
   std::unordered_map<std::string, QTableWidgetItem*>  items;
   
@@ -67,9 +71,6 @@ TEST_CASE("DetailViewerModel -  stacks update")
 
 TEST_CASE("DetailViewerModel: args, initial cols, no instance markers")
 {
-  char* args[] = {""};
-  int argc =1;
-  QApplication qapp{argc,args};
   std::unordered_map<std::string, StackReport>        stacks;
   std::unordered_map<std::string, QTableWidgetItem*>  items;
   
@@ -90,9 +91,6 @@ TEST_CASE("DetailViewerModel: args, initial cols, no instance markers")
 
 TEST_CASE("DetailViewerModel: args, initial cols, instance markers")
 {
-  char* args[] = {""};
-  int argc =1;
-  QApplication qapp{argc,args};
   std::unordered_map<std::string, StackReport>        stacks;
   std::unordered_map<std::string, QTableWidgetItem*>  items;
   
@@ -109,14 +107,10 @@ TEST_CASE("DetailViewerModel: args, initial cols, instance markers")
   REQUIRE(argptr->horizontalHeaderItem(2)->text()  == "int");
   REQUIRE(argptr->horizontalHeaderItem(3)->text()  == ")");
   REQUIRE(argptr->horizontalHeaderItem(4)->text()  == "_total"); 
-  
 }
 
 TEST_CASE("DetailViewerModel: two args, initial cols, no instance markers")
 {
-  char* args[] = {""};
-  int argc =1;
-  QApplication qapp{argc,args};
   std::unordered_map<std::string, StackReport>        stacks;
   std::unordered_map<std::string, QTableWidgetItem*>  items;
   
@@ -133,6 +127,59 @@ TEST_CASE("DetailViewerModel: two args, initial cols, no instance markers")
   REQUIRE(argptr->horizontalHeaderItem(2)->text()  == "int");
   REQUIRE(argptr->horizontalHeaderItem(3)->text()  == "int");
   REQUIRE(argptr->horizontalHeaderItem(4)->text()  == ")");
+}
 
+
+TEST_CASE("DetailViewerModel: two args, no instance markers")
+{
+  std::unordered_map<std::string, StackReport>        stacks;
+  std::unordered_map<std::string, QTableWidgetItem*>  items;
+  
+  QTableWidget* stackptr = new QTableWidget{};
+  QTableWidget* argptr = new QTableWidget{};
+
+  DetailViewerModel model{stackptr,argptr,items};
+
+  model.init_arg_instance_headers({"int","int"},{});
+  REQUIRE(argptr->rowCount()  == 0);
+  REQUIRE(argptr->columnCount()  == 5);
+  std::unordered_map<std::string, frenchroast::monitor::MarkerField> markers;
+
+
+  SignalParams p1{ {"5","10"} };
+  MarkerField fld1{p1.key(), p1, {}};
+
+  markers[fld1._descriptor] = fld1;
+
+  
+  model.update_args_markers(markers);
+  REQUIRE(argptr->rowCount()  == 1);
+  REQUIRE(argptr->item(0,0)->text() == "1");
+  REQUIRE(argptr->item(0,1)->text().toStdString() == "*");
+  REQUIRE(argptr->item(0,2) == nullptr);
+
+  SignalParams p2{ {"6","10"} };
+  MarkerField fld2{p2.key(), p2, {}};
+
+  markers[fld2._descriptor] = fld2;
+  model.update_args_markers(markers);
+  REQUIRE(argptr->rowCount()  == 1);
+  REQUIRE(argptr->item(0,0)->text().toStdString() == "2");
+  REQUIRE(argptr->item(0,1)->text().toStdString() == "*");
+  REQUIRE(argptr->item(0,2) == nullptr);
+
+  markers[fld2._descriptor] += fld2;
+  model.update_args_markers(markers);
+  REQUIRE(argptr->rowCount()  == 2);
+
+  
+  REQUIRE(argptr->item(0,0)->text().toStdString() == "1");
+  REQUIRE(argptr->item(0,1)->text().toStdString() == "*");
+  REQUIRE(argptr->item(0,2) == nullptr);
+  REQUIRE(argptr->item(1,0)->text().toStdString() == "2");
+  REQUIRE(argptr->item(1,1)->text().toStdString() == "(");
+  REQUIRE(argptr->item(1,2)->text().toStdString() == "6,");
+  REQUIRE(argptr->item(1,3)->text().toStdString() == "10");
+  REQUIRE(argptr->item(1,4)->text().toStdString() == ")");
   
 }
