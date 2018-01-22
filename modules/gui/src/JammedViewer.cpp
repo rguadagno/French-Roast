@@ -30,9 +30,8 @@
 
 namespace frenchroast {
   
-  JammedViewer::JammedViewer(QWidget* parent) : FViewer( parent)
+  JammedViewer::JammedViewer(QWidget* parent) : FViewer( parent), _data(new QTableWidget),_model(_data, _jamsRow,_jamsCount)
   {
-    _data = new QTableWidget;
     _data->setStyleSheet(_settings->value("traffic_grid_style").toString());
     _data->verticalHeader()->hide();
     _data->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -68,41 +67,15 @@ namespace frenchroast {
     QObject::connect(keyListener  , &KeyListener::signalkey,          this, [&](){handle_add_signal(_data->currentColumn()); });
 }
 
-void JammedViewer::update(const frenchroast::monitor::JammedReport& rpt)
-{
-  if(_jamsRow.count(rpt.key()) == 0) {
-    if(_data->rowCount() > 0) {
-      _data->insertRow(_data->rowCount());
-    }
-    _jamsRow[rpt.key()] = _data->rowCount();
-    int newrows = rpt.waiter().size() > rpt.owner().size() ? rpt.waiter().size() : rpt.owner().size();
-    for(int idx = 0; idx < newrows;idx++) {
-      _data->insertRow(_data->rowCount());
-    }
-
-    int start = _jamsRow[rpt.key()];
-    for(auto& x : rpt.waiter().descriptor_frames()) {
-      _data->setItem(start++,COL_WAITER, createItem(x));
-    }
-
-    start = _jamsRow[rpt.key()];
-    for(auto& x : rpt.owner().descriptor_frames()) {
-      _data->setItem(start++,COL_OWNER, createItem(x));
-    }
-
-    start = _jamsRow[rpt.key()];
-    for(auto& x : rpt.monitors()) {
-      _data->setItem(start++,COL_MONITORS, createItem(x));
-    }
+  void JammedViewer::update(const frenchroast::monitor::JammedReport& rpt)
+  {
+    _model.update(rpt);
   }
-
-  _data->setItem(_jamsRow[rpt.key()], COL_COUNT, createItem(++_jamsCount[rpt.key()]));
-}
 
 
   void JammedViewer::handle_add_signal(int col )
   {
-    if(col == COL_COUNT || col == COL_MONITORS) return;
+    if(col == JammedViewerModel::COL_COUNT || col == JammedViewerModel::COL_MONITORS) return;
     if(_data->currentItem() == 0) return;
     std::string name = _data->currentItem()->text().toStdString();
     frenchroast::remove_blanks(name);

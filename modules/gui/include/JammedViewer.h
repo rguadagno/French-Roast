@@ -26,6 +26,7 @@
 #include <QListWidget>
 #include "FViewer.h"
 #include "JammedReport.h"
+#include "JammedViewerModel.h"
 
 
 namespace frenchroast {
@@ -37,10 +38,6 @@ namespace frenchroast {
   private:
     static JammedViewer*  _instance;
     static const std::string  FName;
-    const int    COL_COUNT = 0;
-    const int    COL_MONITORS = 1;
-    const int    COL_WAITER = 2;
-    const int    COL_OWNER = 3;
     
     JammedViewer(QWidget*);
     ~JammedViewer();
@@ -48,6 +45,7 @@ namespace frenchroast {
     QTableWidget*                             _data;
     std::unordered_map<std::string, int>      _jamsRow;
     std::unordered_map<std::string, int>      _jamsCount;
+    JammedViewerModel                         _model;
     void reset_all();    
     
   public:

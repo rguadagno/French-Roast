@@ -13,6 +13,7 @@ ${CATCH_LOCATION}
 ../include
 ../../include
 ../../../monitor/include
+../../../monitor/tests/include
 ../../../instrumentation/include
 ../../../network/include
 /opt/Qt5/5.5/gcc/include/QtWidgets
@@ -22,6 +23,7 @@ ${CATCH_LOCATION}
 FILE(GLOB src_files
 ../src/Main.cpp
 ../../src/DetailViewerModel.cpp
+../../src/JammedViewerModel.cpp
 ../../src/QUtil.cpp
 ../../src/CodeFont.cpp
 ../../../monitor/src/StackReport.cpp
@@ -32,9 +34,12 @@ FILE(GLOB src_files
 ../../../monitor/src/MethodStats.cpp
 ../../../monitor/src/SignalParams.cpp
 ../../../monitor/src/SignalMarkers.cpp
+../../../monitor/src/JammedReport.cpp
 ../../../network/src/FRSocket.cpp
 ../../../instrumentation/src/Util.cpp
+../../../monitor/tests/src/helper.cpp
 ../src/test_DetailViewerModel.cpp
+../src/test_JammedViewerModel.cpp
 )
 
 if (UNIX)
