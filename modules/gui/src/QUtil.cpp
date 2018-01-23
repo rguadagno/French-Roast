@@ -41,7 +41,7 @@ QTableWidgetItem* createItem(const std::string& value, Qt::Alignment align)
   QTableWidgetItem* ditem = new QTableWidgetItem(QString::fromStdString(value));
   ditem->setFont(CodeFont());
   ditem->setTextAlignment(align);
-  ditem->setFlags(Qt::ItemIsEnabled);
+  ditem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
   return ditem;
 }
 
