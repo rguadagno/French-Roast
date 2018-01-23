@@ -71,6 +71,8 @@ int main(int argc, char* argv[])
   QObject::connect(&app,     &QApplication::aboutToQuit,   &main,    &FRMain::handle_exit);
   QObject::connect(&roaster, &FRListener::remoteconnected, &main,    &FRMain::remote_connected);
   QObject::connect(&roaster, &FRListener::remoteunloaded,  &main,    &FRMain::remote_disconnected);
+  QObject::connect(&roaster, &FRListener::remote_ack_off,  &main,    &FRMain::remote_ack_off);
+  QObject::connect(&roaster, &FRListener::remote_ack_on,   &main,    &FRMain::remote_ack_on);
   QObject::connect(&roaster, &FRListener::remote_ready,    &main,    &FRMain::handshake);
   QObject::connect(&main,    &FRMain::start_traffic,       &roaster, &FRListener::start_traffic);
   QObject::connect(&main,    &FRMain::stop_traffic,        &roaster, &FRListener::stop_traffic);

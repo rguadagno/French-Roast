@@ -81,6 +81,16 @@ void FRMain::remote_disconnected(const std::string& host, const std::string& pid
   AboutHelpViewer::instance(this)->remote_disconnected(host,pid);
 }
 
+void FRMain::remote_ack_off(const std::string& host, const std::string& pid)
+{
+  AboutHelpViewer::instance(this)->remote_ack_off(host,pid);
+}
+
+void FRMain::remote_ack_on(const std::string& host, const std::string& pid)
+{
+  AboutHelpViewer::instance(this)->remote_ack_on(host,pid);
+}
+
 
 void FRMain::view_traffic()
 {

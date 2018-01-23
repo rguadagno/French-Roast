@@ -38,11 +38,6 @@
 
 namespace frenchroast { namespace monitor {
 
-    struct time_holder {
-      long      _elapsed;
-      long long _last;
-    };
-   
     template
     <typename T>
       class Monitor : public network::Listener {
@@ -75,8 +70,7 @@ namespace frenchroast { namespace monitor {
           std::string ipport = msg.substr(0,msg.find_first_of("~")+1);
           for(auto& mitem : frenchroast::split(nmsg,"<end>")) {
             while(!_iq.push(ipport + mitem));
-           
-            }
+          }
         }
         
         void mhandler()
@@ -115,8 +109,16 @@ namespace frenchroast { namespace monitor {
             }
           
             if (items[MSG_TYPE] == "unloaded") {
-              _handler.unloaded(items[2], items[3]);
+              _handler.unloaded(items[HOST_NAME], items[PID]);
             }
+            
+            if (items[MSG_TYPE] == "ack_profiler_off") {
+              _handler.ack_profiler_off(items[HOST_NAME], items[PID]);
+            }
+            if (items[MSG_TYPE] == "ack_profiler_on") {
+              _handler.ack_profiler_on(items[HOST_NAME], items[PID]);
+            }
+            
             if(items[MSG_TYPE] == "transmit-opcodes") {
               transmit_lines(_opcodeFile, items[IP_PORT], _conn);
             }
@@ -170,7 +172,6 @@ namespace frenchroast { namespace monitor {
 
         void turn_off_profiler(const std::string& hostname_pid)
         {
-          std::cout << "turnoff: " << hostname_pid << std::endl;
           _conn.send_message(_clients[hostname_pid], "turn_off_profiler");
         }
 

@@ -76,6 +76,8 @@ class FRListener : public QObject
     void signal_timed(const frenchroast::monitor::TimerReport&);
     void connected(const std::string& host, const std::string& pid);
     void unloaded(const std::string& host, const std::string& pid);
+    void ack_profiler_off(const std::string& host, const std::string& pid);
+    void ack_profiler_on(const std::string& host, const std::string& pid);
     void ready(const std::string& host, const std::string& pid);
     void request_hooks(const std::string& ipport);
     void jammed(frenchroast::monitor::JammedReport&);
@@ -99,6 +101,8 @@ class FRListener : public QObject
     void timersignal(const frenchroast::monitor::TimerReport&);
     void remoteconnected(const std::string& host, const std::string& pid);
     void remoteunloaded(const std::string& host, const std::string& pid);
+    void remote_ack_off(const std::string& host, const std::string& pid);
+    void remote_ack_on(const std::string& host, const std::string& pid);
     void traffic_signal(const std::vector<frenchroast::monitor::StackTrace>&);
     void class_loaded(const std::vector<frenchroast::monitor::ClassDetail>&);
     void stack_jammed(const frenchroast::monitor::JammedReport&);

@@ -83,7 +83,17 @@ AboutHelpViewer::AboutHelpViewer(QWidget* parent) : FViewer(parent)
   {
     _statusMsg->remote_disconnected(host,pid);
   }
-  
+
+  void AboutHelpViewer::remote_ack_off(const std::string& host, const std::string& pid)
+  {
+    _statusMsg->remote_ack_off(host,pid);
+  }
+
+  void AboutHelpViewer::remote_ack_on(const std::string& host, const std::string& pid)
+  {
+    _statusMsg->remote_ack_on(host,pid);
+  }
+
   void AboutHelpViewer::remote_ready(const std::string& host, const std::string& pid)
   {
     _statusMsg->remote_ready(host, pid);

@@ -290,6 +290,7 @@ bool profiler_predicate()
 
 void reload_monitor() 
 {
+  using namespace frenchroast::network;
   jvmtiEnv* env;
   g_java_vm->AttachCurrentThread((void**)&env,(void*)NULL);
 
@@ -320,6 +321,15 @@ void reload_monitor()
     }
     _all_loaded_mutex.unlock();
     genv->RetransformClasses(total, tclasses);
+    std::string* pstr;
+    std::string details = Connector<>::get_hostname() + "~" + std::to_string(Connector<>::get_pid());
+    if(profiler_predicate()) {
+      pstr = new std::string{"ack_profiler_on~" + details};
+    }
+    else {
+      pstr = new std::string{"ack_profiler_off~" + details};
+    }
+    _signalQueue.push(pstr);
     _commandListener._profilerCond.wait(lck);
 
   }

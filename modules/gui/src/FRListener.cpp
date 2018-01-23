@@ -61,6 +61,16 @@ void FRListener::unloaded(const std::string& host, const std::string& pid)
   remoteunloaded(host,pid);
 }
 
+void FRListener::ack_profiler_off(const std::string& host, const std::string& pid)
+{
+  remote_ack_off(host,pid);
+}
+
+void FRListener::ack_profiler_on(const std::string& host, const std::string& pid)
+{
+  remote_ack_on(host,pid);
+}
+
 void FRListener::init()
 {
   std::thread t1{[this](){_mon.init_receiver(_ip, _port);}};

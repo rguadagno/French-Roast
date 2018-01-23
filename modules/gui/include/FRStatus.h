@@ -40,9 +40,11 @@ class FRStatus : public QWidget {
  public slots:
   void remote_connected(const std::string& host, const std::string& pid);
   void remote_disconnected(const std::string& host, const std::string& pid);
+  void remote_ack_off(const std::string& host, const std::string& pid);
+  void remote_ack_on(const std::string& host, const std::string& pid);
   void remote_ready(const std::string& host, const std::string& ip);
   void show_menu(const QPoint&);
-  void connect_client( );
+  void connect_client( bool forceDisplay = false);
   void disconnect_client( );
 
  signals:
