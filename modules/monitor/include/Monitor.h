@@ -35,12 +35,23 @@
 #include "Signal.h"
 #include "SignalReport.h"
 #include "TimerReport.h"
+#include "Command.h"
 
 namespace frenchroast { namespace monitor {
 
+    
     template
     <typename T>
       class Monitor : public network::Listener {
+      using servicer = void (Monitor<T>::*)(const std::vector<std::string>&);
+      class Executer {
+      public:
+          Executer() : _ptr(&Monitor<T>::service_ignore) {}
+          Executer(servicer ptr) : _ptr(ptr) {}
+          servicer _ptr;
+      };
+
+
 	T&                                                                             _handler;
         network::Connector<>                                                          _conn;
         std::unordered_map<std::string, TimerReport>                                  _timers;
@@ -50,19 +61,31 @@ namespace frenchroast { namespace monitor {
         std::string                                                                   _opcodeFile;
         std::unordered_map<std::string, std::string>                                  _clients;
         boost::lockfree::spsc_queue<std::string, boost::lockfree::fixed_sized<true>>  _iq{15000};
-
-       const int IP_PORT     = 0;
+        std::unordered_map<std::string, Executer>                                     _commands;
+        const int IP_PORT     = 0;
        
-       const int HOST_NAME   = 2;
-       const int PID         = 3;
+        const int HOST_NAME   = 2;
+        const int PID         = 3;
         
-       const int MSG_TYPE    = 1;
-       const int MSG         = 2;
+        const int MSG_TYPE    = 1;
+        const int MSG         = 2;
 
     public:
-        Monitor(T& handler, const std::string& opcodeFile) : _handler(handler), _opcodeFile(opcodeFile)
-        { 
-        }
+    Monitor(T& handler, const std::string& opcodeFile) : _handler(handler), _opcodeFile(opcodeFile)
+        {
+          _commands[command::SIGNAL]           = Executer{&Monitor<T>::service_signal};
+          _commands[command::SIGNAL_TIMER]     = Executer{&Monitor<T>::service_timer};
+          _commands[command::TRAFFIC]          = Executer{&Monitor<T>::service_traffic};
+          _commands[command::JAMMED]           = Executer{&Monitor<T>::service_jammed};
+          _commands[command::LOADED]           = Executer{&Monitor<T>::service_loaded};
+          _commands[command::READY]            = Executer{&Monitor<T>::service_ready};
+          _commands[command::CONNECTED]        = Executer{&Monitor<T>::service_connected};
+          _commands[command::UNLOADED]         = Executer{&Monitor<T>::service_unloaded};
+          _commands[command::ACK_PROFILER_ON]  = Executer{&Monitor<T>::service_ack_profiler_on};
+          _commands[command::ACK_PROFILER_OFF] = Executer{&Monitor<T>::service_ack_profiler_off};
+          _commands[command::TRANSMIT_OPCODES] = Executer{&Monitor<T>::service_transmit_opcodes};
+          _commands[command::TRANSMIT_HOOKS]   = Executer{&Monitor<T>::service_transmit_hooks};
+           }
 
         void message(const std::string& msg)
         {
@@ -77,63 +100,18 @@ namespace frenchroast { namespace monitor {
         {
           std::string msg;
           while(1) {
-          while(_iq.pop(msg)) {
-            std::vector<std::string> items = frenchroast::split(msg,"~");
-            if (items[MSG_TYPE] == "signaltimer") {
-              service_timer(items[MSG]);
+            while(_iq.pop(msg)) {
+              std::vector<std::string> items = frenchroast::split(msg,"~");
+              (this->*_commands[items[MSG_TYPE]]._ptr)(items);
             }
-            if (items[MSG_TYPE] == "signal") {
-              service_signal(items[MSG]);
-            }
-
-            if (items[MSG_TYPE] == "traffic") {
-              _handler.traffic( construct_traffic(items[MSG], _method_counters));
-            }
-            
-            if (items[MSG_TYPE] == "jammed") {
-              _handler.jammed( _jammedReports[items[MSG]] += (items[MSG] >> JammedReport{}) );
-            }
-
-            if (items[MSG_TYPE] == "loaded") {
-              std::vector<ClassDetail> details;
-              _handler.class_watch( items[MSG] >> details);
-            }
-
-            if (items[MSG_TYPE] == "ready") {
-              _clients[items[HOST_NAME] + items[PID]] = items[IP_PORT];
-              _handler.ready(items[HOST_NAME], items[PID]);
-            }
-          
-            if (items[MSG_TYPE] == "connected") {
-              _handler.connected(items[1], "");
-            }
-          
-            if (items[MSG_TYPE] == "unloaded") {
-              _handler.unloaded(items[HOST_NAME], items[PID]);
-            }
-            
-            if (items[MSG_TYPE] == "ack_profiler_off") {
-              _handler.ack_profiler_off(items[HOST_NAME], items[PID]);
-            }
-            if (items[MSG_TYPE] == "ack_profiler_on") {
-              _handler.ack_profiler_on(items[HOST_NAME], items[PID]);
-            }
-            
-            if(items[MSG_TYPE] == "transmit-opcodes") {
-              transmit_lines(_opcodeFile, items[IP_PORT], _conn);
-            }
-            if(items[MSG_TYPE] == "transmit-hooks") {
-              _handler.request_hooks(items[IP_PORT]);
-            }
-          }
-          std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
           }
         }
 
-        void service_timer(const std::string& msg)
+        void service_timer(const std::vector<std::string>& parts)
         {
           TimerReport rpt{};
-          msg >> rpt;
+          parts[MSG] >> rpt;
 
           if (rpt.direction() == TimerReport::Direction::Exit) {
             _handler.signal_timed(_timers[rpt.key()] += rpt);
@@ -143,13 +121,69 @@ namespace frenchroast { namespace monitor {
           }
         }
         
-        void service_signal(const std::string& msg)
+        void service_signal(const std::vector<std::string>& parts)
         {
           Signal sig{};
-          msg >> sig;
+          parts[MSG] >> sig;
           _handler.signal(_signals[sig.key()] += sig);
         }
 
+        void service_traffic(const std::vector<std::string>& parts)
+        {
+          _handler.traffic( construct_traffic(parts[MSG], _method_counters));
+        }
+
+        void service_jammed(const std::vector<std::string>& parts)
+        {
+          _handler.jammed( _jammedReports[parts[MSG]] += (parts[MSG] >> JammedReport{}) );
+        }
+        
+        void service_loaded(const std::vector<std::string>& parts)
+        {
+          std::vector<ClassDetail> details;
+          _handler.class_watch( parts[MSG] >> details);
+        }
+
+        void service_ready(const std::vector<std::string>& parts)
+        {
+          _clients[parts[HOST_NAME] + parts[PID]] = parts[IP_PORT];
+          _handler.ready(parts[HOST_NAME], parts[PID]);
+        }
+
+        void service_connected(const std::vector<std::string>& parts)
+        {
+          _handler.connected(parts[1], "");
+        }
+        
+        void service_unloaded(const std::vector<std::string>& parts)
+        {
+          _handler.unloaded(parts[HOST_NAME], parts[PID]);
+        }
+        
+        void service_ack_profiler_off(const std::vector<std::string>& parts)
+        {
+          _handler.ack_profiler_off(parts[HOST_NAME], parts[PID]);
+        }
+
+        void service_ack_profiler_on(const std::vector<std::string>& parts)
+        {
+          _handler.ack_profiler_on(parts[HOST_NAME], parts[PID]);
+        }
+        
+        void service_transmit_opcodes(const std::vector<std::string>& parts)
+        {
+          transmit_lines(_opcodeFile, parts[IP_PORT], _conn);
+        }
+
+        void service_transmit_hooks(const std::vector<std::string>& parts)
+        {
+          _handler.request_hooks(parts[IP_PORT]);
+        }
+
+        void service_ignore(const std::vector<std::string>&)
+        {
+          
+        }
         
         void send_hooks(const std::vector<std::string>& hooks, const std::string& ipport)
         {

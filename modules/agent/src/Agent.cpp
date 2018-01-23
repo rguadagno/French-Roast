@@ -49,6 +49,7 @@
 #include "SignalMarkers.h"
 #include "AgentSignalReporting.h"
 #include "TimerReport.h"
+#include "Command.h"
 
 std::mutex _traffic_mutex;
 std::mutex _loading_mutex;
@@ -212,7 +213,7 @@ JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass obj
                                             std::string(ptr->GetStringUTFChars(tag,0))};
 
       std::stringstream ss;
-      ss << "signaltimer~" << rpt;
+      ss << frenchroast::monitor::command::SIGNAL_TIMER + "~" << rpt;
       *str = ss.str();
       _signalQueue.push(str);
     }
@@ -246,7 +247,7 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
     frenchroast::monitor::SignalMarkers sig_markers{markers};
     frenchroast::monitor::Signal sig{sig_rpt,sig_params,sig_markers};
     std::stringstream ss;
-    ss << "signal~" << sig;
+    ss << frenchroast::monitor::command::SIGNAL + "~" << sig;
     std::string* str = new std::string;
     *str = ss.str();
     _signalQueue.push(str);
@@ -291,6 +292,7 @@ bool profiler_predicate()
 void reload_monitor() 
 {
   using namespace frenchroast::network;
+  using namespace frenchroast::monitor;
   jvmtiEnv* env;
   g_java_vm->AttachCurrentThread((void**)&env,(void*)NULL);
 
@@ -324,10 +326,10 @@ void reload_monitor()
     std::string* pstr;
     std::string details = Connector<>::get_hostname() + "~" + std::to_string(Connector<>::get_pid());
     if(profiler_predicate()) {
-      pstr = new std::string{"ack_profiler_on~" + details};
+      pstr = new std::string{command::ACK_PROFILER_ON + "~" + details};
     }
     else {
-      pstr = new std::string{"ack_profiler_off~" + details};
+      pstr = new std::string{command::ACK_PROFILER_OFF + "~" + details};
     }
     _signalQueue.push(pstr);
     _commandListener._profilerCond.wait(lck);
@@ -425,7 +427,7 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
 
 
 
-  std::string* str = new std::string{"jammed~"};
+  std::string* str = new std::string{frenchroast::monitor::command::JAMMED + "~"};
   std::stringstream ss;
   frenchroast::monitor::JammedReport report{ownerStack, waiterStack};
   report.add_monitor(monitorStr);
@@ -487,7 +489,7 @@ void traffic_monitor()
 
     if(!ErrorHandler::check_jvmti_error(genv->GetAllThreads(&thread_count, &threads),"GetAllThreads")) continue;
 
-    rv = new std::string{"traffic~"};
+    rv = new std::string{frenchroast::monitor::command::TRAFFIC + "~"};
     for(int idx = 0; idx < thread_count; idx++) {
       monmap.clear();
       thd = *(threads + idx);
@@ -626,7 +628,7 @@ void class_loading_monitor()
 
   while(1) {
     if(_loadedClasses.size() > 0 ) {
-      std::string* str = new std::string{"loaded~"};
+      std::string* str = new std::string{frenchroast::monitor::command::LOADED + "~"};
       std::stringstream ss;
       ss << _loadedClasses;
       str->append(ss.str());

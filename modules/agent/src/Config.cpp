@@ -22,6 +22,7 @@
 #include "Util.h"
 #include "Listener.h"
 #include "Connector.h"
+#include "Command.h"
 
 namespace frenchroast { namespace agent {
     std::string get_value(const std::string& key, const std::string& value, const std::string& line)
@@ -96,10 +97,10 @@ template
           _serverPort = atoi(frenchroast::split(descriptor,":")[1].c_str());
           frenchroast::network::Connector<> conn;
           conn.connect_to_server(_serverip, _serverPort);
-          conn.send_message("transmit-opcodes");
+          conn.send_message(frenchroast::monitor::command::TRANSMIT_OPCODES);
           conn.blocked_listen(new LocalListener<OpCode>(opcodes, conn));
           conn.connect_to_server(_serverip, _serverPort);
-          conn.send_message("transmit-hooks");
+          conn.send_message(frenchroast::monitor::command::TRANSMIT_HOOKS);
           conn.blocked_listen(new LocalListener<frenchroast::signal::Signals>(hooks, conn));
           return true;
         }
