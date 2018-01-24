@@ -22,11 +22,11 @@
 
 namespace frenchroast { namespace signal {
 
-    Signal::Signal(const std::string& name, int lineno) : _name(name), _line(lineno)
+    Signal::Signal(const std::string& name, int lineno) : _line(lineno), _name(name)
     {
     }
 
-    Signal::Signal(const std::string& name, std::bitset<4> flags, bool artifacts) : _name(name), _flags(flags), _line(0), _includeArtifacts(artifacts)
+    Signal::Signal(const std::string& name, std::bitset<4> flags, bool artifacts, bool mheap) : _name(name), _includeArtifacts(artifacts), _flags(flags), _monitor_heap(mheap)
     {
       if(_name == "*") {
         _all = true;
@@ -57,6 +57,11 @@ namespace frenchroast { namespace signal {
     {
       return _includeArtifacts;
     }
+    
+    bool Signal::monitor_heap() const
+    {
+      return _monitor_heap;
+    }
     // -------------------------
 
 
@@ -70,6 +75,11 @@ namespace frenchroast { namespace signal {
       return _hlist.count(name) > 0;
     }
 
+    bool Signals::is_monitor_heap_class(const std::string& name) 
+    {
+      return is_signal_class(name) && _hlist[name][0].monitor_heap();
+    }
+    
     std::vector<std::string> Signals::classes() const
     {
       std::vector<std::string> rv;
@@ -129,6 +139,9 @@ namespace frenchroast { namespace signal {
       if(name.find("*") != std::string::npos) {
         return "*";
       }
+      if(name.find(":") == std::string::npos) {
+        return "";
+      }
       std::string rv;
 
       std::string nameStr   = split(name, ':')[0];
@@ -157,13 +170,9 @@ namespace frenchroast { namespace signal {
       }
         else if (x == "<TIMER>") {
           flags |= METHOD_TIMER;
-      }
-        else {
-          throw std::invalid_argument("signal point missing( e.g. <ENTER>");
         }
       }
     }
-
    
    void Signals::load_from_file(const std::string& filename)
    {
@@ -199,11 +208,10 @@ namespace frenchroast { namespace signal {
       std::string flagStr;
       std::string fieldStr;
       std::string artifactStr;
-      _validator.validate(line,classname, methName,flagStr, fieldStr, artifactStr);
-
+      std::string mheapStr;
+      _validator.validate(line,classname, methName,flagStr, fieldStr, artifactStr, mheapStr);
       std::bitset<4> flags;
       parse_flags(flags, flagStr);
-
       std::vector<std::string> fields;
       for(auto& x : split(fieldStr, "][")) {
         replace(x, '[');
@@ -215,7 +223,9 @@ namespace frenchroast { namespace signal {
       _markerFields[classname + methName] = fields;
       replace(classname, '.', '/');
       methName = convert_name(methName);
-      _hlist[classname].push_back(Signal{methName, flags, artifactStr.find("OFF") != std::string::npos ? false : true});
+      _hlist[classname].push_back(Signal{methName, flags, artifactStr.find("OFF") != std::string::npos ? false : true,
+                                         mheapStr != ""
+                                        });
     }
 
     const std::vector<Signal>& Signals::operator[](const std::string& name) 

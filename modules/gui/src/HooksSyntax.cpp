@@ -44,7 +44,7 @@ void HooksSyntax::highlightBlock(const QString& text)
 
 
   
-  QRegularExpression pointReg("<ENTER>|<EXIT>");
+  QRegularExpression pointReg("<ENTER>|<EXIT>|<ARTIFACTS:OFF>|<MONITOR:HEAP>");
   QRegularExpressionMatchIterator itr = pointReg.globalMatch(text);
   while(itr.hasNext()) {
     QRegularExpressionMatch match = itr.next();

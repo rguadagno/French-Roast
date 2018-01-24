@@ -63,9 +63,10 @@ namespace frenchroast { namespace signal {
       std::string flagStr;
       std::string fieldStr;
       std::string artifactStr;
+      std::string mheapStr;
 
       try {
-        validate(scopy, classStr, methodStr, flagStr, fieldStr,  artifactStr);
+        validate(scopy, classStr, methodStr, flagStr, fieldStr,  artifactStr, mheapStr);
       }
       catch(std::invalid_argument& e) { return SignalValidationStatus{e.what()}; }
       
@@ -74,19 +75,29 @@ namespace frenchroast { namespace signal {
 
 
     
-    void SignalValidator::validate(const std::string& method, std::string& classStr, std::string& methodStr, std::string& flagStr,std::string& fieldStr, std::string& artifactStr)
+    void SignalValidator::validate(const std::string& line, std::string& classStr, std::string& methodStr, std::string& flagStr,std::string& fieldStr, std::string& artifactStr, std::string& mheapStr)
+    {
+      if(try_monitor_match(line, classStr, mheapStr)) return;
+      if(try_signal_match(line, classStr, methodStr, flagStr, fieldStr, artifactStr)) return;
+      report_error(line);
+    }
+
+
+    bool SignalValidator::try_monitor_match(const std::string& line, std::string& classstr, std::string& mheapstr)
     {
       std::smatch sm;
-      std::regex_match(method,sm,_fullRegex);
-      if(sm.size() < 4 ) {
-        std::regex_match(method,sm,_methodRegex);
-        if(sm.size() == 4) {
-          throw std::invalid_argument{"signal point bad/missing: " + sm[3].str()};
-        }
-        else {
-          throw std::invalid_argument{"bad method descriptor: " + method};
-        }
-      }
+      std::regex_match(line, sm, _minorRegex);
+      if(sm.size() != 3) return false;
+      classstr = sm[1].str();
+      mheapstr = sm[2].str();
+      return true;
+    }
+
+    bool SignalValidator::try_signal_match(const std::string& line, std::string& classStr, std::string& methodStr, std::string& flagStr, std::string& fieldStr, std::string& artifactStr)
+    {
+      std::smatch sm;
+      std::regex_match(line, sm, _fullRegex);
+      if(sm.size() < 4) return false;
       classStr = sm[1].str();
       methodStr = sm[2].str();
       flagStr = sm[3].str();
@@ -96,10 +107,20 @@ namespace frenchroast { namespace signal {
       if(sm.size() == 6 && sm[5].str() != "") {
         artifactStr = sm[5].str();
       }
-
+      return true;
     }
 
-
+    bool SignalValidator::report_error(const std::string& line)
+    {
+      std::smatch sm;
+      std::regex_match(line,sm,_methodRegex);
+      if(sm.size() == 4) {
+        throw std::invalid_argument{"signal point bad/missing: " + sm[3].str()};
+      }
+      else {
+        throw std::invalid_argument{"bad method descriptor: " + line};
+      }
+    }
+    
   }
-
 }

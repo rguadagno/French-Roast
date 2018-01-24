@@ -388,6 +388,7 @@ void JNICALL
     track_class(sname);
   }
   if (profiler_predicate() && _hooks.is_signal_class(sname) ) {
+    if(_hooks.is_monitor_heap_class(sname)) return;
     if(!loaded) {
       _fr.load_from_buffer(class_data);
       loaded = true;

@@ -29,19 +29,21 @@
 
 namespace frenchroast { namespace signal {
     class Signal {
-      int            _line;
+      int            _line{0};
       std::string    _name;
       bool           _includeArtifacts;
       std::bitset<4> _flags;
       bool           _all{false};
+      bool           _monitor_heap{false};
     public:
       Signal(const std::string& name, int lineno);
-      Signal(const std::string& name, std::bitset<4>, bool artifacts);
+      Signal(const std::string& name, std::bitset<4>, bool artifacts, bool mheap);
       int            line_number() const;
       std::string    method_name() const;
       std::bitset<4> flags() const;
       bool all() const;
       bool artifacts() const;
+      bool monitor_heap() const;
     };
     
     class Signals {
@@ -56,6 +58,7 @@ namespace frenchroast { namespace signal {
       
     public:
       bool is_signal_class(const std::string& name) const;
+      bool is_monitor_heap_class(const std::string& name) ;
       std::vector<std::string> classes() const;
       const std::vector<Signal>& operator[](const std::string& name);
       void load(const std::string&);

@@ -40,11 +40,14 @@ namespace frenchroast { namespace signal {
     
     class SignalValidator {
       std::regex  _fullRegex{"((?:[A-Za-z0-9_]+\\.)+[A-Za-z0-9]+)::([A-Za-z0-9_\\*]+(?::\\([a-z]*\\):[a-z]+){0,})(<ENTER>|<EXIT>|<TIMER>){1}((?:\\[[A-Za-z0-9_]+\\]){0,})((?:<ARTIFACTS:OFF>){0,})"};
+      std::regex  _minorRegex{"((?:[A-Za-z0-9_]+\\.)+[A-Za-z0-9]+)::(?:(<MONITOR:HEAP>){1})"};
       std::regex  _methodRegex{"((?:[A-Za-z0-9_]+\\.)+[A-Za-z0-9]+)::([A-Za-z0-9_]+:\\([a-z]*\\):[a-z]+)(.*)"};
 
-
+      bool try_monitor_match(const std::string& line, std::string& classstr,std::string& mheapstr);
+      bool try_signal_match(const std::string& line, std::string& classStr, std::string& methodStr, std::string& flagStr, std::string& fieldStr, std::string& artifactStr);
+      bool report_error(const std::string& line);
     public:
-      void validate(const std::string& line, std::string& classstr,std::string& methodstr,std::string& flagstr,std::string& fieldstr, std::string& artifactStr);
+      void validate(const std::string& line, std::string& classstr,std::string& methodstr,std::string& flagstr,std::string& fieldstr, std::string& artifactStr, std::string& mheapStr);
       SignalValidationStatus validate_no_throw(const std::string& line);
     };
 

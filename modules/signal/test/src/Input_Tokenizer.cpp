@@ -155,3 +155,15 @@ TEST_CASE("Signals: is_signal_class")
   sigs.load("mypackage.MyClass::funcA:(int):void <ENTER> <ARTIFACTS:OFF>");
   REQUIRE(sigs.is_signal_class("mypackage/MyClass"));
 }
+
+
+TEST_CASE("Signals: is_monitor_heap_class")
+{
+  frenchroast::signal::Signals sigs;
+  sigs.load("mypackage.MyClass::funcA:(int):void <ENTER> <ARTIFACTS:OFF>");
+  REQUIRE(!sigs.is_monitor_heap_class("mypackage/MyClass"));
+
+  sigs.load("com.xtech.MyClass::<MONITOR:HEAP>");
+  REQUIRE(sigs.is_monitor_heap_class("com/xtech/MyClass"));
+}
+
