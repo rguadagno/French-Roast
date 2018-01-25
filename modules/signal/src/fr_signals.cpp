@@ -26,7 +26,7 @@ namespace frenchroast { namespace signal {
     {
     }
 
-    Signal::Signal(const std::string& name, std::bitset<4> flags, bool artifacts, bool mheap) : _name(name), _includeArtifacts(artifacts), _flags(flags), _monitor_heap(mheap)
+    Signal::Signal(const std::string& name, std::bitset<4> flags, bool artifacts) : _name(name), _includeArtifacts(artifacts), _flags(flags)
     {
       if(_name == "*") {
         _all = true;
@@ -60,7 +60,7 @@ namespace frenchroast { namespace signal {
     
     bool Signal::monitor_heap() const
     {
-      return _monitor_heap;
+      return (_flags & Signals::MONITOR_HEAP) == Signals::MONITOR_HEAP;
     }
     // -------------------------
 
@@ -211,7 +211,12 @@ namespace frenchroast { namespace signal {
       std::string mheapStr;
       _validator.validate(line,classname, methName,flagStr, fieldStr, artifactStr, mheapStr);
       std::bitset<4> flags;
-      parse_flags(flags, flagStr);
+      if(mheapStr == "<MONITOR:HEAP>") {
+        flags = MONITOR_HEAP;
+      }
+      else {
+        parse_flags(flags, flagStr);
+      }
       std::vector<std::string> fields;
       for(auto& x : split(fieldStr, "][")) {
         replace(x, '[');
@@ -223,9 +228,7 @@ namespace frenchroast { namespace signal {
       _markerFields[classname + methName] = fields;
       replace(classname, '.', '/');
       methName = convert_name(methName);
-      _hlist[classname].push_back(Signal{methName, flags, artifactStr.find("OFF") != std::string::npos ? false : true,
-                                         mheapStr != ""
-                                        });
+      _hlist[classname].push_back(Signal{methName, flags, artifactStr.find("OFF") != std::string::npos ? false : true});
     }
 
     const std::vector<Signal>& Signals::operator[](const std::string& name) 
@@ -238,6 +241,7 @@ namespace frenchroast { namespace signal {
     const std::bitset<4> frenchroast::signal::Signals::METHOD_ENTER{"0001"};
     const std::bitset<4> frenchroast::signal::Signals::METHOD_EXIT {"0010"};
     const std::bitset<4> frenchroast::signal::Signals::METHOD_TIMER{"0100"};
+    const std::bitset<4> frenchroast::signal::Signals::MONITOR_HEAP{"1000"};
 
 
   }

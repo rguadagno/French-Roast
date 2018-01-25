@@ -34,10 +34,9 @@ namespace frenchroast { namespace signal {
       bool           _includeArtifacts;
       std::bitset<4> _flags;
       bool           _all{false};
-      bool           _monitor_heap{false};
     public:
       Signal(const std::string& name, int lineno);
-      Signal(const std::string& name, std::bitset<4>, bool artifacts, bool mheap);
+      Signal(const std::string& name, std::bitset<4>, bool artifacts);
       int            line_number() const;
       std::string    method_name() const;
       std::bitset<4> flags() const;
@@ -68,6 +67,7 @@ namespace frenchroast { namespace signal {
       static const std::bitset<4> METHOD_ENTER;
       static const std::bitset<4> METHOD_EXIT;
       static const std::bitset<4> METHOD_TIMER;
+      static const std::bitset<4> MONITOR_HEAP;
     };
   }
 }
