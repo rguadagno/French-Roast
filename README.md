@@ -59,7 +59,7 @@ Then we re-kick the target application again.
 
 ![alt text](https://github.com/rguadagno/French-Roast/blob/master/docs/signals.png "")
 
-Now we observe that ```process()``` (acquiring a lock) is called 50,000 times with the exact same arguments. We stop the target application! Something is wrong here.
+Now we observe that ```process()``` (which acquires a lock) is called over 50,000 times with the exact same arguments. We stop the target application! Something is wrong here.
 ![alt text](https://github.com/rguadagno/French-Roast/blob/master/docs/with_details.png "")
 
 Looking at the code we understand that the ```process()``` function is actually called 10 million times with the same argument values each time... this could have been cached once.
