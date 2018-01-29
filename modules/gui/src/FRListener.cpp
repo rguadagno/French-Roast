@@ -31,14 +31,14 @@ int FRListener::getCount(const std::string& item)
    return _items[item];
 }
 
-void FRListener::signal_timed(const std::string& tag, const std::string& tname, long elapsed, int last)
+void FRListener::signal_timed(const frenchroast::monitor::TimerReport& rpt)
 {
-  timersignal(tag,tname,elapsed);
+  timersignal(rpt);
 }
 
-void FRListener::signal(const std::string& tag, const std::string& tname, int count, std::vector<std::string> args, std::vector<std::string> instances,  frenchroast::monitor::MarkerField markers,  std::unordered_map<std::string, frenchroast::monitor::StackReport> stacks)
+void FRListener::signal(const frenchroast::monitor::SignalReport& rpt)
 {
-  thooked(tag, tname, count, args, instances, markers, stacks);
+  thooked(rpt);
 }
 
 void FRListener::traffic(std::vector<frenchroast::monitor::StackTrace> items)
@@ -59,6 +59,16 @@ void FRListener::connected(const std::string& host, const std::string& pid)
 void FRListener::unloaded(const std::string& host, const std::string& pid)
 {
   remoteunloaded(host,pid);
+}
+
+void FRListener::ack_profiler_off(const std::string& host, const std::string& pid)
+{
+  remote_ack_off(host,pid);
+}
+
+void FRListener::ack_profiler_on(const std::string& host, const std::string& pid)
+{
+  remote_ack_on(host,pid);
 }
 
 void FRListener::init()

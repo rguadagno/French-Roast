@@ -28,30 +28,58 @@
 namespace frenchroast { namespace monitor {
 
     class StackTrace {
+      friend StackTrace& operator>>(const std::string& rep, StackTrace& ref);
+      std::string              _thread_name;
       std::string              _key;
       std::string              _monitorkey;
-      std::string              _thread_name;
-      std::vector<std::string> _frames;
+      std::vector<StackFrame>  _frames;
       std::vector<int>         _monitors;
 
     public:
+      const static std::string TAG_END;
       StackTrace(const std::string tname);
       StackTrace(const StackTrace&);
       StackTrace();
       std::string               thread_name()  const;
-      std::vector<std::string>  descriptor_frames() const;
+      std::vector<StackFrame>   descriptor_frames() const;
       std::vector<int>          monitor_frames() const;
       void                      addFrame(const StackFrame& frame);
+      void                      clear();
       int size() const;
       const std::string& key() const;
-      bool operator==(const StackTrace&);
+      bool operator==(const StackTrace&) const;
       void operator=(const StackTrace&);
-      bool operator>(const StackTrace&);
-      bool operator<(const StackTrace&);
+      bool operator>(const StackTrace&) const;
+      bool operator<(const StackTrace&) const;
       bool update_monitors(const StackTrace&);      
       
     };
+    
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const StackTrace& ref)
+      {
 
+        out << ref.thread_name() << "<end-thread-name>";
+        for(auto x : ref.monitor_frames()) {
+          out << x << "<end-monitor>";
+        }
+        out  << "<end-monitors>";
+        out << ref.descriptor_frames();
+        return out;
+      }
+
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const std::vector<StackTrace>& ref)
+      {
+        if(ref.size() == 0) return out;
+        
+        for(auto& x : ref) {
+          out << x << StackTrace::TAG_END;
+        }
+        return out;
+      }
+    std::vector<StackTrace>& operator>>(const std::string& line, std::vector<StackTrace>& ref);
+    
   }
 }
 

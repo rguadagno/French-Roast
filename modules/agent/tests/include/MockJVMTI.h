@@ -17,20 +17,24 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef COUTTRANS_H
-#define COUTTRANS_H
-#include <string>
-#include <iostream>
-#include "Transport.h"
+#ifndef MOCKJVMTI_H
+#define MOCKJVMTI_H
+
+#include <vector>
+#include "jvmti.h"
 
 
-namespace frenchroast { namespace agent {
+class MockJVMTI {
+  jvmtiEnv _env;
+  jvmtiInterface_1_ _mymock;
 
-    class CoutTransport : public Transport {
-      
-    public:
-      void out(const std::string& str);
+public:
+  jvmtiEnv* env;
+  static std::vector<unsigned char*> _buffers;
 
-    };
-  }}
+  MockJVMTI();
+  ~MockJVMTI();
+  
+};
+
 #endif

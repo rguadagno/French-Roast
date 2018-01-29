@@ -271,7 +271,7 @@ TEST_CASE ( "method) = opcode:: [simple] load from buffer")
 {
   using namespace frenchroast;
   
-
+  OpCode::load_from_file( std::getenv("OPCODE_FILE"));
   int size;
   BYTE* buf = build_simple_method(size);
   BYTE* excepbuf = build_zero_exceptions();

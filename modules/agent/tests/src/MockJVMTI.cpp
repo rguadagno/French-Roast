@@ -16,32 +16,32 @@
 //    You should have received a copy of the GNU General Public License
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
-#include "FileTransport.h"
+
+#include "MockJVMTI.h"
+
+jvmtiError JNICALL myAllocate(jvmtiEnv* env, jlong size, unsigned char** mem_ptr);
 
 
-namespace frenchroast { namespace agent {
 
-    FileTransport::FileTransport(const std::string& filename)
-    {
-      try {
-        _outfile.exceptions(std::ifstream::failbit);
-        _outfile.open(filename);
-      }
-      catch(std::ifstream::failure&) {
-        if(!_outfile.eof())
-          throw std::ifstream::failure("cannot open file: " + filename);
-      }
-    }  
-
-    void FileTransport::out(const std::string& tag)
-    {
-      _outfile << tag << std::endl;
-    }
-    
-    /*void ReporterFile::close()
-    {
-      _outfile.close();
-      }*/
-
+  MockJVMTI::MockJVMTI()
+  {
+    _mymock.Allocate = &myAllocate;
+    _env.functions = &_mymock;
+    env = &_env;
   }
+  
+  MockJVMTI::~MockJVMTI()
+  {
+    for(auto ptr : _buffers)
+      delete ptr;
+    _buffers.clear();
+  }
+  
+jvmtiError JNICALL myAllocate(jvmtiEnv* env, jlong size, unsigned char** mem_ptr)
+{
+  *mem_ptr = reinterpret_cast<unsigned char*>(new char[size]);
+  MockJVMTI::_buffers.push_back(*mem_ptr);
+  return JVMTI_ERROR_NONE;
 }
+
+std::vector<unsigned char*> MockJVMTI::_buffers;

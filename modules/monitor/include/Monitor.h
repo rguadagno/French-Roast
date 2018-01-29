@@ -22,98 +22,70 @@
 #include <unordered_map>
 #include <algorithm>
 #include <thread>
+#include <sstream>
 #include <boost/lockfree/spsc_queue.hpp>
 #include "MonitorUtil.h"
-#include "Connector.h"
 #include "Listener.h"
 #include "Util.h"
 #include "StackTrace.h"
-#include "MarkerField.h"
 #include "MethodStats.h"
 #include "StackReport.h"
 #include "ClassDetail.h"
 #include "JammedReport.h"
+#include "Signal.h"
+#include "SignalReport.h"
+#include "TimerReport.h"
+#include "Command.h"
 
 namespace frenchroast { namespace monitor {
 
     
-
-    struct time_holder {
-      long      _elapsed;
-      long long _last;
-    };
-
-   
     template
     <typename T>
       class Monitor : public network::Listener {
+      using servicer = void (Monitor<T>::*)(const std::vector<std::string>&);
+      class Executer {
+      public:
+          Executer() : _ptr(&Monitor<T>::service_ignore) {}
+          Executer(servicer ptr) : _ptr(ptr) {}
+          servicer _ptr;
+      };
+
+
 	T&                                                                             _handler;
         network::Connector<>                                                          _conn;
-        std::unordered_map<std::string, time_holder>                                  _timed_signals;
-        std::unordered_map<std::string, int>                                          _signals;
+        std::unordered_map<std::string, TimerReport>                                  _timers;
+        std::unordered_map<std::string, SignalReport>                                 _signals;
         std::unordered_map<std::string, MethodStats>                                  _method_counters;
         std::unordered_map<std::string, JammedReport>                                 _jammedReports;
-        std::unordered_map<std::string, std::unordered_map<std::string, MarkerField>> _markers;
-        std::unordered_map<std::string, std::vector<std::string>>                     _instanceHeaders;
-        std::unordered_map<std::string, std::unordered_map<std::string, StackReport>> _stacks;
         std::string                                                                   _opcodeFile;
         std::unordered_map<std::string, std::string>                                  _clients;
         boost::lockfree::spsc_queue<std::string, boost::lockfree::fixed_sized<true>>  _iq{15000};
-
-       const int IP_PORT     = 0;
+        std::unordered_map<std::string, Executer>                                     _commands;
+        const int IP_PORT     = 0;
        
-       const int HOST_NAME   = 2;
-       const int PID         = 3;
+        const int HOST_NAME   = 2;
+        const int PID         = 3;
         
-	const int MSG_TYPE    = 1;
-	const int MSG         = 2;
-       const int SIGNAL_THREAD_NAME = 3;
+        const int MSG_TYPE    = 1;
+        const int MSG         = 2;
 
-       const int MARKER      = 4;
-       const int PARAMS      = 5;
-       const int STACK       = 6;
-
-	const int TIME        = 2;
-	const int DIRECTION   = 3;
-	const int DESCRIPTOR  = 4;
-	const int THREAD_NAME = 5;
-
-        const int MONITOR         = 2;
-        const int WAITER          = 3;
-        const int OWNER           = 4;
-        
     public:
     Monitor(T& handler, const std::string& opcodeFile) : _handler(handler), _opcodeFile(opcodeFile)
-        { 
-        }
-
-        MarkerField build_marker( std::string str)
         {
-          MarkerField mf{str};
-
-          for(auto& x: frenchroast::split(frenchroast::split(str, ")")[0].substr(1),",")) {
-            mf._arg_items.push_back(x);
-          }
-                  
-          for(auto& x: frenchroast::split(frenchroast::split(str, ")")[1],";")) {
-            if(x.find(":") != std::string::npos) {
-               mf._instance_items.push_back(frenchroast::split(x,":")[1]);
-            }
-          }
-
-          return mf;
-        }
-
-        std::vector<std::string> build_instance_headers(const std::string& subkey)
-        {
-          std::vector<std::string> rv;
-          for(auto& x: frenchroast::split(frenchroast::split(subkey, ")")[1],";")) {
-           if(x.find(":") != std::string::npos) {
-            rv.push_back(frenchroast::split(x,":")[0]);
+          _commands[command::SIGNAL]           = Executer{&Monitor<T>::service_signal};
+          _commands[command::SIGNAL_TIMER]     = Executer{&Monitor<T>::service_timer};
+          _commands[command::TRAFFIC]          = Executer{&Monitor<T>::service_traffic};
+          _commands[command::JAMMED]           = Executer{&Monitor<T>::service_jammed};
+          _commands[command::LOADED]           = Executer{&Monitor<T>::service_loaded};
+          _commands[command::READY]            = Executer{&Monitor<T>::service_ready};
+          _commands[command::CONNECTED]        = Executer{&Monitor<T>::service_connected};
+          _commands[command::UNLOADED]         = Executer{&Monitor<T>::service_unloaded};
+          _commands[command::ACK_PROFILER_ON]  = Executer{&Monitor<T>::service_ack_profiler_on};
+          _commands[command::ACK_PROFILER_OFF] = Executer{&Monitor<T>::service_ack_profiler_off};
+          _commands[command::TRANSMIT_OPCODES] = Executer{&Monitor<T>::service_transmit_opcodes};
+          _commands[command::TRANSMIT_HOOKS]   = Executer{&Monitor<T>::service_transmit_hooks};
            }
-          }
-          return rv;
-        }
 
         void message(const std::string& msg)
         {
@@ -121,103 +93,98 @@ namespace frenchroast { namespace monitor {
           std::string ipport = msg.substr(0,msg.find_first_of("~")+1);
           for(auto& mitem : frenchroast::split(nmsg,"<end>")) {
             while(!_iq.push(ipport + mitem));
-           
-            }
+          }
         }
         
         void mhandler()
         {
           std::string msg;
           while(1) {
-          while(_iq.pop(msg)) {
-            std::vector<std::string> items = frenchroast::split(msg,"~");
-            if (items[MSG_TYPE] == "signaltimer") {
-              if (items[DIRECTION] == "exit") {
-                std::string key = items[DESCRIPTOR] + items[THREAD_NAME];
-                int elapsed = std::stoll(items[TIME]) - _timed_signals[key]._last;
-                _timed_signals[key]._elapsed += elapsed;
-                _handler.signal_timed( translate_descriptor(items[DESCRIPTOR].substr(1)), items[THREAD_NAME] , _timed_signals[key]._elapsed, elapsed);
-              }
-              if (items[DIRECTION] == "enter") {
-                std::string key = items[DESCRIPTOR] + items[THREAD_NAME];
-                _timed_signals[key]._last = std::stoll(items[TIME]);
-              }
-            }
-            if (items[MSG_TYPE] == "signal") {
-              const std::string thread_name  = items[SIGNAL_THREAD_NAME];
-              const std::string key = thread_name + items[MSG];
-              const std::string subkey = items[PARAMS] + items[MARKER];
-                if(_markers.count(key) == 0 || _markers[key].count(subkey) == 0) {
-                _markers[key][subkey] = build_marker(subkey);
-              }
-              else {
-                ++_markers[key][subkey];
-              }
-
-              if(_instanceHeaders.count(key) == 0) {
-                _instanceHeaders[key] = build_instance_headers(subkey);
-              }
-
-              std::vector<std::string> argHeaders;
-              std::string desc = translate_descriptor(items[MSG].substr(1));
-              for(auto& x : frenchroast::split(frenchroast::split(frenchroast::split(desc,")")[0], "(")[1], ",")) {
-                argHeaders.push_back(x);
-              }
-              
-              std::string skey = "";
-              std::vector<std::string> sframes;
-  
-                for(auto& x : frenchroast::split(items[STACK], "%")) {
-                if(x.find("::") != std::string::npos) {
-                  skey.append(x);
-                  sframes.push_back(translate_descriptor(x.substr(1)));
-                }
-              }
-              if(_stacks[thread_name + desc].count(skey) == 0) {
-                _stacks[thread_name + desc][skey] = StackReport(sframes);
-              }
-              else {
-                ++_stacks[thread_name + desc][skey];
-              }
-  
-              _handler.signal(desc , thread_name  , ++_signals[thread_name  + items[MSG]], argHeaders, _instanceHeaders[key], _markers[key][subkey], _stacks[thread_name + desc]);
-
-              }
-
-            if (items[MSG_TYPE] == "traffic") {
-              _handler.traffic( construct_traffic(items[MSG], _method_counters));
-            }
-            if (items[MSG_TYPE] == "jammed") {
-              _handler.jammed( process_jammed(items[MONITOR], items[WAITER], items[OWNER], _jammedReports));
-            }
-
-            if (items[MSG_TYPE] == "loaded") {
-              _handler.class_watch( construct_class_details(items[MSG]));
-            }
-
-            if (items[MSG_TYPE] == "ready") {
-            _clients[items[HOST_NAME] + items[PID]] = items[IP_PORT];
-	    _handler.ready(items[HOST_NAME], items[PID]);
-            }
-          
-            if (items[MSG_TYPE] == "connected") {
-              _handler.connected(items[1], "");
-            }
-          
-            if (items[MSG_TYPE] == "unloaded") {
-              _handler.unloaded(items[2], items[3]);
-            }
-            if(items[MSG_TYPE] == "transmit-opcodes") {
-              transmit_lines(_opcodeFile, items[IP_PORT], _conn);
-            }
-            if(items[MSG_TYPE] == "transmit-hooks") {
-              _handler.request_hooks(items[IP_PORT]);
-            }
+            while(_iq.pop(msg)) {
+              std::vector<std::string> items = frenchroast::split(msg,"~");
+              (this->*_commands[items[MSG_TYPE]]._ptr)(items);
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            }
+          }
         }
 
+        void service_timer(const std::vector<std::string>& parts)
+        {
+          TimerReport rpt{};
+          parts[MSG] >> rpt;
+
+          if (rpt.direction() == TimerReport::Direction::Exit) {
+            _handler.signal_timed(_timers[rpt.key()] += rpt);
+          }
+          if (rpt.direction() == TimerReport::Direction::Enter) {
+            _timers[rpt.key()] = rpt;
+          }
+        }
+        
+        void service_signal(const std::vector<std::string>& parts)
+        {
+          Signal sig{};
+          parts[MSG] >> sig;
+          _handler.signal(_signals[sig.key()] += sig);
+        }
+
+        void service_traffic(const std::vector<std::string>& parts)
+        {
+          _handler.traffic( construct_traffic(parts[MSG], _method_counters));
+        }
+
+        void service_jammed(const std::vector<std::string>& parts)
+        {
+          _handler.jammed( _jammedReports[parts[MSG]] += (parts[MSG] >> JammedReport{}) );
+        }
+        
+        void service_loaded(const std::vector<std::string>& parts)
+        {
+          std::vector<ClassDetail> details;
+          _handler.class_watch( parts[MSG] >> details);
+        }
+
+        void service_ready(const std::vector<std::string>& parts)
+        {
+          _clients[parts[HOST_NAME] + parts[PID]] = parts[IP_PORT];
+          _handler.ready(parts[HOST_NAME], parts[PID]);
+        }
+
+        void service_connected(const std::vector<std::string>& parts)
+        {
+          _handler.connected(parts[1], "");
+        }
+        
+        void service_unloaded(const std::vector<std::string>& parts)
+        {
+          _handler.unloaded(parts[HOST_NAME], parts[PID]);
+        }
+        
+        void service_ack_profiler_off(const std::vector<std::string>& parts)
+        {
+          _handler.ack_profiler_off(parts[HOST_NAME], parts[PID]);
+        }
+
+        void service_ack_profiler_on(const std::vector<std::string>& parts)
+        {
+          _handler.ack_profiler_on(parts[HOST_NAME], parts[PID]);
+        }
+        
+        void service_transmit_opcodes(const std::vector<std::string>& parts)
+        {
+          transmit_lines(_opcodeFile, parts[IP_PORT], _conn);
+        }
+
+        void service_transmit_hooks(const std::vector<std::string>& parts)
+        {
+          _handler.request_hooks(parts[IP_PORT]);
+        }
+
+        void service_ignore(const std::vector<std::string>&)
+        {
+          
+        }
+        
         void send_hooks(const std::vector<std::string>& hooks, const std::string& ipport)
         {
           transmit_lines(hooks, ipport, _conn);
@@ -239,7 +206,6 @@ namespace frenchroast { namespace monitor {
 
         void turn_off_profiler(const std::string& hostname_pid)
         {
-          std::cout << "turnoff: " << hostname_pid << std::endl;
           _conn.send_message(_clients[hostname_pid], "turn_off_profiler");
         }
 
@@ -272,12 +238,10 @@ namespace frenchroast { namespace monitor {
 
         void reset()
         {
-          _timed_signals.clear();
+          _timers.clear();
           _signals.clear();
           _method_counters.clear();
           _jammedReports.clear();
-          _markers.clear();
-          _stacks.clear();
         }
         
     };

@@ -17,18 +17,27 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef TRANS_H
-#define TRANS_H
-#include <string>
+#include "catch.hpp"
+#include "AgentSignalReporting.h"
+#include "MockJNI.h"
+
+#include <iostream>
 
 
-namespace frenchroast { namespace agent {
+TEST_CASE("get_value")
+{
 
-    class Transport {
-      
-    public:
-      virtual void out(const std::string& str) = 0;
-      virtual ~Transport() {}
-    };
-  }}
-#endif
+  
+  FieldInfo field_info;
+  jobject obj;
+  MockJNI jnimock;
+
+  field_info._type = "I";
+  field_info._name = "_total";
+  REQUIRE(get_value(jnimock.env, obj, field_info) == "_total:100;");
+  field_info._type = "J";
+  REQUIRE(get_value(jnimock.env, obj, field_info) == "_total:200;");
+  field_info._type = "junk";
+  REQUIRE(get_value(jnimock.env, obj, field_info) == "none for type = junk");  
+}
+

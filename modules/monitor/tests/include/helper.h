@@ -16,20 +16,13 @@
 //    You should have received a copy of the GNU General Public License
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
-#include <vector>
-#include "ServerTransport.h"
 
-namespace frenchroast { namespace agent {
+#include "StackFrame.h"
+#include "StackTrace.h"
 
-
-    ServerTransport::ServerTransport(network::Connector<>& conn) : _conn(conn)
-    {
-    }
+namespace frenchroast { namespace testing {
     
-    void ServerTransport::out(const std::string& tag)
-    {
-      _conn.send_message(tag);
-    }
+    frenchroast::monitor::StackTrace build_trace(const std::vector<std::string>& lines);
 
   }
 }

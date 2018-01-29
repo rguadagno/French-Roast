@@ -60,7 +60,6 @@ namespace frenchroast {
 
 void FClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& details)
 {
-
   for(auto& citem : details) {
     if(_classes.count(citem.name()) == 1) {
       ++_loadCount[citem.name()];
@@ -95,7 +94,7 @@ void FClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& 
     _ind[name] = 1;
     for(auto& mitem : _methods[name]) {
       _data->insertRow(++row);
-      _data->setItem(row, 0, createItem("    " + mitem, Qt::AlignLeft|Qt::AlignVCenter));
+      _data->setItem(row, 0, createItem("    " + mitem.method_name(), Qt::AlignLeft|Qt::AlignVCenter));
     }
   }
 

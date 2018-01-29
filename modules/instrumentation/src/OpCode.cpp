@@ -70,7 +70,7 @@ namespace frenchroast {
     OpCode& OpCode::operator[](BYTE op)
     {
       if(_op_codes.count(op) == 0) {
-        std::cout << "MISSING OPCODE: " << (int)op << std::endl;op = 0;
+        std::cout << "MISSING OPCODE: " << (int)op << std::endl;
         exit(0);
       }
       return _op_codes[op];
@@ -81,25 +81,30 @@ namespace frenchroast {
       return _isDynamic;
     }
 
-
-   void OpCode::load_from_file(const std::string& fileName)
+   void OpCode::load_from_file(const char* fileName)
    {
-    try {
-        std::ifstream in;
-        in.open(fileName);
-        std::string line;
-        while (getline(in,line)) {
-          load(line);
-        }
-        in.close();
-      }
-    catch(std::ifstream::failure& ) {
-        throw std::ifstream::failure("cannot open file: " + fileName);
-      }
+     if(fileName == nullptr) throw std::invalid_argument("cannot open opcode file with nullptr for name");
+     load_from_file(std::string(fileName));
    }
   
+   void OpCode::load_from_file(const std::string& fileName)
+   {
+     std::ifstream in{fileName};
+     if(!in) throw std::ifstream::failure("cannot open file: " + fileName);
+     std::string line;
+     while (getline(in,line)) {
+       load(line);
+     }
+   }
+
+  const std::regex  OpCode::_lineRegex{"[a-z0-9_]+[ ]*<[0-9]+>[ ]*[0-9]*[ ]*(?:[*]){0,1}[ ]*(?:<branch>|<raw>){0,}[ ]*"};
     void OpCode::load(std::string line)
     {
+      std::smatch sm;
+      std::regex_match(line,sm,_lineRegex);
+      if(sm.size() != 1) {
+        throw std::invalid_argument("bad opcode line: " + line);
+      }
       bool isDynamic = false;
       std::bitset<4> attributes{None};
       size_t pos;

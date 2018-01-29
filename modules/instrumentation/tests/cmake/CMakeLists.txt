@@ -25,7 +25,13 @@ endif()
   )
   
 FILE(GLOB huh
-../src/*.cpp
+../src/Test_Main.cpp
+../src/Test_Util.cpp
+../src/Test.cpp
+../src/Test_OpCode.cpp
+../src/Test_Instruction.cpp
+../src/Test_Method.cpp
+../src/testing_utils.cpp
 ../../src/*.cpp)
 
 

@@ -20,6 +20,7 @@
 #include <vector>
 #include <iostream>
 #include "StackTrace.h"
+#include "Util.h"
 
 namespace frenchroast { namespace monitor {
 
@@ -53,13 +54,13 @@ namespace frenchroast { namespace monitor {
       return static_cast<int>(_frames.size());
     }
 
-    bool StackTrace::operator==(const StackTrace& ref)
+    bool StackTrace::operator==(const StackTrace& ref) const
     {
       return _key == ref._key;
     }
 
 
-    bool StackTrace::operator>(const StackTrace& ref)
+    bool StackTrace::operator>(const StackTrace& ref) const
     {
       if(_key == ref._key) return false;
       if(_frames.size() < ref._frames.size()) return false;
@@ -70,7 +71,7 @@ namespace frenchroast { namespace monitor {
       return true;
     }
 
-    bool StackTrace::operator<(const StackTrace& ref)
+    bool StackTrace::operator<(const StackTrace& ref) const
     {
       return const_cast<StackTrace&>(ref) > *this;
     }
@@ -104,8 +105,16 @@ namespace frenchroast { namespace monitor {
       return rv;
     }
 
-
-    std::vector<std::string> StackTrace::descriptor_frames() const
+    void StackTrace::clear()
+    {
+      _key = "";
+      _monitorkey = "";
+      _thread_name = "";
+      _frames.clear();
+      _monitors.clear();
+    }
+    
+    std::vector<StackFrame> StackTrace::descriptor_frames() const
     {
       return _frames;
     }
@@ -120,7 +129,7 @@ namespace frenchroast { namespace monitor {
       _key += frame.get_name();
       _monitorkey += frame.get_monitor_count() > 0 ? "X" : "0";
       
-      _frames.push_back(frame.get_name());
+      _frames.push_back(frame);
       _monitors.push_back(frame.get_monitor_count());
     }
 
@@ -133,7 +142,40 @@ namespace frenchroast { namespace monitor {
     {
       return _key;
     }
+
+
+    StackTrace& operator>>(const std::string& rep, StackTrace& ref)
+    {
+      ref.clear();
+      std::vector<std::string> parts = frenchroast::split(rep,"<end-thread-name>");
+      ref._thread_name = parts[0];
+      parts = frenchroast::split(parts[1], "<end-monitors>");
+      for(auto& mon : frenchroast::split(parts[0], "<end-monitor>")) {
+        ref._monitors.push_back(atoi(mon.c_str()));
+      }
+      for(auto& framestr : frenchroast::split(parts[1],"<end-frame>")) {
+        if(framestr == "") continue;
+        StackFrame frame{};
+        ref.addFrame(framestr >> frame);
+      }
+      
+      return ref;
+    }
+
+    std::vector<StackTrace>& operator>>(const std::string& line, std::vector<StackTrace>& ref)
+    {
+      for(auto& cd : frenchroast::split(line, StackTrace::TAG_END)) {
+        if(cd != "") {
+          StackTrace item;
+          cd >> item;
+          ref.push_back(item);
+        }
+      }
+      return ref;
+    }
+
     
+    const std::string StackTrace::TAG_END = "<end-trace>";    
   }
 }
 

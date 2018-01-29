@@ -24,14 +24,12 @@
 #include "MarkerField.h"
 #include "Connector.h"
 #include "MethodStats.h"
-#include "ClassDetail.h"
 #include "StackFrame.h"
 #include "JammedReport.h"
+#include "Descriptor.h"
 
 namespace frenchroast { namespace monitor {
 
-    std::string translate_descriptor(const std::string& name, int* = nullptr);
-    
             std::unordered_map<char, std::string> _type_map { {'I',"int"},
                                                              {'Z',"bool"},
                                                              {'V',"void"},
@@ -43,14 +41,12 @@ namespace frenchroast { namespace monitor {
                                                              {'S',"short"}
                 
                                                            };
+
     
-
-
-
     std::vector<std::string> parse_type_tokens(const std::string& tstr)
     {
       std::vector<std::string> rv;
-      int pos = 0;
+      std::size_t pos = 0;
 
       while(pos < tstr.length() ) {
         std::string suffix = "";
@@ -92,29 +88,6 @@ namespace frenchroast { namespace monitor {
       return parse_type_tokens(name)[0];
     }
     
-    std::string translate_descriptor(const std::string& name, int* moncount)
-    {
-      std::string rv = name;
-      replace(rv,'/','.');
-      std::string classname;
-      if(moncount != nullptr) {
-        classname = split(rv,"::")[0];
-        *moncount = atoi(  split(classname, "!")[0].c_str());
-        classname = split(classname, "!")[1];
-      }
-      else {
-         classname = split(rv,"::")[0];
-      }
-      
-      replace(classname,';');
-      std::string methodname = split(split(rv,"::")[1],":")[0];
-      std::string pstr = split(split(rv,"(")[1],")")[0];
-      std::string rvstr = translate_return_type(split(split(rv,")")[1],":")[0]);
-      std::string parms = translate_param_types(pstr);
-      rv = classname + "::" + methodname + ":(" + parms + "):" + rvstr;
-      return rv;
-    }
-
     std::vector<StackTrace> construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters)
     {
       std::vector<StackTrace> rv;
@@ -126,9 +99,9 @@ namespace frenchroast { namespace monitor {
         bool first=true;
         for(int idx = static_cast<int>(fitems.size())-1;idx >= 0; idx--) {
           if(fitems[idx].find("thook") == std::string::npos ) {
-            std::string descriptor;
-            int moncount=0;
-            descriptor = translate_descriptor(fitems[idx], &moncount);
+            Descriptor dsc{frenchroast::split(fitems[idx], "!")[1]};
+            std::string descriptor = dsc.full_name();
+            int moncount = atoi(frenchroast::split(fitems[idx], "!")[0].c_str());
             if(fitems[idx].find("java") == std::string::npos && fitems[idx].find("sun") == std::string::npos)  {
               if(counters.count(descriptor) == 0 ) {
                 counters[descriptor] = MethodStats(descriptor);
@@ -139,44 +112,13 @@ namespace frenchroast { namespace monitor {
                 first = false;
               }
             }
-            st.addFrame(StackFrame{descriptor,moncount});
+            st.addFrame(StackFrame{dsc,moncount});
           }
         }
         rv.push_back(st);
       }
       return rv;
     }
-
-
-
-    std::string translate_method(const std::string& pname)
-    {
-      std::string name = pname;
-      replace(name,'/','.');
-      std::string methodname = split(name, ":")[0];
-      std::string rvstr = translate_return_type(split(split(name,")")[1],":")[0]);
-      std::string parms = translate_param_types(split(split(name,"(")[1],")")[0]);
-      return methodname + ":(" + parms + "):" + rvstr;
-    }
-    
-    std::vector<ClassDetail> construct_class_details(const std::string& msg)
-    {
-      std::vector<ClassDetail> rv;
-      for(auto& citem : split(msg, "]^")) {
-        if(citem == "") break;
-        std::string name = split(citem, "^[")[0];
-        replace(name, "/", ".");
-        std::vector<std::string> methods;
-        for(auto& mitem : split(split(citem,"^[")[1],"%")) {
-          if(mitem == "") break;
-          methods.push_back(translate_method(mitem));
-        }
-        rv.emplace_back(name, methods);
-      }
-      
-      return rv;
-    }
-    
 
     void transmit_lines(const std::string& fileName, const std::string& ipport, frenchroast::network::Connector<>& conn)
     {
@@ -203,35 +145,5 @@ namespace frenchroast { namespace monitor {
       }
       conn.send_message(ipport, "<end>");
     }
-
-
-
-    StackTrace build_trace(const std::string& str)
-    {
-      StackTrace rv{};
-      std::vector<std::string> funcs = split(str, "#");
-      for(int idx = static_cast<int>(funcs.size())-2;idx >= 0; idx--) {
-        rv.addFrame(StackFrame{translate_descriptor(funcs[idx])});
-      }
-      return rv;
-    }
-    
-    JammedReport& process_jammed(const std::string& monitor, const std::string& waiter, const std::string& owner, std::unordered_map<std::string, JammedReport>& reports)
-    {
-      if(reports.count(waiter + owner) == 0) {
-        reports[waiter + owner] = JammedReport{build_trace(waiter), build_trace(owner)};
-      }
-      std::string mon = monitor;
-      if(mon != "") {
-        mon = mon.substr(1);
-        replace(mon,'/','.');
-        replace(mon,';');
-      }
-      return reports[waiter + owner].add_monitor(mon);
-    }
-
-
-
-
-    
-  }}
+  }
+}

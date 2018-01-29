@@ -9,6 +9,7 @@ isEmpty(BOOST_ROOT) {
 !win32 {
  DEFINES += CONNECTOR_UNIX
  QMAKE_CXXFLAGS += -std=c++11
+ QMAKE_CXXFLAGS += -Wno-expansion-to-defined
  }
  win32 {
  LIBS +=  ws2_32.lib
@@ -26,6 +27,7 @@ INCLUDEPATH += \
 ../../agent/include \
 ../../instrumentation/include \
 ../../signal/include \
+../../session/include \
 ../../monitor/include
 
 INCLUDEPATH += $(BOOST_ROOT)
@@ -43,7 +45,15 @@ SOURCES += \
 ../../monitor/src/MethodStats.cpp \
 ../../monitor/src/StackReport.cpp \
 ../../monitor/src/ClassDetail.cpp \
+../../monitor/src/Descriptor.cpp \
 ../../monitor/src/JammedReport.cpp \
+../../monitor/src/SignalParams.cpp \
+../../monitor/src/SignalMarkers.cpp \
+../../monitor/src/Signal.cpp \
+../../monitor/src/SignalReport.cpp \
+../../monitor/src/TimerReport.cpp \
+../../session/src/PersistorFile.cpp \
+../../session/src/Session.cpp \
 ../../network/src/FRSocket.cpp \
 ../../monitor/src/StackFrame.cpp
 

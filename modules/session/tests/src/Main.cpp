@@ -14,24 +14,8 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
+//    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef FILETRANS_H
-#define FILETRANS_H
-
-#include <string>
-#include <fstream>
-#include "Transport.h"
-
-namespace frenchroast { namespace agent {
-
-    class FileTransport : public Transport {
-      std::ofstream _outfile;
-    public:
-      FileTransport(const std::string& filename);
-      void out(const std::string& str);
-
-    };
-  }}
-#endif
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"

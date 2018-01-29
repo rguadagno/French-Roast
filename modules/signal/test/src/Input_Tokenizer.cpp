@@ -78,9 +78,9 @@ TEST_CASE("load good descriptor <ENTER> and 2 fields")
   REQUIRE( sigs["mypackage/MyClass"][0].artifacts());
   REQUIRE( sigs["mypackage/MyClass"][0].all() == false);
   REQUIRE( (sigs["mypackage/MyClass"][0].flags() &= Signals::METHOD_ENTER) == true);
-  REQUIRE( sigs.get_marker_fields("Lmypackage/MyClass;", "funcA:(I)V").size() == 2);
-  REQUIRE( sigs.get_marker_fields("Lmypackage/MyClass;", "funcA:(I)V")[0] == "total");
-  REQUIRE( sigs.get_marker_fields("Lmypackage/MyClass;", "funcA:(I)V")[1] == "pickle");
+  REQUIRE( sigs.get_marker_fields("mypackage.MyClass", "funcA:(int):void").size() == 2);
+  REQUIRE( sigs.get_marker_fields("mypackage.MyClass", "funcA:(int):void")[0] == "total");
+  REQUIRE( sigs.get_marker_fields("mypackage.MyClass", "funcA:(int):void")[1] == "pickle");
   
 }
 
@@ -146,5 +146,24 @@ TEST_CASE("load good descriptor <ENTER> , turn off artifacts <ARTIFACTS:OFF>")
   REQUIRE( sigs["mypackage/MyClass"][0].artifacts() == false);
   REQUIRE( sigs["mypackage/MyClass"][0].all() == false);
   REQUIRE( (sigs["mypackage/MyClass"][0].flags() &= Signals::METHOD_ENTER) == true);
+}
+
+
+TEST_CASE("Signals: is_signal_class")
+{
+  frenchroast::signal::Signals sigs;
+  sigs.load("mypackage.MyClass::funcA:(int):void <ENTER> <ARTIFACTS:OFF>");
+  REQUIRE(sigs.is_signal_class("mypackage/MyClass"));
+}
+
+
+TEST_CASE("Signals: is_monitor_heap_class")
+{
+  frenchroast::signal::Signals sigs;
+  sigs.load("mypackage.MyClass::funcA:(int):void <ENTER> <ARTIFACTS:OFF>");
+  REQUIRE(!sigs.is_monitor_heap_class("mypackage/MyClass"));
+
+  sigs.load("com.xtech.MyClass::<MONITOR:HEAP>");
+  REQUIRE(sigs.is_monitor_heap_class("com/xtech/MyClass"));
 }
 

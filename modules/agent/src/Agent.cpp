@@ -31,18 +31,25 @@
 #include <boost/lockfree/queue.hpp>
 #include "jvmti.h"
 #include "Agent.h"
+#include "AgentHooks.h"
 #include "fr_signals.h"
 #include "FrenchRoast.h"
 #include "OpCode.h"
 #include "Reporter.h"
 #include "Config.h"
 #include "CommandListener.h"
-#include "CoutTransport.h"
-#include "FileTransport.h"
-#include "ServerTransport.h"
 #include "Listener.h"
 #include "AgentUtil.h"
 #include "ClassDetail.h"
+#include "StackTrace.h"
+#include "JammedReport.h"
+#include "Signal.h"
+#include "StackTrace.h"
+#include "SignalParams.h"
+#include "SignalMarkers.h"
+#include "AgentSignalReporting.h"
+#include "TimerReport.h"
+#include "Command.h"
 
 std::mutex _traffic_mutex;
 std::mutex _loading_mutex;
@@ -50,16 +57,9 @@ std::mutex _loading_data_mutex;
 std::mutex _profiler_mutex;
 std::mutex _all_loaded_mutex;
 
-std::mutex _cache_mutex;
+
 boost::lockfree::queue<std::string*> _signalQueue{10000};
 
-class ClassPtr {
-public:
-  ClassPtr(jint size) : _size(size) {}
-  ClassPtr() {}
-  unsigned char* _class_data;
-   jint           _size;
-};
 
 std::unordered_set<std::string>           _all_loadedClasses;
 std::unordered_map<std::string, ClassPtr> _origClass;
@@ -161,30 +161,14 @@ struct jni_cache {
 
 };
 
-class FieldInfo {
-public:
-  std::string _name{};
-  std::string _type{};
-  jfieldID    _id;
-  
-  FieldInfo(std::string name, std::string typ, jfieldID id) : _name(name), _type(typ), _id(id)
-  {
-  }
-  
-  FieldInfo()
-  {
-  }
-  
-};
 
 std::vector<frenchroast::monitor::ClassDetail>                  _loadedClasses;
-std::unordered_map<std::string, FieldInfo> _reportingFields;
 frenchroast::OpCode                        _opcodes;
 frenchroast::FrenchRoast                   _fr{_opcodes};
 frenchroast::signal::Signals               _hooks;
 std::unordered_map<std::string, bool>      _artifacts;
 frenchroast::agent::Config                 _config;
-frenchroast::agent::Reporter               _rptr;
+frenchroast::agent::Reporter               _rptr{_conn};
 CommandBridge                              _commandListener;
 
 jvmtiEnv* genv;
@@ -223,173 +207,21 @@ JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass obj
       std::string classinfo{sig};
 
       std::string* str = new std::string{};
-      str->append("signaltimer~");
-      str->append(std::to_string(stime));
-      str->append("~");
-      str->append(std::string(ptr->GetStringUTFChars(tag,0)));
-      str->append("~");
-      str->append(classinfo);
-      str->append("::");
-      str->append(methodNameStr);
-      str->append(":");
-      str->append(sigStr);
-      str->append("~");
-      str->append(std::string(ptr->GetStringUTFChars(tname,0)));
+      frenchroast::monitor::TimerReport rpt{std::string(ptr->GetStringUTFChars(tname,0)),
+                                            {classinfo + "::" + methodNameStr + ":" + sigStr},
+                                            long(stime),
+                                            std::string(ptr->GetStringUTFChars(tag,0))};
+
+      std::stringstream ss;
+      ss << frenchroast::monitor::command::SIGNAL_TIMER + "~" << rpt;
+      *str = ss.str();
       _signalQueue.push(str);
-
     }
   }
 }
-
-
-std::string get_value(JNIEnv* ptr, jobject obj, FieldInfo& field)
-{
-  if(field._type == "I") return field._name + ":" + std::to_string(ptr->GetIntField(obj, field._id)) + ";";
-  if(field._type == "J") return field._name + ":" + std::to_string(ptr->GetLongField(obj, field._id)) + ";";
-  if(field._type == "Ljava/lang/String;") return field._name + ":" +  ptr->GetStringUTFChars(jstring(ptr->GetObjectField(obj, field._id)),0);
-
-  return "none for type = " + field._type;
-}
-
-
-void populate_class_fields_info(char* classDescriptor, jclass theclass, std::unordered_map<std::string, FieldInfo>& gfieldinfo)
-{
-
-  static std::unordered_map<void*, int> _cache;
-  
-  jint fieldcount=0;
-  jfieldID* idPtr;
-  genv->GetClassFields(theclass, &fieldcount, &idPtr);
-
-  char* fieldname;
-  char* sigptr;
-  char* genericptr;
-
-   _cache_mutex.lock();
-   if(_cache.find(idPtr) != _cache.end()) {
-     _cache_mutex.unlock();
-  return;
-  }
-  for(int idx = 0; idx < fieldcount; idx++) {
-    
-    genv->GetFieldName(theclass,  *(idPtr + idx), &fieldname, &sigptr, &genericptr);
-    std::string desc = classDescriptor;
-    desc.append(">");
-    desc.append(fieldname);
-    gfieldinfo[desc] = FieldInfo{fieldname, sigptr, *(idPtr + idx)};
-    _cache[(idPtr + idx)] = 1;
-  }
-  _cache_mutex.unlock();
-}
-
-
-
-
-class DescriptorVO {
-public:
-  char* _classSignature;
-  char* _methodName;
-  char* _methodSignature;
-  DescriptorVO(char* cSig, char* mname, char* mSig) : _classSignature(cSig), _methodName(mname), _methodSignature(mSig)
-  {
-  }
-
-  std::string descriptor() const
-  {
-    std::string rv = _classSignature;
-    rv.append("::");
-    rv.append(_methodName);
-    rv.append(":");
-    rv.append(_methodSignature);
-    return rv;
-  }
-};
-
-
-
-
-void populate_stack( JNIEnv * jni_env, jvmtiFrameInfo* frames, int count, std::vector<DescriptorVO>& rv,
-                     std::unordered_map<std::string, bool>& artifacts )
-{
-  void* cacheid;
-  char *methodName;
-  char *sig;
-  char *generic;
-  char* className;
-  jclass theclass;
-
-  rv.reserve(count);
-
-  for(int idx = 1; idx < count; idx++) {
-    ++frames;
-    if(!ErrorHandler::check_jvmti_error(genv->GetMethodName(frames->method, &methodName,&sig,&generic), "GetMethodName")) continue;
-    if(!ErrorHandler::check_jvmti_error(genv->Deallocate((unsigned char *)generic ), "Deallocate")) continue;
-    if(!ErrorHandler::check_jvmti_error(genv->GetMethodDeclaringClass(frames->method, &theclass), "GetMethodDeclaringClass")) continue;
-    if(!get_class_name_fast(genv, theclass, &className)) continue;
-    jni_env->DeleteLocalRef(theclass);
-    rv.emplace_back(className, methodName, sig);
-    if(idx == 1 && !artifacts[rv[0].descriptor()]) {
-      return;
-    }
-  }
-}
-
-
-void populate_artifacts(JNIEnv * ptr,   jvmtiFrameInfo* frames, jobject& obj, std::string& params, std::string& fieldValues, std::vector<DescriptorVO>& stack, jthread& aThread)
-{
-      int slot = 0;
-    jstring jsvalue;
-      for(auto& argtype : typeTokenizer(stack[0]._methodSignature)) {
-        ++slot;
-        switch(argtype) {
-        case INT_TYPE:
-          jint ivalue;
-          if(!ErrorHandler::check_jvmti_error(genv->GetLocalInt(aThread, 1,slot, &ivalue), "GetLocalInt")) return;
-          params.append(std::to_string(ivalue) + ",");
-
-          break;
-        case STRING_TYPE:
-          jobject ovalue;
-          if(!ErrorHandler::check_jvmti_error(genv->GetLocalObject(aThread, 1,slot, &ovalue), "GetLocalObject")) return;
-          jsvalue = jstring(ovalue);
-          params.append(  std::string(ptr->GetStringUTFChars(jsvalue,0)) + ",");
-          ptr->DeleteLocalRef(ovalue);
-          break;
-        case ARRAY_TYPE:
-          params.append( "[],");
-          break;
-        }
-      }
-    
-      if(params.length() > 1) {
-        params.erase(params.length() -1 ,1);
-      }
-    
-      
-      if(_hooks.get_marker_fields(stack[0]._classSignature, std::string{stack[0]._methodName} + ":" + stack[0]._methodSignature).size() > 0) {
-        jclass theclass;
-        if(!ErrorHandler::check_jvmti_error(genv->GetMethodDeclaringClass(frames[1].method, &theclass), "GetMethodDeclaringClass")) return;
-       
-        std::string classStr = std::string{stack[0]._classSignature};
-        std::string key;
-
-        for(auto& fieldname : _hooks.get_marker_fields(stack[0]._classSignature, std::string{stack[0]._methodName} + ":" + stack[0]._methodSignature)) {
-          key = classStr + ">" + fieldname;
-          if(_reportingFields.find(key) == _reportingFields.end()) {
-            populate_class_fields_info(stack[0]._classSignature, theclass, _reportingFields);          
-          }
-          fieldValues.append(get_value(ptr, obj, _reportingFields[ key]));       
-        }
-        
-        ptr->DeleteLocalRef(theclass);
-      }
-
-}
-
 
 JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass, jobject obj)
 {
-  
   jvmtiFrameInfo frames[10];
   jint count;
   jthread aThread;
@@ -397,46 +229,28 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
   memset(frames, 0, sizeof(frames));         
   if(!ErrorHandler::check_jvmti_error(genv->GetCurrentThread(&aThread),"GetCurrentThread")) return;
   std::string tname;
-  if(!get_thread_name(ptr, genv, aThread, tname)) return;; 
+  if(!get_thread_name(ptr, genv, aThread, tname)) return;;
+  frenchroast::monitor::StackTrace trace{tname};
   if(!ErrorHandler::check_jvmti_error(genv->GetStackTrace(aThread, 0, sizeof(frames), frames, &count),"GetStackTrace")) return;
   if (count >= 1) {
-    std::vector<DescriptorVO>  stack;
-    populate_stack(ptr, frames, count, stack, _artifacts );
+    populate_stack(ptr, genv, frames, count, trace, _artifacts );
 
-    std::string params = "(";
     std::string fieldValues = "";
-    if(_artifacts[stack[0].descriptor()]) {
-      populate_artifacts(ptr, frames, obj, params, fieldValues, stack, aThread);
+
+    std::vector<std::string> params;
+    std::vector<std::string> markers;
+    if(_artifacts[trace.descriptor_frames()[0].get_name()]) {
+      populate_artifacts(ptr, genv, frames, obj, params, markers, trace, aThread);
     }
-
-    params.append(")");
-    //----------------------------------------------------------------    
-
-
-    //----------------------------------------------------------------          
-      std::string stackstr = "";
-      std::string* firstStr = new std::string{"signal~"};
-      firstStr->append(stack[0].descriptor());
-
-      
-      for(auto& x : stack) {
-         stackstr.append(x.descriptor());
-         stackstr.append("%");
-         genv->Deallocate((unsigned char*)x._methodName);
-         genv->Deallocate((unsigned char*)x._methodSignature);
-         genv->Deallocate((unsigned char*)x._classSignature);
-      }
-      
-      firstStr->append("~");
-      firstStr->append(tname);
-      firstStr->append("~");
-      firstStr->append(fieldValues);
-      firstStr->append("~");
-      firstStr->append(params);
-      firstStr->append("~");
-      firstStr->append(stackstr);
-
-      _signalQueue.push(firstStr);
+    frenchroast::monitor::StackReport sig_rpt{trace};
+    frenchroast::monitor::SignalParams sig_params{params};
+    frenchroast::monitor::SignalMarkers sig_markers{markers};
+    frenchroast::monitor::Signal sig{sig_rpt,sig_params,sig_markers};
+    std::stringstream ss;
+    ss << frenchroast::monitor::command::SIGNAL + "~" << sig;
+    std::string* str = new std::string;
+    *str = ss.str();
+    _signalQueue.push(str);
   }
 }
 
@@ -477,6 +291,8 @@ bool profiler_predicate()
 
 void reload_monitor() 
 {
+  using namespace frenchroast::network;
+  using namespace frenchroast::monitor;
   jvmtiEnv* env;
   g_java_vm->AttachCurrentThread((void**)&env,(void*)NULL);
 
@@ -507,6 +323,15 @@ void reload_monitor()
     }
     _all_loaded_mutex.unlock();
     genv->RetransformClasses(total, tclasses);
+    std::string* pstr;
+    std::string details = Connector<>::get_hostname() + "~" + std::to_string(Connector<>::get_pid());
+    if(profiler_predicate()) {
+      pstr = new std::string{command::ACK_PROFILER_ON + "~" + details};
+    }
+    else {
+      pstr = new std::string{command::ACK_PROFILER_OFF + "~" + details};
+    }
+    _signalQueue.push(pstr);
     _commandListener._profilerCond.wait(lck);
 
   }
@@ -522,10 +347,10 @@ bool ok_to_track(const std::string& name)
 void track_class(const std::string& name)
 {
 
-  std::vector<std::string> descriptors;
+  std::vector<frenchroast::monitor::Descriptor> descriptors;
   for(auto methdesc : _fr.get_method_descriptors()) {
     if(methdesc.find("main") == std::string::npos ) {
-      descriptors.push_back(methdesc);
+      descriptors.emplace_back(methdesc);
     }
   }
   _loading_data_mutex.lock();
@@ -534,52 +359,6 @@ void track_class(const std::string& name)
 }
 
 
-
-void remove_hooks(const std::string& sname, jvmtiEnv *env,jint*& new_class_data_len, unsigned char** new_class_data)
-{
-  jvmtiError  err =    env->Allocate(_origClass[sname]._size, new_class_data);
-  *new_class_data_len = _origClass[sname]._size;
-  memcpy(*new_class_data, _origClass[sname]._class_data, _origClass[sname]._size);
-}
-
-
-
-
-void add_hooks(const std::string& sname, jvmtiEnv *env,jint*& new_class_data_len, unsigned char** new_class_data)
-{
-  for (auto& x : _hooks[sname]) {
-    _artifacts["L" + sname + ";::" + x.method_name()] = x.artifacts();
-    if (x.line_number() > 0) {
-      _fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
-    }
-    else {
-      if ((x.flags() & frenchroast::FrenchRoast::METHOD_TIMER) == frenchroast::FrenchRoast::METHOD_TIMER) {
-        _fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
-      }
-      else {
-        if(x.all()) {
-          for(auto methdesc : _fr.get_method_descriptors()) {
-            if(methdesc.find("main") == std::string::npos         ) {
-              if( methdesc.find("<init") == std::string::npos ) {
-                _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
-              }
-              else {
-                  _fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", frenchroast::FrenchRoast::METHOD_EXIT);
-              }
-            }
-          }
-        }
-        else {
-          _fr.add_method_call(x.method_name(), "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
-        }
-      }
-    }
-    jint size = _fr.size_in_bytes();
-    jvmtiError  err =    env->Allocate(size,new_class_data);
-    *new_class_data_len = size;
-    _fr.load_to_buffer(*new_class_data);
-  }
-}
 
 
 void JNICALL
@@ -596,61 +375,50 @@ void JNICALL
      unsigned char** new_class_data) {
   
   std::string sname{name};
-  if (sname == "java/lang/Package") {
-    _fr.load_from_buffer(class_data);
-    
-    _fr.add_name_to_pool("thook");
-    _fr.add_name_to_pool("(Ljava/lang/Object;)V");
-    _fr.add_native_method("thook", "(Ljava/lang/Object;)V");
-    
-    _fr.add_name_to_pool("timerhook");
-    _fr.add_name_to_pool("(JLjava/lang/String;Ljava/lang/String;)V");
-    _fr.add_native_method("timerhook", "(JLjava/lang/String;Ljava/lang/String;)V");
 
-    jint size = _fr.size_in_bytes();
-    jvmtiError  err =    env->Allocate(size,new_class_data);
-    *new_class_data_len = size;
-    _fr.load_to_buffer(*new_class_data);
+  if (sname == "java/lang/Package") {
+    add_thook_to_package(_fr, class_data, env, new_class_data_len, new_class_data);
     return;
   }
 
-      bool loaded = false;
-      if(profiler_predicate() && ok_to_track(sname)) { // for now this means when not profiling we miss classes ok  for now
+  bool loaded = false;
+  if(profiler_predicate() && ok_to_track(sname)) { // for now this means when not profiling we miss classes ok  for now
+    _fr.load_from_buffer(class_data);
+    loaded = true;
+    track_class(sname);
+  }
+  if (profiler_predicate() && _hooks.is_signal_class(sname) ) {
+    if(_hooks.is_monitor_heap_class(sname)) return;
+    if(!loaded) {
       _fr.load_from_buffer(class_data);
       loaded = true;
-      track_class(sname);
-
     }
-    if (profiler_predicate() && _hooks.is_signal_class(sname) ) {
-      if(!loaded) {
-        _fr.load_from_buffer(class_data);
-        loaded = true;
-      }
-      add_hooks(sname, env, new_class_data_len, new_class_data);
-      _origClass[sname] = ClassPtr{class_data_len};
-       env->Allocate(class_data_len, &_origClass[sname]._class_data);
-       memcpy(_origClass[sname]._class_data, class_data,class_data_len);
-    }
-
-    if(!profiler_predicate() && _hooks.is_signal_class(sname) && _all_loadedClasses.count(sname) == 1) {
-      _fr.load_from_buffer(class_data);
-      remove_hooks(sname, env, new_class_data_len, new_class_data);
-    }
-    std::unique_lock<std::mutex> lck{_all_loaded_mutex};
-    _all_loadedClasses.insert(sname);
+    add_hooks(_fr,_hooks,_artifacts,sname, env, new_class_data_len, new_class_data);
+    _origClass[sname] = ClassPtr{class_data_len};
+    env->Allocate(class_data_len, &_origClass[sname]._class_data);
+    memcpy(_origClass[sname]._class_data, class_data,class_data_len);
+  }
+  
+  if(!profiler_predicate() && _hooks.is_signal_class(sname) && _all_loadedClasses.count(sname) == 1) {
+    _fr.load_from_buffer(class_data);
+    remove_hooks(_origClass[sname]._class_data,_origClass[sname]._size, env, new_class_data_len, new_class_data);
+  }
+  std::unique_lock<std::mutex> lck{_all_loaded_mutex};
+  _all_loadedClasses.insert(sname);
 }
+
 
 
 void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread thread, jobject object)
 {
   std::string monitorStr;
   if(!get_class_name(env, jni_env->GetObjectClass(object), monitorStr)) return;
-  std::string waiterStr;
-  if(!format_stack_trace(env, thread, waiterStr)) return;
+  frenchroast::monitor::StackTrace waiterStack{};
+  if(!format_stack_trace(env, thread, waiterStack)) return;
   jvmtiMonitorUsage monitorInfo;
   if(!ErrorHandler::check_jvmti_error(env->GetObjectMonitorUsage(object, &monitorInfo), "GetObjectMonitorUsage")) return;
-  std::string ownerStr;
-  if(!format_stack_trace(env, monitorInfo.owner, ownerStr)) return;
+  frenchroast::monitor::StackTrace ownerStack{};
+  if(!format_stack_trace(env, monitorInfo.owner, ownerStack)) return;
   jthread owner = monitorInfo.owner;
   jni_env->DeleteLocalRef(owner);
   delete_refs(jni_env, monitorInfo.waiters, monitorInfo.waiter_count);
@@ -658,13 +426,14 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.waiters));
   env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
 
-  std::string* str = new std::string{"jammed~"};
-  str->append("~");
-  str->append(monitorStr);
-  str->append("~");
-  str->append(waiterStr);
-  str->append("~");
-  str->append(ownerStr);
+
+
+  std::string* str = new std::string{frenchroast::monitor::command::JAMMED + "~"};
+  std::stringstream ss;
+  frenchroast::monitor::JammedReport report{ownerStack, waiterStack};
+  report.add_monitor(monitorStr);
+  ss << report;
+  str->append(ss.str());
   _signalQueue.push(str);
 }
 
@@ -675,7 +444,9 @@ bool traffic_predicate()
 }
 
 
-
+//
+// highly optimized for speed, variables outside loop, etc... 
+//
 void traffic_monitor() 
 {
   jvmtiEnv* env;
@@ -719,7 +490,7 @@ void traffic_monitor()
 
     if(!ErrorHandler::check_jvmti_error(genv->GetAllThreads(&thread_count, &threads),"GetAllThreads")) continue;
 
-    rv = new std::string{"traffic~"};
+    rv = new std::string{frenchroast::monitor::command::TRAFFIC + "~"};
     for(int idx = 0; idx < thread_count; idx++) {
       monmap.clear();
       thd = *(threads + idx);
@@ -793,7 +564,7 @@ void traffic_monitor()
           jni_env->DeleteLocalRef(theclass);
         }
         rv->append((monmap.find(fidx) != monmap.end() ? "1!" : "0!"));
-        rv->append(className + 1);
+        rv->append(className);
         rv->append( "::");
 
         rv->append(methodName);
@@ -858,14 +629,10 @@ void class_loading_monitor()
 
   while(1) {
     if(_loadedClasses.size() > 0 ) {
-      std::string* str = new std::string{"loaded~"};
-      for(auto& citem : _loadedClasses) {
-        str->append(citem.name() + "^[");
-        for(auto& meth : citem.methods()) {
-          str->append(meth + "%");
-        }
-        str->append("]^");
-      }
+      std::string* str = new std::string{frenchroast::monitor::command::LOADED + "~"};
+      std::stringstream ss;
+      ss << _loadedClasses;
+      str->append(ss.str());
       _signalQueue.push(str);
       _loadedClasses.clear();
     }
@@ -936,29 +703,8 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     exit(0);
   }
 
+  _conn.connect_to_server(_config.get_server_ip(), _config.get_server_port(), &_commandListener);
   
-  if(_config.is_server_required()) {
-    _conn.connect_to_server(_config.get_server_ip(), _config.get_server_port(), &_commandListener);
-  }
-
-    
-  frenchroast::agent::Transport* tptr{nullptr};
-
-  /*
-   if(_config.is_cout_reporter()) {
-    tptr = new frenchroast::agent::CoutTransport{};
-  }
-
-  if(_config.is_file_reporter()) {
-    tptr = new frenchroast::agent::FileTransport{_config.get_report_filename()};
-  }
-
-  if(_config.is_server_reporter()) {
-    tptr = new frenchroast::agent::ServerTransport{_conn};
-  }
-  */
-  tptr = new frenchroast::agent::ServerTransport{_conn};
-  _rptr.setTransport(tptr);
   jvmtiEnv* env;
   vm->GetEnv((void**)&env, JVMTI_VERSION);
 

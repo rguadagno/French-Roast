@@ -18,31 +18,34 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
   ${BOOST_ROOT}
   ${JAVA_INCLUDE_DIR}
   ${JAVA_INCLUDE_DIR2})
-  if (UNIX)
     FILE(GLOB huh
     ../src/*.cpp
     ../../instrumentation/src/*.cpp
     ../../monitor/src/ClassDetail.cpp
+    ../../monitor/src/Descriptor.cpp
+    ../../monitor/src/Monitor.cpp
+    ../../monitor/src/StackTrace.cpp
+    ../../monitor/src/StackFrame.cpp
+    ../../monitor/src/StackReport.cpp
+    ../../monitor/src/SignalParams.cpp
+    ../../monitor/src/SignalMarkers.cpp
+    ../../monitor/src/Signal.cpp            
+    ../../monitor/src/JammedReport.cpp    
     ../../network/src/FRSocket.cpp
     ../../signal/src/fr_signals.cpp
     ../../signal/src/SignalValidator.cpp
+    ../../monitor/src/TimerReport.cpp
     )	
+
+if (UNIX)
     find_package(Threads)
-    add_definitions("-std=c++14")
+    add_definitions("-std=c++17")
     add_definitions(-DCONNECTOR_UNIX)
 #   target_link_libraries(client ${CMAKE_THREAD_LIBS_INIT})   
 
   endif ()
 
   if (WIN32)
-    FILE(GLOB huh
-    ../src/*.cpp
-    ../../instrumentation/src/*.cpp
-    ../../monitor/src/ClassDetail.cpp
-    ../../network/src/FRSocket.cpp
-    ../../signal/src/fr_signals.cpp
-    ../../signal/src/SignalValidator.cpp    
-    )
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
 #    add_definitions(${CMAKE_CXX_FLAGS})
   endif ()

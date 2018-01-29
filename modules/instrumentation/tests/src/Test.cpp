@@ -56,7 +56,8 @@ TEST_CASE("simple load")
   REQUIRE( major.get() >= 50    );
 }
 
-TEST_CASE("ConstantPool : add_class : only add a class once")
+
+TEST_CASE("ConstantPool : add_class : only add a class once (NOT IMPLEMENTED YET, WILL FAIL")
 {
  std::string java_class_file = std::string{std::getenv("JAVA_CLASS_DIR")} + "Simple.class";
   std::unique_ptr<const frenchroast::BYTE> ptr = fr_test_util::get_class_buf(java_class_file);
@@ -65,12 +66,14 @@ TEST_CASE("ConstantPool : add_class : only add a class once")
 
   REQUIRE ( constpool.next_index() == 12);    // this is not logicall index, but array
   int idx1  = constpool.add_class("someclass");
+  REQUIRE ( idx1 == 14);
+  REQUIRE ( constpool.next_index() == 14); 
   int idx2  = constpool.add_class("someclass");
+  REQUIRE ( idx2 == 14);
   REQUIRE ( constpool.next_index() == 14);    // this is not logicall index, but array
-  REQUIRE ( idx1 == idx2);    // this is not logicall index, but array
-  
 
 }
+
 
 TEST_CASE("ConstantPool : simple : add_class")
 {
@@ -86,7 +89,7 @@ TEST_CASE("ConstantPool : simple : add_class")
   REQUIRE ( constpool.get_name_index("someclass") == 13);
   REQUIRE ( constpool.get_name_index("13") == 14);
   idx = constpool.add_method_ref_index("someclass.ff:()V");
-  REQUIRE ( constpool.get_name_index("ff") == 15);
+  REQUIRE ( constpool.get_name_index("ff") == 16);
   //
   //  1. add name ff so that should be 15
   //  2. add a nameAndType 15.5   that should be 16
@@ -94,7 +97,7 @@ TEST_CASE("ConstantPool : simple : add_class")
   //
   
   
-  REQUIRE ( idx == 17);
+  REQUIRE ( idx == 18);
   REQUIRE ( constpool.get_name_index("()V") == 5 );
 }
 
@@ -107,7 +110,7 @@ TEST_CASE("ConstantPool : simple")
   constpool.load_from_buffer(ptr.get() + 8);
   REQUIRE ( constpool.next_index() == 12 );
   REQUIRE ( constpool.size_in_bytes() == 125 );
-  REQUIRE ( constpool.add_method_ref_index("java/lang/Object.<init>:()V") == 13 );  
+  REQUIRE ( constpool.add_method_ref_index("java/lang/Object.<init>:()V") == 14 );  
 
   REQUIRE_THROWS_AS( constpool.add_method_ref_index("<init>:()V") , std::invalid_argument );
   REQUIRE_THROWS_AS( constpool.add_method_ref_index("somepackage/someClasssomefunc()V") , std::invalid_argument );

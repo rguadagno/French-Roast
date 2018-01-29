@@ -17,27 +17,69 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <vector>
 #include "StackFrame.h"
+#include "Util.h"
 
 namespace frenchroast { namespace monitor {
 
-    StackFrame::StackFrame(const std::string& name, int count) : _name(name), _monitorCount(count)
-      {
-      }
-
-    StackFrame::StackFrame(const std::string& name) : StackFrame(name , 0)
+    StackFrame::StackFrame(Descriptor name, int count) : _name(std::forward<Descriptor>(name)), _monitorCount(count)
     {
     }
-      
+
+    StackFrame::StackFrame(Descriptor name) : _name(std::forward<Descriptor>(name))
+    {
+    }
+
+    StackFrame& operator>>(const std::string& rep, StackFrame& ref)
+    {
+      std::vector<std::string> items = split(rep, "<end-method>");
+      ref._monitorCount = atoi(items[1].c_str());
+      items[0] >> ref._name;
+      return ref;
+    }
+    
     std::string StackFrame::get_name()  const 
+    {
+      return _name.full_name();
+    }
+
+    const Descriptor& StackFrame::descriptor() const
     {
       return _name;
     }
-
+    
     int  StackFrame::get_monitor_count()  const
     {
       return _monitorCount;
     }
-      
+    
+    bool StackFrame::operator==(const StackFrame& ref) const
+    {
+      return _name == ref._name;
+    }
+    
+    bool StackFrame::operator!=(const StackFrame& ref) const
+    {
+      return _name != ref._name;      
+    }
+
+    StackFrame::operator std::string() const
+    {
+      return get_name();
+    }
+
+
+    std::vector<StackFrame>& operator>>(const std::string& line, std::vector<StackFrame>& frames)
+    {
+      for(auto& x : frenchroast::split(line,"<end-frame>")) {
+        if(x == "") continue;
+        StackFrame sf{};
+        x >> sf;
+        frames.push_back(sf);
+      }
+      return frames;
+    }
+    
   }
 }

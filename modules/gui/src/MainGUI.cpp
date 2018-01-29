@@ -19,6 +19,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <QFileDialog>
 #include "fr.h"
 #include "FRMain.h"
 #include "MonitorUtil.h"
@@ -29,13 +30,17 @@
 #include "TrafficViewer.h"
 #include "JammedViewer.h"
 #include "AboutHelpViewer.h"
+#include "SignalReport.h"
+#include "TimerReport.h"
 
 using namespace frenchroast;
 
 
 QSettings* FViewer::_settings = nullptr;
 
-FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks) : _settings(settings), _hooksfile(path_to_hooks)
+
+
+FRMain::FRMain( QSettings& settings, const std::string& path_to_hooks, Session& session, const std::string& session_dir) : _settings(settings), _hooksfile(path_to_hooks), _session(session), _session_default_dir(session_dir)
 {
   FViewer::setSettings(&settings);
   restore();
@@ -74,6 +79,16 @@ void FRMain::remote_connected(const std::string& host, const std::string& pid)
 void FRMain::remote_disconnected(const std::string& host, const std::string& pid)
 {
   AboutHelpViewer::instance(this)->remote_disconnected(host,pid);
+}
+
+void FRMain::remote_ack_off(const std::string& host, const std::string& pid)
+{
+  AboutHelpViewer::instance(this)->remote_ack_off(host,pid);
+}
+
+void FRMain::remote_ack_on(const std::string& host, const std::string& pid)
+{
+  AboutHelpViewer::instance(this)->remote_ack_on(host,pid);
 }
 
 
@@ -138,8 +153,51 @@ void FRMain::connect_common_listeners(FViewer* instance)
   QObject::connect(instance, &frenchroast::FViewer::classload_viewer, this,  &FRMain::view_classviewer);
   QObject::connect(instance, &frenchroast::FViewer::about_viewer,     this,  &FRMain::view_about);
   QObject::connect(instance, &frenchroast::FViewer::reset,            this,  &FRMain::reset_viewers);
+  QObject::connect(instance, &frenchroast::FViewer::session_save,     this,  &FRMain::session_save);
+  QObject::connect(instance, &frenchroast::FViewer::session_save_as,  this,  &FRMain::session_save_as);
+  QObject::connect(instance, &frenchroast::FViewer::session_load,     this,  &FRMain::session_load);
   QObject::connect(instance, &frenchroast::FViewer::exit_fr,          this,  &FRMain::exit_fr);
 }
+
+void FRMain::session_save()
+{
+  if(_session.has_descriptor()) {
+    _session.store();
+  }
+  else {
+    session_save_as();
+  }
+}
+
+void FRMain::session_save_as()
+{
+  QString fileName = QFileDialog::getSaveFileName(this, "Choose sesion file", QString{_session_default_dir.c_str()});
+  if(fileName == "") return;
+  _session.store(fileName.toStdString());
+}
+
+void FRMain::session_load()
+{
+  QString fileName = QFileDialog::getOpenFileName(this, "Choose sesion file", QString{_session_default_dir.c_str()});
+  if(fileName == "") return;
+  _session.load(fileName.toStdString());
+
+  reset();
+  FClassViewer::instance(this)->update(_session.get_loaded_classes());
+  for(auto& rpt : _session.get_jammed_reports()) {
+    JammedViewer::instance(this)->update(rpt.second);
+  }
+  TrafficViewer::instance(this)->update_traffic(_session.get_traffic());
+  TrafficViewer::instance(this)->update_ranking(_session.get_rankings());
+  for(auto& sig : _session.get_signal_reports()) {
+    update_list(sig.second);
+  }
+  for(auto& timer : _session.get_timer_reports()) {
+    update_timed_list(timer.second);
+  }
+
+}
+
 
 void FRMain::view_about()
 {
@@ -199,17 +257,21 @@ void FRMain::show_detail(const std::string& descriptor)
   QObject::connect(dv, &frenchroast::DetailViewer::add_signal,     this,  &FRMain::add_hook);
   QDockWidget* dock = *frenchroast::FSignalViewer::instance(this);
   dv->move(dock->x() + 50, dock->y() + 50 ); 
-  update_detail_list(descriptor, &_detailDescriptors[descriptor], MarkerField{});
+  update_detail_list(descriptor, &_detailDescriptors[descriptor]);
 }
+
+
 
 void FRMain::update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>& details)
 {
   FClassViewer::instance(this)->update(details);
+  _session.update(details);
 }
 
 void FRMain::update_jammed(const frenchroast::monitor::JammedReport& rpt)
 {
   JammedViewer::instance(this)->update(rpt);
+  _session.update(rpt);
 }
 
 void FRMain::start_watching_traffic(int rate)
@@ -229,43 +291,44 @@ void FRMain::stop_watching_traffic()
 void FRMain::method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks)
 {
   TrafficViewer::instance(this)->update_ranking(ranks);
+  _session.update(ranks);
 }
 
-void FRMain::update_list(std::string  descriptor, std::string tname, int count,
-                         const std::vector<std::string> argHeaders,  const std::vector<std::string> instanceHeaders, 
-                         const frenchroast::monitor::MarkerField marker, std::unordered_map<std::string, frenchroast::monitor::StackReport> stacks)
+void FRMain::update_list(const frenchroast::monitor::SignalReport& rpt)
 {
   if(_exit) return;
 
-  tname = "[ " + tname + " ] ";
+  _session.update(rpt);
+  std::string tname = "[ " + rpt.thread_name() + " ] ";
+  std::string descriptor = rpt.descriptor_name();
   frenchroast::monitor::pad(descriptor, 50);
   frenchroast::monitor::pad(tname, 10);
 
   descriptor = tname + descriptor;
-   _markers[descriptor][marker._descriptor] = marker; 
-  
-   _detailDescriptors[descriptor] = DetailHolder{count, argHeaders, instanceHeaders,_markers[descriptor], stacks};
+  _detailDescriptors[descriptor] = DetailHolder{rpt.count(), rpt.arg_headers(), rpt.instance_headers(),
+                                                rpt.markers(), rpt.stacks()};
 
-  frenchroast::FSignalViewer::instance(this)->update_count(descriptor, count);
-  update_detail_list(descriptor, &_detailDescriptors[descriptor],marker);
-  
+  frenchroast::FSignalViewer::instance(this)->update_count(descriptor, rpt.count());
+  update_detail_list(descriptor, &_detailDescriptors[descriptor]);
 }
 
 void FRMain::update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks)
 {
   if(!_exit) {
     TrafficViewer::instance(this)->update_traffic(stacks);
+    _session.update(stacks);
   }
 }
 
-void FRMain::update_timed_list(std::string  descriptor, std::string tname, long elapsed)
+void FRMain::update_timed_list(const frenchroast::monitor::TimerReport& rpt)
 {
-  std::string desc{descriptor};
-  tname = "[ " + tname + " ]";
-  frenchroast::monitor::pad(desc, 50);
+  _session.update(rpt);
+  std::string descriptor = rpt.descriptor_name();
+  std::string tname = "[ " + rpt.thread_name() + " ]";
+  frenchroast::monitor::pad(descriptor, 50);
   frenchroast::monitor::pad(tname, 10);
-  desc = tname + desc;
-  FTimerViewer::instance(this)->update_time(desc, elapsed);
+  descriptor = tname + descriptor;
+  FTimerViewer::instance(this)->update_time(descriptor, rpt.elapsed());
 }
 
 void FRMain::exit_fr()

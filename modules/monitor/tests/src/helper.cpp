@@ -16,14 +16,23 @@
 //    You should have received a copy of the GNU General Public License
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
-#include "CoutTransport.h"
 
+#include "StackFrame.h"
+#include "StackTrace.h"
 
-namespace frenchroast { namespace agent {
+namespace frenchroast { namespace testing {
 
-    void CoutTransport::out(const std::string& tag)
+    using namespace frenchroast::monitor;
+    StackTrace build_trace(const std::vector<std::string>& lines)
     {
-      std::cout << tag << std::endl;
+      StackTrace rv{};
+      for(auto& line : lines) {
+        StackFrame sf{};
+        line >> sf;
+        rv.addFrame(sf);
+      }
+      return rv;
     }
+    
   }
 }

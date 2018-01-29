@@ -129,7 +129,7 @@ namespace frenchroast {
   class SameFrame : public StackMapFrame {
   public:
 
-    operator int()
+    operator int() const
     {
       return stackmapframe::same;
     }
@@ -169,7 +169,7 @@ namespace frenchroast {
        _frameType = 251;
     }
 
-    SameFrameExtended::operator int()
+    SameFrameExtended::operator int() const
     {
       return stackmapframe::same_extended;
     }
@@ -208,7 +208,7 @@ namespace frenchroast {
     std::vector<VerificationType*> _verificationInfoList;
     int _size;
   public:
-    operator int()
+    operator int() const
     {
       return stackmapframe::same_local_one_stack;
     }
@@ -254,7 +254,7 @@ namespace frenchroast {
     std::vector<VerificationType*> _verificationInfoList;
     int _size;
   public:
-    operator int()
+    operator int() const
     {
       return stackmapframe::append;
     }
@@ -304,7 +304,7 @@ namespace frenchroast {
     std::vector<VerificationType*> _verificationStack;
     int _size;
   public:
-    operator int()
+    operator int() const
     {
       return stackmapframe::full;
     }
@@ -368,7 +368,7 @@ namespace frenchroast {
     BYTE _offsetDelta[2];
     int _size;
   public:
-    operator int()
+    operator int() const
     {
       return stackmapframe::chop;
     }

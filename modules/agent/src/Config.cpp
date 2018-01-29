@@ -22,6 +22,7 @@
 #include "Util.h"
 #include "Listener.h"
 #include "Connector.h"
+#include "Command.h"
 
 namespace frenchroast { namespace agent {
     std::string get_value(const std::string& key, const std::string& value, const std::string& line)
@@ -46,26 +47,6 @@ namespace frenchroast { namespace agent {
     std::string Config::get_hooks_file() const
     {
       return _hooksFile;
-    }
-
-    bool Config::is_server_required() const
-    {
-      return _serverRequired;
-    }
-
-    bool Config::is_cout_reporter() const
-    {
-      return _reporterDescriptor.find("cout") != std::string::npos;;
-    }
-
-    bool Config::is_file_reporter() const
-    {
-      return _reporterDescriptor.find("file:") != std::string::npos;;
-    }
-
-    bool Config::is_server_reporter() const
-    {
-      return _reporterDescriptor.find("server") != std::string::npos;;
     }
 
     std::string Config::get_report_filename() const
@@ -116,12 +97,11 @@ template
           _serverPort = atoi(frenchroast::split(descriptor,":")[1].c_str());
           frenchroast::network::Connector<> conn;
           conn.connect_to_server(_serverip, _serverPort);
-          conn.send_message("transmit-opcodes");
+          conn.send_message(frenchroast::monitor::command::TRANSMIT_OPCODES);
           conn.blocked_listen(new LocalListener<OpCode>(opcodes, conn));
           conn.connect_to_server(_serverip, _serverPort);
-          conn.send_message("transmit-hooks");
+          conn.send_message(frenchroast::monitor::command::TRANSMIT_HOOKS);
           conn.blocked_listen(new LocalListener<frenchroast::signal::Signals>(hooks, conn));
-          _serverRequired = true;
           return true;
         }
 

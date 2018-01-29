@@ -20,6 +20,7 @@
 
 #include <iostream>
 #include "JammedReport.h"
+#include "Util.h"
 
 namespace frenchroast { namespace monitor {
 
@@ -42,10 +43,14 @@ namespace frenchroast { namespace monitor {
       return rv;
     }
     
-    JammedReport& JammedReport::add_monitor(const std::string& mon)
+    JammedReport& JammedReport::add_monitor(const std::string& mon, bool xform)
     {
-      _monitors.insert(mon);
-      ++_count;
+      std::string str = mon;
+      if(xform) {
+        str = str .substr(1);
+        replace(str,"/",".");
+      }
+      _monitors.insert(str);
       return *this;
     }
 
@@ -63,8 +68,59 @@ namespace frenchroast { namespace monitor {
     {
       return _owner;
     }
+    bool JammedReport::operator==(const JammedReport& ref) const
+    {
+      if(_monitors != ref._monitors) return false;
+      if(_key != ref._key) return false;
+      return true;;
+    }
+
+    JammedReport& operator>>(const std::string& rep, JammedReport&& ref)
+    {
+      return rep >> ref;
+    }
+    
+    JammedReport& operator>>(const std::string& rep, JammedReport& ref)
+    {
+      auto parts = frenchroast::split(rep,"<end-jmonitors>");
+      for(auto& mon : frenchroast::split(parts[0],"<end-monitor>")) {
+        if(mon == "") continue;
+        ref.add_monitor(mon,false);
+      }
+            
+      frenchroast::split(parts[1],"<end-owner>")[0] >> ref._owner;
+      frenchroast::split(parts[1],"<end-owner>")[1] >> ref._waiter;
+      ref._key = ref._waiter.key() + ref._owner.key();
+      return ref;
+    }
+
+    JammedReport& JammedReport::operator+=(const JammedReport& ref)
+    {
+      _key = ref._key;
+      _waiter = ref._waiter;
+      _owner = ref._owner;
+      for(auto& mon : ref.monitors()) {
+        add_monitor(mon,false);
+      }
+      return *this;
+    }
+
+
+    std::vector<JammedReport>& operator>>(const std::string& line, std::vector<JammedReport>& ref)
+    {
+      for(auto& cd : frenchroast::split(line, JammedReport::TAG_END)) {
+        if(cd != "") {
+          JammedReport item;
+          cd >> item;
+          ref.push_back(item);
+        }
+      }
+      return ref;
+    }
 
     
+    const  std::string JammedReport::TAG     = "<jammed>";
+    const  std::string JammedReport::TAG_END = "<end-jammed>";
   }
 }
 

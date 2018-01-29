@@ -17,21 +17,35 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef SERVERTRANS_H
-#define SERVERTRANS_H
+#include "MockJNI.h"
 
-#include <string>
-#include "Transport.h"
-#include "Connector.h"
 
-namespace frenchroast { namespace agent {
 
-    class ServerTransport : public Transport {
-      network::Connector<>& _conn;
-    public:
-      ServerTransport(network::Connector<>& conn);
-      void out(const std::string& str);
+jint myGetIntField(JNIEnv* env, jobject obj, jfieldID fieldID);
+jlong myGetLongField(JNIEnv* env, jobject obj, jfieldID fieldID);
 
-    };
-  }}
-#endif
+
+
+
+  MockJNI::MockJNI()
+  {
+    _mymock.GetIntField = &myGetIntField;
+    _mymock.GetLongField = &myGetLongField;
+    _env.functions = &_mymock;
+    env = &_env;
+  }
+  
+  MockJNI::~MockJNI()
+  {
+
+  }
+  
+jint myGetIntField(JNIEnv* env, jobject obj, jfieldID fieldID)
+{
+  return 100;
+}
+
+jlong myGetLongField(JNIEnv* env, jobject obj, jfieldID fieldID)
+{
+  return 200;
+}

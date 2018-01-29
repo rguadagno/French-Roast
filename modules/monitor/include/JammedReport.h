@@ -21,11 +21,12 @@
 #define JAMMEDH_H
 
 #include <unordered_set>
+#include <unordered_map>
 #include "StackTrace.h"
 
 namespace frenchroast { namespace monitor {
-    class JammedReport {
-      int                      _count{0};
+    class JammedReport  {
+      friend JammedReport& operator>>(const std::string& rep, JammedReport& ref);
       std::string              _key;
       StackTrace               _waiter;
       StackTrace               _owner;
@@ -35,12 +36,43 @@ namespace frenchroast { namespace monitor {
       JammedReport(StackTrace waiter, StackTrace owner);
       JammedReport();
       std::vector<std::string> monitors() const;
-      JammedReport& add_monitor(const std::string&);
+      JammedReport& add_monitor(const std::string&, bool xform=true);
       const std::string& key() const;
       const StackTrace& waiter() const;
       const StackTrace& owner() const;
+      bool operator==(const JammedReport&) const;
+      JammedReport& operator+=(const JammedReport&);
+      const static std::string TAG_END;
+      const static std::string TAG;
     };
 
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const JammedReport& ref)
+      {
+
+        for(auto x : ref.monitors()) {
+          out << x << "<end-monitor>";
+        }
+        out  << "<end-jmonitors>";
+        out << ref.owner() << "<end-owner>" << ref.waiter(); 
+        return out;
+      }
+
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const std::unordered_map<std::string,JammedReport>& ref)
+      {
+        if(ref.size() == 0) return out;
+        out << JammedReport::TAG << "<view>";        
+        for(auto x : ref) {
+          out << x.second << JammedReport::TAG_END;
+        }
+        return out;
+      }
+
+    
+    JammedReport& operator>>(const std::string& rep, JammedReport& ref);
+    JammedReport& operator>>(const std::string& rep, JammedReport&& ref);
+    std::vector<JammedReport>& operator>>(const std::string&, std::vector<JammedReport>& ref);
 
   }
 }

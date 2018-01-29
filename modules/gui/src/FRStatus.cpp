@@ -99,22 +99,20 @@ void display_row_dropped(int row, QTableWidget* table)
 
 
 
-void FRStatus::connect_client()
+void FRStatus::connect_client(bool forceDisplay)
 {
-  _clientStatus[_targets->currentRow()] = CONNECTED; // fix this, msut wait for client to ACK
-  turn_on_profiler(_targets->item(_targets->currentRow(), 1)->text().toStdString() + _targets->item(_targets->currentRow(), 0)->text().toStdString());
-  display_row_connected(_targets->currentRow(), _targets);
-  dynamic_cast<TimerItem*>(_targets->item(_targets->currentRow(), 2))->start();
+    turn_on_profiler(_targets->item(_targets->currentRow(), 1)->text().toStdString() + _targets->item(_targets->currentRow(), 0)->text().toStdString());
+    if(forceDisplay) {
+      _clientStatus[_targets->currentRow()] = CONNECTED; 
+      display_row_connected(_targets->currentRow(), _targets);
+      dynamic_cast<TimerItem*>(_targets->item(_targets->currentRow(), 2))->start();
+    }
 }
 
 void FRStatus::disconnect_client()
 {
-  _clientStatus[_targets->currentRow()] = NOT_CONNECTED; // fix this, msut wait for client to ACK
   turn_off_profiler(_targets->item(_targets->currentRow(), 1)->text().toStdString() + _targets->item(_targets->currentRow(), 0)->text().toStdString());
-  display_row_disconnected(_targets->currentRow(), _targets);
-  dynamic_cast<TimerItem*>(_targets->item(_targets->currentRow(), 2))->stop();
 }
-
 
 void FRStatus::remote_connected(const std::string& host, const std::string& pid)
 {
@@ -127,6 +125,20 @@ void FRStatus::remote_disconnected(const std::string& host, const std::string& p
   dynamic_cast<TimerItem*>(_targets->item(_items[host + pid ], 2))->stop();
 }
 
+void FRStatus::remote_ack_off(const std::string& host, const std::string& pid)
+{
+  _clientStatus[_targets->currentRow()] = NOT_CONNECTED; 
+  display_row_disconnected(_targets->currentRow(), _targets);
+  dynamic_cast<TimerItem*>(_targets->item(_targets->currentRow(), 2))->stop();
+}
+
+void FRStatus::remote_ack_on(const std::string& host, const std::string& pid)
+{
+  _clientStatus[_targets->currentRow()] = CONNECTED; 
+  display_row_connected(_targets->currentRow(), _targets);
+  dynamic_cast<TimerItem*>(_targets->item(_targets->currentRow(), 2))->start();
+}
+
 
 void FRStatus::remote_ready(const std::string& host, const std::string& pid)
 {
@@ -136,7 +148,7 @@ void FRStatus::remote_ready(const std::string& host, const std::string& pid)
     display_row_disconnected(_items[host + pid ], _targets);
     if(_autoConnect->checkState() == Qt::Checked) {
       _targets->setCurrentCell(_items[host + pid],0);
-      connect_client();
+      connect_client(true);
     }
   }
 }

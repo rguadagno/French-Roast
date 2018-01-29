@@ -21,17 +21,17 @@
 #define RRPT_H
 #include <string>
 #include <vector>
-#include "Transport.h"
+#include "Connector.h"
 
 
 namespace frenchroast { namespace agent {
 
         
     class Reporter {
-      Transport* _ptr;
+      network::Connector<>& _conn;
     public:
+      Reporter(network::Connector<>& conn);
       void ready();
-      void setTransport(Transport* ptr);
       void signal(const std::string& tag);
       void close();
       void unloaded(const std::string& msg);

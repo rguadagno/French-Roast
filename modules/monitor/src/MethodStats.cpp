@@ -19,6 +19,7 @@
 
 #include <string>
 #include "MethodStats.h"
+#include "Util.h"
 
 namespace frenchroast { namespace monitor {
     MethodStats::MethodStats()
@@ -39,9 +40,6 @@ namespace frenchroast { namespace monitor {
       return _total_invokes;
     }  
     
-    
-    //MethodStats(std::string desc);
-    
     MethodStats& MethodStats::operator++()
     {
       ++_total_invokes;
@@ -53,6 +51,34 @@ namespace frenchroast { namespace monitor {
        return m2.invoked_count() < m1.invoked_count();
      }
 
+    const  std::string MethodStats::TAG = "<method-stats>";
+    const  std::string MethodStats::TAG_END = "<end-stat>";
 
+
+
+
+
+    MethodStats& operator>>(const std::string& serial, MethodStats& ref)
+    {
+      ref._descriptor = frenchroast::split(serial, "<end-descriptor>")[0];
+      ref._total_invokes = atoi(frenchroast::split(serial, "<end-descriptor>")[1].c_str());
+
+      return ref;
+    }
+
+    std::vector<MethodStats>& operator>>(const std::string& line, std::vector<MethodStats>& ref)
+    {
+      for(auto& cd : frenchroast::split(line, MethodStats::TAG_END)) {
+        if(cd != "") {
+          MethodStats item;
+          cd >> item;
+          ref.push_back(item);
+        }
+      }
+      return ref;
+    }
+
+    
+    
 }
 }

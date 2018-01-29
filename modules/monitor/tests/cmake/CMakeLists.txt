@@ -10,30 +10,42 @@ endif()
 
 include_directories(
 ${CATCH_LOCATION}
+../include
 ../../include
 ../../../instrumentation/include
 ../../../network/include
 )
 
 FILE(GLOB src_files
-../src/*.cpp
 ../../src/MonitorUtil.cpp
+../../src/Descriptor.cpp
 ../../src/Monitor.cpp
 ../../src/StackFrame.cpp
 ../../src/StackTrace.cpp
+../../src/StackReport.cpp
 ../../src/MethodStats.cpp
 ../../src/ClassDetail.cpp
 ../../src/JammedReport.cpp
+../../src/Signal.cpp
+../../src/SignalParams.cpp
+../../src/SignalMarkers.cpp
+../../src/SignalReport.cpp
 ../../../instrumentation/src/Util.cpp
 ../../../network/src/Connector.cpp
 ../../../network/src/FRSocket.cpp
+../src/*.cpp
 )
 
 if (UNIX)
-   add_definitions("-std=c++11")
+   add_definitions("-std=c++17")
+   add_definitions(-DCONNECTOR_UNIX)
+   find_package(Threads)
 endif ()
 
 add_executable(runner ${src_files})
+if (UNIX)
+   target_link_libraries(runner ${CMAKE_THREAD_LIBS_INIT})
+endif ()
 
 if (WIN32)
    target_link_libraries(runner  ws2_32.lib)

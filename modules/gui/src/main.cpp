@@ -25,12 +25,12 @@
 #include "fr.h"
 #include "FRMain.h"
 #include "Editor.h"
-#include "MonitorUtil.h"
+#include "PersistorFile.h"
+#include "Session.h"
 
 
-int main(int argc, char* argv[]) {
-
-
+int main(int argc, char* argv[])
+{
   if (argc != 3 && argc != 4) {
     std::cout << "usage: roaster <ip> <port> [path to hooks file]\nexample: roaster 127.0.0.1 6060 /home/richg/code/hooks.txt" << std::endl;
     exit(0);
@@ -38,6 +38,8 @@ int main(int argc, char* argv[]) {
   QApplication app(argc,argv);
   QSettings config{frenchroast::monitor::get_env_variable("INI_FULL_PATH","example /home/richg/French-Roast/modules/gui/config/fr.ini"), QSettings::IniFormat};
   std::string path_to_opcodes = frenchroast::monitor::get_env_variable("OPCODES_FULL_PATH","example /home/richg/French-Roast/modules/instrumentation/opcodes.txt");
+  char* sdir = std::getenv("SESSION_DIR");
+  std::string session_dir = (sdir == nullptr ? "" : sdir);
   
   qRegisterMetaType<std::string>();
   qRegisterMetaType<std::vector<frenchroast::monitor::StackTrace>>();
@@ -50,12 +52,15 @@ int main(int argc, char* argv[]) {
   qRegisterMetaType<DetailHolder>();
   qRegisterMetaType<std::vector<frenchroast::monitor::ClassDetail>>();
   qRegisterMetaType<frenchroast::monitor::JammedReport>("frenchroast::monitor::JammedReport");
+  qRegisterMetaType<frenchroast::monitor::SignalReport>("frenchroast::monitor::SignalReport");
+  qRegisterMetaType<frenchroast::monitor::TimerReport>("frenchroast::monitor::TimerReport");
   
   FRListener roaster{std::string{argv[1]}, atoi(argv[2]), path_to_opcodes};
   QThread* tt = new QThread(&roaster);
   roaster.moveToThread(tt);
-
-  FRMain main(config, argc == 4 ? argv[3] : "");  
+  PersistorFile* ptr = new PersistorFile{};
+  Session session{ptr};
+  FRMain main(config, argc == 4 ? argv[3] : "", session, session_dir);  
 
   QObject::connect(&roaster, &FRListener::thooked,         &main,    &FRMain::update_list);
   QObject::connect(&roaster, &FRListener::timersignal,     &main,    &FRMain::update_timed_list);
@@ -66,6 +71,8 @@ int main(int argc, char* argv[]) {
   QObject::connect(&app,     &QApplication::aboutToQuit,   &main,    &FRMain::handle_exit);
   QObject::connect(&roaster, &FRListener::remoteconnected, &main,    &FRMain::remote_connected);
   QObject::connect(&roaster, &FRListener::remoteunloaded,  &main,    &FRMain::remote_disconnected);
+  QObject::connect(&roaster, &FRListener::remote_ack_off,  &main,    &FRMain::remote_ack_off);
+  QObject::connect(&roaster, &FRListener::remote_ack_on,   &main,    &FRMain::remote_ack_on);
   QObject::connect(&roaster, &FRListener::remote_ready,    &main,    &FRMain::handshake);
   QObject::connect(&main,    &FRMain::start_traffic,       &roaster, &FRListener::start_traffic);
   QObject::connect(&main,    &FRMain::stop_traffic,        &roaster, &FRListener::stop_traffic);

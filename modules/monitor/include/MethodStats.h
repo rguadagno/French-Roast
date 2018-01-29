@@ -21,10 +21,11 @@
 #define METHSTATS_H
 
 #include <string>
+#include <vector>
 
 namespace frenchroast { namespace monitor {
     class MethodStats {
-
+      friend     MethodStats& operator>>(const std::string&, MethodStats& ref);
       std::string _descriptor;
       int         _total_invokes{0};
       
@@ -34,8 +35,33 @@ namespace frenchroast { namespace monitor {
       MethodStats& operator++();
       const std::string& descriptor() const;
       int invoked_count() const;
+      const static std::string TAG;
+      const static std::string TAG_END;
+
     };
     int operator<(const MethodStats& m1, const MethodStats& m2);
+    MethodStats& operator>>(const std::string&, MethodStats& ref);
+    std::vector<MethodStats>& operator>>(const std::string&, std::vector<MethodStats>& ref);
+
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const MethodStats& ref)
+      {
+        out << ref.descriptor() << "<end-descriptor>" << ref.invoked_count();
+        return out;
+      }
+
+    template <typename OutType>
+      OutType& operator<<(OutType& out, const std::vector<MethodStats>& ref)
+      {
+        if(ref.size() == 0) return out;
+        out << MethodStats::TAG << "<view>";
+        for(auto& x : ref) {
+          out << x << MethodStats::TAG_END;
+        }
+        return out;
+      }
+
+    
   }
 }
 
