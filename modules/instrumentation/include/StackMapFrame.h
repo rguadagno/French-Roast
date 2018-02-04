@@ -25,6 +25,58 @@
 
 namespace frenchroast {
 
+  class VerificationType {
+  protected:
+    BYTE _type;
+  public:
+    virtual int size_in_bytes() const { return 1; }
+    virtual void adjust_offset(int amount) {}
+    virtual void load_from_buffer(BYTE* buf) { _type = *buf;} 
+    virtual void load_to_buffer(BYTE* buf)  { *buf = _type; }
+  };
+
+  class TopVerificationType : public VerificationType {};
+  class IntegerVerificationType : public VerificationType {};
+  class FloatVerificationType : public VerificationType {};
+  class DoubleVerificationType : public VerificationType {};
+  class LongVerificationType : public VerificationType {};
+  class NullVerificationType : public VerificationType {};
+  class UninitializedThisVerificationType : public VerificationType {};
+  class ObjectVerificationType : public VerificationType {
+    BYTE _constPoolIndex[2];
+  public:
+    ObjectVerificationType() = default;
+    ObjectVerificationType(short poolIdx)
+    {
+      _type = 7;
+      write_big_e_bytes(_constPoolIndex,&poolIdx);
+    }
+    
+    int size_in_bytes() const
+    {
+      return 3;
+    }
+
+    void adjust_offset(int amount)
+    {
+
+    }
+
+    void load_from_buffer(BYTE* buf)
+    {
+      _type = *buf;
+      memcpy(_constPoolIndex, buf+1,2);
+    }
+    
+    void load_to_buffer(BYTE* buf)
+    {
+      *buf = _type;
+      memcpy(buf+1,_constPoolIndex,2);
+    }
+  };
+
+
+  
   class StackMapFrame {
   protected:
     BYTE  _frameType;
@@ -35,6 +87,7 @@ namespace frenchroast {
     virtual void load_to_buffer(BYTE* buf) = 0;
     virtual int  offset() const = 0;
     virtual operator int() const = 0;
+    virtual StackMapFrame* copy() const = 0;
   };
 
   class SameFrameExtended : public StackMapFrame {
@@ -48,9 +101,32 @@ namespace frenchroast {
     int offset() const;
     void load_from_buffer(BYTE* buf);
     void load_to_buffer(BYTE* buf);
+    StackMapFrame* copy() const;
   };
 
 
+  class FullFrame : public StackMapFrame {
+    BYTE _offsetDelta[2];
+    BYTE _localsCount[2];
+    BYTE _stackCount[2];
+    
+    std::vector<VerificationType*> _verificationLocals;
+    std::vector<VerificationType*> _verificationStack;
+    int _size;
+  public:
+    FullFrame() = default;
+    FullFrame(short offsetDelta, short localsCount, std::vector<short>& idxs,short stackCount);
+    FullFrame(short offsetDelata, short localsCount, short stackCount);
+    operator int() const;
+    int size_in_bytes() const;
+    bool adjust_offset(short offset);
+    int offset() const;
+    void load_from_buffer(BYTE* buf);
+    void load_to_buffer(BYTE* buf);
+    StackMapFrame* copy() const;    
+  };
+
+  
   
   std::vector<StackMapFrame*> load_frames_from_buffer(int count,BYTE* buf); 
   void load_frames_to_buffer(std::vector<StackMapFrame*> items, BYTE* buf);

@@ -18,11 +18,11 @@ if(NOT OPCODE_FILE)
    message(FATAL_ERROR "env variable OPCODE_FILE must be defined, full path to file with opcodes. run set_env")
 endif()
 
-
-  include_directories(${CATCH_LOCATION}
-  ../../include
-  ../include       
-  )
+include_directories(${CATCH_LOCATION}
+../../../signal/include
+../../include
+../include       
+)
   
 FILE(GLOB huh
 ../src/Test_Main.cpp
@@ -31,8 +31,11 @@ FILE(GLOB huh
 ../src/Test_OpCode.cpp
 ../src/Test_Instruction.cpp
 ../src/Test_Method.cpp
+../src/Test_Method_save_buffer.cpp  
 ../src/testing_utils.cpp
-../../src/*.cpp)
+../../src/*.cpp
+../../../signal/src/*.cpp
+)
 
 
 add_definitions("-std=c++11")

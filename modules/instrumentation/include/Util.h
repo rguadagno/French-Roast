@@ -30,6 +30,9 @@ namespace frenchroast {
   using INDEX = BYTE[2];
 
   int to_int(const BYTE* buf, int length);
+  void to_value(BYTE*& src, int& target);
+  void to_value(BYTE*& src, short& target);
+  void to_value(BYTE*& src, BYTE& target);
   void incr(BYTE* buf, int length);
   std::vector<std::string> split(const std::string& str,const char delim);
   std::vector<std::string> split(const std::string& str, const std::string&);
@@ -57,7 +60,9 @@ namespace frenchroast {
     return result;
   }
 
-
+  void wbytes(BYTE*& buf, BYTE* data);
+  void wbytes(BYTE*& buf, short* data);
+  void wbytes(BYTE*& buf, int* data);
   void write_bytes(BYTE* out, int value, int size);
   
   template

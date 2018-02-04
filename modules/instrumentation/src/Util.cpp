@@ -23,7 +23,42 @@
 
 namespace frenchroast {
 
+  void to_value(BYTE*& src, int& target)
+  {
+    target = to_int(src, sizeof(int));
+    src+=sizeof(int);
+  }
   
+  void to_value(BYTE*& src, short& target)
+  {
+    target = to_int(src, sizeof(short));
+    src+=sizeof(short);
+  }
+  
+  void to_value(BYTE*& src, BYTE& target)
+  {
+    src += 1;
+    target = *src;
+  }
+
+  void wbytes(BYTE*& buf, BYTE* data)
+  {
+    write_big_e_bytes(buf, data);
+    buf += sizeof(BYTE);
+  }
+
+  void wbytes(BYTE*& buf, short* data)
+  {
+    write_big_e_bytes(buf, data);
+    buf += sizeof(short);
+  }
+  
+  void wbytes(BYTE*& buf, int* data)
+  {
+    write_big_e_bytes(buf, data);
+    buf += sizeof(int);
+  }
+
   void write_bytes(BYTE* out, int value, int size)
   {
     if (size == 1) {

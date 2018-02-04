@@ -30,7 +30,8 @@
 #include "Info.h"
 #include "AccessFlags.h"
 #include "OpCode.h"
-#include "Method.h"
+#include "MethodComponent.h"
+
 
 
 namespace frenchroast {
@@ -103,7 +104,7 @@ namespace frenchroast {
     IDComponent            _superClass;
     InterfacesComponent    _interfaces;
     InfoComponent<FrenchRoast, Info<FrenchRoast>>  _fieldsComponent{*this, "Fields"};
-    InfoComponent<FrenchRoast, Info<FrenchRoast>> _methodsComponent{*this,"Methods"};
+    MethodComponent        _methodsComponent;
     InfoComponent<FrenchRoast, Attribute<FrenchRoast>> _attributeComponent{*this,"Attributes"};
     
     std::vector<ClassFileComponent*> _components{&_magic,
@@ -122,8 +123,9 @@ namespace frenchroast {
   
     void load_magic(unsigned char* magic, unsigned char* buf);
     void reset();
-    void update_method(Method& meth, std::bitset<4> flags, const std::string& callTo, ConstantPoolComponent& constPool);
+    void update_method(MethodInfo& meth, std::bitset<4> flags, const std::string& callTo, ConstantPoolComponent& constPool);
   public:
+    FrenchRoast(OpCode opcodes);
     void load_from_buffer(const BYTE* buf);
     void load_to_buffer(BYTE* buf);
     void display(std::ostream& out);
@@ -131,14 +133,12 @@ namespace frenchroast {
     std::string resolve_const(int idx);
     void add_name_to_pool(const std::string& vname);
     void add_native_method(const std::string& vname, const std::string& vtype);
+    void add_static_field(const std::string& vname, const std::string& vtype);
+    MethodInfo add_static_init();
     void add_method_call(const std::string& callFrom, const std::string& callTo, std::bitset<4> flags);
     short add_constant_integer_value(int value);
     void modify_constant(const std::string& fieldname, short descriptorIndex);
-    FrenchRoast(OpCode opcodes);
     std::vector<std::string> get_method_descriptors();
-    static const std::bitset<4> METHOD_ENTER;
-    static const std::bitset<4> METHOD_EXIT;
-    static const std::bitset<4> METHOD_TIMER;
   };
 
 }

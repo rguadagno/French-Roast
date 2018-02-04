@@ -44,6 +44,23 @@ namespace frenchroast {
     }
   }
 
+  Instruction::Instruction( const Instruction& ref)
+  {
+    _opCode = ref._opCode;
+    _address = ref._address;
+    memcpy(_operand, ref._operand, 2);
+    _opbuf_size = ref._opbuf_size;
+    if ( _opCode.is_dynamic() || _opCode.is_raw()) {
+      _opbuf = new BYTE[_opbuf_size];
+      memcpy(_opbuf,ref._opbuf,_opbuf_size);
+
+    }
+    else {
+      _opbuf = nullptr;
+    }
+  }
+
+  
   Instruction::Instruction( Instruction&& ref)
   {
     _opCode = ref._opCode;
@@ -59,20 +76,20 @@ namespace frenchroast {
     }
   }
 
-  void Instruction::operator=( Instruction& ref)
+  void Instruction::operator=( const Instruction& ref)
   {
+    delete _opbuf;
     _opCode = ref._opCode;
     _address = ref._address;
     memcpy(_operand, ref._operand, 2);
     _opbuf_size = ref._opbuf_size;
     if ( _opCode.is_dynamic() || _opCode.is_raw()) {
-      _opbuf = ref._opbuf;
-      ref._opbuf = nullptr;
+      _opbuf = new BYTE[_opbuf_size];
+      memcpy(_opbuf,ref._opbuf,_opbuf_size);
     }
     else {
       _opbuf = nullptr;
     }
-  
   }
   
   const std::string Instruction::get_name() const
@@ -235,7 +252,7 @@ namespace frenchroast {
     write_big_e_bytes(_operand,&operand);
   }
   
-  int Instruction::address()
+  int Instruction::address() const
   {
     return _address;
   }

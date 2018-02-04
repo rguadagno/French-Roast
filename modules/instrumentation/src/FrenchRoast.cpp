@@ -24,10 +24,10 @@
 #include "OpCode.h"
 #include "OpCodeConst.h"
 #include "Instruction.h"
-#include "Method.h"
+#include "fr_signals.h"
 
 namespace frenchroast {
-
+ 
   int MagicComponent::size_in_bytes() const
   {
     return sizeof(_number);
@@ -239,10 +239,6 @@ namespace frenchroast {
   }
 
     
-  const std::bitset<4> FrenchRoast::METHOD_ENTER{"0001"};
-  const std::bitset<4> FrenchRoast::METHOD_EXIT {"0010"};
-  const std::bitset<4> FrenchRoast::METHOD_TIMER{"0100"};
-
     
   void FrenchRoast::reset()
   {
@@ -251,15 +247,15 @@ namespace frenchroast {
     }
   }
     
-  FrenchRoast::FrenchRoast(frenchroast::OpCode opcodes) : _opCodes(opcodes)
-  {
+  FrenchRoast::FrenchRoast(frenchroast::OpCode opcodes) : _opCodes(opcodes), _methodsComponent(_constPool)
+  {    
   }
 
 
 
   std::vector<std::string> FrenchRoast::get_method_descriptors()
   {
-    return _methodsComponent.get_items_names();
+    return _methodsComponent.get_method_descriptors();
   }
   
   std::string FrenchRoast::resolve_const(int idx)
@@ -283,14 +279,20 @@ namespace frenchroast {
     _magic.load_from_buffer(kbuf);
     _minorVersion.load_from_buffer(kbuf + (idx+=_magic.size_in_bytes()));
     _majorVersion.load_from_buffer(kbuf + (idx+=_minorVersion.size_in_bytes()));
+
     _constPool.load_from_buffer(kbuf +    (idx+=_majorVersion.size_in_bytes()));
     _accessFlags.load_from_buffer(kbuf +  (idx+=_constPool.size_in_bytes()));
     _thisClass.load_from_buffer(kbuf +    (idx+=_accessFlags.size_in_bytes()));
+
     _superClass.load_from_buffer(kbuf +   (idx+=_thisClass.size_in_bytes()));
     _interfaces.load_from_buffer(kbuf +   (idx+=_superClass.size_in_bytes()));
+
     _fieldsComponent.load_from_buffer(kbuf +   (idx+=_interfaces.size_in_bytes()));
+
     _methodsComponent.load_from_buffer(kbuf +   (idx+=_fieldsComponent.size_in_bytes()));
-    _attributeComponent.load_from_buffer(kbuf +   (idx+=_methodsComponent.size_in_bytes()));
+      idx+=_methodsComponent.size_in_bytes();
+    _attributeComponent.load_from_buffer(kbuf +   idx);
+    idx+=_attributeComponent.size_in_bytes();
   }
 
   void FrenchRoast::load_to_buffer(BYTE* kbuf)
@@ -345,20 +347,29 @@ namespace frenchroast {
     
   void FrenchRoast::add_native_method(const std::string& vname, const std::string& vtype)
   {
+    short flags = AccessFlagsComponent::ACC_NATIVE | AccessFlagsComponent::ACC_PUBLIC | AccessFlagsComponent::ACC_STATIC;
+    MethodInfo method{flags, static_cast<short>(_constPool.add_name(vname)), static_cast<short>(_constPool.add_name(vtype))};
+    _methodsComponent.add_method(std::move(method));
+  }
+
+  void FrenchRoast::add_static_field(const std::string& vname, const std::string& vtype)
+  {
     short descriptorIndex = _constPool.add_name(vtype);
     short nameIndex       = _constPool.add_name(vname);
     Info<FrenchRoast> method{*this};
-    short flags = AccessFlagsComponent::ACC_NATIVE | AccessFlagsComponent::ACC_PUBLIC | AccessFlagsComponent::ACC_STATIC;
+    short flags = AccessFlagsComponent::ACC_PUBLIC | AccessFlagsComponent::ACC_STATIC;
     method.set_flags(flags);
     method.set_name_index(nameIndex);
     method.set_descriptor_index(descriptorIndex);
-    _methodsComponent.add_item(method);
+    _fieldsComponent.add_item(method);
   }
 
-  void FrenchRoast::update_method(Method& meth, std::bitset<4> flags, const std::string& callTo, ConstantPoolComponent& constPool)
+
+
+  void FrenchRoast::update_method(MethodInfo& meth, std::bitset<4> flags, const std::string& callTo, ConstantPoolComponent& constPool)
   {
     int hook_id =   _constPool.add_method_ref_index(callTo);
-    if ((flags & METHOD_ENTER) == METHOD_ENTER) {
+    if ((flags & frenchroast::signal::Signals::METHOD_ENTER) == frenchroast::signal::Signals::METHOD_ENTER) {
       std::vector<Instruction> instructions;
       instructions.push_back(Instruction(_opCodes[opcode::aload_0]));
       instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  hook_id));
@@ -368,7 +379,7 @@ namespace frenchroast {
       }
     }
     
-    if ((flags & METHOD_EXIT) == METHOD_EXIT) {
+    if ((flags & frenchroast::signal::Signals::METHOD_EXIT) == frenchroast::signal::Signals::METHOD_EXIT) {
       std::vector<Instruction> instructions;
       instructions.push_back(Instruction(_opCodes[opcode::aload_0]));
       instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  hook_id));
@@ -382,7 +393,7 @@ namespace frenchroast {
       }
 
     }
-    if ((flags & METHOD_TIMER) == METHOD_TIMER) {
+    if ((flags & frenchroast::signal::Signals::METHOD_TIMER) == frenchroast::signal::Signals::METHOD_TIMER) {
       int enter_id = constPool.add_string("enter");
       int exit_id = constPool.add_string("exit");
       constPool.add_name("java/lang/System");
@@ -414,72 +425,18 @@ namespace frenchroast {
       }
       meth.set_max_stack( meth.get_max_stack() + 4);
     }
-    
-    
   }
-  
-  
+
   void FrenchRoast::add_method_call(const std::string& callFrom, const std::string& callTo, std::bitset<4> flags)
   {
-    if (!_methodsComponent.has_item(callFrom)) {
+    if (!_methodsComponent.has_method(callFrom)) {
       std::cout << "ERROR, does not Exist: " << callFrom << std::endl; 
     }
     ConstantPoolComponent::validate_method_name(callTo); 
-    Method method;
-    // * LOAD
-    BYTE* methodBuffer = _methodsComponent.get_item(callFrom).get_attribute("Code")._info;
-    int code_length = to_int(methodBuffer +4,4);
-    int exception_table_length = to_int(methodBuffer + 8 + code_length ,2);
-    BYTE* exceptionBuffer = methodBuffer + 8 + code_length;
-    method.load_from_buffer(methodBuffer, exceptionBuffer);
-
-    int attribStart = 8 + code_length  + exception_table_length * 8 +2;
-
-    InfoComponent<FrenchRoast, Attribute<FrenchRoast>> methodAttributes{*this,"Attributes"};
-    methodAttributes.load_from_buffer(methodBuffer + attribStart);
-
-    int origAttributeLength = _methodsComponent.get_item(callFrom).get_attribute("Code").get_length();
-    int origCodeLength      = method.size_in_bytes();
-    int origNonCodeLength   = origAttributeLength - origCodeLength;
-
+    MethodInfo method = _methodsComponent.get_method(callFrom);
     update_method(method, flags, callTo, _constPool);
-    
-    if (methodAttributes.has_item("StackMapTable")) {
-      BYTE* ptr = methodAttributes.get_item("StackMapTable")._info;
-      short frameCount = to_int(ptr,2);
-      std::vector<StackMapFrame*> frames = load_frames_from_buffer(frameCount, ptr + 2);
-      int origframebytes = 0;
-      for(auto& x : frames) {
-         origframebytes += x->size_in_bytes();
-      }
-      origNonCodeLength -= origframebytes;
-      method.adjust_frames(frames);
-      delete[] methodAttributes.get_item("StackMapTable")._info;
-      int framebytes = 0;
-      for(auto& x : frames) {
-        framebytes += x->size_in_bytes();
-      }
-      origNonCodeLength += framebytes;
-      methodAttributes.get_item("StackMapTable")._info = new BYTE[framebytes +2];
-      ptr = methodAttributes.get_item("StackMapTable")._info;
-      write_bytes(ptr,frameCount,2);
-      load_frames_to_buffer(frames,ptr + 2);
-    }
-    
-    _methodsComponent.get_item(callFrom).get_attribute("Code").set_length(method.size_in_bytes() + origNonCodeLength);
-
-    BYTE* newbuf = new BYTE[method.size_in_bytes() + origNonCodeLength ];
-    method.load_to_buffer(newbuf, exceptionBuffer);
-    memcpy(newbuf + method.size_in_bytes(), _methodsComponent.get_item(callFrom).get_attribute("Code")._info + origCodeLength, origNonCodeLength);
-    
-    exception_table_length = to_int(newbuf + 8 + to_int(newbuf +4,4),2);
-    attribStart = 8 + to_int(newbuf +4,4)  + exception_table_length * 8 +2;
-    methodAttributes.load_to_buffer(newbuf + attribStart);
-    delete[] _methodsComponent.get_item(callFrom).get_attribute("Code")._info;
-   _methodsComponent.get_item(callFrom).get_attribute("Code")._info = newbuf;
-
-  
-}
+    _methodsComponent.add_method(std::move(method));
+  }
     
 }
 

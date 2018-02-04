@@ -22,48 +22,6 @@
 
 namespace frenchroast {
 
-  class VerificationType {
-  protected:
-    BYTE _type;
-  public:
-    virtual int size_in_bytes() const { return 1; }
-    virtual void adjust_offset(int amount) {}
-    virtual void load_from_buffer(BYTE* buf) { _type = *buf;} 
-    virtual void load_to_buffer(BYTE* buf)  { *buf = _type; }
-  };
-
-  class TopVerificationType : public VerificationType {};
-  class IntegerVerificationType : public VerificationType {};
-  class FloatVerificationType : public VerificationType {};
-  class DoubleVerificationType : public VerificationType {};
-  class LongVerificationType : public VerificationType {};
-  class NullVerificationType : public VerificationType {};
-  class UninitializedThisVerificationType : public VerificationType {};
-  class ObjectVerificationType : public VerificationType {
-    BYTE _constPoolIndex[2];
-  public:
-    int size_in_bytes() const
-    {
-      return 3;
-    }
-
-    void adjust_offset(int amount)
-    {
-
-    }
-
-    void load_from_buffer(BYTE* buf)
-    {
-      _type = *buf;
-      memcpy(_constPoolIndex, buf+1,2);
-    }
-    
-    void load_to_buffer(BYTE* buf)
-    {
-      *buf = _type;
-      memcpy(buf+1,_constPoolIndex,2);
-    }
-  };
     
   class UninitializedVerificationType : public VerificationType {
     BYTE _offset[2];
@@ -162,6 +120,11 @@ namespace frenchroast {
     {
       *buf = _frameType;
     }
+    
+    StackMapFrame* copy() const
+    {
+      return new SameFrame(*this);
+    }
   };
 
   SameFrameExtended::SameFrameExtended() 
@@ -202,6 +165,11 @@ namespace frenchroast {
     {
       memcpy(buf,    &_frameType, 1);
       memcpy(buf +1, _offsetDelta,2);
+    }
+
+    StackMapFrame* SameFrameExtended::copy() const
+    {
+      return new SameFrameExtended(*this);
     }
   
   class SameLocalsOneStackFrame : public StackMapFrame {
@@ -247,6 +215,12 @@ namespace frenchroast {
       *buf = _frameType;
       save_verification_items(buf +  1, _verificationInfoList);
     }
+    
+    StackMapFrame* copy() const
+    {
+      return new SameLocalsOneStackFrame(*this);
+    }
+
   };
 
   class AppendFrame : public StackMapFrame {
@@ -293,39 +267,50 @@ namespace frenchroast {
       memcpy(buf +1, _offsetDelta,2);
       save_verification_items(buf +  3, _verificationInfoList);
     }
+    
+    StackMapFrame* copy() const
+    {
+      return new AppendFrame(*this);
+    }
+
+    
   };
 
-  class FullFrame : public StackMapFrame {
-    BYTE _offsetDelta[2];
-    BYTE _localsCount[2];
-    BYTE _stackCount[2];
+  FullFrame::FullFrame(short offsetDelta, short localsCount, std::vector<short>& idxs,short stackCount)
+    {
+      _frameType = 255;
+      write_big_e_bytes(_offsetDelta,&offsetDelta);
+      write_big_e_bytes(_localsCount,&localsCount);
+      write_big_e_bytes(_stackCount,&stackCount);
+      _size = 7;
+      for(auto& vtypeIdx : idxs) {
+        _verificationLocals.push_back(new ObjectVerificationType(vtypeIdx));
+        _size += 3;
+      }
+    }
     
-    std::vector<VerificationType*> _verificationLocals;
-    std::vector<VerificationType*> _verificationStack;
-    int _size;
-  public:
-    operator int() const
+    FullFrame::operator int() const
     {
       return stackmapframe::full;
     }
 
-    int size_in_bytes() const
+    int FullFrame::size_in_bytes() const
     {
       return _size;
     }
 
-    bool adjust_offset(short offset)
+    bool FullFrame::adjust_offset(short offset)
     {
       write_big_e_bytes(_offsetDelta,&offset);
       return true;
     }
 
-    int offset() const
+    int FullFrame::offset() const
     {
       return to_int(_offsetDelta,2);
     }
     
-    void load_from_buffer(BYTE* buf)
+    void FullFrame::load_from_buffer(BYTE* buf)
     {
       _frameType = *buf;
       memcpy(_offsetDelta,buf +1, 2);
@@ -346,7 +331,7 @@ namespace frenchroast {
       }
     }
 
-    void load_to_buffer(BYTE* buf)
+  void FullFrame::load_to_buffer(BYTE* buf)
     {
       memcpy(buf,    &_frameType, 1);
       memcpy(buf +1, _offsetDelta,2);
@@ -361,7 +346,12 @@ namespace frenchroast {
       memcpy(buf + size, _stackCount,2);
       save_verification_items(buf +  size + 2, _verificationStack);
     }
-  };
+
+  StackMapFrame* FullFrame::copy() const
+  {
+    return new FullFrame(*this);
+  }
+  
 
 
   class ChopFrame : public StackMapFrame {
@@ -400,6 +390,11 @@ namespace frenchroast {
     {
       memcpy(buf,    &_frameType, 1);
       memcpy(buf +1, _offsetDelta,2);
+    }
+
+    StackMapFrame* copy() const
+    {
+      return new ChopFrame(*this);
     }
 
   };

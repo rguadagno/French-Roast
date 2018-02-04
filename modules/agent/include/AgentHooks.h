@@ -33,48 +33,75 @@ public:
    jint           _size;
 };
 
+namespace frenchroast { namespace agent {
+    
+     const std::string HOOK_SIGNAL_DESCRIPTOR = "java/lang/Package.thook:(Ljava/lang/Object;)V";
+     const std::string HOOK_TIMER_DESCRIPTOR  = "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V";
+     const std::string HOOK_MONITOR_HEAP_DESCRIPTOR = "java/lang/Package.heaphook:(I)V";
+  }
+}
+
 void add_thook_to_package(frenchroast::FrenchRoast& fr, const unsigned char* class_data, jvmtiEnv* env, jint* new_class_data_len, unsigned char** new_class_data);
 
 void remove_hooks(const unsigned char* orig_class_data, jint orig_size, jvmtiEnv *env,jint* new_class_data_len, unsigned char** new_class_data);
 
+
+template <typename FRType = frenchroast::FrenchRoast>
+void add_hooks_to_all_methods(FRType& fr, std::bitset<4> flags)
+{
+  for(auto methdesc : fr.get_method_descriptors()) {
+    if(methdesc.find("main") != std::string::npos) continue;
+    if( methdesc.find("<init") == std::string::npos ) {
+      fr.add_method_call(methdesc, frenchroast::agent::HOOK_SIGNAL_DESCRIPTOR, flags);
+    }
+    else {
+      fr.add_method_call(methdesc, frenchroast::agent::HOOK_SIGNAL_DESCRIPTOR, frenchroast::signal::Signals::METHOD_EXIT);
+    }
+  }
+}
+
+template <typename FRType = frenchroast::FrenchRoast>
+void add_hooks_to_all_constructors(FRType& fr, std::bitset<4> flags)
+{
+  for(auto methdesc : fr.get_method_descriptors()) {
+    if(methdesc.find("main") != std::string::npos) continue;
+    if( methdesc.find("<init") != std::string::npos ) {
+      fr.add_method_call(methdesc, frenchroast::agent::HOOK_MONITOR_HEAP_DESCRIPTOR, flags);
+    }
+  }
+}
+
+
 template <typename FRType = frenchroast::FrenchRoast>
 void add_hooks(FRType& fr, frenchroast::signal::Signals& hooks, std::unordered_map<std::string, bool>& artifacts, const std::string& sname, jvmtiEnv *env,jint* new_class_data_len, unsigned char** new_class_data)
 {
-    for (auto& x : hooks[sname]) {
+  for (auto& x : hooks[sname]) {
+    if(!x.monitor_heap()) {
       std::string rawDesc = "L" + sname + ";::" + x.method_name();
       frenchroast::monitor::Descriptor dsc{rawDesc};
       artifacts[rawDesc] = x.artifacts();
       artifacts[dsc.full_name()] = x.artifacts();
-    if (x.line_number() > 0) {
-      fr.add_method_call(x.method_name(), "java/lang/Package.thook:()V", x.line_number());
+    }
+    if ((x.flags() & frenchroast::signal::Signals::METHOD_TIMER) == frenchroast::signal::Signals::METHOD_TIMER) {
+      fr.add_method_call(x.method_name(), frenchroast::agent::HOOK_TIMER_DESCRIPTOR, x.flags());
     }
     else {
-      if ((x.flags() & frenchroast::FrenchRoast::METHOD_TIMER) == frenchroast::FrenchRoast::METHOD_TIMER) {
-        fr.add_method_call(x.method_name(), "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V", x.flags());
+      if(x.all()) {
+        add_hooks_to_all_methods(fr,x.flags());
+      }
+      else if(x.monitor_heap()) {
+        add_hooks_to_all_constructors(fr, x.flags());
       }
       else {
-        if(x.all()) {
-          for(auto methdesc : fr.get_method_descriptors()) {
-            if(methdesc.find("main") == std::string::npos         ) {
-              if( methdesc.find("<init") == std::string::npos ) {
-                fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
-              }
-              else {
-                  fr.add_method_call(methdesc, "java/lang/Package.thook:(Ljava/lang/Object;)V", frenchroast::FrenchRoast::METHOD_EXIT);
-              }
-            }
-          }
-        }
-        else {
-          fr.add_method_call(x.method_name(), "java/lang/Package.thook:(Ljava/lang/Object;)V", x.flags());
-        }
+          fr.add_method_call(x.method_name(), frenchroast::agent::HOOK_SIGNAL_DESCRIPTOR, x.flags());
       }
     }
-    jint size = fr.size_in_bytes();
-    jvmtiError  err =    env->Allocate(size,new_class_data);
-    *new_class_data_len = size;
-    fr.load_to_buffer(*new_class_data);
-  }
-
+      
+      jint size = fr.size_in_bytes();
+      jvmtiError  err =    env->Allocate(size,new_class_data);
+      *new_class_data_len = size;
+      fr.load_to_buffer(*new_class_data);
+    }
+    
 }
 #endif

@@ -37,8 +37,9 @@ namespace frenchroast {
     Instruction(const OpCode& opcode);
     Instruction(const OpCode& opcode, short operand);
     ~Instruction();
+    Instruction(const Instruction& ref);
     Instruction(Instruction&& ref);
-    void operator=( Instruction& ref);
+    void operator=( const Instruction& ref);
     const std::string get_name() const;
     int size() const;
     int load_from_buffer(const BYTE* buf, int address, int& loaded);
@@ -46,7 +47,7 @@ namespace frenchroast {
     short get_operand() const;
     short offset() const;
     void set_operand(short operand);
-    int address();
+    int address() const;
     OpCode& opcode();
     void set_address(int addr);
     bool is_branch() const;

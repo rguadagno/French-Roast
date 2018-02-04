@@ -51,6 +51,11 @@ namespace frenchroast {
       write_big_e_bytes(_nameIndex, &idx);
     }
 
+    short get_name_index()
+    {
+      return to_int(_nameIndex,2);
+    }
+    
     void set_descriptor_index(short idx)
     {
       write_big_e_bytes(_descriptorIndex, &idx);

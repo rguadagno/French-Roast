@@ -16,21 +16,24 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 //
+#include <unordered_map>
 #include "catch.hpp"
 #include "ClassFileComponent.h"
 #include "Util.h"
 #include "Instruction.h"
 #include "OpCodeConst.h"
-#include "Method.h"
+#include "MethodInfo.h"
 #include "StackMapFrame.h"
 #include "FrameConst.h"
+#include "AccessFlags.h"
 
 
 using namespace frenchroast;
 
 
-BYTE* build_zero_exceptions()
+BYTE* build_zero_exceptions(int& size)
 {
+  size = 2;
   BYTE* buf = new BYTE[2];
   short exceptionCount = 0;
   write_big_e_bytes(buf, &exceptionCount);
@@ -38,7 +41,28 @@ BYTE* build_zero_exceptions()
 }
 
 
-BYTE* build_simple_method(int& size)
+
+BYTE* build_stack_maps_for_simple(int& size,  std::unordered_map<std::string,short>& ids)
+{
+  short name_index = ids["StackMapTable"];
+  int attrib_length;
+  short count = 1;
+  BYTE  frame    = 11;
+
+
+  size = sizeof(name_index) + sizeof(attrib_length) + sizeof(count) + sizeof(frame);
+  attrib_length = sizeof(count) + sizeof(frame);
+  BYTE* buf = new BYTE[size];
+  BYTE* ptr = buf;
+  wbytes(ptr,&name_index);
+  wbytes(ptr,&attrib_length);
+  wbytes(ptr,&count);
+  wbytes(ptr,&frame);
+  
+  return buf;
+}
+
+BYTE* build_simple_method(int& size, std::unordered_map<std::string, short>& ids)
 {
 /*
    ----------- method ------------------
@@ -52,31 +76,93 @@ BYTE* build_simple_method(int& size)
    --------------------------------------   
  
 */
-  size = 12;
-  BYTE* buf = new BYTE[size + 8];
+
+  short accessFlags = AccessFlagsComponent::ACC_PUBLIC;
+  short nameIndex   = ids["SomeFunc"];
+  short descriptorIndex   = ids["()V"];
+  short attributesCount = 1;
+
+  short attrib_name_index = ids["Code"];
   short maxStack = 2;
   short maxLocals = 2;
-  int codeLength = size;
-  write_big_e_bytes(buf, &maxStack);
-  write_big_e_bytes(buf +2 , &maxLocals);
-  write_big_e_bytes(buf +4 , &codeLength);
+  int codeLength = 12;
+  short exceptionTableLength = 0;
+  short codeAttributeCount =1 ;
 
-  BYTE* code = buf + 8;
-  *(code + 0) = opcode::iload_1;
-  *(code + 1) = opcode::bipush; *(code + 2) = 10;
-  *(code + 3) = opcode::if_icmpge; write_bytes(code + 4, 8, 2);
-  *(code + 6) = opcode::aload_0;
-  *(code + 7) = opcode::iload_1;
-  *(code + 8) = opcode::invokevirtual; write_bytes(code + 9, 7, 2);
-  *(code + 11) = opcode::xreturn;
+  int stack_map_size;
+  BYTE* sm_buf = build_stack_maps_for_simple(stack_map_size,ids);
+  int   attribute_length  = sizeof(maxStack) + sizeof(maxLocals) + sizeof(codeLength) +
+    codeLength + sizeof(exceptionTableLength) + sizeof(codeAttributeCount) + stack_map_size;
+
+
+  size = sizeof(accessFlags) +
+         sizeof(nameIndex) +
+         sizeof(descriptorIndex) +
+         sizeof(attributesCount) +
+         6 + 
+         attribute_length
+       
+    ;
+
+  BYTE* buf = new BYTE[size];
+  BYTE* ptr = buf;
+  wbytes(ptr , &accessFlags);
+  wbytes(ptr , &nameIndex);
+  wbytes(ptr , &descriptorIndex);
+  wbytes(ptr , &attributesCount);
+  
+  wbytes(ptr , &attrib_name_index);
+  wbytes(ptr , &attribute_length);
+  
+  wbytes(ptr , &maxStack);
+  wbytes(ptr , &maxLocals);
+  wbytes(ptr , &codeLength);
+
+  *(ptr + 0) = opcode::iload_1;
+  *(ptr + 1) = opcode::bipush; *(ptr + 2) = 10;
+  *(ptr + 3) = opcode::if_icmpge; write_bytes(ptr + 4, 8, 2);
+  *(ptr + 6) = opcode::aload_0;
+  *(ptr + 7) = opcode::iload_1;
+  *(ptr + 8) = opcode::invokevirtual; write_bytes(ptr + 9, 7, 2);
+  *(ptr + 11) = opcode::xreturn;
+  ptr += 12;
+  int zero_excep_size;
+  BYTE* excep_buf = build_zero_exceptions(zero_excep_size);
+  memcpy(ptr,excep_buf, zero_excep_size);
+  ptr += zero_excep_size;
+  short codeAttribLen = 1;
+  wbytes(ptr,&codeAttribLen);
+  memcpy(ptr,sm_buf,stack_map_size);
   return buf;
 }
 
 
 
+BYTE* build_stack_maps_for_lookupswitch(int& size, std::unordered_map<std::string, short>& ids)
+{
+  short name_index = ids["StackMapTable"];
+  int attrib_length;
+  short count = 3;
+
+  size = sizeof(name_index) + sizeof(attrib_length) + sizeof(count) + count;
+  attrib_length = sizeof(count) + 3;
+
+  BYTE* buf = new BYTE[size];
+  BYTE* ptr = buf;
+  wbytes(ptr,&name_index);
+  wbytes(ptr,&attrib_length);
+  wbytes(ptr,&count);
+
+  
+  *(ptr + 0) = 28;
+  *(ptr + 1) = 10;
+  *(ptr + 2) = 7;
+  return buf;
+}
 
 
-BYTE* build_lookupswitch_method(int& size)
+
+BYTE* build_lookupswitch_method(int& size, std::unordered_map<std::string, short>& ids)
 {
 /*
    ----------- method ------------------
@@ -95,17 +181,50 @@ public void something(int x) {
 
 */
 
-  size = 48;
-  BYTE* buf = new BYTE[size + 8];
-  memset(buf,0,size);
+  short accessFlags = AccessFlagsComponent::ACC_PUBLIC;
+  short nameIndex   = ids["SomeFunc"];
+  short descriptorIndex   = ids["()V"];
+  short attributesCount = 1;
+
+  short attrib_name_index = ids["Code"];
   short maxStack = 2;
   short maxLocals = 2;
-  int codeLength = size;
-  write_big_e_bytes(buf, &maxStack);
-  write_big_e_bytes(buf +2 , &maxLocals);
-  write_big_e_bytes(buf +4 , &codeLength);
+  int codeLength = 48;
+  short exceptionTableLength = 0;
+  short codeAttributeCount =1 ;
 
-  BYTE* code = buf + 8;
+  
+  int stack_map_size;
+  BYTE* sm_buf = build_stack_maps_for_lookupswitch(stack_map_size,ids);
+
+
+
+  int   attribute_length  = sizeof(maxStack) + sizeof(maxLocals) + sizeof(codeLength) +
+    codeLength + sizeof(exceptionTableLength) + sizeof(codeAttributeCount) + stack_map_size;
+
+
+  size = sizeof(accessFlags) +
+         sizeof(nameIndex) +
+         sizeof(descriptorIndex) +
+         sizeof(attributesCount) +
+         6 + 
+         attribute_length;
+
+  BYTE* buf = new BYTE[size];
+  BYTE* ptr = buf;
+  wbytes(ptr , &accessFlags);
+  wbytes(ptr , &nameIndex);
+  wbytes(ptr , &descriptorIndex);
+  wbytes(ptr , &attributesCount);
+  
+  wbytes(ptr , &attrib_name_index);
+  wbytes(ptr , &attribute_length);
+  
+  wbytes(ptr , &maxStack);
+  wbytes(ptr , &maxLocals);
+  wbytes(ptr , &codeLength);
+
+  BYTE* code = ptr;
   *(code + 0) = opcode::iload_1;
   *(code + 1) = opcode::lookupswitch;
   int pad = Instruction::calc_pad(1);
@@ -126,12 +245,23 @@ public void something(int x) {
   *(code + 42) = opcode::ldc;           *(code + 43) = DOES_NOT_MATTER;
   *(code + 44) = opcode::invokevirtual; write_bytes(code + 45, DOES_NOT_MATTER, 2);
   *(code + 47) = opcode::xreturn;
+
+  //-----------------------------
+  ptr += 48;
+  int zero_excep_size;
+  BYTE* excep_buf = build_zero_exceptions(zero_excep_size);
+  memcpy(ptr,excep_buf, zero_excep_size);
+  ptr += zero_excep_size;
+  short codeAttribLen = 1;
+  wbytes(ptr,&codeAttribLen);
+  memcpy(ptr,sm_buf,stack_map_size);
+
   
   return buf;
 }
 
 
-BYTE* build_lookupswitch_return_method(int& size)
+BYTE* build_lookupswitch_return_method(int& size, std::unordered_map<std::string, short>& ids)
 {
   
 
@@ -150,19 +280,51 @@ BYTE* build_lookupswitch_return_method(int& size)
   //    System.out.println("NOTHING");
   //}
 
+  short accessFlags = AccessFlagsComponent::ACC_PUBLIC;
+  short nameIndex   = ids["SomeFunc"];
+  short descriptorIndex   = ids["()V"];
+  short attributesCount = 1;
 
-
-  size = 54;
-  BYTE* buf = new BYTE[size + 8];
-  memset(buf,0,size);
+  short attrib_name_index = ids["Code"];
   short maxStack = 2;
   short maxLocals = 2;
-  int codeLength = size;
-  write_big_e_bytes(buf, &maxStack);
-  write_big_e_bytes(buf +2 , &maxLocals);
-  write_big_e_bytes(buf +4 , &codeLength);
+  int codeLength = 54;
+  short exceptionTableLength = 0;
+  short codeAttributeCount =1 ;
 
-  BYTE* code = buf + 8;
+  
+  int stack_map_size;
+  BYTE* sm_buf = build_stack_maps_for_lookupswitch(stack_map_size,ids);
+
+
+
+  int   attribute_length  = sizeof(maxStack) + sizeof(maxLocals) + sizeof(codeLength) +
+    codeLength + sizeof(exceptionTableLength) + sizeof(codeAttributeCount) + stack_map_size;
+
+
+  size = sizeof(accessFlags) +
+         sizeof(nameIndex) +
+         sizeof(descriptorIndex) +
+         sizeof(attributesCount) +
+         6 + 
+         attribute_length;
+
+  BYTE* buf = new BYTE[size];
+  BYTE* ptr = buf;
+  wbytes(ptr , &accessFlags);
+  wbytes(ptr , &nameIndex);
+  wbytes(ptr , &descriptorIndex);
+  wbytes(ptr , &attributesCount);
+  
+  wbytes(ptr , &attrib_name_index);
+  wbytes(ptr , &attribute_length);
+  
+  wbytes(ptr , &maxStack);
+  wbytes(ptr , &maxLocals);
+  wbytes(ptr , &codeLength);
+
+  BYTE* code = ptr;
+
   *(code + 0) = opcode::iload_1;
   *(code + 1) = opcode::lookupswitch;
   int pad = Instruction::calc_pad(1);
@@ -186,12 +348,22 @@ BYTE* build_lookupswitch_return_method(int& size)
   *(code + 48) = opcode::ldc;           *(code + 49) = DOES_NOT_MATTER;
   *(code + 50) = opcode::invokevirtual; write_bytes(code + 51, DOES_NOT_MATTER, 2);
   *(code + 53) = opcode::xreturn;
-  
+
+  ptr += 54;
+  int zero_excep_size;
+  BYTE* excep_buf = build_zero_exceptions(zero_excep_size);
+  memcpy(ptr,excep_buf, zero_excep_size);
+  ptr += zero_excep_size;
+  short codeAttribLen = 1;
+  wbytes(ptr,&codeAttribLen);
+  memcpy(ptr,sm_buf,stack_map_size);
+
+
   return buf;
 }
 
 
-BYTE* build_multi_return_method(int& size)
+BYTE* build_multi_return_method(int& size, std::unordered_map<std::string, short>& ids)
 {
 
 
@@ -211,19 +383,54 @@ BYTE* build_multi_return_method(int& size)
 //      }
   //  }
 
-  
-  const int DOES_NOT_MATTER = 1; // since code is not to be run just make it clear
-  size = 42;
-  BYTE* buf = new BYTE[size + 8];
-  memset(buf,0,size);
+
+  short accessFlags = AccessFlagsComponent::ACC_PUBLIC;
+  short nameIndex   = ids["SomeFunc"];
+  short descriptorIndex   = ids["()V"];
+  short attributesCount = 1;
+
+  short attrib_name_index = ids["Code"];
   short maxStack = 2;
   short maxLocals = 2;
-  int codeLength = size;
-  write_big_e_bytes(buf, &maxStack);
-  write_big_e_bytes(buf +2 , &maxLocals);
-  write_big_e_bytes(buf +4 , &codeLength);
+  int codeLength = 42;
+  short exceptionTableLength = 0;
+  short codeAttributeCount =1 ;
+
   
-  BYTE* code = buf + 8;
+  int stack_map_size;
+  BYTE* sm_buf = build_stack_maps_for_lookupswitch(stack_map_size,ids);
+
+
+
+  int   attribute_length  = sizeof(maxStack) + sizeof(maxLocals) + sizeof(codeLength) +
+    codeLength + sizeof(exceptionTableLength) + sizeof(codeAttributeCount) + stack_map_size;
+
+
+  size = sizeof(accessFlags) +
+         sizeof(nameIndex) +
+         sizeof(descriptorIndex) +
+         sizeof(attributesCount) +
+         6 + 
+         attribute_length;
+
+  BYTE* buf = new BYTE[size];
+  BYTE* ptr = buf;
+  wbytes(ptr , &accessFlags);
+  wbytes(ptr , &nameIndex);
+  wbytes(ptr , &descriptorIndex);
+  wbytes(ptr , &attributesCount);
+  
+  wbytes(ptr , &attrib_name_index);
+  wbytes(ptr , &attribute_length);
+  
+  wbytes(ptr , &maxStack);
+  wbytes(ptr , &maxLocals);
+  wbytes(ptr , &codeLength);
+
+  
+  const int DOES_NOT_MATTER = 1; // since code is not to be run just make it clear
+  
+  BYTE* code = ptr;
   *(code + 0) = opcode::iload_1;
   *(code + 1) = opcode::bipush;         write_bytes(code + 2, DOES_NOT_MATTER, 1);
   *(code + 3) = opcode::if_icmpge;      write_bytes(code + 4, 16, 2);
@@ -245,48 +452,49 @@ BYTE* build_multi_return_method(int& size)
   *(code + 37) = opcode::invokevirtual; write_bytes(code + 38, DOES_NOT_MATTER, 2);
   *(code + 40) = opcode::iconst_m1;
   *(code + 41) = opcode::ireturn;
-   
+
+  ptr += 42;
+  int zero_excep_size;
+  BYTE* excep_buf = build_zero_exceptions(zero_excep_size);
+  memcpy(ptr,excep_buf, zero_excep_size);
+  ptr += zero_excep_size;
+  short codeAttribLen = 1;
+  wbytes(ptr,&codeAttribLen);
+  memcpy(ptr,sm_buf,stack_map_size);
+
+  
   return buf;
 }
 
-BYTE* build_stack_maps_for_simple()
-{
-  BYTE* buf = new BYTE[1];
-  *buf = 11;
-  return buf;
-}
-
-BYTE* build_stack_maps_for_lookupswitch()
-{
-  BYTE* buf = new BYTE[3];
-  *(buf + 0) = 28;
-  *(buf + 1) = 10;
-  *(buf + 2) = 7;
-  return buf;
-}
 
 
 
 TEST_CASE ( "method) = opcode:: [simple] load from buffer")
 {
   using namespace frenchroast;
+  std::unordered_map<int, std::string> names;
+  names[1] = "SomeFunc";
+  names[2] = "()V";
+  names[3] = "Code";
+  names[4] = "StackMapTable";
   
+
+  std::unordered_map<std::string, short> ids;
+  for(auto& item : names) {
+    ids[item.second] = item.first;
+  }
   OpCode::load_from_file( std::getenv("OPCODE_FILE"));
   int size;
-  BYTE* buf = build_simple_method(size);
-  BYTE* excepbuf = build_zero_exceptions();
-  Method meth;
-  meth.load_from_buffer(buf, excepbuf);
-  REQUIRE(meth.size_in_bytes() == size + 8);
-
+  BYTE* buf = build_simple_method(size,ids);
+  MethodInfo meth;
+  meth.load_from_buffer(buf,names);
+  REQUIRE(meth.size_in_bytes() == size);
   REQUIRE(meth[7].address() == 11);
   REQUIRE((meth[7].opcode()  == opcode::xreturn)  );
   REQUIRE(meth[3].offset() == 8);
   REQUIRE(meth[3].address() == 3);
-
-  
   delete[] buf;
-  delete[] excepbuf;
+
 }
 
 
@@ -295,12 +503,24 @@ TEST_CASE ( "method: [simple]  add instructions at begin")
 {
   using namespace frenchroast;
   
+  std::unordered_map<int, std::string> names;
+  names[1] = "SomeFunc";
+  names[2] = "()V";
+  names[3] = "Code";
+  names[4] = "StackMapTable";
+  
 
+  std::unordered_map<std::string, short> ids;
+  for(auto& item : names) {
+    ids[item.second] = item.first;
+  }
   int size;
-  BYTE* buf = build_simple_method(size);
-  Method meth;
-  meth.load_from_buffer(buf, build_zero_exceptions());
-  REQUIRE(meth.size_in_bytes() == size + 8);
+  BYTE* buf = build_simple_method(size,ids);
+  MethodInfo meth;
+  meth.load_from_buffer(buf,names);
+  
+
+
   std::vector<Instruction> list;
   OpCode ops;
   list.push_back(Instruction{ops[opcode::invokestatic], 9});
@@ -309,11 +529,10 @@ TEST_CASE ( "method: [simple]  add instructions at begin")
   REQUIRE(meth[7].address() == 11);
   REQUIRE((meth[7].opcode()  == opcode::xreturn ) );
   REQUIRE(meth[3].offset() == 8);
-  REQUIRE(meth.size_in_bytes() == size + 8);
+  REQUIRE(meth.size_in_bytes() == size );
 
   meth.add_instructions(0,list,true);
-  std::cout << "-----\n" << meth << "\n-------" << std::endl;
-  REQUIRE(meth.size_in_bytes() == size + 8 + 3);
+  REQUIRE(meth.size_in_bytes() == size + 3);
   REQUIRE(meth[8].address() == 14);
   REQUIRE((opcode::xreturn == meth[8].opcode()) );
   REQUIRE(meth[4].address() == 6);
@@ -322,16 +541,29 @@ TEST_CASE ( "method: [simple]  add instructions at begin")
   delete[] buf;
 }
 
+
 TEST_CASE ( "method: [simple]  add instructions at end before call to something()")
 {
   using namespace frenchroast;
+  std::unordered_map<int, std::string> names;
+  names[1] = "SomeFunc";
+  names[2] = "()V";
+  names[3] = "Code";
+  names[4] = "StackMapTable";
   
 
+  std::unordered_map<std::string, short> ids;
+  for(auto& item : names) {
+    ids[item.second] = item.first;
+  }
+  
+  
+  OpCode::load_from_file( std::getenv("OPCODE_FILE"));
   int size;
-  BYTE* buf = build_simple_method(size);
-  Method meth;
-  meth.load_from_buffer(buf, build_zero_exceptions());
-  REQUIRE(meth.size_in_bytes() == size + 8);
+  BYTE* buf = build_simple_method(size,ids);
+  MethodInfo meth;
+  meth.load_from_buffer(buf,names);
+  
   std::vector<Instruction> list;
   OpCode ops;
   list.push_back(Instruction{ops[opcode::invokestatic], 9});
@@ -341,7 +573,7 @@ TEST_CASE ( "method: [simple]  add instructions at end before call to something(
   meth.add_instructions(6,list,true);// logical intention is since we inserted instructions at the return (address 11) the
   REQUIRE(meth[3].offset() == 11);   // branch should put us at the new instruction, 
                                   
-  REQUIRE(meth.size_in_bytes() == size + 8 + 3);
+  REQUIRE(meth.size_in_bytes() == size + 3);
   REQUIRE(meth[8].address() == 14);
   REQUIRE((opcode::xreturn == meth[8].opcode()) );
 
@@ -353,13 +585,22 @@ TEST_CASE ( "method: [simple]  add instructions at end before call to something(
 TEST_CASE ( "method: [simple]  add instructions at end after call to something()")
 {
   using namespace frenchroast;
+  std::unordered_map<int, std::string> names;
+  names[1] = "SomeFunc";
+  names[2] = "()V";
+  names[3] = "Code";
+  names[4] = "StackMapTable";
   
 
+  std::unordered_map<std::string, short> ids;
+  for(auto& item : names) {
+    ids[item.second] = item.first;
+  }
   int size;
-  BYTE* buf = build_simple_method(size);
-  Method meth;
-  meth.load_from_buffer(buf,build_zero_exceptions());
-  REQUIRE(meth.size_in_bytes() == size + 8);
+  BYTE* buf = build_simple_method(size,ids);
+  MethodInfo meth;
+  meth.load_from_buffer(buf,names);
+  
   std::vector<Instruction> list;
   OpCode ops;
   list.push_back(Instruction{ops[opcode::invokestatic], 9});
@@ -370,7 +611,7 @@ TEST_CASE ( "method: [simple]  add instructions at end after call to something()
   REQUIRE(meth[3].offset() == 11);
   REQUIRE(meth[3].offset() + meth[3].address() == 14);
                                   
-  REQUIRE(meth.size_in_bytes() == size + 8 + 3);
+  REQUIRE(meth.size_in_bytes() == size + 3);
   REQUIRE(meth[8].address() == 14);
   REQUIRE((opcode::xreturn == meth[8].opcode()) );
 
@@ -383,12 +624,23 @@ TEST_CASE ( "method: [simple]  add instructions at end , always called, not part
 {
   using namespace frenchroast;
   
+  std::unordered_map<int, std::string> names;
+  names[1] = "SomeFunc";
+  names[2] = "()V";
+  names[3] = "Code";
+  names[4] = "StackMapTable";
+  
+
+  std::unordered_map<std::string, short> ids;
+  for(auto& item : names) {
+    ids[item.second] = item.first;
+  }
 
   int size;
-  BYTE* buf = build_simple_method(size);
-  Method meth;
-  meth.load_from_buffer(buf,build_zero_exceptions());
-  REQUIRE(meth.size_in_bytes() == size + 8);
+  BYTE* buf = build_simple_method(size,ids);
+  MethodInfo meth;
+  meth.load_from_buffer(buf,names);
+  REQUIRE(meth.size_in_bytes() == size );
   std::vector<Instruction> list;
   OpCode ops;
   list.push_back(Instruction{ops[opcode::invokestatic], 9});
@@ -401,7 +653,7 @@ TEST_CASE ( "method: [simple]  add instructions at end , always called, not part
   REQUIRE(meth[3].offset() == 8);
   REQUIRE(meth[3].offset() + meth[3].address() == 11);
                                   
-  REQUIRE(meth.size_in_bytes() == size + 8 + 3);
+  REQUIRE(meth.size_in_bytes() == size + 3);
   REQUIRE(meth[8].address() == 14);
   REQUIRE((opcode::xreturn == meth[8].opcode()) );
 
@@ -414,23 +666,34 @@ TEST_CASE ( "method: [simple]  add instructions at end , always called, not part
 TEST_CASE ( "method: [lookupswitch]  add instructions at begin")
 {
   using namespace frenchroast;
-  
+
+  std::unordered_map<int, std::string> names;
+  names[1] = "SomeFunc";
+  names[2] = "()V";
+  names[3] = "Code";
+  names[4] = "StackMapTable";
+
+  std::unordered_map<std::string, short> ids;
+  for(auto& item : names) {
+    ids[item.second] = item.first;
+  }
 
   int size;
-  BYTE* buf = build_lookupswitch_method(size);
-  Method meth;
-  meth.load_from_buffer(buf, build_zero_exceptions());
-  REQUIRE(meth.size_in_bytes() == size + 8);
+  BYTE* buf = build_lookupswitch_method(size,ids);
+  MethodInfo meth;
+
+  meth.load_from_buffer(buf, names);
+  REQUIRE(meth.size_in_bytes() == size );
   std::vector<Instruction> list;
   OpCode ops;
   list.push_back(Instruction{ops[opcode::invokestatic], 9});
   REQUIRE(meth[3].address() == 28);
-  REQUIRE(meth.size_in_bytes() == size + 8 );
+  REQUIRE(meth.size_in_bytes() == size  );
 
   meth.add_instructions(0,list,true);
 
   REQUIRE(meth[2].address() == 3);
-  REQUIRE(meth.size_in_bytes() == size + 8 + 3 + 1 ); // + 1 since change of address for lookupswitch causes pad change
+  REQUIRE(meth.size_in_bytes() == size + 3 + 1 ); // + 1 since change of address for lookupswitch causes pad change
   REQUIRE(meth[10].address() == 47 +1 );
   REQUIRE(meth[3].is_branch() );
   REQUIRE(meth[3].address() == 4 );
@@ -446,7 +709,7 @@ TEST_CASE ( "method: [lookupswitch]  add instructions at begin")
 
   meth.add_instructions(51,list,false);
 
-  REQUIRE(meth.size_in_bytes() == size + 8 + 3 + 1 + 3);
+  REQUIRE(meth.size_in_bytes() == size + 3 + 1 + 3);
   REQUIRE((meth[7].opcode() == opcode::xgoto));
   REQUIRE(meth[7].address() == 40);
   REQUIRE(meth[7].offset() == 11);
@@ -458,50 +721,66 @@ TEST_CASE ( "method: [lookupswitch]  add instructions at begin")
   REQUIRE(meth[3].address() + defaultOffset ==  47 + 3 +1); // orig target + 3 new bytes + 1 byte adjustment
   REQUIRE((opcode::xreturn == meth[12].opcode()) );
 
-
-  
   delete[] buf;
 }
+
+
 
 
 TEST_CASE ( "method: [simple]   SameFrame  adjusted")
 {
   using namespace frenchroast;
   
+  std::unordered_map<int, std::string> names;
+  names[1] = "SomeFunc";
+  names[2] = "()V";
+  names[3] = "Code";
+  names[4] = "StackMapTable";
+  
+  std::unordered_map<std::string, short> ids;
+  for(auto& item : names) {
+    ids[item.second] = item.first;
+  }
 
   int size;
-  BYTE* buf = build_simple_method(size);
-  Method meth;
-  meth.load_from_buffer(buf, build_zero_exceptions());
-  BYTE* sbuf = build_stack_maps_for_simple();
-  std::vector<StackMapFrame*> frames = load_frames_from_buffer(1, sbuf);
-  REQUIRE(frames.size() == 1);
-  
+  BYTE* buf = build_simple_method(size,ids);
+  MethodInfo meth;
+  meth.load_from_buffer(buf, names);
+  REQUIRE(meth.frames().size() == 1);
   std::vector<Instruction> list;
   OpCode ops;
   list.push_back(Instruction{ops[opcode::invokestatic], 9});
-  revisit: REQUIRE(meth[3].address() + meth[3].offset() == 11);
-  
+  REQUIRE(meth[3].address() + meth[3].offset() == 11);
   meth.add_instructions(0,list,true);
-  meth.adjust_frames(frames);
-  REQUIRE(frames[0]->offset() == 14);
+  REQUIRE(meth.frames()[0]->offset() == 14);
   REQUIRE(meth[4].address() + meth[4].offset() == 14);
 
   delete[] buf;
 }
 
+
+
+
 TEST_CASE ( "method: [simple]   SameFrame  promoted to SameFrameExtended ")
 {
   using namespace frenchroast;
+  std::unordered_map<int, std::string> names;
+  names[1] = "SomeFunc";
+  names[2] = "()V";
+  names[3] = "Code";
+  names[4] = "StackMapTable";
   
+  std::unordered_map<std::string, short> ids;
+  for(auto& item : names) {
+    ids[item.second] = item.first;
+  }
 
   int size;
-  BYTE* buf = build_simple_method(size);
-  Method meth;
-  meth.load_from_buffer(buf, build_zero_exceptions());
-  BYTE* sbuf = build_stack_maps_for_simple();
-  std::vector<StackMapFrame*> frames = load_frames_from_buffer(1, sbuf);
-  REQUIRE(frames.size() == 1);
+  BYTE* buf = build_simple_method(size,ids);
+  MethodInfo meth;
+  meth.load_from_buffer(buf, names);
+
+  REQUIRE(meth.frames().size() == 1);
   std::vector<Instruction> list;
   OpCode ops;
   for(int idx = 1; idx <= 20; idx++) {
@@ -510,9 +789,8 @@ TEST_CASE ( "method: [simple]   SameFrame  promoted to SameFrameExtended ")
   REQUIRE(meth[3].address() + meth[3].offset() == 11);
   
   meth.add_instructions(0,list,true);
-  meth.adjust_frames(frames);
-  REQUIRE(frames[0]->offset() == 71);
-  REQUIRE(*(frames[0]) == stackmapframe::same_extended);
+  REQUIRE(meth.frames()[0]->offset() == 71);
+  REQUIRE(*(meth.frames()[0]) == stackmapframe::same_extended);
   REQUIRE(meth[23].address() + meth[23].offset() == 71);
 
   delete[] buf;
@@ -522,29 +800,38 @@ TEST_CASE ( "method: [simple]   SameFrame  promoted to SameFrameExtended ")
 TEST_CASE ( "method: [simple]   multiple SameFrame  adjusted")
 {
   using namespace frenchroast;
+  std::unordered_map<int, std::string> names;
+  names[1] = "SomeFunc";
+  names[2] = "()V";
+  names[3] = "Code";
+  names[4] = "StackMapTable";
   
+  std::unordered_map<std::string, short> ids;
+  for(auto& item : names) {
+    ids[item.second] = item.first;
+  }
 
   int size;
-  BYTE* buf = build_lookupswitch_method(size);
-  Method meth;
-  meth.load_from_buffer(buf, build_zero_exceptions());
-  BYTE* sbuf = build_stack_maps_for_lookupswitch();
-  std::vector<StackMapFrame*> frames = load_frames_from_buffer(3, sbuf);
-  REQUIRE(frames.size() == 3);
+  BYTE* buf = build_lookupswitch_method(size,ids);
+  MethodInfo meth;
+  meth.load_from_buffer(buf, names);
+
   
+  
+  REQUIRE(meth.frames().size() == 3);
   std::vector<Instruction> list;
   OpCode ops;
   list.push_back(Instruction{ops[opcode::invokestatic], 9});
   
   meth.add_instructions(0,list,true);
-  meth.adjust_frames(frames);
-  REQUIRE(frames[0]->offset() == 32);
-  REQUIRE(frames[1]->offset() == 10);
-  REQUIRE(frames[2]->offset() == 7);
-
+  REQUIRE(meth.frames()[0]->offset() == 32);
+  REQUIRE(meth.frames()[1]->offset() == 10);
+  REQUIRE(meth.frames()[2]->offset() == 7);
 
   delete[] buf;
 }
+
+
 
 namespace frenchroast {
   std::vector<int> get_targets(Instruction& inst);
@@ -553,15 +840,23 @@ namespace frenchroast {
 TEST_CASE ( "method: [simple]   multiple SameFrame  adjusted, with return in middle of switch")
 {
   using namespace frenchroast;
+  std::unordered_map<int, std::string> names;
+  names[1] = "SomeFunc";
+  names[2] = "()V";
+  names[3] = "Code";
+  names[4] = "StackMapTable";
   
+  std::unordered_map<std::string, short> ids;
+  for(auto& item : names) {
+    ids[item.second] = item.first;
+  }
 
   int size;
-  BYTE* buf = build_lookupswitch_return_method(size);
-  Method meth;
-  meth.load_from_buffer(buf, build_zero_exceptions());
-  BYTE* sbuf = build_stack_maps_for_lookupswitch();
-  std::vector<StackMapFrame*> frames = load_frames_from_buffer(3, sbuf);
-  REQUIRE(frames.size() == 3);
+  BYTE* buf = build_lookupswitch_return_method(size,ids);
+  MethodInfo meth;
+  meth.load_from_buffer(buf, names);
+
+  REQUIRE(meth.frames().size() == 3);
   
   std::vector<Instruction> list;
   OpCode ops;
@@ -582,26 +877,30 @@ TEST_CASE ( "method: [simple]   multiple SameFrame  adjusted, with return in mid
   REQUIRE(get_targets(meth[3])[1] == 32 );
   REQUIRE(get_targets(meth[3])[2] == 44);
 
-
-  
   delete[] buf;
 }
-
 
 
 TEST_CASE ( "method : get_return_addresses")
 {
 
+  std::unordered_map<int, std::string> names;
+  names[1] = "SomeFunc";
+  names[2] = "()V";
+  names[3] = "Code";
+  names[4] = "StackMapTable";
+  
+  std::unordered_map<std::string, short> ids;
+  for(auto& item : names) {
+    ids[item.second] = item.first;
+  }
+
   int size;
-  BYTE* buf = build_multi_return_method(size);
-  Method meth;
-  meth.load_from_buffer(buf, build_zero_exceptions());
+  BYTE* buf = build_multi_return_method(size,ids);
+  MethodInfo meth;
+  meth.load_from_buffer(buf, names);
 
   std::vector<int> rlist = meth.get_return_addresses();
   REQUIRE(rlist.size() == 3);
   REQUIRE(meth[7].address() == rlist[2]);
-
 }
-
-
-

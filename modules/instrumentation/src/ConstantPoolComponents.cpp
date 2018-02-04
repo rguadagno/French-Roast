@@ -85,7 +85,16 @@ namespace frenchroast {
       memcpy(_classIndex,    buf,                       sizeof(_classIndex));
       memcpy(_nameTypeIndex, buf + sizeof(_classIndex), sizeof(_nameTypeIndex));
     }
-      
+
+    FieldRefHolder(short classIndex, short nametypeIndex)
+    {
+      _name = "FieldRef";
+      _tag = TAG_FieldRef;
+      write_big_e_bytes(_classIndex, &classIndex);
+      write_big_e_bytes(_nameTypeIndex, &nametypeIndex);
+    }
+
+    
     int size_in_bytes() const
     {
       return sizeof(_classIndex) + sizeof(_nameTypeIndex);
@@ -453,6 +462,17 @@ namespace frenchroast {
     };
   }
 
+
+  std::unordered_map<int,std::string> ConstantPoolComponent::get_ids() const
+  {
+    return _ids;
+  }
+
+  std::unordered_map<std::string,int> ConstantPoolComponent::get_names() const
+  {
+    return _names;
+  }
+
   void ConstantPoolComponent::reset()
   {
     memset(_bcount, 0, sizeof(_bcount));
@@ -560,6 +580,32 @@ namespace frenchroast {
     *this + new StringHolder(add_name(sname));
     return next_index();    
   }
+
+  int ConstantPoolComponent::add_field_ref_index(int class_index, const std::string& name)
+  {
+    std::string namestr = split(name, ":")[0];
+    std::string typestr = split(name, ":")[1];
+
+
+    add_class(typestr);
+
+    int typeIndex = _names[std::to_string(_names[typestr])];
+    if (typeIndex == 0) {
+      throw std::invalid_argument(std::string("name: ") +  typestr + "  NOT in Pool");
+    }
+    
+    //int nameAndTypeIndex = _names[std::to_string(_names[namestr]) + "." + std::to_string(_names[ typestr ])];
+    //if(nameAndTypeIndex == 0) {
+    int nameAndTypeIndex;
+      NameAndTypeHolder* ptr = new NameAndTypeHolder(_names[namestr],_names[typestr]);
+      *this + ptr;
+      nameAndTypeIndex = _names[ptr->get_params()];
+      //}
+    *this + new FieldRefHolder(class_index ,nameAndTypeIndex);
+
+    return _names[std::to_string(class_index) + "." + std::to_string(nameAndTypeIndex)];
+    
+  }
   
   int ConstantPoolComponent::add_method_ref_index(const std::string& name)
   {
@@ -655,7 +701,12 @@ namespace frenchroast {
     bool skip;
     add_info_from_raw(nbuf,skip);
     return _nextIndex;
-}
-        
+  }
+  
+  std::string ConstantPoolComponent::get_name(const int idx) 
+  {
+    if(_ids.find(idx) == _ids.end()) throw std::invalid_argument("get_name: " + idx);
+    return _ids[idx];
+  }
 
 }

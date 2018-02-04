@@ -127,7 +127,11 @@ namespace frenchroast {
     int get_method_ref_index(const std::string& name);
     int get_name_and_type_index(const std::string& name);
     int add_method_ref_index(const std::string& name);
+    int add_field_ref_index(int class_id,const std::string& name);
+    std::string get_name( int idx) ;
     static void validate_method_name(const std::string& name);
+    std::unordered_map<int,std::string> get_ids() const;
+    std::unordered_map<std::string,int> get_names() const;
   };
 }
 #endif

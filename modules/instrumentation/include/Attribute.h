@@ -24,7 +24,17 @@
 #include "ClassFileComponent.h"
 
 namespace frenchroast {
-    
+
+
+  namespace attribute {
+    const std::string StackMapTable = "StackMapTable";
+    const std::string Code          = "Code";
+
+    const int HeaderSize = 6;
+    const int ExceptionSize = 8;
+    const int CountSize = 2;
+  }
+  
   struct ConstantValueAttribute {
     INDEX _valueIndex; 
   };
@@ -35,15 +45,28 @@ namespace frenchroast {
     std::unordered_map<std::string, void (Attribute::*)(std::ostream&,ResolverType&) > _displayFunctions = {
       {"Code",          &Attribute<ResolverType>::display_code},
       {"ConstantValue", &Attribute<ResolverType>::display_constant_value}};
+
+  
   public:
     BYTE  _length[4];
-    INDEX _nameIndex; // @@ fix this, make private
-    BYTE* _info;   // @@ fix this, should not really be public
+    INDEX _nameIndex; 
+    BYTE* _info{nullptr};   
+    
     int get_length()
     {
       return to_int(_length,4);
     }
 
+    short get_name_index()
+    {
+      return to_int(_nameIndex,sizeof(_nameIndex));
+    }
+
+    void set_name_index(short idx)
+    {
+      write_big_e_bytes(_nameIndex,&idx);
+    }
+    
     void set_length(int length)
     {
       write_big_e_bytes(_length,&length);
@@ -51,7 +74,7 @@ namespace frenchroast {
    
     void display_constant_value(std::ostream& out, ResolverType& resolver)
     {
-      out << resolver.resolve_const(to_int(_info,2)) << std::endl;
+      //      out << resolver.resolve_const(to_int(_info,2)) << std::endl;
     }
 
     void display_code(std::ostream& out, ResolverType& resolver)
@@ -89,6 +112,11 @@ namespace frenchroast {
       return sizeof(_nameIndex) + sizeof(_length) + to_int(_length,sizeof(_length));
     }
 
+    int length() const
+    {
+      return to_int(_length,sizeof(_length));
+    }
+
     void display(std::ostream& out, ResolverType& resolver)
     {
       std::string name  = resolver.resolve_const(to_int(_nameIndex,sizeof(_nameIndex)));
@@ -109,7 +137,23 @@ namespace frenchroast {
       ref._info=nullptr;
     }
  
+   Attribute& operator=(Attribute&& ref)
+   {
+     delete _info;
+     
+     memcpy(_nameIndex, ref._nameIndex, sizeof(_nameIndex));
+     memcpy(_length, ref._length, sizeof(_length));
+     _info = ref._info;
+     ref._info=nullptr;
 
+     return *this;
+   }
+
+   
+   Attribute()
+   {
+   }
+   
    Attribute(ResolverType& resolver)
    {
    } 
@@ -121,7 +165,17 @@ namespace frenchroast {
      }
    }
    
-   Attribute(const Attribute& ref) = delete;
+   Attribute(const Attribute& ref)
+   {
+     memcpy(_length, ref._length, sizeof(_length));
+     memcpy(_nameIndex, ref._nameIndex, sizeof(_nameIndex));
+
+     int size = to_int(_length,sizeof(_length));
+     _info = new BYTE[size];
+     memcpy(_info,ref._info, size);
+   }
+
+   
    
    std::string get_name(ResolverType& resolver)
      {
