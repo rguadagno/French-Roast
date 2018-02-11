@@ -74,6 +74,11 @@ namespace frenchroast {
   std::vector<std::string> MethodComponent::get_method_descriptors()
   {
     std::vector<std::string> rv;
+
+    for(auto& method : _methods) {
+      rv.push_back(method.first);
+    }
+    
     return rv;
   }
 

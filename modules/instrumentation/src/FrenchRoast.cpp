@@ -356,19 +356,35 @@ namespace frenchroast {
   {
     short descriptorIndex = _constPool.add_name(vtype);
     short nameIndex       = _constPool.add_name(vname);
-    Info<FrenchRoast> method{*this};
+    Info<FrenchRoast> field{*this};
     short flags = AccessFlagsComponent::ACC_PUBLIC | AccessFlagsComponent::ACC_STATIC;
-    method.set_flags(flags);
-    method.set_name_index(nameIndex);
-    method.set_descriptor_index(descriptorIndex);
-    _fieldsComponent.add_item(method);
+    field.set_flags(flags);
+    field.set_name_index(nameIndex);
+    field.set_descriptor_index(descriptorIndex);
+    _fieldsComponent.add_item(field);
   }
 
 
-
-  void FrenchRoast::update_method(MethodInfo& meth, std::bitset<4> flags, const std::string& callTo, ConstantPoolComponent& constPool)
+  void FrenchRoast::add_heap_monitor(MethodInfo& meth, int hook_id)
+  {
+    std::vector<Instruction> instructions;
+    instructions.push_back(Instruction(_opCodes[opcode::aload_0]));
+    instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  hook_id));
+    meth.add_instructions(MethodInfo::FIRST_ADDRESS_AFTER_INIT,instructions, true);
+    if (meth.get_max_stack() == 0) {
+      meth.set_max_stack(1);
+      }
+  }
+  
+  void FrenchRoast::update_method(MethodInfo& meth, std::bitset<4> flags, const std::string& callTo)
   {
     int hook_id =   _constPool.add_method_ref_index(callTo);
+    if ((flags & frenchroast::signal::Signals::MONITOR_HEAP) == frenchroast::signal::Signals::MONITOR_HEAP) {
+      add_heap_monitor(meth,hook_id);
+      return;
+    }
+
+    
     if ((flags & frenchroast::signal::Signals::METHOD_ENTER) == frenchroast::signal::Signals::METHOD_ENTER) {
       std::vector<Instruction> instructions;
       instructions.push_back(Instruction(_opCodes[opcode::aload_0]));
@@ -394,19 +410,19 @@ namespace frenchroast {
 
     }
     if ((flags & frenchroast::signal::Signals::METHOD_TIMER) == frenchroast::signal::Signals::METHOD_TIMER) {
-      int enter_id = constPool.add_string("enter");
-      int exit_id = constPool.add_string("exit");
-      constPool.add_name("java/lang/System");
-      constPool.add_name("java/lang/Object");
-      constPool.add_name("java/lang/Thread");
-      constPool.add_name("java/lang/String");
+      int enter_id = _constPool.add_string("enter");
+      int exit_id = _constPool.add_string("exit");
+      _constPool.add_name("java/lang/System");
+      _constPool.add_name("java/lang/Object");
+      _constPool.add_name("java/lang/Thread");
+      _constPool.add_name("java/lang/String");
       
-      constPool.add_name("()Ljava/lang/Thread");
-      constPool.add_name("()Ljava/lang/String");
+      _constPool.add_name("()Ljava/lang/Thread");
+      _constPool.add_name("()Ljava/lang/String");
             
-      int currenttimeMillis_id =   constPool.add_method_ref_index("java/lang/System.currentTimeMillis:()J");
-      int currentThread_id =       constPool.add_method_ref_index("java/lang/Thread.currentThread:()Ljava/lang/Thread;");
-      int getname_id =             constPool.add_method_ref_index("java/lang/Thread.getName:()Ljava/lang/String;");
+      int currenttimeMillis_id =   _constPool.add_method_ref_index("java/lang/System.currentTimeMillis:()J");
+      int currentThread_id =       _constPool.add_method_ref_index("java/lang/Thread.currentThread:()Ljava/lang/Thread;");
+      int getname_id =             _constPool.add_method_ref_index("java/lang/Thread.getName:()Ljava/lang/String;");
       
       std::vector<Instruction> instructions;
       instructions.push_back(Instruction(_opCodes[opcode::invokestatic],  currenttimeMillis_id));
@@ -434,7 +450,7 @@ namespace frenchroast {
     }
     ConstantPoolComponent::validate_method_name(callTo); 
     MethodInfo method = _methodsComponent.get_method(callFrom);
-    update_method(method, flags, callTo, _constPool);
+    update_method(method, flags, callTo);
     _methodsComponent.add_method(std::move(method));
   }
     

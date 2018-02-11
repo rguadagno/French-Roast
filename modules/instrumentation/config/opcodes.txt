@@ -156,7 +156,7 @@ iflt            <155> 3 <branch>
 ifge            <156> 3 <branch>
 ifgt            <157> 3 <branch>
 ifle            <158> 3 <branch>
-if_icmple       <159> 3 <branch>
+if_icmpeq       <159> 3 <branch>
 if_icmpne       <160> 3 <branch>
 if_icmplt       <161> 3 <branch>
 if_icmpge       <162> 3 <branch>

@@ -50,6 +50,7 @@
 #include "AgentSignalReporting.h"
 #include "TimerReport.h"
 #include "Command.h"
+#include "HeapEvent.h"
 
 std::mutex _traffic_mutex;
 std::mutex _loading_mutex;
@@ -182,6 +183,56 @@ ThreadStart(jvmtiEnv *env, JNIEnv* jni_env, jthread thread) {
     std::cout << "Thred Started: " << info.name << std::endl;
 }
 
+
+
+void JNICALL
+ObjectFree(jvmtiEnv *env, jlong tag)
+{
+  frenchroast::monitor::HeapEvent hEvent{tag};
+  std::stringstream ss;
+  ss << hEvent;
+  std::string* str = new std::string{};
+  *str = ss.str();
+  _signalQueue.push(str);
+  
+}
+
+JNIEXPORT void JNICALL Java_java_lang_Package_heaphook(JNIEnv * ptr, jclass klass, jobject obj )
+{
+  jvmtiFrameInfo frames[5];
+  jint count;
+  jvmtiError err;
+  jthread aThread;
+
+  genv->GetCurrentThread(&aThread);
+  err = genv->GetStackTrace(aThread, 0, 5, frames, &count);
+  if (err == JVMTI_ERROR_NONE && count >= 1) {
+    char *methodName;
+    char *sig;
+    char *generic;
+    err = genv->GetMethodName(frames[1].method, &methodName,&sig,&generic);
+    if (err == JVMTI_ERROR_NONE) {
+      std::string methodNameStr{methodName};
+      std::string sigStr{sig};
+
+      jclass theclass;
+      genv->GetMethodDeclaringClass(frames[1].method, &theclass);
+      err = genv->GetClassSignature(theclass, &sig,&generic);
+  
+      auto t1 = std::chrono::high_resolution_clock::now();
+      long long tag = std::chrono::duration_cast<std::chrono::microseconds>(t1.time_since_epoch()).count();
+
+      genv->SetTag(obj,tag);
+      frenchroast::monitor::HeapEvent hEvent{sig,tag};
+      std::stringstream ss;
+      ss << hEvent;
+      std::string* str = new std::string{};
+      *str = ss.str();
+      _signalQueue.push(str);
+    }
+  }
+  
+}
 
 JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass object, jlong stime, jstring tag, jstring tname)
 {
@@ -388,7 +439,7 @@ void JNICALL
     track_class(sname);
   }
   if (profiler_predicate() && _hooks.is_signal_class(sname) ) {
-    if(_hooks.is_monitor_heap_class(sname)) return;
+
     if(!loaded) {
       _fr.load_from_buffer(class_data);
       loaded = true;
@@ -713,6 +764,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   xx->ThreadStart           = &ThreadStart;
   xx->MonitorContendedEnter = &MonitorContendedEnter;
   xx->ClassFileLoadHook     = &ClassFileLoadHook;
+  xx->ObjectFree            = &ObjectFree;
   if(!ErrorHandler::check_jvmti_error(env->SetEventCallbacks(xx, sizeof(jvmtiEventCallbacks)), "SetEventCallbacks")) return -1;
 
   jvmtiCapabilities capa;
@@ -724,9 +776,14 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
   capa.can_get_owned_monitor_stack_depth_info = 1;
   capa.can_get_monitor_info = 1;
   capa.can_suspend = 1;
+  capa.can_tag_objects = 1;
+  capa.can_generate_object_free_events = 1;
   if(!ErrorHandler::check_jvmti_error(env->AddCapabilities(&capa), "AddCapabilities")) return -1;
   if(!ErrorHandler::check_jvmti_error(env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_CLASS_FILE_LOAD_HOOK,NULL),"SetEventNotificationMode")) return -1;
   if(!ErrorHandler::check_jvmti_error(env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_VM_INIT,NULL), "SetEventNotificationMode")) return -1;
+
+  if(!ErrorHandler::check_jvmti_error(env->SetEventNotificationMode(JVMTI_ENABLE,JVMTI_EVENT_OBJECT_FREE,NULL), "SetEventNotificationMode")) return -1;
+  
 
   _rptr.ready();
   return 0;

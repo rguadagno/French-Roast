@@ -24,11 +24,15 @@ namespace frenchroast { namespace opcode {
     const BYTE iconst_0      = 3;
     const BYTE iconst_1      = 4;
     const BYTE bipush        = 16;
+    const BYTE sipush        = 17;
     const BYTE ldc           = 18;
     const BYTE iload_0       = 26;
     const BYTE iload_1       = 27;
     const BYTE aload_0       = 42;
+    const BYTE pop           = 87;
+    const BYTE dup           = 89;
     const BYTE if_icmpge     = 162;
+    const BYTE if_icmple     = 164;
     const BYTE xgoto         = 167;
     const BYTE tableswitch   = 170;
     const BYTE lookupswitch  = 171;
@@ -39,8 +43,11 @@ namespace frenchroast { namespace opcode {
     const BYTE areturn       = 176;
     const BYTE xreturn       = 177;
     const BYTE getstatic     = 178;
+    const BYTE putstatic     = 179;
     const BYTE invokevirtual = 182;
+    const BYTE invokespecial = 183;
     const BYTE invokestatic  = 184;
+    const BYTE xnew          = 187;
   }
 }
 #endif

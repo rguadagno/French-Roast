@@ -26,7 +26,7 @@ namespace frenchroast {
     OpCode _opCode;
     int    _address;
     BYTE   _operand[2];
-    BYTE*  _opbuf;
+    BYTE*  _opbuf{nullptr};
     int    _opbuf_size;
     static const  int PAD_MAX = 3;
 

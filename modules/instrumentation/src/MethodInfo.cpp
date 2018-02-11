@@ -19,6 +19,7 @@
 
 
 #include <set>
+#include <algorithm>
 #include "MethodInfo.h"
 #include "OpCodeConst.h"
 #include "FrameConst.h"
@@ -27,6 +28,7 @@ namespace frenchroast {
   
   MethodInfo::MethodInfo(short flags,short name_index,short descriptor_index) : _access_flags(flags), _name_index(name_index), _descriptor_index(descriptor_index)
     {
+      _attributes_count = 1;
     }
 
 
@@ -117,8 +119,23 @@ namespace frenchroast {
     _max_stack = maxstack;
   }
 
+  void MethodInfo::set_max_locals(short maxlocals)
+  {
+    _max_locals = maxlocals;
+  }
+
   void MethodInfo::add_instructions(int insertAt,  std::vector<Instruction>& ilist, bool sticky)
   {
+
+    if(_instructions.size() == 0) {
+      _code_length = 0;
+      for(auto& x : ilist) {
+        _instructions.push_back(x);
+        _code_length += x.size(); 
+      }
+      return;
+    }
+    
         // collect info
     std::unordered_map<int,int> origAddr;
     std::unordered_map<int,int> newAddr;
@@ -521,6 +538,12 @@ namespace frenchroast {
   {
     return _descriptor_index;
   }
-
+  
+  void MethodInfo::add_frame(short id)
+  {
+    std::vector<short> types {id};
+    _frames.insert(_frames.begin(),new FullFrame{39, 1,types,0});  // v v hard codeded....
+    //_frames.insert(_frames.begin(),new FullFrame{39, 1,0});  // v v hard codeded....
+  }
   
 }

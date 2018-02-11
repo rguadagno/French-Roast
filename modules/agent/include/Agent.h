@@ -29,6 +29,9 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook
 JNIEXPORT void JNICALL Java_java_lang_Package_timerhook
   (JNIEnv *, jclass, jlong, jstring, jstring);
 
+JNIEXPORT void JNICALL Java_java_lang_Package_heaphook
+  (JNIEnv *, jclass, jobject);
+  
   
 #ifdef __cplusplus
 }

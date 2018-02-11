@@ -33,7 +33,7 @@ namespace frenchroast { namespace monitor { namespace command {
       const std::string ACK_PROFILER_OFF = "ack_profiler_off";
       const std::string TRANSMIT_OPCODES = "transmit-opcodes";
       const std::string TRANSMIT_HOOKS   = "transmit-hooks";
-
+      const std::string HEAP_EVENT       = "heap-event";
     }
   }
 }

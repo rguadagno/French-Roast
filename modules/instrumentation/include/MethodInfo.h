@@ -47,7 +47,6 @@ namespace frenchroast {
     std::vector<StackMapFrame*> _frames;
 
 
-    
     std::vector<int> get_targets(Instruction& inst);
     void update_targets(Instruction& inst, std::unordered_map<int,int> origAddr, std::unordered_map<int,int> newAddr, std::vector<int>& origTargets, int& nextTarget);
     void update_exception(Exception& excep, std::unordered_map<int,int> origAddr, std::unordered_map<int,int> newAddr);
@@ -68,6 +67,7 @@ namespace frenchroast {
     std::vector<int> get_return_addresses() const;
     short get_max_stack() const;
     void set_max_stack(short);
+    void set_max_locals(short);
     void add_instructions(int insertAt,  std::vector<Instruction>&, bool sticky);
     Instruction& operator[](int idx);
     int size_in_bytes() const;
@@ -77,8 +77,9 @@ namespace frenchroast {
     void set_access_flags(short);
     short get_name_index() const;
     short get_descriptor_index() const;
+    void add_frame(short id);
 
-
+    static const int FIRST_ADDRESS_AFTER_INIT = 4;
   };
 
 }

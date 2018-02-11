@@ -47,7 +47,7 @@ namespace frenchroast { namespace monitor {
     {
       std::string str = mon;
       if(xform) {
-        str = str .substr(1);
+        str = str.substr(1);
         replace(str,"/",".");
       }
       _monitors.insert(str);

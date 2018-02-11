@@ -21,6 +21,7 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     FILE(GLOB huh
     ../src/*.cpp
     ../../instrumentation/src/*.cpp
+    ../../instrumentation/src/StackMapFrame.cpp
     ../../monitor/src/ClassDetail.cpp
     ../../monitor/src/Descriptor.cpp
     ../../monitor/src/Monitor.cpp
@@ -35,6 +36,7 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     ../../signal/src/fr_signals.cpp
     ../../signal/src/SignalValidator.cpp
     ../../monitor/src/TimerReport.cpp
+    ../../monitor/src/HeapEvent.cpp
     )	
 
 if (UNIX)
