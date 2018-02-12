@@ -51,6 +51,11 @@ void FRListener::jammed(frenchroast::monitor::JammedReport& rpt)
   stack_jammed(rpt);
 }
 
+void FRListener::heap_event(frenchroast::monitor::HeapReport& rpt)
+{
+  heap_changed(rpt);
+}
+
 void FRListener::connected(const std::string& host, const std::string& pid)
 {
   remoteconnected( host,pid);

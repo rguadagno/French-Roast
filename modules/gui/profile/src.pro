@@ -52,6 +52,8 @@ SOURCES += \
 ../../monitor/src/Signal.cpp \
 ../../monitor/src/SignalReport.cpp \
 ../../monitor/src/TimerReport.cpp \
+../../monitor/src/HeapEvent.cpp \
+../../monitor/src/HeapReport.cpp \
 ../../session/src/PersistorFile.cpp \
 ../../session/src/Session.cpp \
 ../../network/src/FRSocket.cpp \

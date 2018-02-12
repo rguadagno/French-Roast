@@ -56,6 +56,7 @@ namespace frenchroast {
      void traffic_viewer();
      void classload_viewer();
      void jammed_viewer();
+     void heap_viewer();
      void about_viewer();
      void exit_fr();
      void reset();

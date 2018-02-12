@@ -1,4 +1,4 @@
-// copyright (c) 2017 Richard Guadagno
+// copyright (c) 2018 Richard Guadagno
 // contact: rrguadagno@gmail.com
 //
 // This file is part of French-Roast
@@ -17,17 +17,28 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef QUTIL_H
-#define QUTIL_H
+#ifndef HEAPREPORT_H
+#define HEAPREPORT_H
 
-#include <string>
-#include <QTableWidgetItem>
+namespace frenchroast { namespace monitor {
+    class HeapReport {
+      int         _min{0};
+      int         _max{0};
+      int         _current{0};
+      bool        _first{true};
+      std::string _class_name;
+    public:
+      HeapReport() = default;
+      HeapReport& operator++();
+      HeapReport& operator--();
+      bool first();
+      void set_classname(const std::string&);
+      const std::string& classname() const;
+      int current() const;
+      int max() const;
+      int min() const;
+    };
 
-QTableWidgetItem* createItem(int value);
-QTableWidgetItem* createItem(const std::string& value, Qt::Alignment = Qt::AlignCenter);
-QTableWidgetItem* createItem(QTableWidgetItem*);
-int addRow(QTableWidget*, QTableWidgetItem*, QTableWidgetItem* = nullptr, QTableWidgetItem* = nullptr,QTableWidgetItem* = nullptr);
-void clearTable(QTableWidget*, bool clearcols = false);
-
-
+  }
+}
 #endif

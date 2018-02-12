@@ -31,6 +31,7 @@ namespace frenchroast { namespace monitor {
     
     HeapEvent::HeapEvent(long long tag) : _tag(tag)
     {
+      _free_event = true;
     }
     
     const std::string& HeapEvent::classname() const
@@ -43,7 +44,7 @@ namespace frenchroast { namespace monitor {
       return _tag;
     }
     
-      bool HeapEvent::is_free() const
+    bool HeapEvent::is_free() const
     {
       return _free_event;
     }

@@ -40,6 +40,7 @@
 #include "FViewer.h"
 #include "Session.h"
 #include "TimerReport.h"
+#include "HeapReport.h"
 
 using namespace frenchroast::session;
 class FRMain : public QMainWindow {
@@ -80,6 +81,7 @@ class FRMain : public QMainWindow {
  public slots:
    void update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>&);
    void update_jammed(const frenchroast::monitor::JammedReport&);
+   void update_heap(const frenchroast::monitor::HeapReport&);
    void start_watch_loading();
    void stop_watch_loading();
    void validate_signals();
@@ -94,6 +96,7 @@ class FRMain : public QMainWindow {
    void view_traffic();
    void view_classviewer();
    void view_jammed();
+   void view_heap();
    void view_about();
    void exit_fr();
    void add_hook(QString);

@@ -95,6 +95,7 @@ void add_hooks(FRType& fr, frenchroast::signal::Signals& hooks, std::unordered_m
     jint size = fr.size_in_bytes();
     jvmtiError  err =    env->Allocate(size,new_class_data);
     *new_class_data_len = size;
+    fr.load_to_buffer(*new_class_data);
   }
     
 }

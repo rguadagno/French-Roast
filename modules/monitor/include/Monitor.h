@@ -36,6 +36,8 @@
 #include "SignalReport.h"
 #include "TimerReport.h"
 #include "Command.h"
+#include "HeapEvent.h"
+#include "HeapMonitor.h"
 
 namespace frenchroast { namespace monitor {
 
@@ -44,8 +46,9 @@ namespace frenchroast { namespace monitor {
     <typename T>
       class Monitor : public network::Listener {
       using servicer = void (Monitor<T>::*)(const std::vector<std::string>&);
+      
       class Executer {
-      public:
+        public:
           Executer() : _ptr(&Monitor<T>::service_ignore) {}
           Executer(servicer ptr) : _ptr(ptr) {}
           servicer _ptr;
@@ -58,6 +61,7 @@ namespace frenchroast { namespace monitor {
         std::unordered_map<std::string, SignalReport>                                 _signals;
         std::unordered_map<std::string, MethodStats>                                  _method_counters;
         std::unordered_map<std::string, JammedReport>                                 _jammedReports;
+        HeapMonitor<T>                                                                _heapMonitor;
         std::string                                                                   _opcodeFile;
         std::unordered_map<std::string, std::string>                                  _clients;
         boost::lockfree::spsc_queue<std::string, boost::lockfree::fixed_sized<true>>  _iq{15000};
@@ -71,7 +75,7 @@ namespace frenchroast { namespace monitor {
         const int MSG         = 2;
 
     public:
-    Monitor(T& handler, const std::string& opcodeFile) : _handler(handler), _opcodeFile(opcodeFile)
+    Monitor(T& handler, const std::string& opcodeFile) : _handler(handler), _heapMonitor(handler),_opcodeFile(opcodeFile)
         {
           _commands[command::SIGNAL]           = Executer{&Monitor<T>::service_signal};
           _commands[command::SIGNAL_TIMER]     = Executer{&Monitor<T>::service_timer};
@@ -85,6 +89,7 @@ namespace frenchroast { namespace monitor {
           _commands[command::ACK_PROFILER_OFF] = Executer{&Monitor<T>::service_ack_profiler_off};
           _commands[command::TRANSMIT_OPCODES] = Executer{&Monitor<T>::service_transmit_opcodes};
           _commands[command::TRANSMIT_HOOKS]   = Executer{&Monitor<T>::service_transmit_hooks};
+          _commands[command::HEAP_EVENT]       = Executer{&Monitor<T>::service_heap_event};
            }
 
         void message(const std::string& msg)
@@ -120,7 +125,12 @@ namespace frenchroast { namespace monitor {
             _timers[rpt.key()] = rpt;
           }
         }
-        
+
+        void service_heap_event(const std::vector<std::string>& parts)
+        {
+          _heapMonitor.process(parts[MSG] >> HeapEvent{});
+        }
+
         void service_signal(const std::vector<std::string>& parts)
         {
           Signal sig{};
@@ -242,6 +252,7 @@ namespace frenchroast { namespace monitor {
           _signals.clear();
           _method_counters.clear();
           _jammedReports.clear();
+          _heapMonitor.reset();
         }
         
     };

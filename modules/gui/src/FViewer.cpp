@@ -86,6 +86,7 @@ namespace frenchroast {
   QObject::connect(menu->addAction("Targets"),               &QAction::triggered, this, &FViewer::about_viewer);
   QObject::connect(menu->addAction("Signals"),               &QAction::triggered, this, &FViewer::signal_viewer);
   QObject::connect(menu->addAction("Timers"),                &QAction::triggered, this, &FViewer::timer_viewer);
+  QObject::connect(menu->addAction("Heap"),                  &QAction::triggered, this, &FViewer::heap_viewer);
   QObject::connect(menu->addAction("Editor"),                &QAction::triggered, this, &FViewer::editor_viewer);
   QObject::connect(menu->addAction("Traffic watcher"),       &QAction::triggered, this, &FViewer::traffic_viewer);
   QObject::connect(menu->addAction("Jammed Stacks"),         &QAction::triggered, this, &FViewer::jammed_viewer);

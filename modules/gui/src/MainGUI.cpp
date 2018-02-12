@@ -29,6 +29,7 @@
 #include "Editor.h"
 #include "TrafficViewer.h"
 #include "JammedViewer.h"
+#include "HeapViewer.h"
 #include "AboutHelpViewer.h"
 #include "SignalReport.h"
 #include "TimerReport.h"
@@ -130,6 +131,16 @@ void FRMain::view_jammed()
   }
 }
 
+void FRMain::view_heap()
+{
+  if(HeapViewer::up()) {
+    HeapViewer::instance(this)->bring_to_top();
+  }
+  else {
+    connect_common_listeners(HeapViewer::instance(this));
+  }
+}
+
 void FRMain::start_watch_loading()
 {
   _watchLoading = true;
@@ -150,6 +161,7 @@ void FRMain::connect_common_listeners(FViewer* instance)
   QObject::connect(instance, &frenchroast::FViewer::editor_viewer,    this,  &FRMain::view_hooks_editor);
   QObject::connect(instance, &frenchroast::FViewer::traffic_viewer,   this,  &FRMain::view_traffic);
   QObject::connect(instance, &frenchroast::FViewer::jammed_viewer,    this,  &FRMain::view_jammed);
+  QObject::connect(instance, &frenchroast::FViewer::heap_viewer,      this,  &FRMain::view_heap);
   QObject::connect(instance, &frenchroast::FViewer::classload_viewer, this,  &FRMain::view_classviewer);
   QObject::connect(instance, &frenchroast::FViewer::about_viewer,     this,  &FRMain::view_about);
   QObject::connect(instance, &frenchroast::FViewer::reset,            this,  &FRMain::reset_viewers);
@@ -274,6 +286,12 @@ void FRMain::update_jammed(const frenchroast::monitor::JammedReport& rpt)
   _session.update(rpt);
 }
 
+void FRMain::update_heap(const frenchroast::monitor::HeapReport& rpt)
+{
+  HeapViewer::instance(this)->update(rpt);
+  //_session.update(rpt);
+}
+
 void FRMain::start_watching_traffic(int rate)
 {
   _watchTraffic = true;
@@ -346,6 +364,7 @@ void FRMain::handle_exit()
   FClassViewer::capture();
   TrafficViewer::capture();
   JammedViewer::capture();
+  HeapViewer::capture();
   AboutHelpViewer::capture();
 }
 
@@ -367,6 +386,7 @@ void FRMain::restore()
   restore_if_required(Editor::restore_is_required(),          &FRMain::view_hooks_editor, winup);
   restore_if_required(TrafficViewer::restore_is_required(),   &FRMain::view_traffic, winup);
   restore_if_required(JammedViewer::restore_is_required(),    &FRMain::view_jammed, winup);
+  restore_if_required(HeapViewer::restore_is_required(),    &FRMain::view_heap, winup);
   restore_if_required(AboutHelpViewer::restore_is_required(), &FRMain::view_about, winup);
 
   if(!winup) {
@@ -381,6 +401,7 @@ void FRMain::reset_viewers()
   FClassViewer::reset();
   TrafficViewer::reset();
   JammedViewer::reset();
+  HeapViewer::reset();
   reset();
 }
 
