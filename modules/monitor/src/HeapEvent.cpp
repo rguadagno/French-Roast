@@ -49,6 +49,12 @@ namespace frenchroast { namespace monitor {
       return _free_event;
     }
 
+    std::stringstream& operator<<(std::stringstream& out,  const HeapEvent& ref)
+    {
+      out << command::HEAP_EVENT << "~" << (ref.is_free() ? "free" : "create") << "<end-type>" << ref.tag() << "<end-tag>" << ref.classname() << "<end-classname>";
+      return out;
+    }
+    
     HeapEvent& operator>>(const std::string& rep, HeapEvent&& ref)
     {
       return rep >> ref;

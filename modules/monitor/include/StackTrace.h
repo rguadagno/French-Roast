@@ -37,7 +37,7 @@ namespace frenchroast { namespace monitor {
 
     public:
       const static std::string TAG_END;
-      StackTrace(const std::string tname);
+      explicit StackTrace(const std::string tname);
       StackTrace(const StackTrace&);
       StackTrace();
       std::string               thread_name()  const;

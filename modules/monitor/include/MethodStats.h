@@ -31,7 +31,7 @@ namespace frenchroast { namespace monitor {
       
     public:
       MethodStats();
-      MethodStats(std::string desc);
+      explicit MethodStats(std::string desc);
       MethodStats& operator++();
       const std::string& descriptor() const;
       int invoked_count() const;

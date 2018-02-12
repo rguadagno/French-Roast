@@ -61,7 +61,7 @@ namespace frenchroast { namespace monitor {
       {
         if(ref.size() == 0) return out;
         for(auto& x : ref) {
-          out << x << ClassDetail::TAG_END;
+          out << x << ClassDetail::TAG_END.c_str();
         }
         return out;
       }

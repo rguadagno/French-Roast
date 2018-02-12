@@ -34,7 +34,7 @@ namespace frenchroast { namespace monitor {
     public:
 
       JammedReport(StackTrace waiter, StackTrace owner);
-      JammedReport();
+      explicit JammedReport();
       std::vector<std::string> monitors() const;
       JammedReport& add_monitor(const std::string&, bool xform=true);
       const std::string& key() const;
@@ -50,8 +50,8 @@ namespace frenchroast { namespace monitor {
       OutType& operator<<(OutType& out, const JammedReport& ref)
       {
 
-        for(auto x : ref.monitors()) {
-          out << x << "<end-monitor>";
+        for(auto& x : ref.monitors()) {
+          out << x.c_str() << "<end-monitor>";
         }
         out  << "<end-jmonitors>";
         out << ref.owner() << "<end-owner>" << ref.waiter(); 

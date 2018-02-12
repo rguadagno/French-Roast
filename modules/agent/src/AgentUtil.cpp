@@ -20,6 +20,7 @@
 #include <iostream>
 #include <string>
 #include "AgentUtil.h"
+#include "StackFrame.h"
 
 std::vector<ARG_TYPE> typeTokenizer(const std::string& sigStr)
 {
@@ -73,8 +74,9 @@ bool format_stack_trace(jvmtiEnv* env, jthread& thread, frenchroast::monitor::St
     env->GetMethodDeclaringClass(frame_info[fidx].method, &theclass);
     
     std::string classinfo;
+    using namespace frenchroast::monitor;
     if(!get_class_name(env, theclass, classinfo)) return false;
-    trace.addFrame({classinfo + "::" + std::string{methodName} + ":" + std::string{sig}});
+    trace.addFrame(StackFrame{Descriptor{classinfo + "::" + std::string{methodName} + ":" + std::string{sig}}});
   }
   return true;;
 }

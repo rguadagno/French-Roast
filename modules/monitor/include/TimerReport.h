@@ -29,8 +29,8 @@ namespace frenchroast { namespace monitor {
     class TimerReport  {
       enum class Direction {Enter, Exit};
       friend TimerReport& operator>>(const std::string&, TimerReport& ref);
-      Descriptor                                     _descriptor;
       std::string                                    _thread_name;
+      Descriptor                                     _descriptor;
       long                                           _elapsed{0};
       long long                                      _time_in_millis{0};
       std::string                                    _key{""};

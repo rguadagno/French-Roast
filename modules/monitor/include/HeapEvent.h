@@ -21,6 +21,7 @@
 #define HEAPEVENT_H
 
 #include <string>
+#include <sstream>
 #include "Command.h"
 
 namespace frenchroast { namespace monitor {
@@ -32,20 +33,14 @@ namespace frenchroast { namespace monitor {
     public:
 
       HeapEvent(const char* classsname, long long tag);
-      HeapEvent(long long tag);
+      explicit HeapEvent(long long tag);
       HeapEvent() = default;;
       const std::string& classname() const;
       long long tag() const;
       bool is_free() const;
     };
 
-    template <typename OutType>
-      OutType& operator<<(OutType& out, const HeapEvent& ref)
-      {
-        out << command::HEAP_EVENT << "~" << (ref.is_free() ? "free" : "create") << "<end-type>" << ref.tag() << "<end-tag>" << ref.classname() << "<end-classname>";
-        return out;
-      }
-
+    std::stringstream& operator<<(std::stringstream& out,  const HeapEvent& ref);
     HeapEvent& operator>>(const std::string& rep, HeapEvent& ref);
     HeapEvent& operator>>(const std::string& rep, HeapEvent&& ref);
   }

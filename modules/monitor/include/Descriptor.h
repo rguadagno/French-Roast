@@ -32,7 +32,7 @@ namespace frenchroast { namespace monitor {
 
     public:
       Descriptor()=default;
-      Descriptor(const std::string& agentRep);
+      explicit Descriptor(const std::string& agentRep);
       Descriptor(Descriptor&& agentRep) = default;
       Descriptor(const Descriptor& agentRep) =default;
       std::string class_name() const;

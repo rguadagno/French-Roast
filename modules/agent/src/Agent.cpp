@@ -258,8 +258,9 @@ JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass obj
       std::string classinfo{sig};
 
       std::string* str = new std::string{};
-      frenchroast::monitor::TimerReport rpt{std::string(ptr->GetStringUTFChars(tname,0)),
-                                            {classinfo + "::" + methodNameStr + ":" + sigStr},
+      using namespace frenchroast::monitor;
+      TimerReport rpt{std::string(ptr->GetStringUTFChars(tname,0)),
+                                            Descriptor{classinfo + "::" + methodNameStr + ":" + sigStr},
                                             long(stime),
                                             std::string(ptr->GetStringUTFChars(tag,0))};
 

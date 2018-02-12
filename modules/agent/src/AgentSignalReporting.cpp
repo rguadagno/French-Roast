@@ -56,7 +56,8 @@ void populate_stack( JNIEnv * jni_env, jvmtiEnv* env, jvmtiFrameInfo* frames, in
     if(!get_class_name_fast(env, theclass, &className)) continue;
     jni_env->DeleteLocalRef(theclass);
     std::string rawDesc = std::string{className} + "::" + std::string{methodName} + ":" + std::string{sig};
-    rv.addFrame({rawDesc});
+    using namespace frenchroast::monitor;
+    rv.addFrame(StackFrame{Descriptor{rawDesc}});
     if(idx == 1 && !artifacts[rawDesc]) {
       return;
     }

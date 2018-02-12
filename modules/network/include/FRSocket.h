@@ -35,12 +35,13 @@
 namespace frenchroast { namespace network {
 
     class FRSocket {
-           public:
+    public:
+      int _socket;
       bool _valid{false};
       int _byteCount;
       std::string _ipport;
 #ifdef CONNECTOR_UNIX
-      int _socket;
+
 #else
       SOCKET _socket;
 #endif 
