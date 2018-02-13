@@ -41,9 +41,10 @@ namespace frenchroast {
     ~HeapViewer();
     QTableWidget*   _data;
     std::unordered_map<std::string,QTableWidgetItem*> _classname;
+    std::unordered_map<std::string,QTableWidgetItem*> _lifetime;
     std::unordered_map<std::string,QTableWidgetItem*> _current;
     std::unordered_map<std::string,QTableWidgetItem*> _max;
-    std::unordered_map<std::string,QTableWidgetItem*> _min;
+
     
     void reset_all();    
     

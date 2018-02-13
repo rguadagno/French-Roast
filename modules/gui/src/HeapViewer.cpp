@@ -48,15 +48,15 @@ namespace frenchroast {
     _data->setItemDelegateForColumn(0, new SignalDelegate(_data)); 
     
     _data->insertColumn(1);
-    _data->setHorizontalHeaderItem(1, createItem("Current"));
+    _data->setHorizontalHeaderItem(1, createItem("Lifetime"));
     _data->setItemDelegateForColumn(1, new SignalDelegate(_data)); 
     
     _data->insertColumn(2);
-    _data->setHorizontalHeaderItem(2, createItem("Max"));
+    _data->setHorizontalHeaderItem(2, createItem("Current"));
     _data->setItemDelegateForColumn(2, new SignalDelegate(_data)); 
 
     _data->insertColumn(3);
-    _data->setHorizontalHeaderItem(3, createItem("Min"));
+    _data->setHorizontalHeaderItem(3, createItem("Max"));
     _data->setItemDelegateForColumn(3, new SignalDelegate(_data)); 
     
     setMinimumSize(1500,450);
@@ -67,15 +67,17 @@ namespace frenchroast {
   {
     if (_classname.count(rpt.classname()) == 0 ) {
       _classname[rpt.classname()] = createItem(rpt.classname());
+      _lifetime[rpt.classname()] = createItem(rpt.lifetime());
       _current[rpt.classname()] = createItem(rpt.current());
       _max[rpt.classname()] = createItem(rpt.max());
-      _min[rpt.classname()] = createItem(rpt.min());
-      addRow(_data, _classname[rpt.classname()], _current[rpt.classname()],_max[rpt.classname()],_min[rpt.classname()]);
+
+      addRow(_data, _classname[rpt.classname()], _lifetime[rpt.classname()], _current[rpt.classname()],_max[rpt.classname()]);
     }
     else {
+      _lifetime[rpt.classname()]->setText(QString::fromStdString(frenchroast::monitor::ntoa(rpt.lifetime(),5, ' ')));
       _current[rpt.classname()]->setText(QString::fromStdString(frenchroast::monitor::ntoa(rpt.current(),5, ' ')));
       _max[rpt.classname()]->setText(QString::fromStdString(frenchroast::monitor::ntoa(rpt.max(),5, ' ')));
-      _min[rpt.classname()]->setText(QString::fromStdString(frenchroast::monitor::ntoa(rpt.min(),5, ' ')));
+
     }
   }
 
@@ -114,7 +116,7 @@ namespace frenchroast {
     _classname.clear();
     _current.clear();
     _max.clear();
-    _min.clear();
+    _lifetime.clear();
   }
   
   bool HeapViewer::restore_is_required()

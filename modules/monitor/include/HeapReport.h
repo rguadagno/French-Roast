@@ -22,7 +22,7 @@
 
 namespace frenchroast { namespace monitor {
     class HeapReport {
-      int         _min{0};
+      int         _lifetime{0};
       int         _max{0};
       int         _current{0};
       bool        _first{true};
@@ -36,7 +36,7 @@ namespace frenchroast { namespace monitor {
       const std::string& classname() const;
       int current() const;
       int max() const;
-      int min() const;
+      int lifetime() const;
     };
 
   }

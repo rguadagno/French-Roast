@@ -24,12 +24,10 @@ namespace frenchroast { namespace monitor {
     
     HeapReport& HeapReport::operator++()
       {
+        ++_lifetime;
         ++_current;
         if(_current > _max) {
           _max = _current;
-        }
-        if(_min == 0) {
-          _min = 1;
         }
         return *this;
       }
@@ -37,9 +35,6 @@ namespace frenchroast { namespace monitor {
       HeapReport& HeapReport::operator--()
       {
         --_current;
-        if(_current < _min) {
-          _min = _current;
-        }
         return *this;
       }
     
@@ -72,9 +67,9 @@ namespace frenchroast { namespace monitor {
       return _max;
     }
     
-    int HeapReport::min() const
+    int HeapReport::lifetime() const
     {
-      return _min;
+      return _lifetime;
     }
     
   }
