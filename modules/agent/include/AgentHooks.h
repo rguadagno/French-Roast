@@ -77,6 +77,12 @@ template <typename FRType = frenchroast::FrenchRoast>
 void add_hooks(FRType& fr, frenchroast::signal::Signals& hooks, std::unordered_map<std::string, bool>& artifacts, const std::string& sname, jvmtiEnv *env,jint* new_class_data_len, unsigned char** new_class_data)
 {
   for (auto& x : hooks[sname]) {
+    if(!x.monitor_heap()) {
+      std::string rawDesc = "L" + sname + ";::" + x.method_name();
+      frenchroast::monitor::Descriptor dsc{rawDesc};
+      artifacts[rawDesc] = x.artifacts();
+      artifacts[dsc.full_name()] = x.artifacts();
+    }
     if ((x.flags() & frenchroast::signal::Signals::METHOD_TIMER) == frenchroast::signal::Signals::METHOD_TIMER) {
       fr.add_method_call(x.method_name(), frenchroast::agent::HOOK_TIMER_DESCRIPTOR, x.flags());
     }
