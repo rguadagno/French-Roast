@@ -38,9 +38,12 @@
 #include "Command.h"
 #include "HeapEvent.h"
 #include "HeapMonitor.h"
+#include "Connector.h"
 
 namespace frenchroast { namespace monitor {
-
+  void transmit_lines(const std::string& fileName, const std::string& ipport, frenchroast::network::Connector<>&);
+  void transmit_lines(const std::vector<std::string>&, const std::string& ipport, frenchroast::network::Connector<>&);
+  
     
     template
     <typename T>
