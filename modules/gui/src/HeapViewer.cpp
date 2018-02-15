@@ -43,27 +43,22 @@ namespace frenchroast {
     setLayout(vlayout);
     setStyleSheet(_settings->value("zero_border_style").toString());
 
-    _data->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);    
+
     _data->insertColumn(0);
     _data->setHorizontalHeaderItem(0, createItem("Class"));
     _data->setItemDelegateForColumn(0, new SignalDelegate(_data)); 
+    _data->horizontalHeader()->setSectionResizeMode(0,QHeaderView::ResizeToContents);
     
     _data->insertColumn(1);
     _data->setHorizontalHeaderItem(1, createItem("Lifetime"));
-    _data->setItemDelegateForColumn(1, new SignalDelegate(_data)); 
     
     _data->insertColumn(2);
     _data->setHorizontalHeaderItem(2, createItem("Current"));
-    _data->setItemDelegateForColumn(2, new SignalDelegate(_data)); 
 
     _data->insertColumn(3);
     _data->setHorizontalHeaderItem(3, createItem("Max"));
-    _data->setItemDelegateForColumn(3, new SignalDelegate(_data)); 
 
     _data->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
-    _data->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-    _data->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
-    _data->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
 
     setMinimumSize(1500,450);
     setup_dockwin("Heap Monitor", _data, false);

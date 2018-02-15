@@ -57,13 +57,12 @@ namespace frenchroast {
     
     _data->insertColumn(0);
     _data->setHorizontalHeaderItem(0, createItem("Lifetime"));
-    _data->setItemDelegateForColumn(0, new SignalDelegate(_data)); 
     
     _data->insertColumn(1);
     _data->setHorizontalHeaderItem(1, createItem("Stack"));
     _data->setItemDelegateForColumn(1, new SignalDelegate(_data)); 
 
-    _data->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    _data->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     _data->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
 
     setMinimumSize(1500,450);
@@ -75,7 +74,7 @@ namespace frenchroast {
           add_signal(_data->currentItem()->text());
       }
       );
-    setup_dockwin("Heap Monitor: " + _class_name, _data, false);
+    setup_dockwin(_class_name, _data, true);
 }
 
 void HeapDetailViewer::update(const std::string& class_name, frenchroast::monitor::HeapReport* rpt)
