@@ -283,15 +283,7 @@ void FRMain::show_heap_detail(const std::string& class_name)
   QObject::connect(dv, &frenchroast::HeapDetailViewer::add_signal,     this,  &FRMain::add_hook);
   QDockWidget* dock = *frenchroast::HeapViewer::instance(this);
   dv->move(dock->x() + 50, dock->y() + 50 );
-  
-  std::cout << "------------ show detail -----------------" << std::endl;
-  for(auto& stack :_heapReports[class_name].stacks()) {
-    for(auto& desc : stack.second.descriptors()) {
-      std::cout << "DESC: " << desc.descriptor() << std::endl;
-    }
-  }
   update_heap_detail(class_name, &_heapReports[class_name]);
-  std::cout << "------------------------------------------" << std::endl;
 }
 
 
