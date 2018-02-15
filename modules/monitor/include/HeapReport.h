@@ -20,6 +20,10 @@
 #ifndef HEAPREPORT_H
 #define HEAPREPORT_H
 
+#include <unordered_map>
+#include "StackReport.h"
+#include "HeapEvent.h"
+
 namespace frenchroast { namespace monitor {
     class HeapReport {
       int         _lifetime{0};
@@ -27,16 +31,18 @@ namespace frenchroast { namespace monitor {
       int         _current{0};
       bool        _first{true};
       std::string _class_name;
+      std::unordered_map<std::string, StackReport>   _stacks;
     public:
       HeapReport() = default;
-      HeapReport& operator++();
-      HeapReport& operator--();
-      bool first();
+      HeapReport&  operator+=(const HeapEvent&);
+      HeapReport&  operator-=(const HeapEvent&);
+       bool first();
       void set_classname(const std::string&);
       const std::string& classname() const;
       int current() const;
       int max() const;
       int lifetime() const;
+      const std::unordered_map<std::string, StackReport>& stacks() const;
     };
 
   }

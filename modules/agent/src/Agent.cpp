@@ -199,37 +199,36 @@ ObjectFree(jvmtiEnv *env, jlong tag)
 
 JNIEXPORT void JNICALL Java_java_lang_Package_heaphook(JNIEnv * ptr, jclass klass, jobject obj )
 {
-  jvmtiFrameInfo frames[5];
+  jvmtiFrameInfo frames[10];
   jint count;
   jvmtiError err;
   jthread aThread;
 
   genv->GetCurrentThread(&aThread);
-  err = genv->GetStackTrace(aThread, 0, 5, frames, &count);
+  std::string tname;
+  if(!get_thread_name(ptr, genv, aThread, tname)) return;;
+  frenchroast::monitor::StackTrace trace{tname};
+  
+  err = genv->GetStackTrace(aThread, 0, 10, frames, &count);
   if (err == JVMTI_ERROR_NONE && count >= 1) {
-    char *methodName;
     char *sig;
     char *generic;
-    err = genv->GetMethodName(frames[1].method, &methodName,&sig,&generic);
-    if (err == JVMTI_ERROR_NONE) {
-      std::string methodNameStr{methodName};
-      std::string sigStr{sig};
-
-      jclass theclass;
-      genv->GetMethodDeclaringClass(frames[1].method, &theclass);
-      err = genv->GetClassSignature(theclass, &sig,&generic);
+    jclass theclass;
+    genv->GetMethodDeclaringClass(frames[1].method, &theclass);
+    err = genv->GetClassSignature(theclass, &sig,&generic);
   
-      auto t1 = std::chrono::high_resolution_clock::now();
-      long long tag = std::chrono::duration_cast<std::chrono::microseconds>(t1.time_since_epoch()).count();
+    auto t1 = std::chrono::high_resolution_clock::now();
+    long long tag = std::chrono::duration_cast<std::chrono::microseconds>(t1.time_since_epoch()).count();
 
-      genv->SetTag(obj,tag);
-      frenchroast::monitor::HeapEvent hEvent{sig,tag};
-      std::stringstream ss;
-      ss << hEvent;
-      std::string* str = new std::string{};
-      *str = ss.str();
-      _signalQueue.push(str);
-    }
+    genv->SetTag(obj,tag);
+    populate_stack(ptr, genv, frames, count, trace, _artifacts, true );
+    using namespace frenchroast::monitor;
+    HeapEvent hEvent{sig,tag,StackReport{trace}};
+    std::stringstream ss;
+    ss << hEvent;
+    std::string* str = new std::string{};
+    *str = ss.str();
+    _signalQueue.push(str);
   }
   
 }
@@ -311,19 +310,19 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
 void signal_sender()
 {
   int buffercnt = 0;
-  std::string buffer;
+  std::string buffer{};
   std::string* signal;
   while(1) {
     while(_signalQueue.pop(signal)) {
+      if(buffercnt > 0) {
+        buffer.append("<end>");
+      }
       buffer.append(*signal);
       delete signal;
       if(++buffercnt == 9) {
         _rptr.signal(buffer);
         buffercnt = 0;
         buffer.clear();
-      }
-      else {
-        buffer.append("<end>");
       }
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(20));

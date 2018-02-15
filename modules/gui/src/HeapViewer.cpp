@@ -25,6 +25,7 @@
 #include "SignalDelegate.h"
 #include "HeapViewer.h"
 #include "Util.h"
+#include "MonitorUtil.h"
 
 
 namespace frenchroast {
@@ -66,10 +67,12 @@ namespace frenchroast {
 
     setMinimumSize(1500,450);
     setup_dockwin("Heap Monitor", _data, false);
+    QObject::connect(_data,  &QTableWidget::itemDoubleClicked, this, [&](QTableWidgetItem* item){if(_data->currentColumn() == 0) view_detail_request(item->text().toStdString());});
 }
 
   void HeapViewer::update(const frenchroast::monitor::HeapReport& rpt)
   {
+
     if (_classname.count(rpt.classname()) == 0 ) {
       _classname[rpt.classname()] = createItem(rpt.classname());
       _lifetime[rpt.classname()] = createItem(rpt.lifetime());

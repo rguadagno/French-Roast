@@ -37,8 +37,7 @@ std::string get_value(JNIEnv* ptr, jobject obj, FieldInfo& field)
 }
 
 
-void populate_stack( JNIEnv * jni_env, jvmtiEnv* env, jvmtiFrameInfo* frames, int count, frenchroast::monitor::StackTrace& rv,
-                     std::unordered_map<std::string, bool>& artifacts )
+void populate_stack( JNIEnv * jni_env, jvmtiEnv* env, jvmtiFrameInfo* frames, int count, frenchroast::monitor::StackTrace& rv, std::unordered_map<std::string, bool>& artifacts, bool full_stack )
 {
   void* cacheid;
   char *methodName;
@@ -58,7 +57,7 @@ void populate_stack( JNIEnv * jni_env, jvmtiEnv* env, jvmtiFrameInfo* frames, in
     std::string rawDesc = std::string{className} + "::" + std::string{methodName} + ":" + std::string{sig};
     using namespace frenchroast::monitor;
     rv.addFrame(StackFrame{Descriptor{rawDesc}});
-    if(idx == 1 && !artifacts[rawDesc]) {
+    if(!full_stack && (idx == 1 && !artifacts[rawDesc])) {
       return;
     }
   }

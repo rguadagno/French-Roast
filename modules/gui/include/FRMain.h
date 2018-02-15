@@ -35,7 +35,6 @@
 #include "KeyListener.h"
 #include "MethodStats.h"
 #include "StackReport.h"
-#include "DetailViewer.h"
 #include "DetailHolder.h"
 #include "FViewer.h"
 #include "Session.h"
@@ -57,6 +56,7 @@ class FRMain : public QMainWindow {
   bool                                                          _exit{false};
   bool                                                          _ok_to_send_hooks{false};
   std::unordered_map<std::string, DetailHolder>                 _detailDescriptors;
+  std::unordered_map<std::string, HeapReport>                   _heapReports;
   bool                                                          _watchTraffic{false};
   bool                                                          _watchLoading{false};
   int                                                           _trafficRate{100};
@@ -73,6 +73,7 @@ class FRMain : public QMainWindow {
   void stop_traffic();
   void validated_signals(std::vector<std::string>);
   void update_detail_list(std::string,   DetailHolder* detailholder);
+  void update_heap_detail(std::string,   HeapReport*);
   void turn_on_profiler(const std::string& hostname_pid);
   void turn_off_profiler(const std::string& hostname_pid);
   void reset();
@@ -101,6 +102,7 @@ class FRMain : public QMainWindow {
    void exit_fr();
    void add_hook(QString);
    void show_detail(const std::string& descriptor);
+   void show_heap_detail(const std::string& class_name);
    void handle_exit();
    void update_list(const frenchroast::monitor::SignalReport&);
    void update_timed_list(const frenchroast::monitor::TimerReport& rpt);

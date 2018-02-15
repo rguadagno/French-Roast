@@ -22,10 +22,11 @@
 #include "Util.h"
 
 namespace frenchroast { namespace monitor {
-    HeapEvent::HeapEvent(const char* classnm, long long tag) : _class_name(classnm), _tag(tag)
+    HeapEvent::HeapEvent(const char* classnm, long long tag, const StackReport& srpt) : _class_name(classnm), _tag(tag), _srpt(srpt)
     {
       _class_name = _class_name.substr(1);
       replace(_class_name,"/",".");
+      replace(_class_name,";","");
 
     }
     
@@ -49,9 +50,14 @@ namespace frenchroast { namespace monitor {
       return _free_event;
     }
 
+    const StackReport& HeapEvent::report() const
+    {
+      return _srpt;
+    }
+    
     std::stringstream& operator<<(std::stringstream& out,  const HeapEvent& ref)
     {
-      out << command::HEAP_EVENT << "~" << (ref.is_free() ? "free" : "create") << "<end-type>" << ref.tag() << "<end-tag>" << ref.classname() << "<end-classname>";
+      out << command::HEAP_EVENT << "~" << (ref.is_free() ? "free" : "create") << "<end-type>" << ref.tag() << "<end-tag>" << ref.classname() << "<end-classname>" << ref.report();
       return out;
     }
     
@@ -66,10 +72,10 @@ namespace frenchroast { namespace monitor {
       ref._tag = atoll(frenchroast::split(parts[1],"<end-tag>")[0].c_str());
       if(parts[0] == "free") {
         ref._free_event = true;
-
       }
       else {
         ref._class_name = frenchroast::split(frenchroast::split(parts[1],"<end-classname>")[0],"<end-tag>")[1];
+        frenchroast::split(rep,"<end-classname>")[1] >> ref._srpt;
       }
       return ref;
     }

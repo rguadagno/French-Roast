@@ -33,7 +33,7 @@ namespace frenchroast { namespace monitor {
       
     public:
       StackFrame(Descriptor name, int count);
-      StackFrame(Descriptor name);
+      explicit StackFrame(Descriptor name);
       StackFrame() = default;
       std::string get_name()  const; 
       int         get_monitor_count()  const;

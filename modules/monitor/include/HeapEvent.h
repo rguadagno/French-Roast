@@ -23,6 +23,7 @@
 #include <string>
 #include <sstream>
 #include "Command.h"
+#include "StackReport.h"
 
 namespace frenchroast { namespace monitor {
     class HeapEvent  {
@@ -30,14 +31,16 @@ namespace frenchroast { namespace monitor {
       std::string   _class_name{""};
       long long     _tag;
       bool          _free_event{false};
+      StackReport    _srpt;
     public:
 
-      HeapEvent(const char* classsname, long long tag);
+      HeapEvent(const char* classsname, long long tag, const StackReport&);
       explicit HeapEvent(long long tag);
       HeapEvent() = default;;
       const std::string& classname() const;
-      long long tag() const;
-      bool is_free() const;
+      long long          tag() const;
+      bool               is_free() const;
+      const StackReport& report() const;
     };
 
     std::stringstream& operator<<(std::stringstream& out,  const HeapEvent& ref);

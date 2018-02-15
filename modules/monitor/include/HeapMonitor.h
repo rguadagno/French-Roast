@@ -38,7 +38,7 @@ namespace frenchroast { namespace monitor {
       void process(HeapEvent hevent)
       {
         if(hevent.is_free()) {
-          _handler.heap_event(--(*_tag_lookup[hevent.tag()]));
+          _handler.heap_event(*(_tag_lookup[hevent.tag()])-= hevent);
         }
         else {
           HeapReport& rpt = _reports[hevent.classname()];
@@ -46,8 +46,9 @@ namespace frenchroast { namespace monitor {
             rpt.set_classname(hevent.classname());
           }
 
-          _tag_lookup[hevent.tag()] = &rpt;
-          _handler.heap_event(++rpt);
+          _tag_lookup[hevent.tag()] = &_reports[hevent.classname()];
+          rpt += hevent;
+          _handler.heap_event(rpt += hevent);
         }
       }
       void reset() {

@@ -22,22 +22,33 @@
 
 namespace frenchroast { namespace monitor {
     
-    HeapReport& HeapReport::operator++()
+    HeapReport& HeapReport::operator+=(const HeapEvent& hevent)
       {
         ++_lifetime;
         ++_current;
         if(_current > _max) {
           _max = _current;
         }
+        if(_stacks.find(hevent.report().key()) == _stacks.end()) {
+          _stacks[hevent.report().key()] = hevent.report();
+        }
+        else {
+          ++_stacks[hevent.report().key()];
+        }
         return *this;
       }
     
-      HeapReport& HeapReport::operator--()
+      HeapReport& HeapReport::operator-=(const HeapEvent& hevent)
       {
         --_current;
         return *this;
       }
-    
+
+      const std::unordered_map<std::string, StackReport>& HeapReport::stacks() const
+      {
+        return _stacks;
+      }
+
       bool HeapReport::first()
       {
         if(_first) {

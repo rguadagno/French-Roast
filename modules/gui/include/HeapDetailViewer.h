@@ -17,54 +17,40 @@
 //    along with French-Roast.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef HEAPV_H
-#define HEAPV_H
+#ifndef HEAPDETAILVIEWER_H
+#define HEAPDETAILVIEWER_H
 
-
-#include <QSettings>
 #include <QTableWidget>
 #include <QListWidget>
+#include <QSettings>
 #include "FViewer.h"
 #include "HeapReport.h"
 
 namespace frenchroast {
 
-  class HeapViewer : public FViewer {
+class HeapDetailViewer : public FViewer {
 
-    Q_OBJECT
+  Q_OBJECT
+  
+  std::string                                        _class_name;
+  QTableWidget*                                      _data;
+  std::unordered_map<std::string, QTableWidgetItem*> _lifetime_widgets;
+  std::unordered_map<std::string, QTableWidgetItem*> _stack_widgets;
 
-  private:
-    static HeapViewer*  _instance;
-    static const std::string  FName;
-    
-    HeapViewer(QWidget*);
-    ~HeapViewer();
-    QTableWidget*   _data;
-    std::unordered_map<std::string,QTableWidgetItem*> _classname;
-    std::unordered_map<std::string,QTableWidgetItem*> _lifetime;
-    std::unordered_map<std::string,QTableWidgetItem*> _current;
-    std::unordered_map<std::string,QTableWidgetItem*> _max;
-
-    
-    void reset_all();    
-    
-  public:
-    static HeapViewer* instance(QWidget*);
-    static void capture();
-    static void reset();
-    static bool restore_is_required();
-    static bool up();
-
-    
+  HeapDetailViewer(QWidget*, const std::string& descriptor);
+  
+ public:
+  
+  static HeapDetailViewer* instance(QWidget*, const std::string&);
+  
   public slots:
-    void update(const frenchroast::monitor::HeapReport& rpt);
-
-  signals:
-      void view_detail_request(const std::string&);
     
-  };
+    void update(const std::string& class_name,  frenchroast::monitor::HeapReport* rpt);
+    
+ signals:
+    void add_signal(QString);
 
 
+};
 }
-
 #endif

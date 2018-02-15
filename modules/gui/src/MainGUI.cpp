@@ -33,6 +33,8 @@
 #include "AboutHelpViewer.h"
 #include "SignalReport.h"
 #include "TimerReport.h"
+#include "DetailViewer.h"
+#include "HeapDetailViewer.h"
 
 using namespace frenchroast;
 
@@ -137,6 +139,7 @@ void FRMain::view_heap()
     HeapViewer::instance(this)->bring_to_top();
   }
   else {
+    QObject::connect(HeapViewer::instance(this),  &frenchroast::HeapViewer::view_detail_request, this, &FRMain::show_heap_detail);
     connect_common_listeners(HeapViewer::instance(this));
   }
 }
@@ -272,6 +275,25 @@ void FRMain::show_detail(const std::string& descriptor)
   update_detail_list(descriptor, &_detailDescriptors[descriptor]);
 }
 
+void FRMain::show_heap_detail(const std::string& class_name)
+{
+    HeapDetailViewer* dv = HeapDetailViewer::instance(this, class_name);
+  connect_common_listeners(dv);
+  QObject::connect(this, &FRMain::update_heap_detail, dv, &HeapDetailViewer::update);
+  QObject::connect(dv, &frenchroast::HeapDetailViewer::add_signal,     this,  &FRMain::add_hook);
+  QDockWidget* dock = *frenchroast::HeapViewer::instance(this);
+  dv->move(dock->x() + 50, dock->y() + 50 );
+  
+  std::cout << "------------ show detail -----------------" << std::endl;
+  for(auto& stack :_heapReports[class_name].stacks()) {
+    for(auto& desc : stack.second.descriptors()) {
+      std::cout << "DESC: " << desc.descriptor() << std::endl;
+    }
+  }
+  update_heap_detail(class_name, &_heapReports[class_name]);
+  std::cout << "------------------------------------------" << std::endl;
+}
+
 
 
 void FRMain::update_class_viewer(const std::vector<frenchroast::monitor::ClassDetail>& details)
@@ -289,6 +311,8 @@ void FRMain::update_jammed(const frenchroast::monitor::JammedReport& rpt)
 void FRMain::update_heap(const frenchroast::monitor::HeapReport& rpt)
 {
   HeapViewer::instance(this)->update(rpt);
+  _heapReports[rpt.classname()] = rpt;
+  update_heap_detail(rpt.classname(), &_heapReports[rpt.classname()]);
   //_session.update(rpt);
 }
 
@@ -386,7 +410,7 @@ void FRMain::restore()
   restore_if_required(Editor::restore_is_required(),          &FRMain::view_hooks_editor, winup);
   restore_if_required(TrafficViewer::restore_is_required(),   &FRMain::view_traffic, winup);
   restore_if_required(JammedViewer::restore_is_required(),    &FRMain::view_jammed, winup);
-  restore_if_required(HeapViewer::restore_is_required(),    &FRMain::view_heap, winup);
+  restore_if_required(HeapViewer::restore_is_required(),      &FRMain::view_heap, winup);
   restore_if_required(AboutHelpViewer::restore_is_required(), &FRMain::view_about, winup);
 
   if(!winup) {
