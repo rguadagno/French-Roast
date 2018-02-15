@@ -19,6 +19,7 @@
 #include "Reporter.h"
 #include "Connector.h"
 #include "Command.h"
+#include "Util.h"
 
 namespace frenchroast { namespace agent {
 
@@ -29,7 +30,14 @@ namespace frenchroast { namespace agent {
     
     void Reporter::signal(const std::string& tag)
     {
-      _conn.send_message(tag);
+      if(tag.size() > frenchroast::network::MAX_MSG_SIZE) {
+        for(auto& item : split(tag, "<end>")) {
+          _conn.send_message(item);
+        }
+      }
+      else {
+        _conn.send_message(tag);
+      }
     }
 
     void Reporter::unloaded(const std::string& msg)

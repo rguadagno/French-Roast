@@ -37,24 +37,27 @@
 #include "FRSocket.h"
 
 namespace frenchroast { namespace network {
-    
+
+    const int MAX_MSG_SIZE = 3000;
     template
       <typename SocketType>
       void process_instream(std::string ipport, Listener* handler,std::unordered_map<std::string, SocketType>& sockets)
       {
-        char databuf[3000];
-        char flowbuf[6000];
-        char strbuf[2000];
+        char databuf[MAX_MSG_SIZE];
+        char flowbuf[2 * MAX_MSG_SIZE + 10];
+        char strbuf[2 * MAX_MSG_SIZE];
         int start = 0;
         int end = 0;
         int buflen = 0;
       
         memset(databuf,0,sizeof(databuf));
-        int total = 0;
         std::string str = "";
         while(sockets[ipport].recv(databuf, sizeof(databuf))) {
           int rv = sockets[ipport].bytes_received();
-          total += rv;
+          if(buflen + rv > sizeof(flowbuf)) {
+            std::cout << "Connector: overflow detected. terminating. MAX_MSG_SIZE exceeded." << std::endl;
+            std::terminate();
+          }
           memcpy(&flowbuf[buflen], databuf, rv);
           int total_bytes = buflen + rv;
            
