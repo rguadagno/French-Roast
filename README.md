@@ -14,6 +14,7 @@ intimate with every technical detail. Use French-Roast to profile your applicati
   - method arguments and stack traces per signal
   - class instance variable values per signal
 - Timers providing elapsed execution for any method
+- Heap lifecycle monitoring for user selected classes
 - Signal Editor with wildcard method selection
 - Loaded classes viewer (displays as classes are loaded)
 - Remote profiling (only agent dll or so lib required on target machine(s)
