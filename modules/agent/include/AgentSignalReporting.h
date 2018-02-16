@@ -26,6 +26,8 @@
 #include "jvmti.h"
 #include "StackTrace.h"
 
+namespace frenchroast { namespace agent {
+    
 class FieldInfo {
  public:
   std::string _name{};
@@ -48,5 +50,6 @@ void populate_stack( JNIEnv * jni_env, jvmtiEnv* genv, jvmtiFrameInfo* frames, i
 
 void populate_class_fields_info(jvmtiEnv* env,char* classDescriptor, jclass theclass, std::unordered_map<std::string, FieldInfo>& gfieldinfo);
 void populate_artifacts(JNIEnv * ptr,  jvmtiEnv* env, jvmtiFrameInfo* frames, jobject& obj, std::vector<std::string>& params, std::vector<std::string>& fieldValues, frenchroast::monitor::StackTrace& stack, jthread& aThread);
-
+  }
+}
 #endif

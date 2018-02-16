@@ -20,22 +20,9 @@
 #include "AgentHooks.h"
 #include "fr_signals.h"
 
+namespace frenchroast { namespace agent {
 
-void xput_class_buf(const std::string& fileName, unsigned char * buf, size_t size)
-{
-  std::ofstream klass{fileName, std::ios::binary};
-  if(klass) {
-    std::filebuf* rdbuf = klass.rdbuf();
-    rdbuf->sputn(reinterpret_cast<char*>(buf), size);
-    klass.close();
-  }
-  else {
-    throw std::ios_base::failure("cannot open " + fileName + " for write"  );
-  }
-}
-
-
-void add_thook_to_package(frenchroast::FrenchRoast& fr, const unsigned char* class_data, jvmtiEnv* env, jint* new_class_data_len, unsigned char** new_class_data)
+void add_thook_to_package(FrenchRoast& fr, const unsigned char* class_data, jvmtiEnv* env, jint* new_class_data_len, unsigned char** new_class_data)
 {
   fr.load_from_buffer(class_data);
   
@@ -66,3 +53,5 @@ void remove_hooks(const unsigned char* orig_class_data, jint orig_size, jvmtiEnv
 }
 
 
+  }
+}

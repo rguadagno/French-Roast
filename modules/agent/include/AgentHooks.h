@@ -25,6 +25,8 @@
 #include "fr_signals.h"
 #include "Descriptor.h"
 
+namespace frenchroast { namespace agent {
+    
 class ClassPtr {
 public:
   ClassPtr(jint size) : _size(size) {}
@@ -33,58 +35,56 @@ public:
    jint           _size;
 };
 
-namespace frenchroast { namespace agent {
     
-     const std::string HOOK_SIGNAL_DESCRIPTOR = "java/lang/Package.thook:(Ljava/lang/Object;)V";
-     const std::string HOOK_TIMER_DESCRIPTOR  = "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V";
-     const std::string HOOK_MONITOR_HEAP_DESCRIPTOR = "java/lang/Package.heaphook:(Ljava/lang/Object;)V";
-  }
-}
+ const std::string HOOK_SIGNAL_DESCRIPTOR = "java/lang/Package.thook:(Ljava/lang/Object;)V";
+ const std::string HOOK_TIMER_DESCRIPTOR  = "java/lang/Package.timerhook:(JLjava/lang/String;Ljava/lang/String;)V";
+ const std::string HOOK_MONITOR_HEAP_DESCRIPTOR = "java/lang/Package.heaphook:(Ljava/lang/Object;)V";
 
-void add_thook_to_package(frenchroast::FrenchRoast& fr, const unsigned char* class_data, jvmtiEnv* env, jint* new_class_data_len, unsigned char** new_class_data);
+
+void add_thook_to_package(FrenchRoast& fr, const unsigned char* class_data, jvmtiEnv* env, jint* new_class_data_len, unsigned char** new_class_data);
 
 void remove_hooks(const unsigned char* orig_class_data, jint orig_size, jvmtiEnv *env,jint* new_class_data_len, unsigned char** new_class_data);
 
 
-template <typename FRType = frenchroast::FrenchRoast>
+template <typename FRType = FrenchRoast>
 void add_hooks_to_all_methods(FRType& fr, std::bitset<4> flags)
 {
   for(auto methdesc : fr.get_method_descriptors()) {
     if(methdesc.find("main") != std::string::npos) continue;
     if( methdesc.find("<init") == std::string::npos ) {
-      fr.add_method_call(methdesc, frenchroast::agent::HOOK_SIGNAL_DESCRIPTOR, flags);
+      fr.add_method_call(methdesc, HOOK_SIGNAL_DESCRIPTOR, flags);
     }
     else {
-      fr.add_method_call(methdesc, frenchroast::agent::HOOK_SIGNAL_DESCRIPTOR, frenchroast::signal::Signals::METHOD_EXIT);
+      fr.add_method_call(methdesc, HOOK_SIGNAL_DESCRIPTOR, signal::Signals::METHOD_EXIT);
     }
   }
 }
 
-template <typename FRType = frenchroast::FrenchRoast>
+template <typename FRType = FrenchRoast>
 void add_hooks_to_all_constructors(FRType& fr, std::bitset<4> flags)
 {
   for(auto methdesc : fr.get_method_descriptors()) {
  
     if(methdesc.find("main") != std::string::npos) continue;
     if( methdesc.find("<init") != std::string::npos ) {
-      fr.add_method_call(methdesc, frenchroast::agent::HOOK_MONITOR_HEAP_DESCRIPTOR, flags);
+      fr.add_method_call(methdesc, HOOK_MONITOR_HEAP_DESCRIPTOR, flags);
     }
   }
 }
 
   
-template <typename FRType = frenchroast::FrenchRoast>
-void add_hooks(FRType& fr, frenchroast::signal::Signals& hooks, std::unordered_map<std::string, bool>& artifacts, const std::string& sname, jvmtiEnv *env,jint* new_class_data_len, unsigned char** new_class_data)
+template <typename FRType = FrenchRoast>
+void add_hooks(FRType& fr, signal::Signals& hooks, std::unordered_map<std::string, bool>& artifacts, const std::string& sname, jvmtiEnv *env,jint* new_class_data_len, unsigned char** new_class_data)
 {
   for (auto& x : hooks[sname]) {
     if(!x.monitor_heap()) {
       std::string rawDesc = "L" + sname + ";::" + x.method_name();
-      frenchroast::monitor::Descriptor dsc{rawDesc};
+      monitor::Descriptor dsc{rawDesc};
       artifacts[rawDesc] = x.artifacts();
       artifacts[dsc.full_name()] = x.artifacts();
     }
-    if ((x.flags() & frenchroast::signal::Signals::METHOD_TIMER) == frenchroast::signal::Signals::METHOD_TIMER) {
-      fr.add_method_call(x.method_name(), frenchroast::agent::HOOK_TIMER_DESCRIPTOR, x.flags());
+    if ((x.flags() & signal::Signals::METHOD_TIMER) == signal::Signals::METHOD_TIMER) {
+      fr.add_method_call(x.method_name(), HOOK_TIMER_DESCRIPTOR, x.flags());
     }
     else {
       if(x.all()) {
@@ -94,7 +94,7 @@ void add_hooks(FRType& fr, frenchroast::signal::Signals& hooks, std::unordered_m
         add_hooks_to_all_constructors(fr, x.flags());
       }
       else {
-          fr.add_method_call(x.method_name(), frenchroast::agent::HOOK_SIGNAL_DESCRIPTOR, x.flags());
+          fr.add_method_call(x.method_name(), HOOK_SIGNAL_DESCRIPTOR, x.flags());
       }
     }
       
@@ -104,5 +104,7 @@ void add_hooks(FRType& fr, frenchroast::signal::Signals& hooks, std::unordered_m
     fr.load_to_buffer(*new_class_data);
   }
     
+}
+  }
 }
 #endif

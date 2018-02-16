@@ -23,6 +23,8 @@
 #include "AgentUtil.h"
 #include "fr_signals.h"
 
+namespace frenchroast { namespace agent {
+    
 extern frenchroast::signal::Signals  _hooks;
 std::mutex _cache_mutex;
 std::unordered_map<std::string, FieldInfo> _reportingFields;
@@ -135,4 +137,7 @@ void populate_artifacts(JNIEnv * ptr, jvmtiEnv* env,  jvmtiFrameInfo* frames, jo
         }
         ptr->DeleteLocalRef(theclass);
       }
+}
+
+  }
 }

@@ -26,6 +26,8 @@
 #include "jvmti.h"
 #include "StackTrace.h"
 
+namespace frenchroast { namespace agent {
+    
 enum ARG_TYPE {INT_TYPE, STRING_TYPE, ARRAY_TYPE};
 
 std::vector<ARG_TYPE> typeTokenizer(const std::string& line);
@@ -43,4 +45,6 @@ bool get_thread_name(JNIEnv*,  jvmtiEnv* env, jthread, std::string&);
 bool get_thread_name_fast(JNIEnv*,  jvmtiEnv* env, jthread, char**);
 
 void delete_refs(JNIEnv* jni_env,jthread*, jint count);
+  }
+}
 #endif

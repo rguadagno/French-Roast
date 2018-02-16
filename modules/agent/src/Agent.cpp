@@ -52,6 +52,9 @@
 #include "Command.h"
 #include "HeapEvent.h"
 
+
+namespace frenchroast { namespace agent {
+
 std::mutex _traffic_mutex;
 std::mutex _loading_mutex;
 std::mutex _loading_data_mutex;
@@ -798,3 +801,5 @@ Agent_OnUnload(JavaVM* vm)
   _rptr.unloaded("now");
 }
   
+  }
+}

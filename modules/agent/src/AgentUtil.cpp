@@ -22,6 +22,8 @@
 #include "AgentUtil.h"
 #include "StackFrame.h"
 
+namespace frenchroast { namespace agent {
+    
 std::vector<ARG_TYPE> typeTokenizer(const std::string& sigStr)
 {
   std::vector<ARG_TYPE> rv;
@@ -142,4 +144,7 @@ bool get_thread_name_fast(JNIEnv* jni_env, jvmtiEnv* env, jthread thd, char** na
     jni_env->DeleteLocalRef(ctx);
     
   return true;
+}
+
+  }
 }
