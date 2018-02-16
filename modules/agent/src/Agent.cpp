@@ -191,13 +191,7 @@ ThreadStart(jvmtiEnv *env, JNIEnv* jni_env, jthread thread) {
 void JNICALL
 ObjectFree(jvmtiEnv *env, jlong tag)
 {
-  frenchroast::monitor::HeapEvent hEvent{tag};
-  std::stringstream ss;
-  ss << hEvent;
-  std::string* str = new std::string{};
-  *str = ss.str();
-  _signalQueue.push(str);
-  
+  _signalQueue.push(to_ptr(frenchroast::monitor::HeapEvent{tag}));
 }
 
 JNIEXPORT void JNICALL Java_java_lang_Package_heaphook(JNIEnv * ptr, jclass klass, jobject obj )
@@ -226,12 +220,7 @@ JNIEXPORT void JNICALL Java_java_lang_Package_heaphook(JNIEnv * ptr, jclass klas
     genv->SetTag(obj,tag);
     populate_stack(ptr, genv, frames, count, trace, _artifacts, true );
     using namespace frenchroast::monitor;
-    HeapEvent hEvent{sig,tag,StackReport{trace}};
-    std::stringstream ss;
-    ss << hEvent;
-    std::string* str = new std::string{};
-    *str = ss.str();
-    _signalQueue.push(str);
+    _signalQueue.push(to_ptr(HeapEvent{sig,tag,StackReport{trace}}));
   }
   
 }
@@ -707,8 +696,13 @@ void class_loading_monitor()
   }
   }
 
+  }
+}
+
 void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
 {
+  using namespace frenchroast::agent;
+  
   genv = env;
   jvmtiEventCallbacks* xx = new jvmtiEventCallbacks();
   xx->VMInit                = &VMInit;
@@ -740,6 +734,8 @@ void JNICALL VMInit(jvmtiEnv* env, JNIEnv* jni_env, jthread thread)
 
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 {
+  using namespace frenchroast::agent;
+    
   std::cout << "******************************" << std::endl;
   std::cout << "  French-Roast: agent loaded" << std::endl;
   std::cout << "******************************" << std::endl;
@@ -796,10 +792,10 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 JNIEXPORT void JNICALL
 Agent_OnUnload(JavaVM* vm)
 {
-
+  using namespace frenchroast::agent;
+  
   std::cout << "unloaded" << std::endl;
   _rptr.unloaded("now");
 }
   
-  }
-}
+

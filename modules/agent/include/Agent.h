@@ -23,6 +23,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+  namespace frenchroast { namespace agent {
 JNIEXPORT void JNICALL Java_java_lang_Package_thook
 (JNIEnv *, jclass, jobject);
 
@@ -32,7 +33,8 @@ JNIEXPORT void JNICALL Java_java_lang_Package_timerhook
 JNIEXPORT void JNICALL Java_java_lang_Package_heaphook
   (JNIEnv *, jclass, jobject);
   
-  
+    }
+  }
 #ifdef __cplusplus
 }
 #endif

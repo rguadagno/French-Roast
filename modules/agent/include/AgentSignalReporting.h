@@ -22,28 +22,40 @@
 
 #include <unordered_map>
 #include <vector>
+#include <sstream>
 #include "jni.h"
 #include "jvmti.h"
 #include "StackTrace.h"
 
 namespace frenchroast { namespace agent {
-    
-class FieldInfo {
- public:
-  std::string _name{};
-  std::string _type{};
-  jfieldID    _id;
-  
-  FieldInfo(std::string name, std::string typ, jfieldID id) : _name(name), _type(typ), _id(id)
-  {
-  }
-  
-  FieldInfo()
-  {
-  }
-  
-};
 
+    template<typename ReportType>
+      std::string* to_ptr(ReportType rpt)
+      {
+        std::stringstream ss;
+        ss << rpt;
+        std::string* str = new std::string{};
+        *str = ss.str();
+        return str;
+      }
+
+    
+    class FieldInfo {
+    public:
+      std::string _name{};
+      std::string _type{};
+      jfieldID    _id;
+      
+    FieldInfo(std::string name, std::string typ, jfieldID id) : _name(name), _type(typ), _id(id)
+      {
+      }
+  
+      FieldInfo()
+        {
+        }
+      
+    };
+    
 
 std::string get_value(JNIEnv* ptr, jobject obj, FieldInfo& field);
 void populate_stack( JNIEnv * jni_env, jvmtiEnv* genv, jvmtiFrameInfo* frames, int count, frenchroast::monitor::StackTrace& rv,std::unordered_map<std::string, bool>& artifacts, bool full_stack = false );
