@@ -61,8 +61,9 @@ namespace frenchroast {
 void FClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& details)
 {
   for(auto& citem : details) {
+    ++_loadCount[citem.name()];
     if(_classes.count(citem.name()) == 1) {
-      ++_loadCount[citem.name()];
+
       _classes[citem.name()]->setText(QString::fromStdString(citem.name() + " [ " + std::to_string(_loadCount[citem.name()]) + " ]"));
     }
     else {
