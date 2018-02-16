@@ -94,6 +94,7 @@ void FClassViewer::update(const std::vector<frenchroast::monitor::ClassDetail>& 
     _ind[name] = 1;
     for(auto& mitem : _methods[name]) {
       _data->insertRow(++row);
+      _row_class[row] = name;
       _data->setItem(row, 0, createItem("    " + mitem.method_name(), Qt::AlignLeft|Qt::AlignVCenter));
     }
   }
@@ -103,6 +104,7 @@ void FClassViewer::collapse_methods(const std::string& name, int row)
   _ind[name] = 0;
   ++row;
   for(auto& mitem : _methods[name]) {
+    _row_class.erase(row);
     _data->removeRow(row);
   }
 }
@@ -125,12 +127,7 @@ void FClassViewer::handle_add_signal(int row, QString text)
   std::string name = clean_name(text.toStdString());
   frenchroast::remove_blanks(name);
   if(_methods.count(name) == 0) {
-    while(--row >= 0) {
-      if(_methods.count(_data->itemAt(0,row)->text().toStdString()) == 1) {
-        add_signal(QString::fromStdString(_data->itemAt(0,row)->text().toStdString() + "::" + name + " "));
-      }
-    }
-
+    add_signal(QString::fromStdString(_row_class[row] + "::" + name + " "));
   }
   else {
     add_signal(QString::fromStdString(name + "::* "));

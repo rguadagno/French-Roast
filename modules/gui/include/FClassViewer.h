@@ -37,6 +37,7 @@ namespace frenchroast {
   std::unordered_map<std::string, int>                      _loadCount;
   std::unordered_map<std::string, QTableWidgetItem*>        _classes;
   std::unordered_map<std::string, int>                      _ind;
+  std::unordered_map<int, std::string>                      _row_class;
   static FClassViewer*                                      _instance;
   static const std::string                                  FName;
   

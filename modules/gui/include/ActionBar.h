@@ -26,7 +26,6 @@
 #include <QLineEdit>
 #include <QLabel>
 #include <QGridLayout>
-#include "MonitorUtil.h"
 
 class ActionButton : public QPushButton {
 
