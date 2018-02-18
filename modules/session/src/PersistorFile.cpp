@@ -44,18 +44,19 @@ namespace frenchroast { namespace session {
     {
     }
 
-    const std::string& PersistorFile::get_serial(const std::string tag)
+    const std::string& PersistorFile::get_serial(char tag)
     {
       return _views[tag];
     }
 
-    void PersistorFile::get_all_views(const std::string& fileName, std::unordered_map<std::string, std::string>& views)
+    void PersistorFile::get_all_views(const std::string& fileName, std::unordered_map<char, std::string>& views)
     {
       std::ifstream in{fileName};
       if(!in) throw std::invalid_argument{"cannot open " + fileName + " for reading"};
       std::string line;
       while(getline(in,line)) {
-        views[frenchroast::split(line, "<view>")[0]] = frenchroast::split(line, "<view>")[1];
+        if(line.size() < 2) continue;
+        views[line[0]] = line.substr(1);
       }
     }
     

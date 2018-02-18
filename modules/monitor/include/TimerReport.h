@@ -22,6 +22,7 @@
 
 #include "Signal.h"
 #include "MarkerField.h"
+#include "Command.h"
 
 
 namespace frenchroast { namespace monitor {
@@ -52,7 +53,7 @@ namespace frenchroast { namespace monitor {
     template <typename OutType>
       OutType& operator<<(OutType& out, const TimerReport& ref)
       {
-        out << ref.thread_name() << "<end-thread-name>" << ref.descriptor() << "<end-descriptor>" << ref.elapsed() << "<end-elapsed>" << ref.time_in_millis() << "<end-time>" << (ref.direction() == TimerReport::Direction::Enter ? "enter" : "exit");
+        out << command::SIGNAL_TIMER << ref.thread_name() << "<end-thread-name>" << ref.descriptor() << "<end-descriptor>" << ref.elapsed() << "<end-elapsed>" << ref.time_in_millis() << "<end-time>" << (ref.direction() == TimerReport::Direction::Enter ? "enter" : "exit");
         return out;
       }
 

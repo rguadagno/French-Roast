@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include "Descriptor.h"
+#include "Command.h"
 
 namespace frenchroast { namespace monitor {
     class ClassDetail {
@@ -59,6 +60,7 @@ namespace frenchroast { namespace monitor {
     template <typename OutType>
       OutType& operator<<(OutType& out, const std::vector<ClassDetail>& ref)
       {
+        out << command::LOADED;
         if(ref.size() == 0) return out;
         for(auto& x : ref) {
           out << x << ClassDetail::TAG_END.c_str();

@@ -57,7 +57,7 @@ namespace frenchroast { namespace monitor {
     
     std::stringstream& operator<<(std::stringstream& out,  const HeapEvent& ref)
     {
-      out << command::HEAP_EVENT << "~" << (ref.is_free() ? "free" : "create") << "<end-type>" << ref.tag() << "<end-tag>" << ref.classname() << "<end-classname>" << ref.report();
+      out << command::HEAP_EVENT << (ref.is_free() ? "free" : "create") << "<end-type>" << ref.tag() << "<end-tag>" << ref.classname() << "<end-classname>" << ref.report();
       return out;
     }
     
@@ -68,7 +68,7 @@ namespace frenchroast { namespace monitor {
     
     HeapEvent& operator>>(const std::string& rep, HeapEvent& ref)
     {
-      auto parts = frenchroast::split(rep,"<end-type>");
+      auto parts = frenchroast::split(rep.substr(1),"<end-type>");
       ref._tag = atoll(frenchroast::split(parts[1],"<end-tag>")[0].c_str());
       if(parts[0] == "free") {
         ref._free_event = true;

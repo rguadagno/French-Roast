@@ -250,15 +250,10 @@ JNIEXPORT void JNICALL Java_java_lang_Package_timerhook(JNIEnv * ptr, jclass obj
 
       std::string* str = new std::string{};
       using namespace frenchroast::monitor;
-      TimerReport rpt{std::string(ptr->GetStringUTFChars(tname,0)),
+      _signalQueue.push(to_ptr(TimerReport{std::string(ptr->GetStringUTFChars(tname,0)),
                                             Descriptor{classinfo + "::" + methodNameStr + ":" + sigStr},
                                             long(stime),
-                                            std::string(ptr->GetStringUTFChars(tag,0))};
-
-      std::stringstream ss;
-      ss << frenchroast::monitor::command::SIGNAL_TIMER + "~" << rpt;
-      *str = ss.str();
-      _signalQueue.push(str);
+                                              std::string(ptr->GetStringUTFChars(tag,0))}));
     }
   }
 }
@@ -268,7 +263,6 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
   jvmtiFrameInfo frames[10];
   jint count;
   jthread aThread;
-
   memset(frames, 0, sizeof(frames));         
   if(!ErrorHandler::check_jvmti_error(genv->GetCurrentThread(&aThread),"GetCurrentThread")) return;
   std::string tname;
@@ -289,11 +283,7 @@ JNIEXPORT void JNICALL Java_java_lang_Package_thook (JNIEnv * ptr, jclass klass,
     frenchroast::monitor::SignalParams sig_params{params};
     frenchroast::monitor::SignalMarkers sig_markers{markers};
     frenchroast::monitor::Signal sig{sig_rpt,sig_params,sig_markers};
-    std::stringstream ss;
-    ss << frenchroast::monitor::command::SIGNAL + "~" << sig;
-    std::string* str = new std::string;
-    *str = ss.str();
-    _signalQueue.push(str);
+    _signalQueue.push(to_ptr(frenchroast::monitor::Signal{sig_rpt,sig_params,sig_markers}));
   }
 }
 
@@ -366,14 +356,15 @@ void reload_monitor()
     }
     _all_loaded_mutex.unlock();
     genv->RetransformClasses(total, tclasses);
-    std::string* pstr;
-    std::string details = Connector<>::get_hostname() + "~" + std::to_string(Connector<>::get_pid());
+    std::string details = Connector<>::get_hostname() + "<host-name>" + std::to_string(Connector<>::get_pid());
+    std::stringstream ss;
     if(profiler_predicate()) {
-      pstr = new std::string{command::ACK_PROFILER_ON + "~" + details};
+      ss << command::ACK_PROFILER_ON << details;
     }
     else {
-      pstr = new std::string{command::ACK_PROFILER_OFF + "~" + details};
+      ss << command::ACK_PROFILER_OFF << details;
     }
+    std::string* pstr = new std::string{ss.str()};
     _signalQueue.push(pstr);
     _commandListener._profilerCond.wait(lck);
 
@@ -468,16 +459,9 @@ void JNICALL MonitorContendedEnter(jvmtiEnv* env, JNIEnv* jni_env, jthread threa
   delete_refs(jni_env, monitorInfo.notify_waiters, monitorInfo.notify_waiter_count);
   env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.waiters));
   env->Deallocate(reinterpret_cast<unsigned char*>(monitorInfo.notify_waiters));
-
-
-
-  std::string* str = new std::string{frenchroast::monitor::command::JAMMED + "~"};
-  std::stringstream ss;
   frenchroast::monitor::JammedReport report{ownerStack, waiterStack};
   report.add_monitor(monitorStr);
-  ss << report;
-  str->append(ss.str());
-  _signalQueue.push(str);
+  _signalQueue.push(to_ptr(report));
 }
 
 
@@ -533,7 +517,7 @@ void traffic_monitor()
 
     if(!ErrorHandler::check_jvmti_error(genv->GetAllThreads(&thread_count, &threads),"GetAllThreads")) continue;
 
-    rv = new std::string{frenchroast::monitor::command::TRAFFIC + "~"};
+    rv = new std::string{frenchroast::monitor::command::TRAFFIC};
     for(int idx = 0; idx < thread_count; idx++) {
       monmap.clear();
       thd = *(threads + idx);
@@ -672,11 +656,7 @@ void class_loading_monitor()
 
   while(1) {
     if(_loadedClasses.size() > 0 ) {
-      std::string* str = new std::string{frenchroast::monitor::command::LOADED + "~"};
-      std::stringstream ss;
-      ss << _loadedClasses;
-      str->append(ss.str());
-      _signalQueue.push(str);
+      _signalQueue.push(to_ptr(_loadedClasses));
       _loadedClasses.clear();
     }
     

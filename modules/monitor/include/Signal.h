@@ -25,6 +25,7 @@
 #include "StackReport.h"
 #include "SignalParams.h"
 #include "SignalMarkers.h"
+#include "Command.h"
 
 
 namespace frenchroast { namespace monitor {
@@ -50,7 +51,7 @@ namespace frenchroast { namespace monitor {
     template <typename OutType>
       OutType& operator<<(OutType& out, const Signal& ref)
       {
-        out << ref.report() << "<end-report>" << ref.params() << "<end-params>" << ref.markers();
+        out << command::SIGNAL << ref.report() << "<end-report>" << ref.params() << "<end-params>" << ref.markers();
         return out;
       }
 

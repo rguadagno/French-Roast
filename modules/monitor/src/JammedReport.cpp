@@ -82,7 +82,7 @@ namespace frenchroast { namespace monitor {
     
     JammedReport& operator>>(const std::string& rep, JammedReport& ref)
     {
-      auto parts = frenchroast::split(rep,"<end-jmonitors>");
+      auto parts = frenchroast::split(rep.substr(1),"<end-jmonitors>");
       for(auto& mon : frenchroast::split(parts[0],"<end-monitor>")) {
         if(mon == "") continue;
         ref.add_monitor(mon,false);
@@ -108,6 +108,7 @@ namespace frenchroast { namespace monitor {
 
     std::vector<JammedReport>& operator>>(const std::string& line, std::vector<JammedReport>& ref)
     {
+      if(line == "") return ref;
       for(auto& cd : frenchroast::split(line, JammedReport::TAG_END)) {
         if(cd != "") {
           JammedReport item;
@@ -118,8 +119,6 @@ namespace frenchroast { namespace monitor {
       return ref;
     }
 
-    
-    const  std::string JammedReport::TAG     = "<jammed>";
     const  std::string JammedReport::TAG_END = "<end-jammed>";
   }
 }

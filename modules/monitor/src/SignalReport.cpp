@@ -42,7 +42,6 @@ namespace frenchroast { namespace monitor {
       _stacks[ref.report().key()] += ref.report();
       std::string mkey = ref.params().key() + ref.markers().key();
       _markers[mkey] += MarkerField{mkey,ref.params(), ref.markers()};
-
       return *this;
     }
 
@@ -118,6 +117,7 @@ namespace frenchroast { namespace monitor {
     
     std::vector<SignalReport>& operator>>(const std::string& line, std::vector<SignalReport>& ref)
     {
+      if(line == "") return ref;
       for(auto& rpt : frenchroast::split(line, "<end-signal-report>")) {
         if(rpt == "") continue;
         ref.push_back( rpt >> SignalReport{});

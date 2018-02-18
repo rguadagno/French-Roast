@@ -68,6 +68,7 @@ namespace frenchroast { namespace monitor {
 
     std::vector<MethodStats>& operator>>(const std::string& line, std::vector<MethodStats>& ref)
     {
+      if(line == "") return ref;
       for(auto& cd : frenchroast::split(line, MethodStats::TAG_END)) {
         if(cd != "") {
           MethodStats item;

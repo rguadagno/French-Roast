@@ -29,12 +29,12 @@
 namespace frenchroast { namespace session {
     class Persistor  {
 
-      virtual const std::string& get_serial(const std::string tag)=0;
+      virtual const std::string& get_serial(char tag)=0;
     public:
       virtual void store(const std::string& descritpor, std::vector<std::string> items) = 0;
       virtual void load(const std::string& descriptor) = 0;
       template <typename T>
-        void load(const std::string& tag, std::vector<T>& items)  {
+        void load(char tag, std::vector<T>& items)  {
         get_serial(tag) >> items;
       }
       virtual void store() = 0;

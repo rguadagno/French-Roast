@@ -21,19 +21,21 @@
 #define MONITORCMD_H
 
 namespace frenchroast { namespace monitor { namespace command {
-      const std::string SIGNAL           = "signal";
-      const std::string SIGNAL_TIMER     = "signaltimer";
-      const std::string TRAFFIC          = "traffic";
-      const std::string JAMMED           = "jammed";
-      const std::string LOADED           = "loaded";
-      const std::string READY            = "ready";
-      const std::string CONNECTED        = "connected";
-      const std::string UNLOADED         = "unloaded";
-      const std::string ACK_PROFILER_ON  = "ack_profiler_on";
-      const std::string ACK_PROFILER_OFF = "ack_profiler_off";
-      const std::string TRANSMIT_OPCODES = "transmit-opcodes";
-      const std::string TRANSMIT_HOOKS   = "transmit-hooks";
-      const std::string HEAP_EVENT       = "heap-event";
+      const  char SIGNAL           = 'A';
+      const  char SIGNAL_TIMER     = 'B';
+      const  char TRAFFIC          = 'C';
+      const  char JAMMED           = 'D';
+      const  char LOADED           = 'E';
+      const  char READY            = 'F';
+      const  char CONNECTED        = 'G';
+      const  char UNLOADED         = 'H';
+      const  char ACK_PROFILER_ON  = 'I';
+      const  char ACK_PROFILER_OFF = 'J';
+      const  char TRANSMIT_OPCODES = 'K';
+      const  char TRANSMIT_HOOKS   = 'L';
+      const  char HEAP_EVENT       = 'M';
+      const  char SIGNAL_REPORTS   = 'N';
+      const  char METHOD_STATS     = 'O';
     }
   }
 }

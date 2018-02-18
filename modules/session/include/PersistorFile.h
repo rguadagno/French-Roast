@@ -27,10 +27,10 @@
 namespace frenchroast { namespace session {
 
     class PersistorFile : public Persistor {
-      std::unordered_map<std::string, std::string> _views;
+      std::unordered_map<char, std::string> _views;
       std::string generate_name();
-      void get_all_views(const std::string& fileName, std::unordered_map<std::string, std::string>& views);
-      const std::string& get_serial(const std::string tag);
+      void get_all_views(const std::string& fileName, std::unordered_map<char, std::string>& views);
+      const std::string& get_serial(char tag);
     public:
       // use generated file name
       PersistorFile(const std::string& dirName);

@@ -91,7 +91,7 @@ namespace frenchroast { namespace monitor {
     std::vector<StackTrace> construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters)
     {
       std::vector<StackTrace> rv;
-      std::vector<std::string> items = split(msg, "%");
+      std::vector<std::string> items = split(msg.substr(1), "%");
       for(auto& x : items) {
         StackTrace st{split(x,"^")[0]};
         std::vector<std::string> fitems = split(split(x,"^")[1],"#");

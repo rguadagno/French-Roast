@@ -72,7 +72,7 @@ namespace frenchroast { namespace monitor {
     
     Signal& operator>>(const std::string& rep, Signal& ref)
     {
-      auto parts = frenchroast::split(rep, "<end-report>");
+      auto parts = frenchroast::split(rep.substr(1), "<end-report>");
       parts[0] >> ref._report;
       auto parts2 = frenchroast::split(parts[1], "<end-params>");
       parts2[0] >> ref._params;

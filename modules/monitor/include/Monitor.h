@@ -68,14 +68,12 @@ namespace frenchroast { namespace monitor {
         std::string                                                                   _opcodeFile;
         std::unordered_map<std::string, std::string>                                  _clients;
         boost::lockfree::spsc_queue<std::string, boost::lockfree::fixed_sized<true>>  _iq{15000};
-        std::unordered_map<std::string, Executer>                                     _commands;
+        std::unordered_map<char, Executer>                                            _commands;
         const int IP_PORT     = 0;
        
         const int HOST_NAME   = 2;
         const int PID         = 3;
-        
-        const int MSG_TYPE    = 1;
-        const int MSG         = 2;
+        const int MSG         = 1;
 
     public:
     Monitor(T& handler, const std::string& opcodeFile) : _handler(handler), _heapMonitor(handler),_opcodeFile(opcodeFile)
@@ -93,7 +91,7 @@ namespace frenchroast { namespace monitor {
           _commands[command::TRANSMIT_OPCODES] = Executer{&Monitor<T>::service_transmit_opcodes};
           _commands[command::TRANSMIT_HOOKS]   = Executer{&Monitor<T>::service_transmit_hooks};
           _commands[command::HEAP_EVENT]       = Executer{&Monitor<T>::service_heap_event};
-           }
+        }
 
         void message(const std::string& msg)
         {
@@ -110,7 +108,7 @@ namespace frenchroast { namespace monitor {
           while(1) {
             while(_iq.pop(msg)) {
               std::vector<std::string> items = frenchroast::split(msg,"~");
-              (this->*_commands[items[MSG_TYPE]]._ptr)(items);
+              (this->*_commands[items[MSG][0]]._ptr)(items);
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
           }
@@ -175,12 +173,13 @@ namespace frenchroast { namespace monitor {
         
         void service_ack_profiler_off(const std::vector<std::string>& parts)
         {
-          _handler.ack_profiler_off(parts[HOST_NAME], parts[PID]);
+          
+          _handler.ack_profiler_off(split(parts[MSG], "<host-name>")[0], split(parts[MSG], "<host-name>")[1]);
         }
 
         void service_ack_profiler_on(const std::vector<std::string>& parts)
         {
-          _handler.ack_profiler_on(parts[HOST_NAME], parts[PID]);
+          _handler.ack_profiler_on(split(parts[MSG], "<host-name>")[0], split(parts[MSG], "<host-name>")[1]);
         }
         
         void service_transmit_opcodes(const std::vector<std::string>& parts)

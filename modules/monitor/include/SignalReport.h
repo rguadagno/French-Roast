@@ -23,6 +23,7 @@
 #include <unordered_map>
 #include "Signal.h"
 #include "MarkerField.h"
+#include "Command.h"
 
 
 namespace frenchroast { namespace monitor {

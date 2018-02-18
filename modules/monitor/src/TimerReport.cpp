@@ -92,8 +92,9 @@ namespace frenchroast { namespace monitor {
       return rep >> ref;
     }
     
-    TimerReport& operator>>(const std::string& rep, TimerReport& ref)
+    TimerReport& operator>>(const std::string& line, TimerReport& ref)
     {
+      std::string rep = line.substr(1);
       ref._thread_name = frenchroast::split(rep, "<end-thread-name>")[0];
       frenchroast::split(frenchroast::split(rep, "<end-descriptor>")[0], "<end-thread-name>")[1] >> ref._descriptor;
       ref._elapsed = std::stoll(   frenchroast::split(frenchroast::split(rep, "<end-elapsed>")[0], "<end-descriptor>")[1]);
@@ -106,6 +107,7 @@ namespace frenchroast { namespace monitor {
 
     std::vector<TimerReport>& operator>>(const std::string& line, std::vector<TimerReport>& ref)
     {
+      if(line == "") return ref;
       for(auto& rpt : frenchroast::split(line, "<end-timer-report>")) {
         if(rpt == "") continue;
         ref.push_back( rpt >> TimerReport{});

@@ -97,10 +97,14 @@ template
           _serverPort = atoi(frenchroast::split(descriptor,":")[1].c_str());
           frenchroast::network::Connector<> conn;
           conn.connect_to_server(_serverip, _serverPort);
-          conn.send_message(frenchroast::monitor::command::TRANSMIT_OPCODES);
+          std::stringstream ss;
+          ss << frenchroast::monitor::command::TRANSMIT_OPCODES;
+          conn.send_message(ss.str());
           conn.blocked_listen(new LocalListener<OpCode>(opcodes, conn));
           conn.connect_to_server(_serverip, _serverPort);
-          conn.send_message(frenchroast::monitor::command::TRANSMIT_HOOKS);
+          ss.str("");
+          ss << frenchroast::monitor::command::TRANSMIT_HOOKS;
+          conn.send_message(ss.str());
           conn.blocked_listen(new LocalListener<frenchroast::signal::Signals>(hooks, conn));
           return true;
         }

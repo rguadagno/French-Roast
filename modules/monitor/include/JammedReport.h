@@ -23,6 +23,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include "StackTrace.h"
+#include "Command.h"
 
 namespace frenchroast { namespace monitor {
     class JammedReport  {
@@ -43,13 +44,12 @@ namespace frenchroast { namespace monitor {
       bool operator==(const JammedReport&) const;
       JammedReport& operator+=(const JammedReport&);
       const static std::string TAG_END;
-      const static std::string TAG;
     };
 
     template <typename OutType>
       OutType& operator<<(OutType& out, const JammedReport& ref)
       {
-
+        out << command::JAMMED;
         for(auto& x : ref.monitors()) {
           out << x.c_str() << "<end-monitor>";
         }
@@ -62,7 +62,6 @@ namespace frenchroast { namespace monitor {
       OutType& operator<<(OutType& out, const std::unordered_map<std::string,JammedReport>& ref)
       {
         if(ref.size() == 0) return out;
-        out << JammedReport::TAG << "<view>";        
         for(auto x : ref) {
           out << x.second << JammedReport::TAG_END;
         }

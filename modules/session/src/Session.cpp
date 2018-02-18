@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <sstream>
 #include "Session.h"
+#include "Command.h"
 
 namespace frenchroast { namespace session {
     Session::Session(Persistor* persistor) :  _persistor(persistor) {}
@@ -119,18 +120,16 @@ namespace frenchroast { namespace session {
       std::stringstream serial;
       items.push_back((serial << _jammed).str());
       serial.str("");
-      serial << "<loaded-classes><view>";
       items.push_back((serial << _loaded_classes).str());
       serial.str("");
-      serial << "<traffic><view>";
+      serial << frenchroast::monitor::command::TRAFFIC;
       items.push_back((serial << _traffic).str());
       serial.str("");
       items.push_back((serial << _method_rankings).str());
       serial.str("");
-      serial << "<signal-reports><view>";
+      serial << frenchroast::monitor::command::SIGNAL_REPORTS;
       items.push_back((serial << _signals).str());
       serial.str("");
-      serial << "<timer-reports><view>";
       items.push_back((serial << _timers).str());
       _persistor->store(fileName, items);
     }
@@ -152,13 +151,14 @@ namespace frenchroast { namespace session {
       std::vector<frenchroast::monitor::JammedReport> jams;
       std::vector<frenchroast::monitor::SignalReport> sigs;
       std::vector<frenchroast::monitor::TimerReport> timers;
+      using namespace monitor;
       _persistor->load(fileName);
-      _persistor->load(frenchroast::monitor::ClassDetail::TAG, _loaded_classes);
-      _persistor->load(frenchroast::monitor::JammedReport::TAG, jams);
-      _persistor->load("<traffic>", _traffic);
-      _persistor->load(frenchroast::monitor::MethodStats::TAG, _method_rankings);
-      _persistor->load("<signal-reports>", sigs);
-      _persistor->load("<timer-reports>", timers);
+      _persistor->load(command::LOADED, _loaded_classes);
+      _persistor->load(command::JAMMED, jams);
+      _persistor->load(command::TRAFFIC, _traffic);
+      _persistor->load(command::METHOD_STATS, _method_rankings);
+      _persistor->load(command::SIGNAL_REPORTS, sigs);
+      _persistor->load(command::SIGNAL_TIMER, timers);
       for(auto& jam : jams) {
        _jammed[jam.key()] = jam;
       }
