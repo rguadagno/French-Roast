@@ -1,0 +1,191 @@
+\documentclass[11pt,a5paper,oneside]{book}
+\usepackage{fancyvrb}
+\usepackage[textheight=400pt,textwidth=276pt]{geometry}
+\begin{document}
+\title{French-Roast: User's Manual}
+\author{Richard Guadagno}
+\frontmatter
+\chapter{Typographical Conventions}
+Source code and all digital text are displayed in a fixed width font such as \verb; public class Person {;\\
+
+This manual contains no screen shots - they tend to look dated and can be hard to read. Instead when a keyboard key is mentioned it will be in the form of \verb;<key name>; Buttons in the GUI will be referred to in the form of \verb;[button text];
+\maketitle
+\mainmatter
+\chapter{Introduction}
+\section*{What is French-Roast?}
+French-Roast is an application profiler that can monitor and report on the behavior of a target Java application. It is written in C++ and runs on both Linux and Windows (both agent and monitor). French-Roast can monitor specific methods ( number of times called, stack trace for the call, arguments passed, elapsed time), user classes loaded, heap activity for specific classes, traffic snap shot ( executing stackcs for all threads ), lock contention ( reportng stack traces for each lock ).
+With this information the application owner can gain insight and understading of the application architecture, problems, and other areas of interest.
+\section*{Brief Technical Notes}
+French-Roast has two parts. The \textit{agent} and the \textit{monitor}. The \textit{agent} is a library (.so or .dll) specificed on the target application command line via the \verb;-agentpath; option. The agent uses the JVMTI API to interogate and send events to the monitor. The \textit{monitor} listens to events from the agent, does some aggreation and diplays the results in the GUI ( Qt/C++ library ).
+\begin{verbatim}
+|agent|  <---- TCP/IP (sockets) ---->  |monitor|
+\end{verbatim}
+Both the agent(s) and monitor allow the host and port to be specified, Multiple JVMs can be connected to the monitor at the same time. Both \textit{agent} and \textit{monitor} can be run on same machine.
+\begin{Verbatim}[fontsize=\scriptsize] 
+the agent:
+java  -classpath .
+   -agentpath:/home/richg/libagent.so=server:127.0.0.1:6060 mypackage.Main
+
+the monitor:
+./roaster 127.0.0.1 6060
+\end{Verbatim}
+
+\section*{Assumptions}
+This manual assumes you have already built the \textit{agent} library and \textit{monitor} executable. If not please see French-Roast: Technical Reference Guide.
+
+\chapter{Quick Start Guide}
+\chapter{The Screens}
+\textgreater Editor\\
+\textgreater Signals\\
+\textgreater Timers\\
+\textgreater Traffic\\
+\textgreater Jammed\\
+\textgreater Heap\\
+\textgreater Loaded Classes\\
+\textgreater Session\\
+\textgreater Targets\\
+\section*{Editor}
+The \textit{monitor} tells the \textit{agent} what is to be monitored by commands entered one per line in the Editor. Lines begging with a \verb;#; are comments and ignored. When the \textit{agent} starts up it sends the \textit{monitor} the command to validate and send over the list of commands (see below for the set of commands ). The validate action alone can also be triggered manually by the user via \verb;[validate];. The validate process checks for correct formatting of the command displaying error messages in a area below the editable area.. It does not check for things that can only be done at run-time such as correct method signature. Currently if a bad method signature is detected the agent will abort with the appropiate message.
+\subsection*{Commands}
+Every command starts with the class name followed by the method name or \verb;*;. We referr to to this as the method \textit{descriptor}. The descriptor can be typed directly into the Editor or ``popped'' into it from another window via the \verb;<s>; key. The examples of all commands will use the following Java class:
+
+\begin{verbatim}
+  package com.alltech;
+
+  public class Person {
+    private String name;
+    private int    age;
+    public Person(String name, int age)
+    {
+      this.name = name;
+      this.age  = age;
+    }
+    public String getName() 
+    {
+      return name;   
+    }
+   
+    public int getAge()
+    {
+      return age; 
+    }  
+
+  }
+
+\end{verbatim}
+\subsubsection{Signal}
+A Signal can be emitted from the entry point of the method or any exit point. This command allows us to monitor the number of times a method has been invoked.
+\begin{Verbatim}[frame=single]
+  com.alltech.Person::getAge():int <ENTER>
+\end{Verbatim}
+We can also specify \verb;<EXIT>; or \verb;<ENTER|EXIT>;
+
+The \textit{signal} sent back to the monitor is done by dynammically altering the bytecode of the Java class. So now the \verb;getAge(); method will upon entry invoke via JNI an agent function that collects information such as call stack, etc... and sends it to the \textit{monitor}.
+
+In the Signal example above knowing that the application called \verb;getAge(); 100,000 times may not be that interesting. But we can also ask the agent to report back on the value of \verb;name;
+\begin{Verbatim}[frame=single]
+com.alltech.Person::getAge():int <ENTER>[name]
+\end{Verbatim}
+The results from the signals are are displayed in the \mbox{\textbf{Signals}} screen. Each instance variable requested must be inclosed in square brackets as above.
+
+By default the \textit{agent} collects information about the call stack, and values of arguments passed to the method being monitored. For methods that are invoked many times this can cause a performance problem. In cases like this or if call stack and argument values are of no interest \textit{artifacts} can be turned off.
+\begin{Verbatim}[frame=single,fontsize=\scriptsize]
+  com.alltech.Person::getAge():int <ENTER> <ARTIFACTS:OFF>
+\end{Verbatim}
+
+To monitor all methods of a class without having to specifiy each one use the \verb;*; wildcard.
+\begin{Verbatim}[frame=single,fontsize=\scriptsize]
+  com.alltech.Person::* <ENTER>
+\end{Verbatim}
+\subsubsection{Timer}
+A Timer reports on the cumlative elapsed wall clock time of a method. The results are displayed in the Timers screen.
+\begin{Verbatim}[frame=single,fontsize=\scriptsize]
+  com.alltech.Person::getAge():int <TIMER>
+\end{Verbatim}
+\subsubsection{Heap Monitor}
+A heap monitor reports on the lifecycle of the class. It reports back total instances created as well as  current instances on the heap and max instances ever on the heap.
+\begin{Verbatim}[frame=single,fontsize=\scriptsize]
+  com.alltech.Person::* <MONITOR:HEAP>
+\end{Verbatim}
+\subsection*{Saving Editor contents}
+On startup French-Roast reads the file \verb;../gui/config/fr.ini; for among other things the commands saved from the previous session. The commands sent to the \textit{agent} are what is visible in the Editor, not what what is in \verb;fr.ini; To save the contents click \verb;[Save];. Any changes not saved are lost - the Editor does not prompt for unsaved changes on exit.
+
+\section*{Signals}
+Signals specified in the Editor are reported here as they happen. The signal window shows the count, thread name and signal \textit{descriptor}. \textit{Descriptors} are grouped by thread.  For example the signal window may show that \verb;getAge(); has been called 1,225 times from the main thread.
+\begin{Verbatim}[frame=single,fontsize=\scriptsize]
+1225 [main] com.alltech.Person::getAge():int
+\end{Verbatim}
+To view details of a signal double click the \textit{descriptor} and a detail window will open just below the main signal window. The detail window has two tabs - one for arguments / instance variables and one for call stacks. The argument/instance tab further groups signals by a unique combination of parameter values and instance field ( if requested ) values. To avoid a massive list of items ( e.g. the method is called many times with unique parameters) there is one line displayed with an asterisk. Once the monitor detects a grouping greater then one it breaks this out from the asterisk into a seperate line. As an example, let's say we are profiling an application with the following descriptor:
+\begin{Verbatim}[fontsize=\scriptsize]
+  com.alltech.Person::setStreet(java.lang.String):void
+\end{Verbatim}
+Early in the application run we may see in the detail window the following:
+\begin{Verbatim}[frame=single,fontsize=\scriptsize]
+  2590  ( * )
+\end{Verbatim}
+This indicates the method \verb;setStreet(); has been called 2,590 times each with a differant argument for the street. Then in the next time tick (next update to the Signal detail window) we could see:
+\begin{Verbatim}[frame=single,fontsize=\scriptsize]
+  2589  ( * )
+     2  ( Oak Drive )
+\end{Verbatim}
+
+The Stacks tab groups the signals into unique call stacks. So for example we may see:
+\begin{Verbatim}[frame=single,fontsize=\scriptsize]
+  1200    com.alltech.Person::setStreet(java.lang.String):void
+          com.alltech.Handler::updatePerson():void
+          com.alltech.TheApp::main(java.lang.String[]):void
+
+  1389    com.alltech.Person::setStreet(java.lang.String):void
+          com.alltech.Catalog::newEmp(com.alltech.Person):void
+          com.alltech.TheApp::main(java.lang.String[]):void
+\end{Verbatim}
+
+\section*{Timers}
+The Timers window displays elapsed time for \textit{descriptors} marked with \verb;<TIMER>; in the Editor. For example we may see the following with time format of h:mm:ss:mmm.
+\begin{Verbatim}[frame=single,fontsize=\scriptsize]
+  0:00:12:163  [main] com.alltech.Person::setAge(int):void
+\end{Verbatim}
+\section*{Traffic}
+The Traffic window displays executing stacks sampled at a specified rate in milliseconds with \verb;[Start]; and \verb;[Stop]; to turn it on or off. The purpose of traffic monitoring is to get a sense of what the application is doing helping to identify  interesting \textit{descriptors} to profile. The sampling rate can be set to as fast as 1 millisecond which can capture most but not all stacks. Since this can slow the application down the best approach is to sample for a period of time, then stop, restart application with signals added to the Editor. The executing stacks are grouped into columns per thread. For a particular call stack when a stack frame holds a monitor lock a letter \verb;X; is placed to left of it. For example:
+\begin{Verbatim}[frame=single,fontsize=\scriptsize]
+    com.alltech.Person::setStreet(java.lang.String):void
+ X  com.alltech.Handler::updatePerson():void
+    com.alltech.TheApp::main(java.lang.String[]):void
+\end{Verbatim}
+The above traffic indicates that \verb;updatePerson(); obtains a lock. This does not mean there is contention for that lock just that it could be an area of intest.
+
+When \verb;[Stop]; is clicked the \textit{agent} is informed to stop sampling and the traffic window displays in decending order a list of \textbf{Hot Methods}. A hot method is one that occured the most at the top of the stack. This can be used also to help select \textit{descriptors} of interest to be profiled.
+
+All \textit{descriptors} displayed, either in the call stacks section or Hot Methods section, can be ``popped'' over to tne Editor window by scrolling to them and typing the \verb;<s>; key.
+
+\section*{Jammed}
+This window dislays information pertaining to lock contention. If a given thread attempts to accquire the monitor of an obect it may be put to sleep if another thread already owns the monitor. When this happens the \textit{agent} reports to the \textit{monitor} the call stacks of the waiter and owner and the full class name of the monitor object. The \textit{monitor} aggreates the unique waiter stack + owner stack + class name of object that was used as the lock and displays it in this window.
+
+All \textit{descriptors} displayed can be ``popped'' over to tne Editor window by scrolling to them and typing the \verb;<s>; key.
+\section*{Loaded Classes}
+This window displays classes as they are loaded by the target(s) application. The \textit{agent} collects information about each class as it is loaded including all of its methods. This information is only sent back to the \textit{monitor} when \verb;<Start>; has been pressed.
+
+System classes such as \verb;java.lang.String; are not reported.
+\subsection*{Starting /  Stopping reporting}
+The \verb;[Start]; button in the window header causes the agent to report every 5 seconds all classes loaded since previous time. Once the class has been reported to the monitor it will not be reported again (unless loaded by another JVM). \verb;[Stop]; will stop reporting and the screen being updated, however the \textit{agent} will continue to collect information when a class is loaded.
+\subsection*{Show / Hide methods}
+Pressing the \verb;<return>; key on a class name causes it to expand displaying the methods of that class. Pressing \verb;<return>; on an expanded class will collapse the methods displayed.
+\subsection*{Adding Signals}
+Scroll to the row containing the method or class.
+Pressing the \verb;<s>; on a class name will cause the signal to be added to the Editor as a wildcard for all methods of that class. For example:
+\begin{Verbatim}
+  com.alltech.Person::* <ENTER>
+\end{Verbatim}
+Pressing the \verb;<s>; on a method name will cause it to be added to the Editor. For example:
+\begin{Verbatim}
+  com.alltech.Person::getAge() <ENTER>
+\end{Verbatim}
+
+\subsection*{Multiple JVMs}
+When profiling multiple JVMs the same class will be reported per JVM. For example:
+\begin{Verbatim}
+  com.alltech.Person [3]
+\end{Verbatim}
+
+
+\end{document}
