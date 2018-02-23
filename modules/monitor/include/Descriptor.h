@@ -29,7 +29,10 @@ namespace frenchroast { namespace monitor {
       std::string _method_name;
       std::string _raw_param_types;
       void translate(const std::string& pname);
-
+      std::string translate_param_types(const std::string& pstr);
+      std::string translate_return_type(const std::string& name);
+      std::vector<std::string> parse_type_tokens(const std::string& tstr);
+      
     public:
       Descriptor()=default;
       explicit Descriptor(const std::string& agentRep);

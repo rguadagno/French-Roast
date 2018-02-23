@@ -27,8 +27,6 @@ namespace frenchroast {  namespace monitor {
 
     std::vector<std::string> parse_type_tokens(const std::string& tstr);
     std::vector<StackTrace>  construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters);
-    std::string translate_param_types(const std::string& pstr);
-    std::string translate_return_type(const std::string& name);
   }};
 
 #endif

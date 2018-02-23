@@ -24,7 +24,6 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     ../../instrumentation/src/StackMapFrame.cpp
     ../../monitor/src/ClassDetail.cpp
     ../../monitor/src/Descriptor.cpp
-    ../../monitor/src/Monitor.cpp
     ../../monitor/src/StackTrace.cpp
     ../../monitor/src/StackFrame.cpp
     ../../monitor/src/StackReport.cpp

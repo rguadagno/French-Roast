@@ -30,63 +30,6 @@
 
 namespace frenchroast { namespace monitor {
 
-            std::unordered_map<char, std::string> _type_map { {'I',"int"},
-                                                             {'Z',"bool"},
-                                                             {'V',"void"},
-                                                             {'J',"long"},
-                                                             {'B',"byte"},
-                                                             {'C',"char"},
-                                                             {'D',"double"},
-                                                             {'F',"float"},
-                                                             {'S',"short"}
-                
-                                                           };
-
-    
-    std::vector<std::string> parse_type_tokens(const std::string& tstr)
-    {
-      std::vector<std::string> rv;
-      std::size_t pos = 0;
-
-      while(pos < tstr.length() ) {
-        std::string suffix = "";
-        if(tstr[pos] == '[') {
-          suffix = "[]";
-          ++pos;
-        }
-        if (tstr[pos] == 'L') {
-          int nextsemi = static_cast<int>(tstr.find(";",pos));
-          rv.push_back(tstr.substr(pos+1,nextsemi-(pos+1)) + suffix );
-          pos = nextsemi +1;
-        }
-        else {
-          rv.push_back(_type_map[tstr[pos]] + suffix);
-          ++pos;
-        }
-      }
-      return rv;
-    }
-
-
-    
-    std::string translate_param_types(const std::string& pstr)
-    {
-      std::string rv = "";
-
-      for(auto& token : parse_type_tokens(pstr)) {
-        rv.append(token);
-        rv.append(",");
-      }
-      if(rv.length() > 1) {
-        rv.erase(rv.length()-1);
-      }
-      return rv;
-    }
-
-    std::string translate_return_type(const std::string& name)
-    {
-      return parse_type_tokens(name)[0];
-    }
     
     std::vector<StackTrace> construct_traffic(const std::string& msg, std::unordered_map<std::string, MethodStats>& counters)
     {
