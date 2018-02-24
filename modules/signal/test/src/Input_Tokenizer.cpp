@@ -124,7 +124,7 @@ TEST_CASE("empty string")
 TEST_CASE("comment line")
 {
   frenchroast::signal::Signals sigs;
-  sigs.load("#  mypackage.MyClass::funcA:(int):void <ENTER>");
+  REQUIRE(sigs.load("#  mypackage.MyClass::funcA:(int):void <ENTER>") == false);
   REQUIRE( sigs.classes().size() == 0);
 }
 

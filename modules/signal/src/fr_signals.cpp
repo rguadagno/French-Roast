@@ -62,6 +62,16 @@ namespace frenchroast { namespace signal {
     {
       return (_flags & Signals::MONITOR_HEAP) == Signals::MONITOR_HEAP;
     }
+
+    bool Signal::valid() const
+    {
+      return _valid;
+    }
+
+    void Signal::mark_invalid()
+    {
+      _valid = false;
+    }
     // -------------------------
 
 
@@ -102,7 +112,13 @@ namespace frenchroast { namespace signal {
                                                                   };
     
 
-
+    std::string Signals::get_type(const std::string& rep)
+    {
+      if(_type_map.find(rep) == _type_map.end()) {
+        throw std::invalid_argument{"bad type: " + rep};;
+      }
+      return  _type_map[rep];
+    }
 
     std::vector<std::string> Signals::parse_token_types(const std::string& pstr)
     {
@@ -118,7 +134,7 @@ namespace frenchroast { namespace signal {
             rv.push_back("[L" + split(param,"[]")[0] + ";" );
           }
           else {
-            rv.push_back("[" + _type_map[split(param,"[]")[0]]  );
+            rv.push_back("[" + get_type(split(param,"[]")[0])  );
           }
         }
         else {
@@ -126,7 +142,7 @@ namespace frenchroast { namespace signal {
             rv.push_back("L" + param + ";" );
           }
           else {
-            rv.push_back( _type_map[param]  );
+            rv.push_back( get_type(param)  );
           }
         }
       }
@@ -195,12 +211,12 @@ namespace frenchroast { namespace signal {
    }
 
                    
-    void Signals::load(const std::string& pline)
+    bool Signals::load(const std::string& pline)
     {
       std::string line{pline};
       remove_blanks(line);
       if (line[0] == '#' || line == "") {
-        return;
+        return false;;
       }
       std::string classname;
 
@@ -229,9 +245,10 @@ namespace frenchroast { namespace signal {
       replace(classname, '.', '/');
       methName = convert_name(methName);
       _hlist[classname].push_back(Signal{methName, flags, artifactStr.find("OFF") != std::string::npos ? false : true});
+      return true;
     }
 
-    const std::vector<Signal>& Signals::operator[](const std::string& name) 
+    std::vector<Signal>& Signals::operator[](const std::string& name) 
     {
       return _hlist[name];
     }

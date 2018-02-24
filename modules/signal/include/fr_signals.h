@@ -34,6 +34,7 @@ namespace frenchroast { namespace signal {
       bool           _includeArtifacts;
       std::bitset<4> _flags;
       bool           _all{false};
+      bool           _valid{true};
     public:
       Signal(const std::string& name, int lineno);
       Signal(const std::string& name, std::bitset<4>, bool artifacts);
@@ -43,6 +44,8 @@ namespace frenchroast { namespace signal {
       bool all() const;
       bool artifacts() const;
       bool monitor_heap() const;
+      void mark_invalid();
+      bool valid() const;
     };
     
     class Signals {
@@ -54,13 +57,13 @@ namespace frenchroast { namespace signal {
       std::string convert_name(const std::string& name);
       std::vector<std::string> parse_token_types(const std::string& pstr);
       void parse_flags(std::bitset<4>& flags, std::string str);
-      
+      std::string get_type(const std::string& rep);
     public:
       bool is_signal_class(const std::string& name) const;
       bool is_monitor_heap_class(const std::string& name) ;
       std::vector<std::string> classes() const;
-      const std::vector<Signal>& operator[](const std::string& name);
-      void load(const std::string&);
+      std::vector<Signal>& operator[](const std::string& name);
+      bool load(const std::string&);
       void load_from_file(const std::string&);
       const std::vector<std::string>& get_marker_fields(const std::string& className, const std::string& key) ;
       
