@@ -56,6 +56,7 @@ class FRMain : public QMainWindow {
   bool                                                          _exit{false};
   bool                                                          _ok_to_send_hooks{false};
   std::unordered_map<std::string, DetailHolder>                 _detailDescriptors;
+  std::unordered_map<std::string, SignalReport>                 _signalReports;
   std::unordered_map<std::string, HeapReport>                   _heapReports;
   bool                                                          _watchTraffic{false};
   bool                                                          _watchLoading{false};
@@ -104,7 +105,7 @@ class FRMain : public QMainWindow {
    void show_detail(const std::string& descriptor);
    void show_heap_detail(const std::string& class_name);
    void handle_exit();
-   void update_list(const frenchroast::monitor::SignalReport&);
+   void update_list(const frenchroast::monitor::Signal&);
    void update_timed_list(const frenchroast::monitor::TimerReport& rpt);
    void update_traffic(const std::vector<frenchroast::monitor::StackTrace>& stacks);
    void start_watching_traffic(int);

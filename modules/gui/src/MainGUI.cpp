@@ -204,8 +204,10 @@ void FRMain::session_load()
   }
   TrafficViewer::instance(this)->update_traffic(_session.get_traffic());
   TrafficViewer::instance(this)->update_ranking(_session.get_rankings());
-  for(auto& sig : _session.get_signal_reports()) {
-    update_list(sig.second);
+  for(auto& sig_rpts : _session.get_signal_reports()) {
+    for(auto& sig : sig_rpts.second.xsignals()) {
+      update_list(sig);
+    }
   }
   for(auto& timer : _session.get_timer_reports()) {
     update_timed_list(timer.second);
@@ -328,21 +330,22 @@ void FRMain::method_ranking(std::vector<frenchroast::monitor::MethodStats> ranks
   _session.update(ranks);
 }
 
-void FRMain::update_list(const frenchroast::monitor::SignalReport& rpt)
+void FRMain::update_list(const frenchroast::monitor::Signal& rpt)
 {
   if(_exit) return;
-
+  _signalReports[rpt.key()] += rpt;
+  SignalReport& srpt = _signalReports[rpt.key()];
   _session.update(rpt);
-  std::string tname = "[ " + rpt.thread_name() + " ] ";
-  std::string descriptor = rpt.descriptor_name();
+  std::string tname = "[ " + srpt.thread_name() + " ] ";
+  std::string descriptor = srpt.descriptor_name();
   frenchroast::monitor::pad(descriptor, 50);
   frenchroast::monitor::pad(tname, 10);
 
   descriptor = tname + descriptor;
-  _detailDescriptors[descriptor] = DetailHolder{rpt.count(), rpt.arg_headers(), rpt.instance_headers(),
-                                                rpt.markers(), rpt.stacks()};
+  _detailDescriptors[descriptor] = DetailHolder{srpt.count(), srpt.arg_headers(), srpt.instance_headers(),
+                                              srpt.markers(), srpt.stacks()};
 
-  frenchroast::FSignalViewer::instance(this)->update_count(descriptor, rpt.count());
+  frenchroast::FSignalViewer::instance(this)->update_count(descriptor, srpt.count());
   update_detail_list(descriptor, &_detailDescriptors[descriptor]);
 }
 
@@ -419,5 +422,6 @@ void FRMain::reset_viewers()
   JammedViewer::reset();
   HeapViewer::reset();
   reset();
+  _signalReports.clear();
 }
 

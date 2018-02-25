@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
   qRegisterMetaType<DetailHolder>();
   qRegisterMetaType<std::vector<frenchroast::monitor::ClassDetail>>();
   qRegisterMetaType<frenchroast::monitor::JammedReport>("frenchroast::monitor::JammedReport");
-  qRegisterMetaType<frenchroast::monitor::SignalReport>("frenchroast::monitor::SignalReport");
+  qRegisterMetaType<frenchroast::monitor::Signal>("frenchroast::monitor::Signal");
   qRegisterMetaType<frenchroast::monitor::TimerReport>("frenchroast::monitor::TimerReport");
   qRegisterMetaType<frenchroast::monitor::HeapReport>("frenchroast::monitor::HeapReport");
   

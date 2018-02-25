@@ -36,7 +36,7 @@ void FRListener::signal_timed(const frenchroast::monitor::TimerReport& rpt)
   timersignal(rpt);
 }
 
-void FRListener::signal(const frenchroast::monitor::SignalReport& rpt)
+void FRListener::signal(const frenchroast::monitor::Signal& rpt)
 {
   thooked(rpt);
 }

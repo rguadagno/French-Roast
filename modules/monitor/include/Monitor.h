@@ -61,7 +61,6 @@ namespace frenchroast { namespace monitor {
 	T&                                                                             _handler;
         network::Connector<>                                                          _conn;
         std::unordered_map<std::string, TimerReport>                                  _timers;
-        std::unordered_map<std::string, SignalReport>                                 _signals;
         std::unordered_map<std::string, MethodStats>                                  _method_counters;
         std::unordered_map<std::string, JammedReport>                                 _jammedReports;
         HeapMonitor<T>                                                                _heapMonitor;
@@ -134,9 +133,7 @@ namespace frenchroast { namespace monitor {
 
         void service_signal(const std::vector<std::string>& parts)
         {
-          Signal sig{};
-          parts[MSG] >> sig;
-          _handler.signal(_signals[sig.key()] += sig);
+          _handler.signal(parts[MSG] >> Signal{});
         }
 
         void service_traffic(const std::vector<std::string>& parts)
@@ -251,7 +248,6 @@ namespace frenchroast { namespace monitor {
         void reset()
         {
           _timers.clear();
-          _signals.clear();
           _method_counters.clear();
           _jammedReports.clear();
           _heapMonitor.reset();
