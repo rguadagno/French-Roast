@@ -263,10 +263,20 @@ namespace frenchroast {
     add(text +    "<ENTER>");
   }
     
-  void Editor::add(QString text)
+  void Editor::add(QString vtext)
   {
-    std::string className = split(text.toStdString(),"::")[0];
-    std::string methodName = split(text.toStdString(),"::")[1];
+    std::string text = vtext.toStdString();
+    if(text.find("::") == std::string::npos) {
+      QString str = _edit->document()->toPlainText();
+      if(str.size() > 0 && str[str.size() -1] != '\n') {
+        str.append('\n');
+      }
+      str.append(text.c_str());
+      _edit->document()->setPlainText(str);
+      return;
+    }
+    std::string className = split(text,"::")[0];
+    std::string methodName = split(text,"::")[1];
     size_t pos = methodName.find_first_of("<");
     if(pos != std::string::npos) {
       methodName = methodName.substr(0, pos);
@@ -279,7 +289,7 @@ namespace frenchroast {
     if(str.size() > 0 && str[str.size() -1] != '\n') {
       str.append('\n');
     }
-    str.append(text);
+    str.append(text.c_str());
     _edit->document()->setPlainText(str);
   }
     
