@@ -51,6 +51,7 @@
 #include "TimerReport.h"
 #include "Command.h"
 #include "HeapEvent.h"
+#include "InstrumentationReport.h"
 
 
 namespace frenchroast { namespace agent {
@@ -406,8 +407,9 @@ void JNICALL
      jint class_data_len,
      const unsigned char* class_data,
      jint* new_class_data_len,
-     unsigned char** new_class_data) {
-  
+     unsigned char** new_class_data)
+{
+  using namespace frenchroast::network;  
   std::string sname{name};
 
   if (sname == "java/lang/Package") {
@@ -431,6 +433,7 @@ void JNICALL
     _origClass[sname] = ClassPtr{class_data_len};
     env->Allocate(class_data_len, &_origClass[sname]._class_data);
     memcpy(_origClass[sname]._class_data, class_data,class_data_len);
+    _signalQueue.push(to_ptr(monitor::InstrumentationReport{Connector<>::get_hostname(), std::to_string(Connector<>::get_pid()), " " + sname,_hooks[sname]}));
   }
   
   if(!profiler_predicate() && _hooks.is_signal_class(sname) && _all_loadedClasses.count(sname) == 1) {

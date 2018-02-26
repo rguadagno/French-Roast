@@ -23,9 +23,11 @@
 #include <unordered_map>
 #include <QTextEdit>
 #include <QListWidget>
+#include <QTableWidget>
 #include <QSettings>
 #include "FViewer.h"
 #include "SignalValidator.h"
+#include "InstrumentationReport.h"
 
 
 namespace frenchroast {
@@ -41,8 +43,12 @@ namespace frenchroast {
     ~Editor();
     QTextEdit*    _edit{nullptr};
     QListWidget*  _message{nullptr};
+    QTableWidget*  _instrumentation{nullptr};
+    std::unordered_map<std::string, int> _descriptor_row;
+    std::unordered_map<std::string, int> _host_pid_column;
     std::string   _filename;
     bool          _changesToSave{false};
+    bool          _validated{false};
     std::unordered_map<std::string, std::string> _signals;
     ActionButton* _bsave;
     frenchroast::signal::SignalValidator _validator;
@@ -53,13 +59,13 @@ namespace frenchroast {
     static void capture();
     static bool restore_is_required();
     static bool up();
-
+    void update(const monitor::InstrumentationReport&);
     std::vector<std::string> lines() const;
     
   signals:
     void validated_signals(std::vector<std::string>);
     void changed();
-
+    
     private slots:
       void contents_changed();
       void goto_error_line(QListWidgetItem*);

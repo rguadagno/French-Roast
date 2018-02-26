@@ -310,6 +310,11 @@ void FRMain::update_heap(const frenchroast::monitor::HeapReport& rpt)
   //_session.update(rpt);
 }
 
+void FRMain::update_instrumentation_status(const frenchroast::monitor::InstrumentationReport& rpt)
+{
+  Editor::instance(this)->update(rpt);
+}
+
 void FRMain::start_watching_traffic(int rate)
 {
   _watchTraffic = true;

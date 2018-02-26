@@ -22,7 +22,7 @@
 #include <sstream>
 #include "catch.hpp"
 #include "ClassDetail.h"
-
+#include "Command.h"
 
 using namespace frenchroast::monitor;
 
@@ -76,7 +76,9 @@ TEST_CASE("operator<< vector<ClassDetail>")
   std::stringstream ss;
   ss << classes;
   std::string line = ss.str();
-  REQUIRE(line == "mypackage.SomeClass<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>mypackage.SomeClassMore<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>");
+  std::stringstream test_ss;
+  test_ss << command::LOADED << "mypackage.SomeClass<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>mypackage.SomeClassMore<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>";
+  REQUIRE(line == test_ss.str());
 }
 
 
@@ -90,7 +92,9 @@ TEST_CASE("operator>> vector<ClassDetail>")
   classes.emplace_back("mypackage/SomeClass",methods);
   classes.emplace_back("mypackage/SomeClassMore",methods);
   std::vector<ClassDetail> classes2;
-  "mypackage.SomeClass<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>mypackage.SomeClassMore<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>" >> classes2;
+  std::stringstream ss;
+  ss << command::LOADED << "mypackage.SomeClass<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>mypackage.SomeClassMore<end-name>mypackage.SomeClass::funcA:(int):void<end-method>mypackage.SomeClass::funcB:(int):void<end-method><end-item>";
+  ss.str() >> classes2;
 
   REQUIRE(classes == classes2);
 
@@ -99,7 +103,10 @@ TEST_CASE("operator>> vector<ClassDetail>")
   methods.emplace_back("Lmypackage/SomeClass::funcA:(I)V");
   classes3.emplace_back("mypackage/SomeClass",methods);
   std::vector<ClassDetail> classes4;
-  "mypackage.SomeClass<end-name>mypackage.SomeClass::funcA:(int):void<end-method><end-item>" >> classes4;
+  ss.str("");
+  
+  ss << command::LOADED << "mypackage.SomeClass<end-name>mypackage.SomeClass::funcA:(int):void<end-method><end-item>";
+  ss.str() >> classes4;
 
   REQUIRE(classes3 == classes4);
   

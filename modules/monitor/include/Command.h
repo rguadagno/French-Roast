@@ -36,6 +36,7 @@ namespace frenchroast { namespace monitor { namespace command {
       const  char HEAP_EVENT       = 'M';
       const  char SIGNAL_REPORTS   = 'N';
       const  char METHOD_STATS     = 'O';
+      const  char INSTRUMENTATION  = 'P';
     }
   }
 }

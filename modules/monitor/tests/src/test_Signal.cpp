@@ -160,11 +160,13 @@ TEST_CASE("Signal, construction, ")
 
   std::stringstream ss;
   ss << sig2;
-  REQUIRE(ss.str() == "1<end-count>t1<end-thread-name>0<end-monitor>0<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>0<end-frame>mypackage.SomeClass::funcB:(int):void<end-method>0<end-frame><end-report>100<end-param>some text<end-param><end-params>");
+  REQUIRE(ss.str().substr(1) == "1<end-count>t1<end-thread-name>0<end-monitor>0<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>0<end-frame>mypackage.SomeClass::funcB:(int):void<end-method>0<end-frame><end-report>100<end-param>some text<end-param><end-params>");
 
 
   Signal sig3{};
-  "1<end-count>t1<end-thread-name>0<end-monitor>0<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>0<end-frame>mypackage.SomeClass::funcB:(int):void<end-method>0<end-frame><end-report>100<end-param>some text<end-param><end-params>" >> sig3;
+  std::stringstream test_ss;
+  test_ss << command::SIGNAL << "1<end-count>t1<end-thread-name>0<end-monitor>0<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>0<end-frame>mypackage.SomeClass::funcB:(int):void<end-method>0<end-frame><end-report>100<end-param>some text<end-param><end-params>";
+  test_ss.str() >> sig3;
   REQUIRE(sig2 == sig3);
   
 }

@@ -21,6 +21,7 @@
 #define DESCRIPTOR_H
 #include <string>
 #include <iostream>
+#include <vector>
 
 namespace frenchroast { namespace monitor {
     class Descriptor {
@@ -32,7 +33,6 @@ namespace frenchroast { namespace monitor {
       std::string translate_param_types(const std::string& pstr);
       std::string translate_return_type(const std::string& name);
       std::vector<std::string> parse_type_tokens(const std::string& tstr);
-      
     public:
       Descriptor()=default;
       explicit Descriptor(const std::string& agentRep);
@@ -49,6 +49,8 @@ namespace frenchroast { namespace monitor {
     };
 
     Descriptor& operator>>(const std::string&, Descriptor& ref);
+    Descriptor& operator>>(const std::string&, Descriptor&& ref);
+    
     template <typename OutType>
       OutType& operator<<(OutType& out, const Descriptor& ref)
       {

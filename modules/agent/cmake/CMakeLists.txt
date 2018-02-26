@@ -30,7 +30,8 @@ if(JAVA_INCLUDE_DIR AND JAVA_INCLUDE_DIR2)
     ../../monitor/src/SignalParams.cpp
     ../../monitor/src/SignalMarkers.cpp
     ../../monitor/src/Signal.cpp            
-    ../../monitor/src/JammedReport.cpp    
+    ../../monitor/src/JammedReport.cpp
+    ../../monitor/src/InstrumentationReport.cpp    
     ../../network/src/FRSocket.cpp
     ../../signal/src/fr_signals.cpp
     ../../signal/src/SignalValidator.cpp

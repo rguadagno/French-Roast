@@ -36,6 +36,14 @@
 
 namespace frenchroast {
 
+  class invalid_method_descriptor : public std::invalid_argument {
+  public:
+    invalid_method_descriptor(const std::string&);
+    
+  };
+
+    
+
   class MagicComponent : public ClassFileComponent {
     BYTE _number[4];
   public:

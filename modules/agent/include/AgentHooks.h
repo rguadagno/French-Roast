@@ -74,7 +74,7 @@ void add_hooks_to_all_constructors(FRType& fr, std::bitset<4> flags)
 
   
 template <typename FRType = FrenchRoast>
-void add_hooks(FRType& fr, signal::Signals& hooks, std::unordered_map<std::string, bool>& artifacts, const std::string& sname, jvmtiEnv *env,jint* new_class_data_len, unsigned char** new_class_data)
+  void add_hooks(FRType& fr, signal::Signals& hooks, std::unordered_map<std::string, bool>& artifacts, const std::string& sname, jvmtiEnv *env,jint* new_class_data_len, unsigned char** new_class_data)
 {
   for (auto& x : hooks[sname]) {
     if(!x.monitor_heap()) {
@@ -84,7 +84,12 @@ void add_hooks(FRType& fr, signal::Signals& hooks, std::unordered_map<std::strin
       artifacts[dsc.full_name()] = x.artifacts();
     }
     if ((x.flags() & signal::Signals::METHOD_TIMER) == signal::Signals::METHOD_TIMER) {
-      fr.add_method_call(x.method_name(), HOOK_TIMER_DESCRIPTOR, x.flags());
+      try {
+        fr.add_method_call(x.method_name(), HOOK_TIMER_DESCRIPTOR, x.flags());
+      }
+      catch(invalid_method_descriptor& ) {
+        x.mark_invalid();
+      }
     }
     else {
       if(x.all()) {
@@ -94,7 +99,13 @@ void add_hooks(FRType& fr, signal::Signals& hooks, std::unordered_map<std::strin
         add_hooks_to_all_constructors(fr, x.flags());
       }
       else {
+        try {
           fr.add_method_call(x.method_name(), HOOK_SIGNAL_DESCRIPTOR, x.flags());
+        }
+        catch(invalid_method_descriptor&) {
+          x.mark_invalid();
+        }
+
       }
     }
       

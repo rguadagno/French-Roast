@@ -149,6 +149,11 @@ namespace frenchroast { namespace monitor {
     {
       return full_name();
     }
+
+    Descriptor& operator>>(const std::string& rep, Descriptor&& ref)
+    {
+      return rep >> ref;
+    }
     
     Descriptor& operator>>(const std::string& rep, Descriptor& ref)
     {

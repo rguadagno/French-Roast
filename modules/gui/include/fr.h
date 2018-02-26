@@ -37,6 +37,7 @@
 #include "Signal.h"
 #include "TimerReport.h"
 #include "HeapReport.h"
+#include "InstrumentationReport.h"
 
 Q_DECLARE_METATYPE(std::string);
 Q_DECLARE_METATYPE(std::vector<frenchroast::monitor::StackTrace>);
@@ -56,6 +57,7 @@ Q_DECLARE_METATYPE(frenchroast::monitor::SignalParams);
 Q_DECLARE_METATYPE(frenchroast::monitor::SignalMarkers);
 Q_DECLARE_METATYPE(frenchroast::monitor::Descriptor);
 Q_DECLARE_METATYPE(frenchroast::monitor::HeapReport);
+Q_DECLARE_METATYPE(frenchroast::monitor::InstrumentationReport);
 
 
 class FRListener : public QObject
@@ -84,6 +86,7 @@ class FRListener : public QObject
     void request_hooks(const std::string& ipport);
     void jammed(frenchroast::monitor::JammedReport&);
     void heap_event(frenchroast::monitor::HeapReport&);
+    void instrumentation(frenchroast::monitor::InstrumentationReport&);
 
   public slots:
     void init();
@@ -111,6 +114,7 @@ class FRListener : public QObject
     void stack_jammed(const frenchroast::monitor::JammedReport&);
     void remote_ready(const std::string&, const std::string&);
     void heap_changed(const frenchroast::monitor::HeapReport&);
+    void instrumentation_status(const frenchroast::monitor::InstrumentationReport&);
 
 };
 

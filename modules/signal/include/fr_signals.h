@@ -72,6 +72,8 @@ namespace frenchroast { namespace signal {
       static const std::bitset<4> METHOD_TIMER;
       static const std::bitset<4> MONITOR_HEAP;
     };
+
+    std::vector<std::string> get_signals(Signals& sigs);
   }
 }
 

@@ -77,7 +77,9 @@ TEST_CASE("jammedRpeort: operator <<")
 
   std::stringstream ss;
   ss << jr;
-  REQUIRE(ss.str() == "SomeOtherClass<end-monitor>java.lang.Object<end-monitor><end-jmonitors><end-thread-name>1<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame><end-owner><end-thread-name>0<end-monitor><end-monitors>mypackage.SomeClass::funcB:(int):void<end-method>0<end-frame>");
+  std::stringstream test_ss;
+  test_ss << command::JAMMED << "SomeOtherClass<end-monitor>java.lang.Object<end-monitor><end-jmonitors><end-thread-name>1<end-monitor><end-monitors>mypackage.SomeClass::funcA:(int):void<end-method>1<end-frame><end-owner><end-thread-name>0<end-monitor><end-monitors>mypackage.SomeClass::funcB:(int):void<end-method>0<end-frame>";
+  REQUIRE(ss.str() == test_ss.str());
 }
 
 TEST_CASE("jammedRpeort: operator ==")

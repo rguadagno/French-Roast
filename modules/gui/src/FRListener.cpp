@@ -56,6 +56,12 @@ void FRListener::heap_event(frenchroast::monitor::HeapReport& rpt)
   heap_changed(rpt);
 }
 
+void FRListener::instrumentation(frenchroast::monitor::InstrumentationReport& rpt)
+{
+  instrumentation_status(rpt);
+}
+
+
 void FRListener::connected(const std::string& host, const std::string& pid)
 {
   remoteconnected( host,pid);

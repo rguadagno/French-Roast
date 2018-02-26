@@ -19,6 +19,7 @@
 
 #include "fr_signals.h"
 #include "Util.h"
+#include "Descriptor.h"
 
 namespace frenchroast { namespace signal {
 
@@ -108,7 +109,8 @@ namespace frenchroast { namespace signal {
                                                                      {"char","C"},
                                                                      {"double","D"},
                                                                      {"float","F"},
-                                                                     {"short","S"}
+                                                                     {"short","S"},
+                                                                     {"",""}
                                                                   };
     
 
@@ -253,7 +255,16 @@ namespace frenchroast { namespace signal {
       return _hlist[name];
     }
     
-
+    std::vector<std::string> get_signals(Signals& sigs)
+    {
+      std::vector<std::string> rv;
+      for(auto& cl : sigs.classes()) {
+        for(auto& sig : sigs[cl]) {
+          rv.push_back(monitor::Descriptor{" " + cl + "::" + sig.method_name()});
+        }
+      }
+      return rv;
+    }
     
     const std::bitset<4> frenchroast::signal::Signals::METHOD_ENTER{"0001"};
     const std::bitset<4> frenchroast::signal::Signals::METHOD_EXIT {"0010"};

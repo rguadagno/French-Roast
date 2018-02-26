@@ -69,9 +69,9 @@ namespace frenchroast { namespace session {
       _method_rankings = methods;
     }
     
-    void Session::update(const frenchroast::monitor::SignalReport& rpt)
+    void Session::update(const frenchroast::monitor::Signal& rpt)
     {
-      _signals[rpt.key()] = rpt;
+      _signals[rpt.key()] += rpt;
     }
 
     void Session::update(const frenchroast::monitor::TimerReport& rpt)

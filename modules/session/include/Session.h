@@ -52,7 +52,7 @@ namespace frenchroast { namespace session {
       void update(const frenchroast::monitor::JammedReport& );
       void update(const std::vector<frenchroast::monitor::StackTrace>& traffic);
       void update(const std::vector<frenchroast::monitor::MethodStats>& methods);
-      void update(const frenchroast::monitor::SignalReport&);
+      void update(const frenchroast::monitor::Signal&);
       void update(const frenchroast::monitor::TimerReport&);
       std::vector<frenchroast::monitor::ClassDetail>                      get_loaded_classes() const;
       std::unordered_map<std::string, frenchroast::monitor::JammedReport> get_jammed_reports() const;

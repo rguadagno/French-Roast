@@ -21,11 +21,15 @@
 #include <fstream>
 #include <QBoxLayout>
 #include <QSplitter>
+#include <QHeaderView>
+#include <QTableWidgetItem>
 #include "Editor.h"
 #include "CodeFont.h"
 #include "HooksSyntax.h"
-#include "SignalValidator.h"
+#include "fr_signals.h"
 #include "Util.h"
+#include "QUtil.h"
+#include "SignalDelegate.h"
 
 namespace frenchroast {
   
@@ -39,6 +43,17 @@ namespace frenchroast {
     
     _edit->setFont(CodeFont());
     _edit->setStyleSheet(_settings->value("edit_style").toString());
+
+    _instrumentation = new QTableWidget{};
+    _instrumentation->setStyleSheet(_settings->value("traffic_grid_style").toString());
+    _instrumentation->verticalHeader()->hide();
+    _instrumentation->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    _instrumentation->insertColumn(0);
+    _instrumentation->setHorizontalHeaderItem(0, createItem("Signal Instrumentation Status"));
+    _instrumentation->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    _instrumentation->setItemDelegateForColumn(0, new SignalDelegate(_instrumentation)); 
+    //    _instrumentation->horizontalHeader()->setSectionResizeMode(0,QHeaderView::ResizeToContents);
+    
     new HooksSyntax(_edit->document());
     _edit->document()->setModified(false);
     QSplitter* splitter = new QSplitter();
@@ -46,6 +61,7 @@ namespace frenchroast {
     splitter->setContentsMargins(0,0,0,0);
     splitter->addWidget(_edit);
     splitter->addWidget(_message);
+    splitter->addWidget(_instrumentation);
     setup_dockwin("Editor", splitter, false);
     _filename = _settings->value("editor:signal-file", "").toString().toStdString();
     
@@ -83,12 +99,19 @@ namespace frenchroast {
   void Editor::contents_changed()
   {
     _changesToSave = true;
+    _validated = false;
     changed();
   }
 
-
+  
   void Editor::validate_signals()
   {
+    if(_validated) {
+      std::string outstr = _edit->document()->toPlainText().toStdString();
+      validated_signals(frenchroast::split(outstr, "\n"));
+      return;
+    }
+    signal::Signals sigs;
     _message->clear();
     bool validated = true;
     std::string outstr = _edit->document()->toPlainText().toStdString();
@@ -96,36 +119,68 @@ namespace frenchroast {
     int xline = 0;
     int total = 0;
     for(auto& line : signals_from_editor) {
-      frenchroast::signal::SignalValidationStatus status = _validator.validate_no_throw(line);
-      if(!status) {
+      try {
+        if(sigs.load(line)) {
+          ++total;
+        }
+      }
+      catch(std::invalid_argument& e) {
         validated = false;
-        MessageItem* item = new MessageItem(status.msg(), xline);
+        MessageItem* item = new MessageItem(e.what(), xline);
         item->setForeground(QColor("#990000"));
         item->setFont(CodeFont());
         _message->addItem(item);
-      }
-      else {
-        if(!status.is_comment()) {
-          ++total;
-        }
+
       }
     ++xline;
     }
     if(validated) {
-       QListWidgetItem* item;
-       if(total > 0) {
-         item = new MessageItem("validation PASSED.");
-       }
-       else {
-         item = new MessageItem("WARNING: Since no hooks given no signals will be generated.");
-       }
-       item->setForeground(QColor("#443355"));
-       item->setFont(CodeFont());
-       _message->addItem(item);
-       validated_signals(signals_from_editor);
-       }
+      _validated = true;
+      QListWidgetItem* item;
+      if(total > 0) {
+        item = new MessageItem("validation PASSED.");
+      }
+      else {
+        item = new MessageItem("WARNING: Since no hooks given no signals will be generated.");
+      }
+      item->setForeground(QColor("#443355"));
+      item->setFont(CodeFont());
+      _message->addItem(item);
+      clearTable(_instrumentation);
+      _descriptor_row.clear();
+      _host_pid_column.clear();
+      for(int idx = _instrumentation->columnCount() -1; idx > 0; idx--) {
+        _instrumentation->removeColumn(idx);
+      }
+      addRow(_instrumentation, createItem(""));
+      for(auto& x : get_signals(sigs)) {
+        addRow(_instrumentation, createItem(x,Qt::AlignLeft));
+        _descriptor_row[x] = _instrumentation->rowCount() - 1;
+      }
+      validated_signals(signals_from_editor);
+    }
   }
 
+  void Editor::update(const monitor::InstrumentationReport& rpt)
+  {
+    if(_host_pid_column.find(rpt.hostname() + rpt.pid()) == _host_pid_column.end()) {
+      _instrumentation->insertColumn(_instrumentation->columnCount());
+      int col = _instrumentation->columnCount() -1;
+      _instrumentation->setHorizontalHeaderItem(col, createItem("hostname[pid]"));
+      _instrumentation->horizontalHeader()->setSectionResizeMode(col,QHeaderView::ResizeToContents);
+      _instrumentation->setItem(0, col, new QTableWidgetItem(std::string{rpt.hostname() + "[" + rpt.pid() + "]"}.c_str()));    
+      _host_pid_column[rpt.hostname() + rpt.pid()] = col;
+    }
+    for(auto& x : rpt.valid()) {
+      _instrumentation->setItem(_descriptor_row[x], _host_pid_column[rpt.hostname() + rpt.pid()], new QTableWidgetItem("OK"));
+    }
+    for(auto& x : rpt.invalid()) {
+      _instrumentation->setItem(_descriptor_row[x], _host_pid_column[rpt.hostname() + rpt.pid()],new QTableWidgetItem("BAD"));
+    }
+
+  }
+
+  
   void Editor::load_from_file(const std::string& filename)
   {
     /*

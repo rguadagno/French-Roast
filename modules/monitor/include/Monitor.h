@@ -38,6 +38,7 @@
 #include "Command.h"
 #include "HeapEvent.h"
 #include "HeapMonitor.h"
+#include "InstrumentationReport.h"
 #include "Connector.h"
 
 namespace frenchroast { namespace monitor {
@@ -90,6 +91,7 @@ namespace frenchroast { namespace monitor {
           _commands[command::TRANSMIT_OPCODES] = Executer{&Monitor<T>::service_transmit_opcodes};
           _commands[command::TRANSMIT_HOOKS]   = Executer{&Monitor<T>::service_transmit_hooks};
           _commands[command::HEAP_EVENT]       = Executer{&Monitor<T>::service_heap_event};
+          _commands[command::INSTRUMENTATION]  = Executer{&Monitor<T>::service_instrumentation};
         }
 
         void message(const std::string& msg)
@@ -126,6 +128,11 @@ namespace frenchroast { namespace monitor {
           }
         }
 
+        void service_instrumentation(const std::vector<std::string>& parts)
+        {
+          _handler.instrumentation(parts[MSG] >> InstrumentationReport{});
+        }
+        
         void service_heap_event(const std::vector<std::string>& parts)
         {
           _heapMonitor.process(parts[MSG] >> HeapEvent{});

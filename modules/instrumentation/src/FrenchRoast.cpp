@@ -27,7 +27,11 @@
 #include "fr_signals.h"
 
 namespace frenchroast {
- 
+
+  invalid_method_descriptor::invalid_method_descriptor(const std::string& msg) : std::invalid_argument(msg)
+  {
+  }
+  
   int MagicComponent::size_in_bytes() const
   {
     return sizeof(_number);
@@ -446,7 +450,7 @@ namespace frenchroast {
   void FrenchRoast::add_method_call(const std::string& callFrom, const std::string& callTo, std::bitset<4> flags)
   {
     if (!_methodsComponent.has_method(callFrom)) {
-      std::cout << "ERROR, does not Exist: " << callFrom << std::endl; 
+      throw invalid_method_descriptor{callFrom};
     }
     ConstantPoolComponent::validate_method_name(callTo); 
     MethodInfo method = _methodsComponent.get_method(callFrom);

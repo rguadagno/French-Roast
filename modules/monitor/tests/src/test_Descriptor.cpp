@@ -79,5 +79,3 @@ TEST_CASE("operator=,  Descriptor")
   dsc2 = dsc1;
   REQUIRE(dsc1 == dsc2);
 }
-
-
