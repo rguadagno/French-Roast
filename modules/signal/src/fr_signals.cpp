@@ -260,7 +260,13 @@ namespace frenchroast { namespace signal {
       std::vector<std::string> rv;
       for(auto& cl : sigs.classes()) {
         for(auto& sig : sigs[cl]) {
-          rv.push_back(monitor::Descriptor{" " + cl + "::" + sig.method_name()});
+          replace(cl,'/', '.');
+          if(sig.all()) {
+            rv.push_back(cl +  "::*");
+          }
+          else {
+            rv.push_back(monitor::Descriptor{" " + cl + "::" + sig.method_name()});
+          }
         }
       }
       return rv;

@@ -23,6 +23,8 @@
 #include <QSplitter>
 #include <QHeaderView>
 #include <QTableWidgetItem>
+#include <QPainter>
+#include <QHBoxLayout>
 #include "Editor.h"
 #include "CodeFont.h"
 #include "HooksSyntax.h"
@@ -52,7 +54,6 @@ namespace frenchroast {
     _instrumentation->setHorizontalHeaderItem(0, createItem("Signal Instrumentation Status"));
     _instrumentation->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     _instrumentation->setItemDelegateForColumn(0, new SignalDelegate(_instrumentation)); 
-    //    _instrumentation->horizontalHeader()->setSectionResizeMode(0,QHeaderView::ResizeToContents);
     
     new HooksSyntax(_edit->document());
     _edit->document()->setModified(false);
@@ -80,8 +81,8 @@ namespace frenchroast {
     }
     _bsave = new ActionButton("Save", false);
     QObject::connect(_actionBar->add(_bsave) ,     &ActionButton::request, this, &frenchroast::Editor::save);
-    QObject::connect(_actionBar->add(new ActionButton("Validate")) , &ActionButton::request, this, &frenchroast::Editor::validate_signals);
-    QObject::connect(_edit->document(), &QTextDocument::contentsChange,  this,    [&]() {     _changesToSave = true; _bsave->enable(); });
+    QObject::connect(_actionBar->add(new ActionButton("Validate")) , &ActionButton::request, this, &frenchroast::Editor::validate_button);
+    QObject::connect(_edit->document(), &QTextDocument::contentsChange,  this,    [&]() {   _validated = false;  _changesToSave = true; _bsave->enable(); });
     QObject::connect(_message,          &QListWidget::itemDoubleClicked, this,    &Editor::goto_error_line);
   }
 
@@ -96,17 +97,14 @@ namespace frenchroast {
     }
   }
 
-  void Editor::contents_changed()
+  void Editor::validate_button()
   {
-    _changesToSave = true;
-    _validated = false;
-    changed();
+    validate_signals(true);
   }
-
   
-  void Editor::validate_signals()
+  void Editor::validate_signals(bool always)
   {
-    if(_validated) {
+    if(_validated && !always) {
       std::string outstr = _edit->document()->toPlainText().toStdString();
       validated_signals(frenchroast::split(outstr, "\n"));
       return;
@@ -152,7 +150,6 @@ namespace frenchroast {
       for(int idx = _instrumentation->columnCount() -1; idx > 0; idx--) {
         _instrumentation->removeColumn(idx);
       }
-      addRow(_instrumentation, createItem(""));
       for(auto& x : get_signals(sigs)) {
         addRow(_instrumentation, createItem(x,Qt::AlignLeft));
         _descriptor_row[x] = _instrumentation->rowCount() - 1;
@@ -161,21 +158,53 @@ namespace frenchroast {
     }
   }
 
+
+  class  StatusGood: public QWidget {
+
+    void paintEvent(QPaintEvent*)
+    {
+      QPainter painter(this);
+      painter.setBrush(Qt::green);
+      painter.drawEllipse(0,0,10,10);
+    }
+  };
+
+  class  StatusBad: public QWidget {
+
+    void paintEvent(QPaintEvent*)
+    {
+      QPainter painter(this);
+      painter.setBrush(Qt::red);
+      painter.drawEllipse(0,0,10,10);
+    }
+  };
+
+
+  class StatusHolder : public QWidget {
+  public:
+    StatusHolder(QWidget* ptr) : QWidget()
+    {
+      QHBoxLayout* layout = new QHBoxLayout{};
+      layout->addWidget(ptr);
+      setLayout(layout);
+    }
+    
+
+  };
   void Editor::update(const monitor::InstrumentationReport& rpt)
   {
     if(_host_pid_column.find(rpt.hostname() + rpt.pid()) == _host_pid_column.end()) {
       _instrumentation->insertColumn(_instrumentation->columnCount());
       int col = _instrumentation->columnCount() -1;
-      _instrumentation->setHorizontalHeaderItem(col, createItem("hostname[pid]"));
+      _instrumentation->setHorizontalHeaderItem(col, createItem(rpt.hostname() + "[" + rpt.pid() + "]"));
       _instrumentation->horizontalHeader()->setSectionResizeMode(col,QHeaderView::ResizeToContents);
-      _instrumentation->setItem(0, col, new QTableWidgetItem(std::string{rpt.hostname() + "[" + rpt.pid() + "]"}.c_str()));    
       _host_pid_column[rpt.hostname() + rpt.pid()] = col;
     }
     for(auto& x : rpt.valid()) {
-      _instrumentation->setItem(_descriptor_row[x], _host_pid_column[rpt.hostname() + rpt.pid()], new QTableWidgetItem("OK"));
+      _instrumentation->setCellWidget(_descriptor_row[x], _host_pid_column[rpt.hostname() + rpt.pid()], new StatusHolder{new StatusGood{}});
     }
     for(auto& x : rpt.invalid()) {
-      _instrumentation->setItem(_descriptor_row[x], _host_pid_column[rpt.hostname() + rpt.pid()],new QTableWidgetItem("BAD"));
+      _instrumentation->setCellWidget(_descriptor_row[x], _host_pid_column[rpt.hostname() + rpt.pid()], new StatusHolder{new StatusBad{}} );
     }
 
   }

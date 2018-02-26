@@ -67,10 +67,10 @@ namespace frenchroast {
     void changed();
     
     private slots:
-      void contents_changed();
       void goto_error_line(QListWidgetItem*);
   public slots:
-      void validate_signals();
+      void validate_button();
+      void validate_signals(bool always = false);
       void load_from_file(const std::string&);
       void save();
       void save_as(const std::string&);

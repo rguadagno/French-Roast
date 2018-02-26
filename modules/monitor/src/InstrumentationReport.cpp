@@ -24,11 +24,20 @@
 
 namespace frenchroast { namespace monitor {
     const std::string InstrumentationReport::DESCRIPTOR_DELIM = "<end-descriptor>";
+
+    std::string format_method_name(const signal::Signal& sig)
+    {
+      if(sig.all()) {
+        return "::*";
+      }
+      return "::" + sig.method_name();
+    }
+    
     InstrumentationReport::InstrumentationReport(const std::string& hostname, const std::string& pid,const std::string& class_name, const std::vector<signal::Signal>& sigs) : _hostname(hostname), _pid(pid)
     {
       for(auto& x :sigs) {
         if(x.valid()) {
-          _valid.push_back(Descriptor{class_name + "::" + x.method_name()});
+          _valid.push_back(Descriptor{class_name + format_method_name(x)});
         }
         else {
           _invalid.push_back(Descriptor{class_name + "::" + x.method_name()});
