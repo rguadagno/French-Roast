@@ -6,21 +6,17 @@ project(gui_curses)
   ../include
   ../../network/include
   ../../monitor/include
-  ../../instrumentation/include             
+  ../../instrumentation/include
+  ../../signal/include
   )
 
   if (UNIX)
     FILE(GLOB huh
-    ../src/main.cpp
-    ../src/CursesFrameWork.cpp
-    ../src/SignalWindow.cpp
-    ../src/SignalTimerWindow.cpp
-    ../../network/src/ConnectorUnix.cpp
-    ../../network/src/Connector.cpp
-    ../../monitor/src/Monitor.cpp
-    ../../monitor/src/MonitorUtil.cpp    
-    ../../monitor/src/StackTrace.cpp
+    ../src/*.cpp
+    ../../network/src/*.cpp
+    ../../monitor/src/*.cpp
     ../../instrumentation/src/Util.cpp
+    ../../signal/src/*.cpp
     )	
     find_package(Threads)
     add_definitions("-std=c++14")

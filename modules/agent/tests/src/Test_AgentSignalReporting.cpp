@@ -26,7 +26,7 @@
 
 TEST_CASE("get_value")
 {
-
+  using namespace frenchroast::agent;
   
   FieldInfo field_info;
   jobject obj;

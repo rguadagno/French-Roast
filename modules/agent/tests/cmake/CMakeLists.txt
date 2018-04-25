@@ -31,29 +31,12 @@ ${JAVA_INCLUDE_DIR2}
 )
 
 FILE(GLOB src_files
-../../src/AgentHooks.cpp
-../../src/AgentUtil.cpp
-../../src/AgentSignalReporting.cpp
-../../src/Agent.cpp
-../../src/Config.cpp
-../../src/ServerTransport.cpp
-../../src/Reporter.cpp
+../../src/*.cpp
 ../../../network/src/Connector.cpp
 ../../../network/src/FRSocket.cpp
 ../../..//instrumentation/src/*.cpp
 ../../..//instrumentation/tests/src/testing_utils.cpp
-../../../monitor/src/ClassDetail.cpp
-../../../monitor/src/Descriptor.cpp
-../../../monitor/src/Monitor.cpp
-../../../monitor/src/StackTrace.cpp
-../../../monitor/src/StackFrame.cpp
-../../../monitor/src/StackReport.cpp
-../../../monitor/src/MethodStats.cpp
-../../../monitor/src/JammedReport.cpp
-../../../monitor/src/SignalReport.cpp
-../../../monitor/src/Signal.cpp
-../../../monitor/src/SignalParams.cpp
-../../../monitor/src/SignalMarkers.cpp
+../../../monitor/src/*.cpp
 ../../../signal/src/fr_signals.cpp
 ../../../signal/src/SignalValidator.cpp
 ../src/Main.cpp
