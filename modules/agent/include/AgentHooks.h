@@ -47,12 +47,14 @@ void remove_hooks(const unsigned char* orig_class_data, jint orig_size, jvmtiEnv
 
 
 template <typename FRType = FrenchRoast>
-void add_hooks_to_all_methods(FRType& fr, std::bitset<4> flags)
+  void add_hooks_to_all_methods(FRType& fr, const std::string& classname,signal::Signal& sig, std::unordered_map<std::string, bool>& artifacts)
 {
   for(auto methdesc : fr.get_method_descriptors()) {
     if(methdesc.find("main") != std::string::npos) continue;
+    artifacts[monitor::Descriptor{classname + methdesc}.full_name()] = sig.artifacts();
+    artifacts[classname + methdesc] = sig.artifacts();
     if( methdesc.find("<init") == std::string::npos ) {
-      fr.add_method_call(methdesc, HOOK_SIGNAL_DESCRIPTOR, flags);
+      fr.add_method_call(methdesc, HOOK_SIGNAL_DESCRIPTOR, sig.flags());
     }
     else {
       fr.add_method_call(methdesc, HOOK_SIGNAL_DESCRIPTOR, signal::Signals::METHOD_EXIT);
@@ -93,7 +95,7 @@ template <typename FRType = FrenchRoast>
     }
     else {
       if(x.all()) {
-        add_hooks_to_all_methods(fr,x.flags());
+        add_hooks_to_all_methods(fr, "L" + sname + ";::", x, artifacts);
       }
       else if(x.monitor_heap()) {
         add_hooks_to_all_constructors(fr, x.flags());
