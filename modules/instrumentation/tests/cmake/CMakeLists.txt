@@ -20,6 +20,8 @@ endif()
 
 include_directories(${CATCH_LOCATION}
 ../../../signal/include
+../../../monitor/include
+../../../network/include
 ../../include
 ../include       
 )
@@ -34,11 +36,15 @@ FILE(GLOB huh
 ../src/Test_Method_save_buffer.cpp  
 ../src/testing_utils.cpp
 ../../src/*.cpp
+../../../monitor/src/*.cpp
+../../../network/src/*.cpp
 ../../../signal/src/*.cpp
 )
 
 
 add_definitions("-std=c++11")
+add_definitions(-DCONNECTOR_UNIX)
+
 add_executable(runner  ${huh})
 
 

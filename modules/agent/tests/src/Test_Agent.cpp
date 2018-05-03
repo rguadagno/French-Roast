@@ -60,6 +60,8 @@ std::unique_ptr<const unsigned char> get_SomeClass_class()
 
 TEST_CASE("update java.lang.Package with thook")
 {
+  using namespace frenchroast::agent;
+
   MockJVMTI jvmtimock;
 
   frenchroast::OpCode::load_from_file( std::getenv("OPCODE_FILE"));
@@ -84,6 +86,7 @@ TEST_CASE("update java.lang.Package with thook")
 TEST_CASE("add_hooks")
 {
   MockJVMTI jvmtimock;
+  using namespace frenchroast::agent;
 
   class FRMock {
     
@@ -128,6 +131,8 @@ TEST_CASE("add_hooks")
 
 TEST_CASE("remove_hooks")
 {
+  using namespace frenchroast::agent;
+
   MockJVMTI jvmtimock;
   frenchroast::OpCode::load_from_file( std::getenv("OPCODE_FILE"));
   

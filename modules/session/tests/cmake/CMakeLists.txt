@@ -15,24 +15,15 @@ ${CATCH_LOCATION}
 ../../../monitor/include
 ../../../instrumentation/include
 ../../../network/include
+../../../signal/include
 )
 
 FILE(GLOB src_files
 ../../../monitor/tests/src/helper.cpp
-../../../monitor/src/ClassDetail.cpp
-../../../monitor/src/Descriptor.cpp
-../../../monitor/src/Monitor.cpp
-../../../monitor/src/StackTrace.cpp
-../../../monitor/src/Signal.cpp
-../../../monitor/src/StackFrame.cpp
-../../../monitor/src/StackReport.cpp
-../../../monitor/src/SignalParams.cpp
-../../../monitor/src/SignalMarkers.cpp
-../../../monitor/src/MethodStats.cpp
-../../../monitor/src/JammedReport.cpp
-../../../monitor/src/SignalReport.cpp
+../../../monitor/src/*.cpp
 ../../../instrumentation/src/Util.cpp
 ../../../network/src/FRSocket.cpp
+../../../signal/src/*.cpp
 ../../src/Session.cpp
 ../../src/PersistorFile.cpp
 ../src/*.cpp

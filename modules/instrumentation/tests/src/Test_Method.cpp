@@ -833,13 +833,14 @@ TEST_CASE ( "method: [simple]   multiple SameFrame  adjusted")
 
 
 
-namespace frenchroast {
-  std::vector<int> get_targets(Instruction& inst);
-}
+// namespace MethodInfo {
+//   std::vector<int> get_targets(Instruction& inst);
+// }
 
 TEST_CASE ( "method: [simple]   multiple SameFrame  adjusted, with return in middle of switch")
 {
   using namespace frenchroast;
+
   std::unordered_map<int, std::string> names;
   names[1] = "SomeFunc";
   names[2] = "()V";
@@ -861,21 +862,21 @@ TEST_CASE ( "method: [simple]   multiple SameFrame  adjusted, with return in mid
   std::vector<Instruction> list;
   OpCode ops;
   list.push_back(Instruction{ops[opcode::invokestatic], 9});
-  REQUIRE(get_targets(meth[2])[0] == 45);
-  REQUIRE(get_targets(meth[2])[1] == 28);
-  REQUIRE(get_targets(meth[2])[2] == 37);
+  REQUIRE(meth.get_targets(meth[2])[0] == 45);
+  REQUIRE(meth.get_targets(meth[2])[1] == 28);
+  REQUIRE(meth.get_targets(meth[2])[2] == 37);
   meth.add_instructions(0,list,true);
 
   //meth.add_instructions(61,list,false);
 
-  REQUIRE(get_targets(meth[3])[0] == 49);
-  REQUIRE(get_targets(meth[3])[1] == 32 );
-  REQUIRE(get_targets(meth[3])[2] == 41);
+  REQUIRE(meth.get_targets(meth[3])[0] == 49);
+  REQUIRE(meth.get_targets(meth[3])[1] == 32 );
+  REQUIRE(meth.get_targets(meth[3])[2] == 41);
 
   meth.add_instructions(40,list,true);
-  REQUIRE(get_targets(meth[3])[0] == 52);
-  REQUIRE(get_targets(meth[3])[1] == 32 );
-  REQUIRE(get_targets(meth[3])[2] == 44);
+  REQUIRE(meth.get_targets(meth[3])[0] == 52);
+  REQUIRE(meth.get_targets(meth[3])[1] == 32);
+  REQUIRE(meth.get_targets(meth[3])[2] == 44);
 
   delete[] buf;
 }

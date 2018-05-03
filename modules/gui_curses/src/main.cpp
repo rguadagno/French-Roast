@@ -63,6 +63,34 @@ namespace frenchroast { namespace monitor {
       frenchroast::monitor::EventHandler hand{};
       
       std::thread t1{[&]() { hand._monitor.init_receiver(url, port);}};
+      wrefresh(sig_window);
+      refresh();
+
+      refresh();
+      wrefresh(sig_window);
+      refresh();
+      sigptr = &sig_window;
+      sigtimerptr = &sigtimer_window;
+
+      wrefresh(sig_window);
+      wrefresh(sigtimer_window);
+      refresh();
+
+  
+      int maxy = 0;
+      int maxx = 0;
+      getmaxyx(stdscr, maxy,maxx);
+      --maxy;
+      mvaddstr(maxy,0, "waiting for connection...");    
+      mvchgat(maxy,0,200, A_REVERSE, 0,NULL);
+      
+      ::signal(SIGWINCH, refresh_all);
+  
+      frenchroast::monitor::EventHandler hand{sig_window, sigtimer_window};
+
+      // XXX Disabled because doesn't compile.
+      // frenchroast::monitor::Monitor<frenchroast::monitor::EventHandler> mon{hand};
+      // std::thread t1{[&]() { mon.init_receiver(url, port);}};
   
       bool running = true;
 
