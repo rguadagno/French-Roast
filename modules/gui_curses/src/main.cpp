@@ -19,14 +19,8 @@
 
 #include <iostream>
 #include <thread>
-#include <ncurses.h>
 #include "Monitor.h"
 #include <string>
-#include <signal.h>
-#include "CursesFrameWork.h"
-#include "SignalWindow.h"
-#include "SignalTimerWindow.h"
-
 
 namespace frenchroast { namespace monitor {
     int main(int argc, char* argv[]);
@@ -40,144 +34,100 @@ int main(int argc, char* argv[])
 
 namespace frenchroast { namespace monitor {
 
-    void refresh_status();
     void get_cmd_line_args(int argc, char* argv[], std::string& url, int& port) noexcept;
-    void refresh_all(int x);
     
     class EventHandler {
-      SignalWindow&      _sigwin;
-      SignalTimerWindow& _sigtimer_win;
 
     public:
-      EventHandler(SignalWindow& sw, SignalTimerWindow& stw);
-      void signal_timed(const std::string& tag, long long totalElapsed, int elapsed);
-      void signal(const std::string& tag, int t1);
+      frenchroast::monitor::Monitor<frenchroast::monitor::EventHandler> _monitor;
+      EventHandler();
+      void signal_timed(const std::string& tag, const std::string& tname, long long totalElapsed, int elapsed);
+      void signal(const std::string& tag, const std::string& tname, int count,  std::vector<std::string>,std::vector<std::string>, std::vector<frenchroast::monitor::MarkerField>, std::unordered_map<std::string, frenchroast::monitor::StackReport>);
       void traffic(std::vector<StackTrace> items);
-      void connected(const std::string& msg);
-      void unloaded(const std::string& msg);
+      void connected(const std::string& msg,const std::string& );
+      void unloaded(const std::string&, const std::string& msg);
+      void jammed(frenchroast::monitor::JammedReport&);
+      void class_watch(const std::vector<frenchroast::monitor::ClassDetail>& details);
+      void ready(const std::string& host, const std::string& pid);
+      void request_hooks();
     };
     
     std::string _connectedMsg = "waiting for connection...";
-    SignalWindow* sigptr{nullptr};
-    SignalTimerWindow* sigtimerptr{nullptr};
-    
+      
     int main(int argc, char* argv[])
     {
       std::string url;
       int port;
       get_cmd_line_args(argc, argv, url, port);
-      initscr();
-      cbreak();
-      noecho();
-      keypad(stdscr,TRUE);
-      erase();
-
-      refresh();
-      SignalWindow      sig_window{8,60,1,1, "Signals"};
-      SignalTimerWindow sigtimer_window{8,70,1,65, "Timers"};
   
-      wrefresh(sig_window);
-      refresh();
-
-      refresh();
-      wrefresh(sig_window);
-      refresh();
-      sigptr = &sig_window;
-      sigtimerptr = &sigtimer_window;
-
-      wrefresh(sig_window);
-      wrefresh(sigtimer_window);
-      refresh();
-
-  
-      int maxy = 0;
-      int maxx = 0;
-      getmaxyx(stdscr, maxy,maxx);
-      --maxy;
-      mvaddstr(maxy,0, "waiting for connection...");    
-      mvchgat(maxy,0,200, A_REVERSE, 0,NULL);
+      frenchroast::monitor::EventHandler hand{};
       
-      signal(SIGWINCH, refresh_all);
+      std::thread t1{[&]() { hand._monitor.init_receiver(url, port);}};
   
-      frenchroast::monitor::EventHandler hand{sig_window, sigtimer_window};
-      frenchroast::monitor::Monitor<frenchroast::monitor::EventHandler> mon{hand};
-      
-      std::thread t1{[&]() { mon.init_receiver(url, port);}};
-  
-      const int QUIT      = 113;
-      const int ENTER     = 10;
       bool running = true;
 
       while(running) {
-        int ch = getch();
-        switch(ch) {
-        case QUIT:
-          
-          endwin();
-          exit(0);
-          break;
+        std::string line;
+        std::cin >> line;
+        std::cout << "line: " << line << std::endl;
         }
+        std::cout << "EXITED:" << std::endl;
       }
       
-    }
+  
 
     
-    EventHandler::EventHandler(SignalWindow& sw, SignalTimerWindow& stw) : _sigwin(sw), _sigtimer_win(stw)
+    EventHandler::EventHandler() : _monitor(*this, "/home/richg/code/French-Roast/modules/instrumentation/config/opcodes.txt")
     {
     }
 
-    void EventHandler::signal_timed(const std::string& tag, long long totalElapsed, int elapsed)
+    void EventHandler::signal_timed(const std::string& tag, const std::string& tname, long long totalElapsed, int elapsed)
     {
-      _sigtimer_win.add_signal(tag, totalElapsed, elapsed);
     }
 
-    void EventHandler::signal(const std::string& tag, int t1)
+    void EventHandler::signal(const std::string& tag, const std::string& tname, int count,  std::vector<std::string>,std::vector<std::string>, std::vector<frenchroast::monitor::MarkerField>, std::unordered_map<std::string, frenchroast::monitor::StackReport>)
     {
-      _sigwin.add_signal(tag, t1);
+      std::cout << tag << std::endl;
     }
       
     void EventHandler::traffic(std::vector<StackTrace> items)
     {
     }
       
-    void EventHandler::connected(const std::string& msg)
+    void EventHandler::connected(const std::string& msg,const std::string& np)
     {
+      std::cout << "connected" << std::endl;
+      // _monitor.turn_on_profiler(msg+np);
       _connectedMsg = "connected: " + msg;
-      refresh_status();
-    }
+      }
 
-    void EventHandler::unloaded(const std::string& msg)
+    void EventHandler::unloaded(const std::string& ipport, const std::string& msg)
     {
       _connectedMsg = "disconnected: " + msg;
-      refresh_status();
     }
 
+    void EventHandler::jammed(frenchroast::monitor::JammedReport&)
+    {
+    }
 
+    void EventHandler::class_watch(const std::vector<frenchroast::monitor::ClassDetail>& details)
+    {
+    }
     
-    void refresh_status()
+    void EventHandler::ready(const std::string& host, const std::string& pid)
     {
-      int maxy =0;
-      int maxx =0;
-      refresh();
-      getmaxyx(stdscr, maxy,maxx);
-      --maxy;
-      mvaddstr(maxy,0, _connectedMsg.c_str());    
-      mvchgat(maxy,0,200, A_REVERSE, 0,NULL);
-      refresh();
+           std::cout << "READY." << std::endl;
+           _monitor.turn_on_profiler(host+pid);
     }
-
-    void refresh_all(int x)
+    
+    void EventHandler::request_hooks()
     {
-      erase();
-      endwin();
-      refresh_status();
-      sigptr->redraw();
-      sigtimerptr->redraw();
-      wrefresh(*sigptr);
-      wrefresh(*sigtimerptr);
-      refresh();
-    }
+      std::vector<std::string> hooks;
+      hooks.push_back("juniper.Berry::bigcalc:(int):void <ENTER>");
 
+      _monitor.send_hooks(hooks);
+    }
+    
     void get_cmd_line_args(int argc, char* argv[], std::string& url, int& port) noexcept
     {
       if(argc != 2) {
