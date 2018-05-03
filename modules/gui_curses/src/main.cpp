@@ -97,12 +97,13 @@ namespace frenchroast { namespace monitor {
       mvaddstr(maxy,0, "waiting for connection...");    
       mvchgat(maxy,0,200, A_REVERSE, 0,NULL);
       
-      signal(SIGWINCH, refresh_all);
+      ::signal(SIGWINCH, refresh_all);
   
       frenchroast::monitor::EventHandler hand{sig_window, sigtimer_window};
-      frenchroast::monitor::Monitor<frenchroast::monitor::EventHandler> mon{hand};
-      
-      std::thread t1{[&]() { mon.init_receiver(url, port);}};
+
+      // XXX Disabled because doesn't compile.
+      // frenchroast::monitor::Monitor<frenchroast::monitor::EventHandler> mon{hand};
+      // std::thread t1{[&]() { mon.init_receiver(url, port);}};
   
       const int QUIT      = 113;
       const int ENTER     = 10;

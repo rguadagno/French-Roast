@@ -12,12 +12,14 @@ ${CATCH_LOCATION}
 ../../include
 ../include
 ../../../instrumentation/include
+../../../monitor/include
 )
   
 FILE(GLOB src_list
 ../src/*.cpp
 ../../src/*.cpp
 ../../../instrumentation/src/Util.cpp
+../../../monitor/src/Descriptor.cpp
 )
 
 if (UNIX)
